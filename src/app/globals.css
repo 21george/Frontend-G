@@ -1,0 +1,212 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --brand:         #2563EB;
+    --brand-dark:    #1D4ED8;
+    --brand-light:   #1a3663;
+    --accent:        #10B981;
+    --accent-light:  #ECFDF5;
+    --warning:       #F59E0B;
+    --danger:        #EF4444;
+    --sidebar-bg:    #0F172A;
+    --sidebar-bdr:   rgba(255,255,255,0.07);
+    --page-bg:       #F1F5F9;
+
+    /* Light theme tokens */
+    --bg-page:       #F1F5F9;
+    --bg-card:       #FFFFFF;
+    --text-primary:  #0F172A;
+    --text-muted:    #64748B;
+    --border:        rgba(0,0,0,0.06);
+  }
+
+  /* Dark theme tokens */
+  html.dark {
+    --bg-page:      #141414;
+    --bg-card:      #171717;
+    --text-primary: #ffffff;
+    --text-muted:   #a0a0a0;
+    --border:       rgba(255,255,255,0.08);
+  }
+
+  * { box-sizing: border-box; }
+
+  html { scroll-behavior: smooth; }
+
+  /* Smooth theme transition */
+  *, *::before, *::after {
+    transition: background-color 0.25s ease, border-color 0.25s ease, color 0.25s ease;
+  }
+
+  body {
+    @apply antialiased;
+    background-color: var(--bg-page);
+    color: var(--text-primary);
+    font-family: var(--font-sans), system-ui, sans-serif;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    line-height: 1.5;
+  }
+
+  input, textarea, select, button {
+    font: inherit;
+  }
+
+  code, kbd, pre, samp {
+    font-family: var(--font-mono), ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  }
+
+  /* Custom scrollbar */
+  ::-webkit-scrollbar { width: 5px; height: 5px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { @apply bg-slate-300 rounded-full; }
+  ::-webkit-scrollbar-thumb:hover { @apply bg-slate-400; }
+}
+
+@layer components {
+
+  /* ── Buttons ── */
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 font-medium rounded-lg transition-all duration-200
+           focus:outline-none focus:ring-2 focus:ring-offset-2
+           disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+  .btn-primary {
+    @apply btn bg-cyan-950 text-white px-4 py-2 text-sm
+           hover:bg-cyan-900 active:bg-cyan-800
+           focus:ring-cyan-700 shadow-sm;
+  }
+  .btn-secondary {
+    @apply btn bg-white border border-slate-200 text-slate-700 px-4 py-2 text-sm
+           hover:bg-slate-50 hover:border-slate-300
+           focus:ring-slate-200 shadow-sm;
+  }
+  .btn-danger {
+    @apply btn bg-red-500 text-white px-4 py-2 text-sm
+           hover:bg-red-600 focus:ring-red-500;
+  }
+  .btn-ghost {
+    @apply btn text-slate-600 px-4 py-2 text-sm
+           hover:bg-slate-100 focus:ring-slate-200;
+  }
+
+  /* ── Cards ── */
+  .card {
+    @apply bg-white border border-slate-200/80 shadow-card p-6;
+  }
+  .card-hover {
+    @apply card hover:shadow-elevated hover:border-slate-300 transition-all duration-200 cursor-pointer;
+  }
+
+  /* ── Form inputs ── */
+  .input {
+    @apply w-full bg-white border border-slate-300 px-3.5 py-2.5 text-sm text-slate-900
+           placeholder:text-slate-400 transition-colors
+           focus:outline-none focus:ring-2 focus:ring-cyan-700/20 focus:border-blue-500
+           hover:border-slate-400;
+  }
+  .label {
+    @apply block text-sm font-medium text-slate-700 mb-1.5;
+  }
+
+  /* ── Badges ── */
+  .badge {
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
+  }
+  .badge-blue  { @apply badge bg-blue-50   text-blue-700    ring-1 ring-inset ring-blue-200/60; }
+  .badge-green { @apply badge bg-emerald-50 text-emerald-700 ring-1 ring-inset ring-emerald-200/60; }
+  .badge-red   { @apply badge bg-red-50    text-red-700     ring-1 ring-inset ring-red-200/60; }
+  .badge-amber { @apply badge bg-amber-50  text-amber-700   ring-1 ring-inset ring-amber-200/60; }
+  .badge-gray  { @apply badge bg-slate-100 text-slate-600; }
+
+  /* ── Stat card ── */
+  .stat-card {
+    @apply card flex items-center gap-4;
+  }
+  .stat-icon {
+    @apply w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0;
+  }
+
+  /* ── Page structure ── */
+  .page-header {
+    @apply flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6;
+  }
+  .page-title {
+    @apply text-2xl font-semibold text-slate-900 tracking-tight;
+  }
+  .page-subtitle {
+    @apply text-sm text-slate-500 mt-0.5;
+  }
+
+  /* ── Navigation links ── */
+  .nav-link {
+    @apply flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium
+           transition-all duration-150 relative;
+  }
+  .nav-link-active {
+    @apply nav-link bg-cyan-950 text-white shadow-sm;
+  }
+  .nav-link-inactive {
+    @apply nav-link text-slate-400 hover:bg-slate-700/60 hover:text-slate-100;
+  }
+
+  /* ── Table ── */
+  .table-row {
+    @apply flex items-center gap-3 p-3.5 rounded-xl bg-slate-50 hover:bg-slate-100 transition-colors;
+  }
+
+  /* ── Section divider ── */
+  .section-title {
+    @apply text-xs font-semibold uppercase tracking-widest text-slate-500 px-3 mb-2 mt-1;
+  }
+
+  /* ── Dark mode overrides ── */
+  /* Must live in @layer components so they have higher precedence than the light definitions above */
+  html.dark .card {
+    background-color: #171717;
+    border-color: rgba(255,255,255,0.08);
+    box-shadow: 0 2px 8px 0 rgb(0 0 0 / 0.3), 0 0 0 1px rgba(255,255,255,0.04);
+    @apply text-white;
+  }
+  html.dark .card-hover {
+    @apply hover:border-white/[0.12] hover:bg-[#2c2c2c];
+  }
+  html.dark .input {
+    @apply bg-[#141414] border-white/[0.1] text-white placeholder:text-neutral-500;
+  }
+  html.dark .label {
+    @apply text-neutral-400;
+  }
+  html.dark .page-title {
+    @apply text-white;
+  }
+  html.dark .page-subtitle {
+    @apply text-neutral-400;
+  }
+  html.dark .btn-secondary {
+    @apply bg-white/[0.05] border-white/[0.12] text-white hover:bg-white/[0.1];
+  }
+  html.dark .btn-ghost {
+    @apply text-neutral-300 hover:bg-white/[0.08];
+  }
+  html.dark .table-row {
+    @apply bg-white/[0.04] hover:bg-white/[0.08];
+  }
+  html.dark .badge-gray {
+    @apply bg-white/[0.08] text-neutral-300;
+  }
+}
+
+@layer utilities {
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+}
