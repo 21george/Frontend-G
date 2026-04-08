@@ -38,6 +38,7 @@ interface AuthFormSplitScreenProps {
   onSubmit: (data: FormValues) => Promise<void>;
   forgotPasswordHref: string;
   createAccountHref: string;
+  error?: string | null;
 }
 
 /**
@@ -60,6 +61,7 @@ export function AuthFormSplitScreen({
   onSubmit,
   forgotPasswordHref,
   createAccountHref,
+  error,
 }: AuthFormSplitScreenProps) {
   const [isLoading, setIsLoading] = React.useState(false);
 
@@ -101,9 +103,16 @@ export function AuthFormSplitScreen({
   };
 
   return (
-    <div className="relative flex min-h-screen w-full flex-col md:flex-row">
+    <div className="relative flex min-h-[100dvh] w-full flex-col md:flex-row">
+      {/* Error toast */}
+      {error && (
+        <div className="fixed top-4 left-1/2 -translate-x-1/2 bg-red-500/90 text-white px-4 py-2 rounded-lg shadow-lg z-50 text-sm max-w-[90vw] text-center">
+          {error}
+        </div>
+      )}
+
       {/* Left Panel: Form */}
-      <div className="flex w-full flex-col items-center justify-center bg-background p-8 md:w-1/2">
+      <div className="flex w-full flex-col items-center justify-center bg-background px-5 py-10 sm:p-8 md:w-1/2 min-h-[100dvh] md:min-h-0">
         <div className="w-full max-w-md">
           <motion.div
             variants={containerVariants}
@@ -209,7 +218,7 @@ export function AuthFormSplitScreen({
       </div>
 
       {/* Right Panel: Image */}
-      <div className="relative hidden w-1/2 md:block">
+      <div className="relative hidden md:block md:w-1/2">
         <img
           src={imageSrc}
           alt={imageAlt}

@@ -25,36 +25,31 @@ export default function LoginPage() {
     setError(null);
     try {
       const res = await apiClient.post('/auth/coach/login', data);
-      const { access_token, refresh_token, coach } = res.data.data;
-      setCoach(coach, access_token, refresh_token);
+      const { coach } = res.data.data;
+      // Tokens are set as httpOnly cookies by the backend
+      setCoach(coach);
       router.push('/dashboard');
     } catch (e: any) {
-      setError(e?.response?.data?.error || 'Login failed');
+      setError(e?.response?.data?.message || 'Login failed');
       throw e;
     }
   };
 
   return (
-    <div className="relative h-screen flex items-center justify-center sm:justify-center overflow-hidden">
-      <div className="relative z-10 w-full  jsut">
-        <AuthFormSplitScreen
-          logo={
-            <h1 className="text-xl font-semibold text-blue-600 tracking-wider">CoachPro</h1>
-          }
-          title="Welcome back"
-          description="Sign in to your coaching dashboard"
-          imageSrc="https://images.unsplash.com/photo-1714715350295-5f00e902f0d7?ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Nnx8d2FsbHBhZXJ8ZW58MHwxfDB8fHww&auto=format&fit=crop&q=60&w=900"
-          imageAlt="A beautiful landscape with rolling hills and a road."
-          onSubmit={handleLogin}
-          forgotPasswordHref="#"
-          createAccountHref="#"
-        />
-        {error && (
-          <div className="absolute top-4 left-1/2 -translate-x-1/2 bg-red-500/90 text-white px-4 py-2 rounded shadow-lg z-20">
-            {error}
-          </div>
-        )}
-      </div>
-    </div>
+    <>
+      <AuthFormSplitScreen
+        logo={
+          <h1 className="text-xl font-semibold text-blue-600 tracking-wider">CoachPro</h1>
+        }
+        title="Welcome back"
+        description="Sign in to your coaching dashboard"
+        imageSrc="https://images.unsplash.com/photo-1714715350295-5f00e902f0d7?ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Nnx8d2FsbHBhZXJ8ZW58MHwxfDB8fHww&auto=format&fit=crop&q=60&w=900"
+        imageAlt="A beautiful landscape with rolling hills and a road."
+        onSubmit={handleLogin}
+        forgotPasswordHref="#"
+        createAccountHref="#"
+        error={error}
+      />
+    </>
   );
 }

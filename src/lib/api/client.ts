@@ -1,5 +1,4 @@
 import axios from 'axios'
-import Cookies from 'js-cookie'
 
 const resolveBaseUrl = () => {
   const raw = process.env.NEXT_PUBLIC_API_URL?.trim() || 'http://localhost:8000/v1'
@@ -11,65 +10,50 @@ const api = axios.create({
   baseURL: resolveBaseUrl(),
   headers: { 'Content-Type': 'application/json' },
   timeout: 30_000,
-})
-
-// ── Request: attach access token ──────────────────────────────────────────────
-api.interceptors.request.use((config) => {
-  const token = Cookies.get('access_token')
-  if (token) config.headers.Authorization = `Bearer ${token}`
-  return config
+  withCredentials: true, // send httpOnly cookies automatically
 })
 
 // ── Response: refresh on 401, global error normalisation ──────────────────────
 let isRefreshing = false
-let refreshQueue: Array<{ resolve: (token: string) => void; reject: (err: unknown) => void }> = []
+let refreshQueue: Array<{ resolve: () => void; reject: (err: unknown) => void }> = []
 
-const processQueue = (token: string | null, error: unknown = null) => {
-  refreshQueue.forEach(({ resolve, reject }) => (token ? resolve(token) : reject(error)))
+const processQueue = (error: unknown = null) => {
+  refreshQueue.forEach(({ resolve, reject }) => (error ? reject(error) : resolve()))
   refreshQueue = []
 }
+
+// Auth endpoints that should never trigger a token refresh
+const AUTH_PATHS = ['/auth/coach/login', '/auth/client/login', '/auth/coach/register', '/auth/refresh']
 
 api.interceptors.response.use(
   (r) => r,
   async (error) => {
     const original = error.config
-    if (error.response?.status !== 401 || original._retry) {
+    const url = original?.url || ''
+    if (
+      error.response?.status !== 401 ||
+      original._retry ||
+      AUTH_PATHS.some((p) => url.includes(p))
+    ) {
       return Promise.reject(error)
     }
 
     if (isRefreshing) {
-      return new Promise<string>((resolve, reject) => {
+      return new Promise<void>((resolve, reject) => {
         refreshQueue.push({ resolve, reject })
-      }).then((token) => {
-        original.headers.Authorization = `Bearer ${token}`
-        return api(original)
-      })
+      }).then(() => api(original))
     }
 
     original._retry = true
     isRefreshing = true
 
-    const refresh = Cookies.get('refresh_token')
-    if (!refresh) {
-      isRefreshing = false
-      Cookies.remove('access_token')
-      Cookies.remove('refresh_token')
-      window.location.href = '/auth/login'
-      return Promise.reject(error)
-    }
-
     try {
-      const { data } = await api.post('/auth/refresh', { refresh_token: refresh })
-      const newToken = data.data.access_token
-      Cookies.set('access_token', newToken, { expires: 1 / 96, sameSite: 'strict', path: '/' })
-      Cookies.set('refresh_token', data.data.refresh_token, { expires: 30, sameSite: 'strict', path: '/' })
-      processQueue(newToken)
-      original.headers.Authorization = `Bearer ${newToken}`
+      // httpOnly refresh_token cookie is sent automatically
+      await api.post('/auth/refresh')
+      processQueue()
       return api(original)
     } catch (err) {
-      processQueue(null, err)
-      Cookies.remove('access_token')
-      Cookies.remove('refresh_token')
+      processQueue(err)
       window.location.href = '/auth/login'
       return Promise.reject(err)
     } finally {

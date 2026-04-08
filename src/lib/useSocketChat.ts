@@ -31,6 +31,7 @@ export function useSocketChat(clientId: string) {
       transports: ['websocket', 'polling'],
       path: '/socket.io',
       auth: { client_id: clientId, role: 'coach' },
+      withCredentials: true, // send httpOnly cookies for server-side auth
       reconnectionAttempts: 5,
       reconnectionDelay: 2000,
       timeout: 10000,

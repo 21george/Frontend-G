@@ -9,14 +9,12 @@ import {
 } from 'lucide-react'
 import { formatDate, parseDateValue } from '@/lib/utils'
 import {
-  format, isSameDay, addDays, subDays, addMonths, subMonths,
-  startOfWeek, addWeeks, subWeeks, eachDayOfInterval,
+  format, isSameDay, addDays, addMonths, subMonths,
+  startOfWeek, eachDayOfInterval,
 } from 'date-fns'
 import type { CheckinMeeting } from '@/types'
 
 /* ── constants ────────────────────────────────────────────────────────────── */
-const HOURS = Array.from({ length: 14 }, (_, i) => i + 6) // 6 AM → 7 PM
-const HOUR_HEIGHT = 72
 const TYPE_ICON: Record<string, typeof Video> = { video: Video, call: Phone, chat: MessageCircle }
 const TYPE_COLOR: Record<string, { bg: string; text: string; border: string; dot: string }> = {
   video: {
@@ -39,8 +37,6 @@ const TYPE_COLOR: Record<string, { bg: string; text: string; border: string; dot
   },
 }
 
-type ViewMode = 'day' | 'week' | 'month'
-
 /* ── helpers ──────────────────────────────────────────────────────────────── */
 function getMonthGrid(year: number, month: number) {
   const first = new Date(year, month, 1)
@@ -48,14 +44,6 @@ function getMonthGrid(year: number, month: number) {
   const last = new Date(year, month + 1, 0)
   const end = addDays(startOfWeek(addDays(last, 7), { weekStartsOn: 1 }), -1)
   return eachDayOfInterval({ start, end })
-}
-
-function eventPosition(scheduledAt: string) {
-  const d = parseDateValue(scheduledAt)
-  if (!d) return { top: 0, height: HOUR_HEIGHT }
-  const minutes = d.getHours() * 60 + d.getMinutes()
-  const top = ((minutes - 6 * 60) / 60) * HOUR_HEIGHT
-  return { top: Math.max(0, top), height: HOUR_HEIGHT }
 }
 
 /* ══════════════════════════════════════════════════════════════════════════ */
@@ -70,7 +58,6 @@ export default function SchedulePage() {
 
   /* state */
   const [selectedDate, setSelectedDate] = useState(new Date())
-  const [viewMode, setViewMode]         = useState<ViewMode>('week')
   const [selected, setSelected]         = useState<CheckinMeeting | null>(null)
   const [searchQuery, setSearchQuery]   = useState('')
   const [showModal, setShowModal]       = useState(false)
@@ -112,16 +99,6 @@ export default function SchedulePage() {
     return list
   }, [checkins, searchQuery, clientMap])
 
-  /* days shown in day / week view */
-  const viewDays = useMemo<Date[]>(() => {
-    if (viewMode === 'day') return [selectedDate]
-    if (viewMode === 'week') {
-      const start = startOfWeek(selectedDate, { weekStartsOn: 1 })
-      return Array.from({ length: 7 }, (_, i) => addDays(start, i))
-    }
-    return [] // month handled separately
-  }, [selectedDate, viewMode])
-
   const dayEvents = useCallback(
     (day: Date) =>
       filteredEvents.filter(c => {
@@ -143,29 +120,16 @@ export default function SchedulePage() {
 
   /* nav helpers */
   const goToday = () => { setSelectedDate(new Date()); setCalDate(new Date()) }
-  const goPrev = () => {
-    if (viewMode === 'day') setSelectedDate(d => subDays(d, 1))
-    else if (viewMode === 'week') setSelectedDate(d => subWeeks(d, 1))
-    else setSelectedDate(d => subMonths(d, 1))
-  }
-  const goNext = () => {
-    if (viewMode === 'day') setSelectedDate(d => addDays(d, 1))
-    else if (viewMode === 'week') setSelectedDate(d => addWeeks(d, 1))
-    else setSelectedDate(d => addMonths(d, 1))
-  }
+  const goPrev = () => setSelectedDate(d => subMonths(d, 1))
+  const goNext = () => setSelectedDate(d => addMonths(d, 1))
   const selectCalDay = (d: Date) => { setSelectedDate(d); setSelected(null) }
 
   const selectedClient = selected ? clientMap.get(selected.client_id) : undefined
 
-  /* month grid (only when month view) */
+  /* month grid */
   const monthGrid = useMemo(() => {
-    if (viewMode !== 'month') return []
     return getMonthGrid(selectedDate.getFullYear(), selectedDate.getMonth())
-  }, [selectedDate, viewMode])
-
-  /* current time position on timeline */
-  const nowMinutes = now.getHours() * 60 + now.getMinutes()
-  const nowTop = ((nowMinutes - 6 * 60) / 60) * HOUR_HEIGHT
+  }, [selectedDate])
 
   /* modal helpers */
   const openModal = () => {
@@ -212,21 +176,9 @@ export default function SchedulePage() {
               </p>
             </div>
 
-            {/* Center – view mode pills */}
-            <div className="flex items-center gap-1 bg-slate-100 dark:bg-white/[0.06] rounded-xl p-1">
-              {(['day', 'week', 'month'] as ViewMode[]).map(mode => (
-                <button
-                  key={mode}
-                  onClick={() => setViewMode(mode)}
-                  className={`px-4 py-1.5 rounded-lg text-[12px] font-semibold capitalize transition-colors ${
-                    viewMode === mode
-                      ? 'bg-white dark:bg-white/[0.12] text-slate-900 dark:text-white shadow-sm'
-                      : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
-                  }`}
-                >
-                  {mode}
-                </button>
-              ))}
+            {/* Center – month label */}
+            <div className="text-[13px] font-semibold text-slate-700 dark:text-slate-300">
+              {format(selectedDate, 'MMMM yyyy')}
             </div>
 
             {/* Right – controls */}
@@ -277,7 +229,7 @@ export default function SchedulePage() {
               <div className="flex items-center justify-center h-full">
                 <div className="text-[13px] text-slate-500 dark:text-slate-400">Loading schedule…</div>
               </div>
-            ) : viewMode === 'month' ? (
+            ) : (
               /* ────── MONTH GRID ────── */
               <div className="p-4">
                 <div className="grid grid-cols-7 mb-2">
@@ -289,13 +241,18 @@ export default function SchedulePage() {
                   {monthGrid.map((day, i) => {
                     const isCurrent = day.getMonth() === selectedDate.getMonth()
                     const isToday = isSameDay(day, now)
+                    const isActive = isSameDay(day, selectedDate)
                     const evts = dayEvents(day)
                     return (
                       <button
                         key={i}
-                        onClick={() => { setSelectedDate(day); setViewMode('day') }}
+                        onClick={() => {
+                          setSelectedDate(day)
+                          const first = evts[0]
+                          setSelected(first ?? null)
+                        }}
                         className={`min-h-[100px] p-2 border-b border-r border-slate-200 dark:border-white/[0.06] text-left transition-colors hover:bg-slate-50 dark:hover:bg-white/[0.02] ${
-                          !isCurrent ? 'bg-slate-50/50 dark:bg-white/[0.01]' : 'bg-white dark:bg-[#141414]'
+                          isActive ? 'bg-cyan-50 dark:bg-cyan-900/10' : !isCurrent ? 'bg-slate-50/50 dark:bg-white/[0.01]' : 'bg-white dark:bg-[#141414]'
                         }`}
                       >
                         <span className={`text-[12px] font-semibold inline-flex items-center justify-center w-6 h-6 rounded-full ${
@@ -319,9 +276,6 @@ export default function SchedulePage() {
                   })}
                 </div>
               </div>
-            ) : (
-              /* ────── DAY / WEEK TIMELINE ────── */
-             <> none</>
             )}
           </div>
 
