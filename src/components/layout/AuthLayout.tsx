@@ -4,6 +4,7 @@ import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuthStore } from '@/store/auth'
 import Sidebar from '@/components/layout/Sidebar'
+import DashboardHeader from '@/components/layout/DashboardHeader'
 
 function AuthLayout({ children }: { children: React.ReactNode }) {
   const { isAuthenticated } = useAuthStore()
@@ -20,6 +21,7 @@ function AuthLayout({ children }: { children: React.ReactNode }) {
       <Sidebar />
       <main className="flex-1 lg:ml-64 min-h-screen overflow-x-hidden">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 pt-16 lg:pt-8 pb-10">
+          <DashboardHeader />
           {children}
         </div>
       </main>

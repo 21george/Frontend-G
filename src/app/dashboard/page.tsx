@@ -1,6 +1,5 @@
 'use client'
 import DashboardLayout from '@/components/layout/DashboardLayout'
-import DashboardHeader from '@/components/layout/DashboardHeader'
 import { useClients, useCheckins, useMessages, useSendMessage, useWorkoutPlans } from '@/lib/hooks'
 import { useState, useMemo, useRef, useEffect } from 'react'
 import {
@@ -406,7 +405,6 @@ export default function DashboardPage() {
 
   return (
     <DashboardLayout>
-      <DashboardHeader />
 
       {/* Quick Actions Row */}
       <div className="flex items-center justify-between mb-6">
