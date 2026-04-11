@@ -26,12 +26,23 @@ export default function LoginPage() {
     try {
       const res = await apiClient.post('/auth/coach/login', data);
       const { coach } = res.data.data;
-      // Tokens are set as httpOnly cookies by the backend
       setCoach(coach);
       router.push('/dashboard');
     } catch (e: any) {
-      setError(e?.response?.data?.message || 'Login failed');
-      throw e;
+      let msg = 'Login failed. Please try again.';
+      if (e?.code === 'ECONNABORTED' || e?.message?.includes('timeout')) {
+        msg = 'Login request timed out. Please check your network connection or try again later.';
+      } else if (e?.message === 'Network Error') {
+        msg = 'Cannot connect to the server. Please check your network connection.';
+      } else if (e?.response?.data?.message) {
+        msg = e.response.data.message;
+      }
+      setError(msg);
+      // Log error for debugging, but do not leak sensitive info to user
+      if (process.env.NODE_ENV !== 'production') {
+        // eslint-disable-next-line no-console
+        console.error('Login error:', e);
+      }
     }
   };
 

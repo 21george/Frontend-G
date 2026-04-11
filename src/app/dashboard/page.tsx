@@ -79,7 +79,7 @@ function ActiveClientsCards({ clients }: { clients: Client[] }) {
           </Link>
         </div>
       ) : (
-        <div className="flex gap-4 overflow-x-auto pb-2 -mx-1 px-1 scrollbar-hide">
+        <div className="flex gap-4 overflow-x-auto pb-2 -mx-1 px-1 scrollbar-thin scrollbar-thumb-slate-300 scrollbar-track-transparent">
           {activeClients.slice(0, 8).map(client => (
             <div
               key={client.id}
@@ -236,7 +236,7 @@ function MessagesWidget({ clients }: { clients: Client[] }) {
   }
 
   return (
-    <div className="bg-white border border-slate-200/80 dark:bg-[#171717] dark:border-white/[0.08] overflow-hidden flex flex-col h-[420px]">
+    <div className="bg-white border border-slate-200/80 dark:bg-[#171717] dark:border-white/[0.08] overflow-hidden flex flex-col h-[420px] max-h-[60vh] sm:h-[420px]">
       {/* Header */}
       <div className="px-4 py-3 border-b border-slate-200 dark:border-white/[0.08] flex items-center justify-between flex-shrink-0">
         {!selectedId ? (
@@ -389,10 +389,12 @@ function QuickActions() {
 }
 
 /* ── Main Dashboard Page ──────────────────────────────────────────────────── */
+import { PageLoader } from '@/components/ui/LoadingSpinner'
+
 export default function DashboardPage() {
-  const { data: clientsData } = useClients()
-  const { data: checkins }    = useCheckins()
-  const { data: workoutData } = useWorkoutPlans()
+  const { data: clientsData, isLoading: loadingClients } = useClients()
+  const { data: checkins, isLoading: loadingCheckins }    = useCheckins()
+  const { data: workoutData, isLoading: loadingWorkouts } = useWorkoutPlans()
 
   const clients      = clientsData?.data ?? []
   const totalClients = clientsData?.pagination?.total ?? 0
@@ -403,68 +405,77 @@ export default function DashboardPage() {
     return d !== null && d.getTime() > now
   })
 
+  const isLoading = loadingClients || loadingCheckins || loadingWorkouts
+
   return (
     <DashboardLayout>
+      <div className="container max-w-9xl mx-auto px-2 sm:px-4 md:px-6">
+        {isLoading ? (
+          <PageLoader />
+        ) : (
+          <>
+            {/* Quick Actions Row */}
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-6 flex-wrap">
+              <QuickActions />
+              <Link
+                href="/clients"
+                className="text-xs text-slate-400 hover:text-blue-400 flex items-center gap-1 transition-colors mt-2 sm:mt-0"
+              >
+                All Clients <ArrowRight className="w-3 h-3" />
+              </Link>
+            </div>
 
-      {/* Quick Actions Row */}
-      <div className="flex items-center justify-between mb-6">
-        <QuickActions />
-        <Link
-          href="/clients"
-          className="text-xs text-slate-400 hover:text-blue-400 flex items-center gap-1 transition-colors"
-        >
-          All Clients <ArrowRight className="w-3 h-3" />
-        </Link>
-      </div>
+            {/* Stat Cards Row */}
+            <div className="grid grid-cols-1 xs:grid-cols-2 md:grid-cols-4 gap-4 mb-6 min-w-0">
+              <StatCard
+                icon={Users}
+                label="Total Clients"
+                value={totalClients}
+                change="+12%"
+                changeLabel="vs last month"
+                gradient="bg-gradient-to-r from-blue-500 to-blue-600"
+              />
+              <StatCard
+                icon={Star}
+                label="Coach Rating"
+                value="4.8"
+                change="+0.3"
+                changeLabel="from reviews"
+                gradient="bg-gradient-to-r from-amber-500 to-orange-500"
+              />
+              <StatCard
+                icon={Clock}
+                label="Avg Session"
+                value="45m"
+                changeLabel="per appointment"
+                gradient="bg-gradient-to-r from-emerald-500 to-teal-500"
+              />
+              <StatCard
+                icon={Calendar}
+                label="Upcoming"
+                value={upcoming.length}
+                change={upcoming.length > 0 ? 'Next today' : undefined}
+                changeLabel="scheduled events"
+                gradient="bg-gradient-to-r from-purple-500 to-indigo-500"
+              />
+            </div>
 
-      {/* Stat Cards Row */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-        <StatCard
-          icon={Users}
-          label="Total Clients"
-          value={totalClients}
-          change="+12%"
-          changeLabel="vs last month"
-          gradient="bg-gradient-to-r from-blue-500 to-blue-600"
-        />
-        <StatCard
-          icon={Star}
-          label="Coach Rating"
-          value="4.8"
-          change="+0.3"
-          changeLabel="from reviews"
-          gradient="bg-gradient-to-r from-amber-500 to-orange-500"
-        />
-        <StatCard
-          icon={Clock}
-          label="Avg Session"
-          value="45m"
-          changeLabel="per appointment"
-          gradient="bg-gradient-to-r from-emerald-500 to-teal-500"
-        />
-        <StatCard
-          icon={Calendar}
-          label="Upcoming"
-          value={upcoming.length}
-          change={upcoming.length > 0 ? 'Next today' : undefined}
-          changeLabel="scheduled events"
-          gradient="bg-gradient-to-r from-purple-500 to-indigo-500"
-        />
-      </div>
+            {/* Main Content Grid: Left (main) + Right (sidebar) */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 min-w-0">
+              {/* Left / Main Area */}
+              <div className="space-y-6 lg:col-span-2 min-w-0">
+                <ActiveClientsCards clients={clients} />
+                <AnalyticsSection workoutPlans={workoutPlans} />
+              </div>
 
-      {/* Main Content Grid: Left (main) + Right (sidebar) */}
-      <div className="grid grid-cols-1 xl:grid-cols-[1fr_320px] gap-6">
-        {/* Left / Main Area */}
-        <div className="space-y-6">
-          <ActiveClientsCards clients={clients} />
-          <AnalyticsSection workoutPlans={workoutPlans} />
-        </div>
-
-        {/* Right Sidebar */}
-        <div className="space-y-6">
-          <CalendarWidget />
-          <MessagesWidget clients={clients} />
-        </div>
+              {/* Right Sidebar */}
+              <div className="space-y-6 lg:col-span-1 min-w-0">
+                <CalendarWidget />
+                <MessagesWidget clients={clients} />
+              </div>
+            </div>
+          </>
+        )}
       </div>
     </DashboardLayout>
   )

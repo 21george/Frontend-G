@@ -59,7 +59,7 @@ function SidebarContent({ onClose }: { onClose?: () => void }) {
       </div>
 
       {/* ── Navigation ── */}
-      <nav className="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto">
+      <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
         <p className="section-title text-white/40 dark:text-slate-500">Main Menu</p>
         {NAV.map(({ href, label, icon: Icon }) => {
           const active = path.startsWith(href)
@@ -69,13 +69,14 @@ function SidebarContent({ onClose }: { onClose?: () => void }) {
               href={href}
               onClick={onClose}
               className={cn(
-                'flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-150',
+                'flex items-center gap-4 px-4 py-3 rounded-xl text-base font-medium transition-all duration-150',
                 active
                   ? 'bg-white/15 dark:bg-[#05384a] text-white shadow-sm'
                   : 'text-white/60 dark:text-neutral-400 hover:bg-white/10 dark:hover:bg-white/[0.08] hover:text-white dark:hover:text-white'
               )}
+              tabIndex={0}
             >
-              <Icon className="w-4 h-4 flex-shrink-0" />
+              <Icon className="w-5 h-5 flex-shrink-0" />
               <span>{label}</span>
               {active && (
                 <span className="ml-auto w-1.5 h-1.5 rounded-full bg-white/60 opacity-80" />
@@ -118,6 +119,16 @@ export default function Sidebar() {
     setMobileOpen(false)
   }, [pathname])
 
+  // Close on Escape key
+  useEffect(() => {
+    if (!mobileOpen) return
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setMobileOpen(false)
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [mobileOpen])
+
   return (
     <>
       {/* Mobile hamburger */}
@@ -145,6 +156,9 @@ export default function Sidebar() {
           'transform transition-transform duration-300 ease-in-out',
           mobileOpen ? 'translate-x-0' : '-translate-x-full'
         )}
+        tabIndex={-1}
+        aria-modal={mobileOpen}
+        role="dialog"
       >
         <SidebarContent onClose={() => setMobileOpen(false)} />
       </aside>
