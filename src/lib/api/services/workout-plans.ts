@@ -24,6 +24,6 @@ export const workoutPlansApi = {
       '/workout-plans/import',
       formData,
       { headers: { 'Content-Type': 'multipart/form-data' } }
-    ).then(r => r.data)
+    ).then(r => r.data.data)
   },
 }

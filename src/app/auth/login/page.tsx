@@ -58,7 +58,7 @@ export default function LoginPage() {
         imageAlt="A beautiful landscape with rolling hills and a road."
         onSubmit={handleLogin}
         forgotPasswordHref="#"
-        createAccountHref="#"
+        createAccountHref="/auth/register"
         error={error}
       />
     </>

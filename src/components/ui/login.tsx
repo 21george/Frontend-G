@@ -17,6 +17,7 @@ import {
 import { Input } from "../ui/Input";
 import { Checkbox } from "../ui/checkbox";
 import { Loader2 } from "lucide-react";
+import Link from "next/link";
 
 // Validation schema for the form
 const formSchema = z.object({
@@ -198,7 +199,6 @@ export function AuthFormSplitScreen({
                       </FormItem>
                     )}
                   />
-                 
                 </motion.div>
 
                 <motion.div variants={itemVariants}>
@@ -209,6 +209,13 @@ export function AuthFormSplitScreen({
                     Continue
                   </Button>
                 </motion.div>
+
+                <motion.p variants={itemVariants} className="text-center text-sm text-muted-foreground">
+                  New here?{" "}
+                  <Link href={createAccountHref} className="text-foreground underline hover:opacity-80">
+                    Create an account
+                  </Link>
+                </motion.p>
               </form>
             </Form>
 
