@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { clientsApi } from '@/lib/api'
+import { useToastMutation } from './useToastMutation'
 import type { Client } from '@/types'
 
 export const useClients = (search?: string) =>
@@ -15,37 +16,33 @@ export const useClient = (id: string) =>
     enabled: !!id,
   })
 
-export const useCreateClient = () => {
-  const qc = useQueryClient()
-  return useMutation({
+export const useCreateClient = () =>
+  useToastMutation({
     mutationFn: (data: Partial<Client>) => clientsApi.create(data),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['clients'] }),
+    successMessage: 'Client created successfully',
+    errorMessage: 'Failed to create client',
+    invalidateKeys: [['clients']],
   })
-}
 
-export const useUpdateClient = (id: string) => {
-  const qc = useQueryClient()
-  return useMutation({
+export const useUpdateClient = (id: string) =>
+  useToastMutation({
     mutationFn: (data: Partial<Client>) => clientsApi.update(id, data),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['client', id] })
-      qc.invalidateQueries({ queryKey: ['clients'] })
-    },
+    successMessage: 'Client updated successfully',
+    errorMessage: 'Failed to update client',
+    invalidateKeys: [['client', id], ['clients']],
   })
-}
 
-export const useDeleteClient = () => {
-  const qc = useQueryClient()
-  return useMutation({
+export const useDeleteClient = () =>
+  useToastMutation({
     mutationFn: (id: string) => clientsApi.remove(id),
-    onSuccess: (_, id) => {
-      qc.invalidateQueries({ queryKey: ['clients'] })
-      qc.invalidateQueries({ queryKey: ['client', id] })
-    },
+    successMessage: 'Client deleted',
+    errorMessage: 'Failed to delete client',
+    invalidateKeys: [['clients']],
   })
-}
 
 export const useRegenerateCode = (id: string) =>
-  useMutation({
+  useToastMutation({
     mutationFn: () => clientsApi.regenerateCode(id),
+    successMessage: 'Login code regenerated',
+    errorMessage: 'Failed to regenerate code',
   })

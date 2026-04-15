@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { useState } from 'react'
 import { ArrowLeft } from 'lucide-react'
 import Link from 'next/link'
+import { FormField, TextInput, TextArea, SelectInput } from '@/components/ui/FormField'
 
 export default function NewCheckinPage() {
   const router       = useRouter()
@@ -39,33 +40,35 @@ export default function NewCheckinPage() {
         <h1 className="text-2xl font-semibold text-gray-900 dark:text-white mb-6">Schedule Event</h1>
         <div className="card p-6">
           <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <label className="label">Client *</label>
-              <select value={clientId} onChange={e => setClientId(e.target.value)} className="input" required>
-                <option value="">Select client…</option>
-                {clients.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-              </select>
-            </div>
-            <div>
-              <label className="label">Date & Time *</label>
-              <input type="datetime-local" value={datetime} onChange={e => setDatetime(e.target.value)} className="input" required />
-            </div>
-            <div>
-              <label className="label">Meeting Type *</label>
-              <select value={type} onChange={e => setType(e.target.value as any)} className="input">
-                <option value="video">Video Call</option>
-                <option value="call">Phone Call</option>
-                <option value="chat">Chat</option>
-              </select>
-            </div>
-            <div>
-              <label className="label">Meeting Link (Zoom / Google Meet)</label>
-              <input value={link} onChange={e => setLink(e.target.value)} className="input" placeholder="https://meet.google.com/…" />
-            </div>
-            <div>
-              <label className="label">Notes</label>
-              <textarea value={notes} onChange={e => setNotes(e.target.value)} className="input h-24 resize-none" placeholder="Agenda, topics to discuss…" />
-            </div>
+            <FormField label="Client" required>
+              <SelectInput
+                value={clientId}
+                onChange={e => setClientId(e.target.value)}
+                required
+                options={clients.map(c => ({ value: c.id, label: c.name }))}
+                placeholder="Select client…"
+              />
+            </FormField>
+            <FormField label="Date & Time" required>
+              <TextInput type="datetime-local" value={datetime} onChange={e => setDatetime(e.target.value)} required />
+            </FormField>
+            <FormField label="Meeting Type" required>
+              <SelectInput
+                value={type}
+                onChange={e => setType(e.target.value as any)}
+                options={[
+                  { value: 'video', label: 'Video Call' },
+                  { value: 'call', label: 'Phone Call' },
+                  { value: 'chat', label: 'Chat' },
+                ]}
+              />
+            </FormField>
+            <FormField label="Meeting Link (Zoom / Google Meet)">
+              <TextInput value={link} onChange={e => setLink(e.target.value)} placeholder="https://meet.google.com/…" />
+            </FormField>
+            <FormField label="Notes">
+              <TextArea value={notes} onChange={e => setNotes(e.target.value)} className="h-24" placeholder="Agenda, topics to discuss…" />
+            </FormField>
             <button type="submit" disabled={loading} className="btn-primary w-full py-3">
               {loading ? 'Scheduling…' : 'Schedule Meeting'}
             </button>

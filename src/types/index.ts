@@ -12,6 +12,10 @@ export interface Coach {
     instagram?: string
     website?: string
   }
+  subscription_tier?: SubscriptionTier
+  subscription_status?: SubscriptionStatus
+  trial_ends_at?: string | null
+  max_clients?: number
 }
 
 export interface Client {
@@ -294,4 +298,19 @@ export interface LiveTrainingChatMessage {
   sender_role: 'coach' | 'client'
   content: string
   sent_at: string | null
+}
+
+// ── Subscription ──────────────────────────────────────────────────────────────
+export type SubscriptionTier = 'free' | 'pro' | 'business'
+export type SubscriptionStatus = 'none' | 'trialing' | 'active' | 'past_due' | 'cancelled'
+
+export interface SubscriptionInfo {
+  tier: SubscriptionTier
+  status: SubscriptionStatus
+  client_limit: number
+  client_count: number
+  trial_ends_at: string | null
+  current_period_end: string | null
+  cancel_at_period_end: boolean
+  stripe_customer_id: string | null
 }

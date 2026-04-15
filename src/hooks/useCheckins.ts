@@ -1,5 +1,6 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useQuery } from '@tanstack/react-query'
 import { checkinsApi } from '@/lib/api'
+import { useToastMutation } from './useToastMutation'
 import type { CheckinMeeting } from '@/types'
 
 export const useCheckins = (clientId?: string) =>
@@ -8,18 +9,18 @@ export const useCheckins = (clientId?: string) =>
     queryFn: () => checkinsApi.list(clientId),
   })
 
-export const useCreateCheckin = () => {
-  const qc = useQueryClient()
-  return useMutation({
+export const useCreateCheckin = () =>
+  useToastMutation({
     mutationFn: (data: Partial<CheckinMeeting> & { client_id: string }) => checkinsApi.create(data),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['checkins'] }),
+    successMessage: 'Check-in scheduled',
+    errorMessage: 'Failed to schedule check-in',
+    invalidateKeys: [['checkins']],
   })
-}
 
-export const useUpdateCheckin = (id: string) => {
-  const qc = useQueryClient()
-  return useMutation({
+export const useUpdateCheckin = (id: string) =>
+  useToastMutation({
     mutationFn: (data: Partial<CheckinMeeting>) => checkinsApi.update(id, data),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['checkins'] }),
+    successMessage: 'Check-in updated',
+    errorMessage: 'Failed to update check-in',
+    invalidateKeys: [['checkins']],
   })
-}

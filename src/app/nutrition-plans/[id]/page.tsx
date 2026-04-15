@@ -12,6 +12,7 @@ import {
 } from 'lucide-react'
 import { formatDate } from '@/lib/utils'
 import { DAYS } from '@/lib/utils'
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import type { NutritionPlan, NutritionDay, Meal } from '@/types'
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -85,48 +86,7 @@ function NutrFact({ label, value, unit, bold }: { label: string; value: number; 
   )
 }
 
-// ── Delete confirm modal ──────────────────────────────────────────────────────
-
-function DeleteModal({ title, onConfirm, onCancel, loading }: {
-  title: string
-  onConfirm: () => void
-  onCancel: () => void
-  loading: boolean
-}) {
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onCancel} />
-      <div className="relative bg-white dark:bg-[#171717] rounded-2xl border border-slate-200 dark:border-white/[0.08] shadow-2xl w-full max-w-md p-6">
-        <div className="flex items-start gap-4 mb-5">
-          <div className="w-10 h-10 rounded-xl bg-red-100 dark:bg-red-900/30 flex items-center justify-center flex-shrink-0">
-            <AlertTriangle size={20} className="text-red-500" />
-          </div>
-          <div>
-            <h3 className="font-semibold text-slate-900 dark:text-white text-base">Delete Plan</h3>
-            <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
-              Are you sure you want to delete <span className="font-semibold text-slate-700 dark:text-slate-200">"{title}"</span>? This cannot be undone.
-            </p>
-          </div>
-        </div>
-        <div className="flex gap-3 justify-end">
-          <button
-            onClick={onCancel}
-            className="px-4 py-2 rounded-xl border border-slate-200 dark:border-white/[0.08] text-sm font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-white/[0.05] transition-colors"
-          >
-            Cancel
-          </button>
-          <button
-            onClick={onConfirm}
-            disabled={loading}
-            className="px-4 py-2 rounded-xl bg-red-500 hover:bg-red-600 text-white text-sm font-semibold transition-colors disabled:opacity-50 flex items-center gap-2"
-          >
-            {loading ? 'Deleting…' : <><Trash2 size={14} /> Delete Plan</>}
-          </button>
-        </div>
-      </div>
-    </div>
-  )
-}
+// ── Delete confirm modal ── replaced by ConfirmDialog component ───────────────
 
 // ── Score dots ────────────────────────────────────────────────────────────────
 
@@ -247,14 +207,16 @@ export default function NutritionPlanDetailPage() {
 
   return (
     <DashboardLayout>
-      {showDelete && (
-        <DeleteModal
-          title={title || plan.title}
-          onConfirm={handleDelete}
-          onCancel={() => setShowDelete(false)}
-          loading={deleting}
-        />
-      )}
+      <ConfirmDialog
+        open={showDelete}
+        onClose={() => setShowDelete(false)}
+        onConfirm={handleDelete}
+        title="Delete Plan"
+        message={`Are you sure you want to delete "${title || plan.title}"? This cannot be undone.`}
+        confirmLabel="Delete Plan"
+        variant="danger"
+        loading={deleting}
+      />
 
       <div className="space-y-5">
 

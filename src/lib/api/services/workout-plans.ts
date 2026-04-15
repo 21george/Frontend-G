@@ -16,4 +16,14 @@ export const workoutPlansApi = {
 
   remove: (id: string) =>
     api.delete(`/workout-plans/${id}`).then(r => r.data),
+
+  import: (file: File) => {
+    const formData = new FormData()
+    formData.append('file', file)
+    return api.post<ApiResponse<{ imported: number; plan_ids: string[]; warnings: string[] }>>(
+      '/workout-plans/import',
+      formData,
+      { headers: { 'Content-Type': 'multipart/form-data' } }
+    ).then(r => r.data)
+  },
 }

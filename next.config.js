@@ -1,7 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   experimental: {
-    serverActions: { allowedOrigins: ['localhost:3000'] },
+    serverActions: { allowedOrigins: (process.env.ALLOWED_ORIGINS || 'localhost:3000').split(',').map(s => s.trim()) },
   },
   turbopack: {
     root: __dirname,

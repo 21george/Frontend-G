@@ -1,5 +1,6 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useQuery } from '@tanstack/react-query'
 import { workoutPlansApi } from '@/lib/api'
+import { useToastMutation } from './useToastMutation'
 import type { WorkoutPlan, WorkoutPlanType } from '@/types'
 
 export const useWorkoutPlans = (clientId?: string, status?: string, planType?: WorkoutPlanType) =>
@@ -15,38 +16,43 @@ export const useWorkoutPlan = (id: string) =>
     enabled: !!id,
   })
 
-export const useCreateWorkoutPlan = () => {
-  const qc = useQueryClient()
-  return useMutation({
+export const useCreateWorkoutPlan = () =>
+  useToastMutation({
     mutationFn: (data: Partial<WorkoutPlan>) => workoutPlansApi.create(data),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['workout-plans'] }),
+    successMessage: 'Workout plan created',
+    errorMessage: 'Failed to create workout plan',
+    invalidateKeys: [['workout-plans']],
   })
-}
 
-export const useCreateGroupWorkoutPlan = () => {
-  const qc = useQueryClient()
-  return useMutation({
+export const useCreateGroupWorkoutPlan = () =>
+  useToastMutation({
     mutationFn: (data: Omit<Partial<WorkoutPlan>, 'plan_type'> & { plan_type: 'group' | 'team'; client_ids?: string[]; group_name?: string }) =>
       workoutPlansApi.create(data as Partial<WorkoutPlan>),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['workout-plans'] }),
+    successMessage: 'Group workout plan created',
+    errorMessage: 'Failed to create group plan',
+    invalidateKeys: [['workout-plans']],
   })
-}
 
-export const useUpdateWorkoutPlan = (id: string) => {
-  const qc = useQueryClient()
-  return useMutation({
+export const useUpdateWorkoutPlan = (id: string) =>
+  useToastMutation({
     mutationFn: (data: Partial<WorkoutPlan>) => workoutPlansApi.update(id, data),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['workout-plan', id] })
-      qc.invalidateQueries({ queryKey: ['workout-plans'] })
-    },
+    successMessage: 'Workout plan updated',
+    errorMessage: 'Failed to update workout plan',
+    invalidateKeys: [['workout-plan', id], ['workout-plans']],
   })
-}
 
-export const useDeleteWorkoutPlan = () => {
-  const qc = useQueryClient()
-  return useMutation({
+export const useDeleteWorkoutPlan = () =>
+  useToastMutation({
     mutationFn: (id: string) => workoutPlansApi.remove(id),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['workout-plans'] }),
+    successMessage: 'Workout plan deleted',
+    errorMessage: 'Failed to delete workout plan',
+    invalidateKeys: [['workout-plans']],
   })
-}
+
+export const useImportWorkoutPlans = () =>
+  useToastMutation({
+    mutationFn: (file: File) => workoutPlansApi.import(file),
+    successMessage: 'Plans imported successfully',
+    errorMessage: 'Failed to import plans',
+    invalidateKeys: [['workout-plans']],
+  })

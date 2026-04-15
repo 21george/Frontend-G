@@ -2,12 +2,12 @@
 import DashboardLayout from '@/components/layout/DashboardLayout'
 import { useState, useCallback } from 'react'
 import { useDropzone } from 'react-dropzone'
-import api from '@/lib/api'
-import { Upload, CheckCircle, AlertCircle, ArrowLeft, FileSpreadsheet } from 'lucide-react'
+import { workoutPlansApi } from '@/lib/api'
+import { Upload, CheckCircle, AlertCircle, ArrowLeft, FileSpreadsheet, Download } from 'lucide-react'
 import Link from 'next/link'
 
 export default function ImportPage() {
-  const [result, setResult] = useState<{ imported: number; warnings: string[] } | null>(null)
+  const [result, setResult] = useState<{ imported: number; plan_ids: string[]; warnings: string[] } | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [file, setFile] = useState<File | null>(null)
@@ -22,13 +22,9 @@ export default function ImportPage() {
   const handleImport = async () => {
     if (!file) return
     setLoading(true); setError('')
-    const formData = new FormData()
-    formData.append('file', file)
     try {
-      const res = await api.post('/workout-plans/import', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' }
-      })
-      setResult(res.data.data)
+      const res = await workoutPlansApi.import(file)
+      setResult(res.data)
     } catch (e: any) {
       setError(e.response?.data?.message ?? 'Import failed')
     } finally {
@@ -36,51 +32,77 @@ export default function ImportPage() {
     }
   }
 
+  const downloadTemplate = () => {
+    const csv = 'client_name,week_start,day,exercise,sets,reps,rest_seconds,notes\nJohn Doe,2025-01-06,monday,Bench Press,4,8-10,90,Focus on form\nJohn Doe,2025-01-06,monday,Incline DB Press,3,12,60,\nJohn Doe,2025-01-06,wednesday,Squat,5,5,120,Heavy\nJane Smith,2025-01-06,monday,Deadlift,3,8,90,\n'
+    const blob = new Blob([csv], { type: 'text/csv' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url; a.download = 'workout-import-template.csv'; a.click()
+    URL.revokeObjectURL(url)
+  }
+
   return (
     <DashboardLayout>
       <div className="max-w-2xl">
-        <Link href="/workout-plans" className="flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700 mb-6">
+        <Link href="/workout-plans" className="flex items-center gap-1 text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)] mb-6">
           <ArrowLeft className="w-3 h-3" /> Back
         </Link>
-        <h1 className="text-2xl font-semibold text-gray-900 mb-2">Import Workout Plans</h1>
-        <p className="text-gray-500 text-sm mb-6">Upload an Excel or CSV file. Clients are matched by name automatically.</p>
+        <h1 className="text-2xl font-semibold text-[var(--text-primary)] mb-2">Import Workout Plans</h1>
+        <p className="text-[var(--text-secondary)] text-sm mb-6">Upload an Excel or CSV file. Clients are matched by name automatically.</p>
 
         {result ? (
           <div className="card p-8 text-center">
             <CheckCircle className="w-12 h-12 text-green-500 mx-auto mb-4" />
-            <h2 className="text-xl font-semibold text-gray-900">{result.imported} plan(s) imported!</h2>
-            {result.warnings.length > 0 && (
-              <div className="mt-4 text-left bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-                <p className="text-sm font-medium text-yellow-800 mb-2">Warnings:</p>
-                {result.warnings.map((w, i) => <p key={i} className="text-sm text-yellow-700">{w}</p>)}
+            <h2 className="text-xl font-semibold text-[var(--text-primary)]">{result.imported} plan(s) imported!</h2>
+            {result.plan_ids.length > 0 && (
+              <div className="mt-4 flex flex-wrap gap-2 justify-center">
+                {result.plan_ids.map((id) => (
+                  <Link key={id} href={`/workout-plans/${id}`} className="text-sm text-cyan-600 hover:text-cyan-700 underline">
+                    View Plan
+                  </Link>
+                ))}
               </div>
             )}
-            <Link href="/workout-plans" className="btn-primary mt-6 inline-block">View Plans</Link>
+            {result.warnings.length > 0 && (
+              <div className="mt-4 text-left bg-yellow-50 dark:bg-yellow-950/30 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4">
+                <p className="text-sm font-medium text-yellow-800 dark:text-yellow-200 mb-2">Warnings:</p>
+                {result.warnings.map((w, i) => <p key={i} className="text-sm text-yellow-700 dark:text-yellow-400">{w}</p>)}
+              </div>
+            )}
+            <div className="flex gap-3 mt-6 justify-center">
+              <Link href="/workout-plans" className="btn-primary inline-block">View All Plans</Link>
+              <button onClick={() => { setResult(null); setFile(null) }} className="btn-secondary">Import More</button>
+            </div>
           </div>
         ) : (
           <div className="card p-6 space-y-6">
             <div {...getRootProps()} className={`border-2 border-dashed rounded-xl p-12 text-center cursor-pointer transition-colors ${
-              isDragActive ? 'border-brand bg-brand-light' : 'border-gray-300 hover:border-gray-400'}`}>
+              isDragActive ? 'border-cyan-500 bg-cyan-50 dark:bg-cyan-950/20' : 'border-slate-300 dark:border-white/20 hover:border-slate-400 dark:hover:border-white/30'}`}>
               <input {...getInputProps()} />
-              <FileSpreadsheet className="w-10 h-10 text-gray-400 mx-auto mb-3" />
+              <FileSpreadsheet className="w-10 h-10 text-slate-400 dark:text-slate-500 mx-auto mb-3" />
               {file ? (
-                <><p className="font-medium text-gray-900">{file.name}</p><p className="text-sm text-gray-500">{(file.size/1024).toFixed(1)} KB</p></>
+                <><p className="font-medium text-[var(--text-primary)]">{file.name}</p><p className="text-sm text-[var(--text-secondary)]">{(file.size/1024).toFixed(1)} KB</p></>
               ) : (
-                <><p className="font-medium text-gray-700">Drop your Excel or CSV file here</p>
-                  <p className="text-sm text-gray-400 mt-1">or click to browse · .xlsx, .xls, .csv</p></>
+                <><p className="font-medium text-[var(--text-primary)]">Drop your Excel or CSV file here</p>
+                  <p className="text-sm text-[var(--text-secondary)] mt-1">or click to browse · .xlsx, .xls, .csv</p></>
               )}
             </div>
 
-            <div className="bg-gray-50 rounded-xl p-4 text-sm">
-              <p className="font-medium text-gray-900 mb-2">Required columns:</p>
-              <div className="grid grid-cols-2 gap-1 text-gray-600">
-                {['client_name', 'week_start', 'day', 'exercise', 'sets', 'reps'].map(c => (
-                  <code key={c} className="bg-white border border-gray-200 rounded px-2 py-0.5 text-xs">{c}</code>
+            <div className="bg-slate-50 dark:bg-white/[0.03] rounded-xl p-4 text-sm">
+              <div className="flex items-center justify-between mb-2">
+                <p className="font-medium text-[var(--text-primary)]">Required columns:</p>
+                <button onClick={downloadTemplate} className="flex items-center gap-1 text-xs text-cyan-600 hover:text-cyan-700">
+                  <Download className="w-3 h-3" /> Download template
+                </button>
+              </div>
+              <div className="grid grid-cols-2 gap-1 text-[var(--text-secondary)]">
+                {['client_name', 'week_start', 'day', 'exercise', 'sets', 'reps', 'rest_seconds', 'notes'].map(c => (
+                  <code key={c} className="bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded px-2 py-0.5 text-xs">{c}</code>
                 ))}
               </div>
             </div>
 
-            {error && <div className="text-red-600 text-sm bg-red-50 border border-red-200 rounded-lg p-3">{error}</div>}
+            {error && <div className="text-red-600 text-sm bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800 rounded-lg p-3 flex items-center gap-2"><AlertCircle className="w-4 h-4 flex-shrink-0" />{error}</div>}
             <button onClick={handleImport} disabled={!file || loading} className="btn-primary w-full py-3 flex items-center justify-center gap-2">
               <Upload className="w-4 h-4" />
               {loading ? 'Importing…' : 'Import Plans'}

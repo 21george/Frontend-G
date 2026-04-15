@@ -5,6 +5,8 @@ import { useState } from 'react'
 import api from '@/lib/api'
 import { useQuery } from '@tanstack/react-query'
 import { Image as ImageIcon, Video } from 'lucide-react'
+import { PageHeader } from '@/components/ui/FormField'
+import { FormField, SelectInput } from '@/components/ui/FormField'
 
 export default function MediaPage() {
   const [selectedClient, setSelectedClient] = useState('')
@@ -20,12 +22,16 @@ export default function MediaPage() {
   return (
     <DashboardLayout>
       <div className="max-w-5xl">
-        <h1 className="text-2xl font-semibold text-gray-900 mb-6">Client Media</h1>
-        <div className="mb-6">
-          <select value={selectedClient} onChange={e => setSelectedClient(e.target.value)} className="input w-64">
-            <option value="">Select a client…</option>
-            {clients.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-          </select>
+        <PageHeader title="Client Media" />
+        <div className="mb-6 max-w-xs">
+          <FormField label="Client">
+            <SelectInput
+              value={selectedClient}
+              onChange={e => setSelectedClient(e.target.value)}
+              options={clients.map(c => ({ value: c.id, label: c.name }))}
+              placeholder="Select a client…"
+            />
+          </FormField>
         </div>
 
         {!selectedClient ? (

@@ -1,5 +1,6 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useQuery } from '@tanstack/react-query'
 import { nutritionPlansApi } from '@/lib/api'
+import { useToastMutation } from './useToastMutation'
 import type { NutritionPlan } from '@/types'
 
 export const useNutritionPlans = (clientId?: string) =>
@@ -15,29 +16,26 @@ export const useNutritionPlan = (id: string) =>
     enabled: !!id,
   })
 
-export const useCreateNutritionPlan = () => {
-  const qc = useQueryClient()
-  return useMutation({
+export const useCreateNutritionPlan = () =>
+  useToastMutation({
     mutationFn: (data: Partial<NutritionPlan>) => nutritionPlansApi.create(data),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['nutrition-plans'] }),
+    successMessage: 'Nutrition plan created',
+    errorMessage: 'Failed to create nutrition plan',
+    invalidateKeys: [['nutrition-plans']],
   })
-}
 
-export const useUpdateNutritionPlan = (id: string) => {
-  const qc = useQueryClient()
-  return useMutation({
+export const useUpdateNutritionPlan = (id: string) =>
+  useToastMutation({
     mutationFn: (data: Partial<NutritionPlan>) => nutritionPlansApi.update(id, data),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['nutrition-plans'] })
-      qc.invalidateQueries({ queryKey: ['nutrition-plan', id] })
-    },
+    successMessage: 'Nutrition plan updated',
+    errorMessage: 'Failed to update nutrition plan',
+    invalidateKeys: [['nutrition-plans'], ['nutrition-plan', id]],
   })
-}
 
-export const useDeleteNutritionPlan = () => {
-  const qc = useQueryClient()
-  return useMutation({
+export const useDeleteNutritionPlan = () =>
+  useToastMutation({
     mutationFn: (id: string) => nutritionPlansApi.remove(id),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['nutrition-plans'] }),
+    successMessage: 'Nutrition plan deleted',
+    errorMessage: 'Failed to delete nutrition plan',
+    invalidateKeys: [['nutrition-plans']],
   })
-}

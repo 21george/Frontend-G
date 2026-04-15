@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { liveTrainingApi } from '@/lib/api'
+import { useToastMutation } from './useToastMutation'
 import type { LiveTrainingSession } from '@/types'
 
 export const useLiveTrainingSessions = (status?: string, category?: string) =>
@@ -15,48 +16,45 @@ export const useLiveTrainingSession = (id: string) =>
     enabled: !!id,
   })
 
-export const useCreateLiveTraining = () => {
-  const qc = useQueryClient()
-  return useMutation({
+export const useCreateLiveTraining = () =>
+  useToastMutation({
     mutationFn: (data: Partial<LiveTrainingSession>) => liveTrainingApi.create(data),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['live-training'] }),
+    successMessage: 'Live training session created',
+    errorMessage: 'Failed to create session',
+    invalidateKeys: [['live-training']],
   })
-}
 
-export const useUpdateLiveTraining = (id: string) => {
-  const qc = useQueryClient()
-  return useMutation({
+export const useUpdateLiveTraining = (id: string) =>
+  useToastMutation({
     mutationFn: (data: Partial<LiveTrainingSession>) => liveTrainingApi.update(id, data),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['live-training'] })
-      qc.invalidateQueries({ queryKey: ['live-training', id] })
-    },
+    successMessage: 'Session updated',
+    errorMessage: 'Failed to update session',
+    invalidateKeys: [['live-training'], ['live-training', id]],
   })
-}
 
-export const useDeleteLiveTraining = () => {
-  const qc = useQueryClient()
-  return useMutation({
+export const useDeleteLiveTraining = () =>
+  useToastMutation({
     mutationFn: (id: string) => liveTrainingApi.remove(id),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['live-training'] }),
+    successMessage: 'Session deleted',
+    errorMessage: 'Failed to delete session',
+    invalidateKeys: [['live-training']],
   })
-}
 
-export const useGoLive = () => {
-  const qc = useQueryClient()
-  return useMutation({
+export const useGoLive = () =>
+  useToastMutation({
     mutationFn: (id: string) => liveTrainingApi.goLive(id),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['live-training'] }),
+    successMessage: 'You are now live!',
+    errorMessage: 'Failed to go live',
+    invalidateKeys: [['live-training']],
   })
-}
 
-export const useEndSession = () => {
-  const qc = useQueryClient()
-  return useMutation({
+export const useEndSession = () =>
+  useToastMutation({
     mutationFn: (id: string) => liveTrainingApi.endSession(id),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['live-training'] }),
+    successMessage: 'Session ended',
+    errorMessage: 'Failed to end session',
+    invalidateKeys: [['live-training']],
   })
-}
 
 export const useLiveTrainingRequests = (sessionId: string) =>
   useQuery({
@@ -65,17 +63,14 @@ export const useLiveTrainingRequests = (sessionId: string) =>
     enabled: !!sessionId,
   })
 
-export const useHandleJoinRequest = (sessionId: string) => {
-  const qc = useQueryClient()
-  return useMutation({
+export const useHandleJoinRequest = (sessionId: string) =>
+  useToastMutation({
     mutationFn: ({ requestId, action }: { requestId: string; action: 'approved' | 'rejected' }) =>
       liveTrainingApi.handleRequest(sessionId, requestId, action),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['live-training-requests', sessionId] })
-      qc.invalidateQueries({ queryKey: ['live-training'] })
-    },
+    successMessage: 'Request handled',
+    errorMessage: 'Failed to handle request',
+    invalidateKeys: [['live-training-requests', sessionId], ['live-training']],
   })
-}
 
 export const useLiveTrainingParticipants = (sessionId: string) =>
   useQuery({

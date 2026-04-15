@@ -7,7 +7,7 @@ import { useAuthStore } from '@/store/auth'
 import { useThemeStore } from '@/store/theme'
 import {
   LayoutDashboard, Users, Dumbbell, Salad, Calendar, Radio,
-  Image, Settings, LogOut, Zap, Menu, X, Sun, Moon,
+  Image, Settings, LogOut, Zap, Menu, X, Sun, Moon, CreditCard,
 } from 'lucide-react'
 
 const NAV = [
@@ -17,6 +17,7 @@ const NAV = [
   { href: '/nutrition-plans',   label: 'Nutrition',        icon: Salad },
   { href: '/checkins',          label: 'Schedule',         icon: Calendar },
   { href: '/live-training',     label: 'Live Training',    icon: Radio },
+  { href: '/billing',           label: 'Billing',          icon: CreditCard },
   { href: '/settings',          label: 'Settings',         icon: Settings },
 ]
 
