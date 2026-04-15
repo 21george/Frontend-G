@@ -6,8 +6,22 @@ import { workoutPlansApi } from '@/lib/api'
 import { Upload, CheckCircle, AlertCircle, ArrowLeft, FileSpreadsheet, Download } from 'lucide-react'
 import Link from 'next/link'
 
+type ImportPayload = { imported: number; plan_ids: string[]; warnings: string[] }
+
+const isImportPayload = (value: unknown): value is ImportPayload => {
+  if (!value || typeof value !== 'object') return false
+  const payload = value as Record<string, unknown>
+  return (
+    typeof payload.imported === 'number' &&
+    Array.isArray(payload.plan_ids) &&
+    payload.plan_ids.every((id) => typeof id === 'string') &&
+    Array.isArray(payload.warnings) &&
+    payload.warnings.every((warning) => typeof warning === 'string')
+  )
+}
+
 export default function ImportPage() {
-  const [result, setResult] = useState<{ imported: number; plan_ids: string[]; warnings: string[] } | null>(null)
+  const [result, setResult] = useState<ImportPayload | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [file, setFile] = useState<File | null>(null)
@@ -23,9 +37,8 @@ export default function ImportPage() {
     if (!file) return
     setLoading(true); setError('')
     try {
-      const res = await workoutPlansApi.import(file)
-      const payload = (res as any)?.data ?? res
-      if (typeof payload?.imported !== 'number' || !Array.isArray(payload?.plan_ids) || !Array.isArray(payload?.warnings)) {
+      const payload: unknown = await workoutPlansApi.import(file)
+      if (!isImportPayload(payload)) {
         throw new Error('Unexpected import response')
       }
       setResult(payload)

@@ -10,7 +10,6 @@ import { Loader2 } from 'lucide-react'
 import apiClient from '@/lib/api'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/Input'
-import { Checkbox } from '@/components/ui/checkbox'
 import {
   Form,
   FormControl,
@@ -20,21 +19,35 @@ import {
   FormMessage,
 } from '@/components/ui/form'
 
+const VERIFICATION_CODE_MIN_LENGTH = 4
+const UNSAFE_CHARACTERS = /[<>"'`&]/
+
 const sanitizeText = (value: string) =>
   value
-    .replace(/[<>]/g, '')
+    .replace(/[\u0000-\u001F\u007F]/g, '')
     .replace(/\s+/g, ' ')
     .trim()
 
 const schema = z
   .object({
-    firstName: z.string().transform(sanitizeText).pipe(z.string().min(2, 'First name is required')),
-    lastName: z.string().transform(sanitizeText).pipe(z.string().min(2, 'Last name is required')),
+    firstName: z.string().transform(sanitizeText).pipe(
+      z.string()
+        .min(2, 'First name must be at least 2 characters')
+        .refine((value) => !UNSAFE_CHARACTERS.test(value), { message: 'First name contains invalid characters' })
+    ),
+    lastName: z.string().transform(sanitizeText).pipe(
+      z.string()
+        .min(2, 'Last name must be at least 2 characters')
+        .refine((value) => !UNSAFE_CHARACTERS.test(value), { message: 'Last name contains invalid characters' })
+    ),
     email: z.string().transform((v) => sanitizeText(v).toLowerCase()).pipe(z.string().email('Enter a valid email')),
     password: z.string().trim().min(8, 'Password must be at least 8 characters'),
     confirmPassword: z.string().trim(),
-    verificationCode: z.string().transform(sanitizeText).pipe(z.string().min(4, 'Enter the email verification code')),
-    emailVerified: z.boolean().refine((v) => v, { message: 'You must verify your email before continuing' }),
+    verificationCode: z.string().transform(sanitizeText).pipe(
+      z.string()
+        .min(VERIFICATION_CODE_MIN_LENGTH, `Verification code must be at least ${VERIFICATION_CODE_MIN_LENGTH} characters`)
+        .refine((value) => !UNSAFE_CHARACTERS.test(value), { message: 'Verification code contains invalid characters' })
+    ),
   })
   .superRefine(({ password, confirmPassword }, ctx) => {
     if (password !== confirmPassword) {
@@ -62,7 +75,6 @@ export default function RegisterPage() {
       password: '',
       confirmPassword: '',
       verificationCode: '',
-      emailVerified: false,
     },
   })
 
@@ -76,7 +88,6 @@ export default function RegisterPage() {
         email: data.email,
         password: data.password,
         verification_code: data.verificationCode,
-        email_verified: data.emailVerified,
       })
       router.push('/auth/login')
     } catch (e: any) {
@@ -188,24 +199,6 @@ export default function RegisterPage() {
                   )}
                 />
 
-                <FormField
-                  control={form.control}
-                  name="emailVerified"
-                  render={({ field }) => (
-                    <FormItem>
-                      <div className="flex items-start gap-3">
-                        <FormControl>
-                          <Checkbox checked={field.value} onCheckedChange={field.onChange} disabled={isLoading} />
-                        </FormControl>
-                        <div>
-                          <FormLabel className="font-normal">I verified my email before continuing</FormLabel>
-                          <FormMessage />
-                        </div>
-                      </div>
-                    </FormItem>
-                  )}
-                />
-
                 <Button type="submit" className="w-full" disabled={isLoading}>
                   {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                   Create account
@@ -225,7 +218,7 @@ export default function RegisterPage() {
 
       <div className="relative hidden md:block md:w-1/2">
         <img
-          src="https://images.unsplash.com/photo-1714715350295-5f00e902f0d7?ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Nnx8d2FsbHBhZXJ8ZW58MHwxfDB8fHww&auto=format&fit=crop&q=60&w=900"
+          src="https://images.unsplash.com/photo-1714715350295-5f00e902f0d7?ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Nnx8d2FsbHBhcGVyfGVufDB8MXwwfHx8MA%3D%3D&auto=format&fit=crop&q=80&w=900"
           alt="A beautiful landscape with rolling hills and a road."
           className="h-full w-full object-cover"
         />
