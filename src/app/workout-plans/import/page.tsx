@@ -24,7 +24,11 @@ export default function ImportPage() {
     setLoading(true); setError('')
     try {
       const res = await workoutPlansApi.import(file)
-      setResult(res.data)
+      const payload = (res as any)?.data ?? res
+      if (typeof payload?.imported !== 'number' || !Array.isArray(payload?.plan_ids) || !Array.isArray(payload?.warnings)) {
+        throw new Error('Unexpected import response')
+      }
+      setResult(payload)
     } catch (e: any) {
       setError(e.response?.data?.message ?? 'Import failed')
     } finally {
