@@ -92,23 +92,7 @@ export default function LiveTrainingPage() {
       <div className="space-y-6">
 
         {/* ── PAGE HEADER ── */}
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <h1 className="text-2xl font-semibold text-slate-900 dark:text-white tracking-tight">
-              Live Training
-            </h1>
-            <p className="text-[13px] text-slate-500 dark:text-slate-400 mt-1">
-              Create and manage live workout sessions for your clients
-            </p>
-          </div>
-          <Link
-            href="/live-training/new"
-            className="inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-cyan-600 to-cyan-950 hover:from-cyan-500 hover:to-cyan-900 text-white text-[13px] font-semibold rounded-xl shadow-lg shadow-cyan-950/25 transition-all hover:shadow-xl hover:shadow-cyan-950/30 hover:-translate-y-0.5"
-          >
-            <Plus size={16} />
-            New Session
-          </Link>
-        </div>
+        
 
         {/* ── STAT CARDS ── */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">

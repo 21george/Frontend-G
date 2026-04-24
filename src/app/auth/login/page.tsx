@@ -25,8 +25,11 @@ export default function LoginPage() {
     setError(null);
     try {
       const res = await apiClient.post('/auth/coach/login', data);
-      const { coach } = res.data.data;
-      setCoach(coach);
+      const coachData = res.data?.data?.coach;
+      if (!coachData) {
+        throw new Error('Invalid response from server');
+      }
+      setCoach(coachData);
       router.push('/dashboard');
     } catch (e: any) {
       let msg = 'Login failed. Please try again.';
@@ -48,6 +51,15 @@ export default function LoginPage() {
 
   return (
     <>
+      <style jsx global>{`
+        @keyframes fadeIn {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+        .fade-in {
+          animation: fadeIn 0.3s ease-in-out;
+        }
+      `}</style>
       <AuthFormSplitScreen
         logo={
           <h1 className="text-xl font-semibold text-blue-600 tracking-wider">CoachPro</h1>
@@ -58,7 +70,7 @@ export default function LoginPage() {
         imageAlt="A beautiful landscape with rolling hills and a road."
         onSubmit={handleLogin}
         forgotPasswordHref="#"
-        createAccountHref="#"
+        createAccountHref="/auth/register"
         error={error}
       />
     </>

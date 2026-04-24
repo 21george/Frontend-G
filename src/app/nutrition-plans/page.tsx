@@ -101,7 +101,7 @@ function FeaturedPlanCard({ plan, clientName }: { plan: NutritionPlan; clientNam
   const totalMeals = plan.days?.reduce((s, d) => s + d.meals.length, 0) ?? 0
 
   return (
-    <div className="rounded-2xl border border-slate-200/80 dark:border-white/[0.07] bg-white dark:bg-[#171717] overflow-hidden shadow-sm">
+    <div>
       <div className="flex flex-col sm:flex-row">
         {/* Visual gradient panel */}
         <div className="sm:w-52 flex-shrink-0 bg-gradient-to-br from-green-400 via-emerald-500 to-teal-600 p-6 flex flex-col justify-between min-h-[180px]">
@@ -331,12 +331,7 @@ export default function NutritionPlansPage() {
       <div>
         {/* ── Page header ── */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-          <div>
-            <h1 className="text-2xl font-semibold text-slate-900 dark:text-white">Healthy Menu</h1>
-            <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">
-              Manage &amp; assign nutrition plans to your clients
-            </p>
-          </div>
+          
           <div className="flex items-center gap-2 flex-wrap">
             {/* Search */}
             <div className="relative">
@@ -355,13 +350,7 @@ export default function NutritionPlansPage() {
             >
               <SlidersHorizontal size={14} />
             </button>
-            {/* Add Plan */}
-            <Link
-              href="/nutrition-plans/new"
-              className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-cyan-950 hover:bg-cyan-900 text-white text-sm font-semibold transition-colors shadow-sm shadow-cyan-950/20"
-            >
-              <Plus size={15} /> Add Menu
-            </Link>
+           
           </div>
         </div>
 
@@ -379,7 +368,7 @@ export default function NutritionPlansPage() {
             ) : null}
 
             {/* All plans card */}
-            <div className="rounded-2xl border border-slate-200/80 dark:border-white/[0.07] bg-white dark:bg-[#171717] overflow-hidden shadow-sm">
+            <div className=" bg-white dark:bg-[#171717]">
 
               {/* Tabs + sort */}
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-4 pt-4 pb-3 border-b border-slate-100 dark:border-white/[0.05]">
@@ -448,7 +437,7 @@ export default function NutritionPlansPage() {
           <div className="space-y-5">
 
             {/* Popular */}
-            <div className="rounded-2xl border border-slate-200/80 dark:border-white/[0.07] bg-white dark:bg-[#171717] p-4 shadow-sm">
+            <div className="p-4 ">
               <div className="flex items-center justify-between mb-3">
                 <h3 className="text-sm font-semibold text-slate-900 dark:text-white">Popular Menu</h3>
                 <button className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors"><MoreHorizontal size={16} /></button>
@@ -471,7 +460,7 @@ export default function NutritionPlansPage() {
             </div>
 
             {/* Recommended */}
-            <div className="rounded-2xl border border-slate-200/80 dark:border-white/[0.07] bg-white dark:bg-[#171717] p-4 shadow-sm">
+            <div className="p-4 ">
               <div className="flex items-center justify-between mb-3">
                 <h3 className="text-sm font-semibold text-slate-900 dark:text-white">Recommended Menu</h3>
                 <button className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors"><MoreHorizontal size={16} /></button>
@@ -495,7 +484,7 @@ export default function NutritionPlansPage() {
 
             {/* Averages overview */}
             {!isLoading && plans.length > 0 && (
-              <div className="rounded-2xl border border-slate-200/80 dark:border-white/[0.07] bg-white dark:bg-[#171717] p-4 shadow-sm">
+              <div className="p-4 ">
                 <h3 className="text-sm font-semibold text-slate-900 dark:text-white mb-3">Plan Overview</h3>
                 <div className="grid grid-cols-2 gap-2">
                   {[

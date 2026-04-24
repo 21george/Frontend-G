@@ -19,6 +19,41 @@ import {
 } from 'lucide-react'
 import Link from 'next/link'
 import { useParams, useRouter } from 'next/navigation'
+
+// Navigation handler for back button
+const goBack = (router: ReturnType<typeof useRouter>) => {
+  // Try to go back in history, fallback to clients page
+  if (window.history.length > 1) {
+    router.back()
+  } else {
+    router.push('/clients')
+  }
+}
+
+// Color constants from design system - using only existing colors
+const COLORS = {
+  // Primary
+  cyan950: '#083344',
+  cyan900: '#0c4a5e',
+  // Accents
+  orange500: '#f97316',
+  blue500: '#3b82f6',
+  emerald500: '#10b981',
+  // Neutrals
+  slate50: '#f8fafc',
+  slate100: '#f1f5f9',
+  slate200: '#e2e8f0',
+  slate300: '#cbd5e1',
+  slate400: '#94a3b8',
+  slate500: '#64748b',
+  slate600: '#475569',
+  slate700: '#334155',
+  slate800: '#1e293b',
+  slate900: '#0f172a',
+  // Dark mode
+  darkBg: '#141414',
+  darkCard: '#171717',
+} as const
 import { formatDate, timeAgo } from '@/lib/utils'
 import { useSocketChat } from '@/lib/useSocketChat'
 import type { CheckinMeeting, NutritionPlan, WorkoutPlan, WorkoutLogDetailed } from '@/types'
@@ -120,6 +155,13 @@ const CATEGORY_CONFIG: Record<WorkoutCategory, { label: string; color: string; b
   core:       { label: 'Core',       color: '#06b6d4', bg: 'rgba(6,182,212,0.08)',   icon: '🧘' },
   fullbody:   { label: 'Full Body',  color: '#6366f1', bg: 'rgba(99,102,241,0.08)',  icon: '⚡' },
 }
+
+// Schedule type colors - using standard palette
+const SCHEDULE_TYPE_COLORS = {
+  video: { bg: 'bg-blue-100 dark:bg-blue-900/25', text: 'text-blue-600 dark:text-blue-400', border: 'border-blue-500/50' },
+  call: { bg: 'bg-emerald-100 dark:bg-emerald-900/25', text: 'text-emerald-600 dark:text-emerald-400', border: 'border-emerald-500/50' },
+  chat: { bg: 'bg-purple-100 dark:bg-purple-900/25', text: 'text-purple-600 dark:text-purple-400', border: 'border-purple-500/50' },
+} as const
 
 // ── Schedule form ─────────────────────────────────────────────────────────────
 // ── Nutrition plan expanded card (fetches full details) ────────────────────────
@@ -523,26 +565,25 @@ export default function ClientDetailPage() {
   }
 
   const handleDeleteClient = async () => {
-    if (!confirm(`Deactivate client "${client?.name}"? They will be removed from active client lists.`)) return
+    if (!confirm(`Permanently delete client "${client?.name}"? This action cannot be undone.`)) return
 
     try {
       await deleteClient.mutateAsync(id)
       router.push('/clients')
     } catch {
-      window.alert('Failed to deactivate client.')
+      window.alert('Failed to delete client.')
     }
   }
 
   const handleToggleBlockClient = async () => {
     const nextActiveState = !client?.active
-    const actionLabel = nextActiveState ? 'unblock' : 'block'
 
-    if (!confirm(`${actionLabel === 'block' ? 'Block' : 'Unblock'} client "${client?.name}"?`)) return
+    if (!confirm(`${nextActiveState ? 'Unblock' : 'Block'} client "${client?.name}"?`)) return
 
     try {
       await updateClient.mutateAsync({ active: nextActiveState })
     } catch {
-      window.alert(`Failed to ${actionLabel} client.`)
+      window.alert(`Failed to ${nextActiveState ? 'unblock' : 'block'} client.`)
     }
   }
 
@@ -647,6 +688,7 @@ export default function ClientDetailPage() {
             <button
               onClick={handleToggleBlockClient}
               disabled={updateClient.isPending}
+              title={client.active ? 'Temporarily disable client access' : 'Restore client access'}
               className={`hidden sm:inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-semibold transition-colors disabled:opacity-50 ${
                 client.active
                   ? 'border-amber-200 dark:border-amber-900/40 text-amber-700 dark:text-amber-300 hover:bg-amber-50 dark:hover:bg-amber-500/10'
@@ -654,15 +696,16 @@ export default function ClientDetailPage() {
               }`}
             >
               {updateClient.isPending ? <Loader2 size={13} className="animate-spin" /> : <X size={13} />}
-              {client.active ? 'Block Client' : 'Unblock Client'}
+              {client.active ? 'Block Access' : 'Restore Access'}
             </button>
             <button
               onClick={handleDeleteClient}
               disabled={deleteClient.isPending}
+              title="Permanently delete this client (cannot be undone)"
               className="hidden sm:inline-flex items-center gap-1.5 rounded-lg border border-red-200 dark:border-red-900/40 px-3 py-1.5 text-xs font-semibold text-red-600 dark:text-red-300 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors disabled:opacity-50"
             >
               {deleteClient.isPending ? <Loader2 size={13} className="animate-spin" /> : <Trash2 size={13} />}
-              Delete Client
+              Delete Permanently
             </button>
             <div className="hidden lg:flex items-center gap-2 bg-slate-100 dark:bg-[#1a1f2e] border border-slate-200 dark:border-white/[0.07] rounded-lg px-3 py-1.5">
               <Search size={13} className="text-slate-500 dark:text-slate-600" />
@@ -699,15 +742,17 @@ export default function ClientDetailPage() {
             {/* Mobile-only action buttons (hidden from header on sm) */}
             <div className="sm:hidden flex items-center gap-2 px-4 py-2.5 border-b border-slate-100 dark:border-white/[0.04]">
               <button onClick={handleToggleBlockClient} disabled={updateClient.isPending}
+                title={client.active ? 'Temporarily disable client access' : 'Restore client access'}
                 className={`flex-1 inline-flex items-center justify-center gap-1.5 rounded-lg border px-2 py-1.5 text-[11px] font-semibold transition-colors disabled:opacity-50 ${
                   client.active
                     ? 'border-amber-200 dark:border-amber-900/40 text-amber-700 dark:text-amber-300'
                     : 'border-emerald-200 dark:border-emerald-900/40 text-emerald-700 dark:text-emerald-300'
                 }`}>
                 {updateClient.isPending ? <Loader2 size={11} className="animate-spin" /> : <X size={11} />}
-                {client.active ? 'Block' : 'Unblock'}
+                {client.active ? 'Block' : 'Restore'}
               </button>
               <button onClick={handleDeleteClient} disabled={deleteClient.isPending}
+                title="Permanently delete this client (cannot be undone)"
                 className="flex-1 inline-flex items-center justify-center gap-1.5 rounded-lg border border-red-200 dark:border-red-900/40 px-2 py-1.5 text-[11px] font-semibold text-red-600 dark:text-red-300 transition-colors disabled:opacity-50">
                 {deleteClient.isPending ? <Loader2 size={11} className="animate-spin" /> : <Trash2 size={11} />}
                 Delete
@@ -2069,7 +2114,7 @@ export default function ClientDetailPage() {
                                                 <PhoneCall size={13} /> Call Now
                                               </a>
                                             )}
-                                            <button className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-[12px] font-semibold bg-amber-500 hover:bg-amber-400 text-white transition-colors shadow-sm">
+                                            <button className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-[12px] font-semibold bg-cyan-950 hover:bg-cyan-900 text-white transition-colors shadow-sm">
                                               <RefreshCw size={13} /> Reschedule
                                             </button>
                                             <button className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-[12px] font-medium text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/15 transition-colors border border-transparent hover:border-red-200 dark:hover:border-red-800/30">

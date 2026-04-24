@@ -314,3 +314,32 @@ export interface SubscriptionInfo {
   cancel_at_period_end: boolean
   stripe_customer_id: string | null
 }
+
+// ── Notifications ──────────────────────────────────────────────────────────────
+export type NotificationType =
+  | 'workout_completed'
+  | 'new_message'
+  | 'profile_updated'
+  | 'checkin_reminder'
+  | 'live_session_reminder'
+  | 'checkin_scheduled'
+
+export interface Notification {
+  id: string
+  type: NotificationType
+  title: string
+  body: string
+  data: {
+    clientId?: string
+    clientName?: string
+    workoutLogId?: string
+    workoutPlanName?: string
+    messageId?: string
+    checkinId?: string
+    sessionId?: string
+    scheduledAt?: string
+    changedFields?: string[]
+  }
+  read: boolean
+  sent_at: string
+}

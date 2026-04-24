@@ -4,6 +4,7 @@
 import { useAuthStore } from '@/store/auth'
 import { useRouter } from 'next/navigation'
 import { useEffect } from 'react'
+import { motion } from 'framer-motion'
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const { coach } = useAuthStore()
@@ -15,5 +16,14 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   if (!coach) return null
 
-  return <>{children}</>
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -10 }}
+      transition={{ duration: 0.15, ease: 'easeInOut' }}
+    >
+      {children}
+    </motion.div>
+  )
 }

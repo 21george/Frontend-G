@@ -105,7 +105,7 @@ export default function EditWorkoutPlanPage() {
         <Link href={`/workout-plans/${id}`} className="flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700 mb-6">
           <ArrowLeft className="w-3 h-3" /> Back
         </Link>
-        <h1 className="text-2xl font-semibold text-gray-900 mb-6">Edit Workout Plan</h1>
+        <h1 className="text-2xl font-semibold text-gray-50 mb-6">Edit Workout Plan</h1>
 
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="card p-6 grid grid-cols-2 gap-4">
@@ -153,7 +153,7 @@ export default function EditWorkoutPlanPage() {
 
                 <div className="space-y-3">
                   {day.exercises.map((ex, ei) => (
-                    <div key={ei} className="bg-gray-50 rounded-lg p-3 grid grid-cols-12 gap-2 items-start">
+                    <div key={ei} className="rounded-lg p-3 grid grid-cols-12 gap-2 items-start">
                       <div className="col-span-4">
                         <input value={ex.name} onChange={e => updateExercise(di, ei, 'name', e.target.value)}
                                className="input text-sm" placeholder="Exercise name" />

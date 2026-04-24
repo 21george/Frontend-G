@@ -7,6 +7,7 @@ export interface Gym {
   name: string
   distance: number   // metres
   address: string
+  location: { lat: number; lon: number }
 }
 
 function haversine(lat1: number, lon1: number, lat2: number, lon2: number): number {
@@ -46,6 +47,7 @@ async function queryOverpass(lat: number, lon: number, radius = 3000): Promise<G
         distance: Math.round(haversine(lat, lon, elLat, elLon)),
         address:  [el.tags?.['addr:street'], el.tags?.['addr:housenumber']]
                    .filter(Boolean).join(' ') || '',
+        location: { lat: elLat, lon: elLon },
       }
     })
     .sort((a: Gym, b: Gym) => a.distance - b.distance)
@@ -56,6 +58,7 @@ export function useNearbyGyms() {
   const [gyms,    setGyms]    = useState<Gym[]>([])
   const [loading, setLoading] = useState(false)
   const [error,   setError]   = useState<string | null>(null)
+  const [userLocation, setUserLocation] = useState<{ lat: number; lon: number } | null>(null)
 
   function load() {
     if (!navigator.geolocation) {
@@ -68,7 +71,9 @@ export function useNearbyGyms() {
     navigator.geolocation.getCurrentPosition(
       async (pos) => {
         try {
-          const results = await queryOverpass(pos.coords.latitude, pos.coords.longitude)
+          const { latitude, longitude } = pos.coords
+          setUserLocation({ lat: latitude, lon: longitude })
+          const results = await queryOverpass(latitude, longitude)
           setGyms(results)
         } catch (e: any) {
           setError(e.message ?? 'Failed to load gyms')
@@ -86,5 +91,5 @@ export function useNearbyGyms() {
 
   useEffect(() => { load() }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
-  return { gyms, loading, error, reload: load }
+  return { gyms, loading, error, reload: load, userLocation }
 }

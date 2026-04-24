@@ -7,7 +7,7 @@ import { Upload, CheckCircle, AlertCircle, ArrowLeft, FileSpreadsheet, Download 
 import Link from 'next/link'
 
 export default function ImportPage() {
-  const [result, setResult] = useState<{ imported: number; plan_ids: string[]; warnings: string[] } | null>(null)
+  const [result, setResult] = useState<{ imported: number; plan_ids: string[]; warnings: string[]; total_rows?: number; processed_rows?: number; skipped_rows?: number } | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [file, setFile] = useState<File | null>(null)
@@ -54,6 +54,23 @@ export default function ImportPage() {
           <div className="card p-8 text-center">
             <CheckCircle className="w-12 h-12 text-green-500 mx-auto mb-4" />
             <h2 className="text-xl font-semibold text-[var(--text-primary)]">{result.imported} plan(s) imported!</h2>
+
+            {/* Import statistics */}
+            <div className="mt-4 grid grid-cols-3 gap-4 text-sm">
+              <div className="bg-slate-50 dark:bg-white/5 rounded-lg p-3">
+                <p className="text-[var(--text-secondary)]">Total Rows</p>
+                <p className="text-lg font-semibold text-[var(--text-primary)]">{result.total_rows ?? '-'}</p>
+              </div>
+              <div className="bg-green-50 dark:bg-green-950/20 rounded-lg p-3">
+                <p className="text-green-600 dark:text-green-400">Processed</p>
+                <p className="text-lg font-semibold text-green-700 dark:text-green-300">{result.processed_rows ?? result.imported}</p>
+              </div>
+              <div className="bg-yellow-50 dark:bg-yellow-950/20 rounded-lg p-3">
+                <p className="text-yellow-600 dark:text-yellow-400">Skipped</p>
+                <p className="text-lg font-semibold text-yellow-700 dark:text-yellow-300">{result.skipped_rows ?? 0}</p>
+              </div>
+            </div>
+
             {result.plan_ids.length > 0 && (
               <div className="mt-4 flex flex-wrap gap-2 justify-center">
                 {result.plan_ids.map((id) => (

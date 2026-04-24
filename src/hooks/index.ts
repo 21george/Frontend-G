@@ -1,5 +1,5 @@
 export { useClients, useClient, useCreateClient, useUpdateClient, useDeleteClient, useRegenerateCode } from './useClients'
-export { useWorkoutPlans, useWorkoutPlan, useCreateWorkoutPlan, useCreateGroupWorkoutPlan, useUpdateWorkoutPlan, useDeleteWorkoutPlan, useImportWorkoutPlans } from './useWorkoutPlans'
+export { useWorkoutPlans, useWorkoutPlan, useCreateWorkoutPlan, useCreateGroupWorkoutPlan, useUpdateWorkoutPlan, useDeleteWorkoutPlan, useImportWorkoutPlans, useAssignWorkoutPlan } from './useWorkoutPlans'
 export { useNutritionPlans, useNutritionPlan, useCreateNutritionPlan, useUpdateNutritionPlan, useDeleteNutritionPlan } from './useNutritionPlans'
 export { useCheckins, useCreateCheckin, useUpdateCheckin } from './useCheckins'
 export { useMessages, useSendMessage, useUploadMessageMedia } from './useMessages'

@@ -23,16 +23,42 @@ const processQueue = (error: unknown = null) => {
 }
 
 // Auth endpoints that should never trigger a token refresh
-const AUTH_PATHS = ['/auth/coach/login', '/auth/client/login', '/auth/coach/register', '/auth/refresh']
+const AUTH_PATHS = ['/auth/coach/login', '/auth/client/login', '/auth/coach/register', '/auth/refresh', '/auth/verify-email', '/auth/resend-verification']
+
+// Callback for clearing auth state (set by auth store to avoid circular dependency)
+let onAuthInvalidated: (() => void) | null = null
+
+export const setAuthInvalidationCallback = (callback: () => void) => {
+  onAuthInvalidated = callback
+}
 
 api.interceptors.response.use(
   (r) => r,
   async (error) => {
-    const original = error.config
+    const original = error?.config
     const url = original?.url || ''
+    const status = error?.response?.status
+
+    // Log error for debugging
+    if (status && status >= 400) {
+      console.error(`API Error ${status}: ${url}`, error?.response?.data)
+    }
+
+    // Handle 403 Forbidden - session expired or invalid, redirect to login
+    if (status === 403) {
+      // Clear auth state via callback
+      onAuthInvalidated?.()
+      // Redirect to login if not already on auth page
+      if (typeof window !== 'undefined' && !window.location.pathname.startsWith('/auth')) {
+        window.location.href = '/auth/login'
+      }
+      return Promise.reject(error)
+    }
+
+    // Handle 401 Unauthorized - try to refresh token
     if (
-      error.response?.status !== 401 ||
-      original._retry ||
+      status !== 401 ||
+      original?._retry ||
       AUTH_PATHS.some((p) => url.includes(p))
     ) {
       return Promise.reject(error)
@@ -54,7 +80,11 @@ api.interceptors.response.use(
       return api(original)
     } catch (err) {
       processQueue(err)
-      window.location.href = '/auth/login'
+      // Clear auth state and redirect on refresh failure
+      onAuthInvalidated?.()
+      if (typeof window !== 'undefined' && !window.location.pathname.startsWith('/auth')) {
+        window.location.href = '/auth/login'
+      }
       return Promise.reject(err)
     } finally {
       isRefreshing = false

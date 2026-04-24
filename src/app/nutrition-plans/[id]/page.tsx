@@ -263,7 +263,7 @@ export default function NutritionPlanDetailPage() {
         </div>
 
         {/* ── Hero card ── */}
-        <div className="rounded-2xl border border-slate-200/80 dark:border-white/[0.07] bg-white dark:bg-[#171717] overflow-hidden shadow-sm">
+        <div>
           <div className="flex flex-col sm:flex-row">
             {/* Gradient panel */}
             <div className="sm:w-56 flex-shrink-0 bg-gradient-to-br from-green-400 via-emerald-500 to-teal-600 p-6 flex flex-col justify-between min-h-[180px]">
@@ -320,7 +320,7 @@ export default function NutritionPlanDetailPage() {
                   <div key={m.label} className={`flex items-center gap-2 px-3 py-2 rounded-xl ${m.bg}`}>
                     <span className={m.iconCls}>{m.icon}</span>
                     <div>
-                      <p className="text-[10px] text-slate-500 dark:text-slate-400 leading-none">{m.label}</p>
+                      <p className="text-[10px] text-slate-200 dark:text-slate-400 leading-none">{m.label}</p>
                       <p className={`text-sm font-semibold ${m.iconCls}`}>{m.value}<span className="text-[10px] font-normal ml-0.5">{m.unit}</span></p>
                     </div>
                   </div>
@@ -349,7 +349,7 @@ export default function NutritionPlanDetailPage() {
               const totals = dayTotals(day)
               const isOpen = !!openDays[day.day]
               return (
-                <div key={day.day} className="rounded-2xl border border-slate-200/80 dark:border-white/[0.07] overflow-hidden bg-white dark:bg-[#171717] shadow-sm">
+                <div key={day.day} className="border border-slate-200/80 dark:border-white/[0.07] overflow-hidden bg-white dark:bg-[#171717] shadow-sm">
                   {/* Day header */}
                   <button
                     onClick={() => toggleDay(day.day)}
@@ -362,7 +362,7 @@ export default function NutritionPlanDetailPage() {
                       <span className="text-sm font-semibold text-slate-800 dark:text-white capitalize">{day.day}</span>
                       <span className="text-xs text-slate-400 dark:text-slate-600">{day.meals.length} meal{day.meals.length !== 1 ? 's' : ''}</span>
                     </div>
-                    <div className="flex items-center gap-4 text-xs text-slate-400 dark:text-slate-500">
+                    <div className="flex items-center gap-4 text-xs text-slate-200 dark:text-slate-500">
                       <span><span className="font-semibold text-slate-700 dark:text-slate-200">{totals.cal}</span> kcal</span>
                       <span className="hidden sm:inline">P <span className="font-medium text-slate-700 dark:text-slate-200">{totals.pro}g</span></span>
                       <span className="hidden sm:inline">C <span className="font-medium text-slate-700 dark:text-slate-200">{totals.carb}g</span></span>
@@ -371,9 +371,9 @@ export default function NutritionPlanDetailPage() {
                   </button>
 
                   {isOpen && (
-                    <div className="border-t border-slate-100 dark:border-white/[0.05] p-4 space-y-3 bg-slate-50/50 dark:bg-[#141414]">
+                    <div className="p-4 space-y-2">
                       {day.meals.map((meal, mi) => (
-                        <div key={mi} className="rounded-xl border border-slate-200 dark:border-white/[0.06] overflow-hidden bg-white dark:bg-[#171717]">
+                        <div key={mi}>
                           {/* Meal header */}
                           <div className="flex items-center gap-3 px-4 py-2.5 bg-slate-50 dark:bg-[#171717] border-b border-slate-100 dark:border-white/[0.05]">
                             <div className="w-2 h-2 rounded-full bg-green-500 flex-shrink-0" />
@@ -458,7 +458,7 @@ export default function NutritionPlanDetailPage() {
           <div className="space-y-4">
 
             {/* Macro summary tiles */}
-            <div className="rounded-2xl border border-slate-200/80 dark:border-white/[0.07] bg-white dark:bg-[#171717] p-4 shadow-sm">
+            <div className="p-4 ">
               <h3 className="text-sm font-semibold text-slate-900 dark:text-white mb-3">Daily Averages</h3>
               <div className="grid grid-cols-2 gap-2">
                 <MacroPill icon={<Flame size={18} />}    label="Calories" value={weeklyAvg.calories}  unit="kcal" iconCls="text-orange-500" bg="bg-orange-50 dark:bg-orange-900/20" />
@@ -469,7 +469,7 @@ export default function NutritionPlanDetailPage() {
             </div>
 
             {/* Nutrition Facts */}
-            <div className="rounded-2xl border border-slate-200/80 dark:border-white/[0.07] bg-white dark:bg-[#171717] p-4 shadow-sm">
+            <div className="p-4 ">
               <div className="flex items-center justify-between mb-3">
                 <h3 className="text-sm font-semibold text-slate-900 dark:text-white">Nutrition Facts</h3>
                 <span className="text-[10px] text-slate-400 dark:text-slate-500 font-medium">Per Day (avg)</span>
@@ -486,7 +486,7 @@ export default function NutritionPlanDetailPage() {
             </div>
 
             {/* Plan details */}
-            <div className="rounded-2xl border border-slate-200/80 dark:border-white/[0.07] bg-white dark:bg-[#171717] p-4 shadow-sm space-y-3">
+            <div className="p-4 ">
               <h3 className="text-sm font-semibold text-slate-900 dark:text-white">Plan Details</h3>
               <div className="space-y-2 text-sm">
                 {[

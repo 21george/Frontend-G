@@ -1,88 +1,65 @@
 'use client'
 import DashboardLayout from '@/components/layout/DashboardLayout'
 import { useCheckins, useClients, useCreateCheckin } from '@/lib/hooks'
-import Link from 'next/link'
-import { useState, useMemo, useCallback, useEffect } from 'react'
+import { useState, useMemo, useCallback } from 'react'
 import {
   Plus, Calendar, Video, Phone, MessageCircle, ChevronLeft,
-  ChevronRight, Clock, Copy, Pencil, Bell, X, Search, Link2,
+  ChevronRight, Clock, X, Search, User, CheckCircle2, ArrowRight
 } from 'lucide-react'
 import { formatDate, parseDateValue } from '@/lib/utils'
-import {
-  format, isSameDay, addDays, addMonths, subMonths,
-  startOfWeek, eachDayOfInterval,
-} from 'date-fns'
+import { format, isSameDay, addMonths, subMonths, startOfWeek, endOfWeek, eachDayOfInterval, isToday } from 'date-fns'
 import type { CheckinMeeting } from '@/types'
+import { motion, AnimatePresence } from 'framer-motion'
 
-/* ── constants ────────────────────────────────────────────────────────────── */
-const TYPE_ICON: Record<string, typeof Video> = { video: Video, call: Phone, chat: MessageCircle }
-const TYPE_COLOR: Record<string, { bg: string; text: string; border: string; dot: string }> = {
-  video: {
-    bg: 'bg-sky-50 dark:bg-sky-900/20',
-    text: 'text-sky-800 dark:text-sky-200',
-    border: 'border-sky-200 dark:border-sky-800/30',
-    dot: 'bg-sky-500',
-  },
-  call: {
-    bg: 'bg-emerald-50 dark:bg-emerald-900/20',
-    text: 'text-emerald-800 dark:text-emerald-200',
-    border: 'border-emerald-200 dark:border-emerald-800/30',
-    dot: 'bg-emerald-500',
-  },
-  chat: {
-    bg: 'bg-violet-50 dark:bg-violet-900/20',
-    text: 'text-violet-800 dark:text-violet-200',
-    border: 'border-violet-200 dark:border-violet-800/30',
-    dot: 'bg-violet-500',
-  },
+const TYPE_COLOR: Record<string, { bg: string; text: string; iconBg: string; border: string; hover: string }> = {
+  video: { bg: 'bg-sky-950/10 dark:bg-sky-900/20', text: 'text-sky-700 dark:text-sky-400', iconBg: 'bg-sky-950 dark:bg-sky-500', border: 'border-sky-200 dark:border-sky-800/30', hover: 'hover:bg-sky-950/20 dark:hover:bg-sky-800/30' },
+  call: { bg: 'bg-emerald-950/10 dark:bg-emerald-900/20', text: 'text-emerald-700 dark:text-emerald-400', iconBg: 'bg-emerald-950 dark:bg-emerald-500', border: 'border-emerald-200 dark:border-emerald-800/30', hover: 'hover:bg-emerald-950/20 dark:hover:bg-emerald-800/30' },
+  chat: { bg: 'bg-violet-950/10 dark:bg-violet-900/20', text: 'text-violet-700 dark:text-violet-400', iconBg: 'bg-violet-950 dark:bg-violet-500', border: 'border-violet-200 dark:border-violet-800/30', hover: 'hover:bg-violet-950/20 dark:hover:bg-violet-800/30' },
 }
 
-/* ── helpers ──────────────────────────────────────────────────────────────── */
-function getMonthGrid(year: number, month: number) {
-  const first = new Date(year, month, 1)
-  const start = startOfWeek(first, { weekStartsOn: 1 })
-  const last = new Date(year, month + 1, 0)
-  const end = addDays(startOfWeek(addDays(last, 7), { weekStartsOn: 1 }), -1)
+const HOURS = Array.from({ length: 15 }, (_, i) => i + 6) // 6 AM to 8 PM
+const DAYS_SHORT = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+
+function getWeekDays(baseDate: Date) {
+  const start = startOfWeek(baseDate, { weekStartsOn: 1 })
+  const end = endOfWeek(baseDate, { weekStartsOn: 1 })
   return eachDayOfInterval({ start, end })
 }
 
-/* ══════════════════════════════════════════════════════════════════════════ */
-/*  PAGE                                                                     */
-/* ══════════════════════════════════════════════════════════════════════════ */
 export default function SchedulePage() {
-  const { data: checkins, isLoading } = useCheckins()
-  const { data: clientsData }         = useClients()
-  const createCheckin                 = useCreateCheckin()
-  const clients                       = clientsData?.data ?? []
-  const clientMap                     = useMemo(() => new Map(clients.map(c => [c.id, c])), [clients])
+  const { data: checkins } = useCheckins()
+  const { data: clientsData } = useClients()
+  const createCheckin = useCreateCheckin()
+  const clients = clientsData?.data ?? []
+  const clientMap = useMemo(() => new Map(clients.map(c => [c.id, c])), [clients])
 
-  /* state */
   const [selectedDate, setSelectedDate] = useState(new Date())
-  const [selected, setSelected]         = useState<CheckinMeeting | null>(null)
-  const [searchQuery, setSearchQuery]   = useState('')
-  const [showModal, setShowModal]       = useState(false)
+  const [selected, setSelected] = useState<CheckinMeeting | null>(null)
+  const [searchQuery, setSearchQuery] = useState('')
+  const [showModal, setShowModal] = useState(false)
+  const [view, setView] = useState<'month' | 'week' | 'day'>('week')
+  const [selectedTypes, setSelectedTypes] = useState<Set<string>>(new Set(['video', 'call', 'chat']))
+  const [showSidebar, setShowSidebar] = useState(false)
 
-  /* modal form */
-  const [formClient, setFormClient]   = useState('')
-  const [formDate, setFormDate]       = useState('')
-  const [formTime, setFormTime]       = useState('')
-  const [formType, setFormType]       = useState<'video' | 'call' | 'chat'>('video')
-  const [formLink, setFormLink]       = useState('')
-  const [formNotes, setFormNotes]     = useState('')
+  const [formClient, setFormClient] = useState('')
+  const [formDate, setFormDate] = useState('')
+  const [formTime, setFormTime] = useState('')
+  const [formType, setFormType] = useState<'video' | 'call' | 'chat'>('video')
+  const [formLink, setFormLink] = useState('')
+  const [formNotes, setFormNotes] = useState('')
   const [formLoading, setFormLoading] = useState(false)
 
-  /* mini-calendar */
   const [calDate, setCalDate] = useState(new Date())
-  const calGrid = useMemo(() => getMonthGrid(calDate.getFullYear(), calDate.getMonth()), [calDate])
+  const calGrid = useMemo(() => {
+    const first = new Date(calDate.getFullYear(), calDate.getMonth(), 1)
+    const start = startOfWeek(first, { weekStartsOn: 1 })
+    const last = new Date(calDate.getFullYear(), calDate.getMonth() + 1, 0)
+    const end = endOfWeek(last, { weekStartsOn: 1 })
+    return eachDayOfInterval({ start, end })
+  }, [calDate])
 
-  /* live clock for current-time indicator */
-  const [now, setNow] = useState(new Date())
-  useEffect(() => {
-    const t = setInterval(() => setNow(new Date()), 60_000)
-    return () => clearInterval(t)
-  }, [])
+  const weekDays = useMemo(() => getWeekDays(selectedDate), [selectedDate])
 
-  /* filtered events */
   const filteredEvents = useMemo(() => {
     let list = checkins ?? []
     if (searchQuery.trim()) {
@@ -96,8 +73,11 @@ export default function SchedulePage() {
         )
       })
     }
+    if (selectedTypes.size > 0 && selectedTypes.size < 3) {
+      list = list.filter(c => selectedTypes.has(c.type))
+    }
     return list
-  }, [checkins, searchQuery, clientMap])
+  }, [checkins, searchQuery, clientMap, selectedTypes])
 
   const dayEvents = useCallback(
     (day: Date) =>
@@ -108,7 +88,6 @@ export default function SchedulePage() {
     [filteredEvents],
   )
 
-  /* dots on mini-calendar */
   const eventDates = useMemo(() => {
     const set = new Set<string>()
     ;(checkins ?? []).forEach(c => {
@@ -118,20 +97,13 @@ export default function SchedulePage() {
     return set
   }, [checkins])
 
-  /* nav helpers */
   const goToday = () => { setSelectedDate(new Date()); setCalDate(new Date()) }
-  const goPrev = () => setSelectedDate(d => subMonths(d, 1))
-  const goNext = () => setSelectedDate(d => addMonths(d, 1))
+  const goPrev = () => setSelectedDate(d => view === 'month' ? subMonths(d, 1) : new Date(d.getTime() - 7 * 24 * 60 * 60 * 1000))
+  const goNext = () => setSelectedDate(d => view === 'month' ? addMonths(d, 1) : new Date(d.getTime() + 7 * 24 * 60 * 60 * 1000))
   const selectCalDay = (d: Date) => { setSelectedDate(d); setSelected(null) }
 
   const selectedClient = selected ? clientMap.get(selected.client_id) : undefined
 
-  /* month grid */
-  const monthGrid = useMemo(() => {
-    return getMonthGrid(selectedDate.getFullYear(), selectedDate.getMonth())
-  }, [selectedDate])
-
-  /* modal helpers */
   const openModal = () => {
     setFormClient('')
     setFormDate(format(selectedDate, 'yyyy-MM-dd'))
@@ -159,412 +131,667 @@ export default function SchedulePage() {
     }
   }
 
-  /* ═════════════════════════════════ RENDER ═══════════════════════════════ */
   return (
     <DashboardLayout>
-      <div className="flex flex-col  sm:-mx-6 -mt-16 lg:-mt-8 -mb-10">
+      <div className="flex flex-col min-h-screen bg-slate-100 dark:bg-[#141414]">
 
-        {/* ── HEADER ── */}
-        <div className="bg-white dark:bg-[#141414] border-b border-t-8 border-slate-200 dark:border-white/[0.07] px-4 sm:px-6 py-4 flex-shrink-0">
-          <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-
-            {/* Left – title + date */}
+        {/* TOP BAR */}
+        <div className="flex items-center justify-between px-4 sm:px-6 py-4 bg-white dark:bg-[#171717] border-b border-slate-200 dark:border-white/[0.08]">
+          <div className="flex items-center gap-2 sm:gap-4">
+            <button onClick={() => setShowSidebar(!showSidebar)} className="p-2 sm:hidden hover:bg-slate-100 dark:hover:bg-white/[0.06] rounded-lg transition-colors">
+              <Calendar size={20} className="text-slate-600 dark:text-slate-400" />
+            </button>
+            <div className="flex items-center gap-1 sm:gap-2">
+              <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={goPrev} className="p-2 hover:bg-slate-100 dark:hover:bg-white/[0.06] rounded-lg transition-colors">
+                <ChevronLeft size={20} className="text-slate-600 dark:text-slate-400" />
+              </motion.button>
+              <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={goNext} className="p-2 hover:bg-slate-100 dark:hover:bg-white/[0.06] rounded-lg transition-colors">
+                <ChevronRight size={20} className="text-slate-600 dark:text-slate-400" />
+              </motion.button>
+            </div>
             <div>
-              <h1 className="text-lg font-semibold text-slate-900 dark:text-white">Schedule</h1>
-              <p className="text-[12px] text-slate-500 dark:text-slate-400 mt-0.5">
-                {format(selectedDate, 'MMMM d, yyyy')} · {format(selectedDate, 'EEEE')}
+              <h1 className="text-lg sm:text-xl font-semibold text-slate-900 dark:text-white">
+                {format(selectedDate, 'MMMM yyyy')}
+              </h1>
+              <p className="text-xs text-slate-500 dark:text-slate-400 hidden sm:block">
+                {format(selectedDate, 'EEEE, MMM d')}
               </p>
             </div>
+          </div>
 
-            {/* Center – month label */}
-            <div className="text-[13px] font-semibold text-slate-700 dark:text-slate-300">
-              {format(selectedDate, 'MMMM yyyy')}
+          <div className="flex items-center gap-2 sm:gap-3">
+            <div className="relative hidden sm:block">
+              <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+              <input
+                type="text"
+                placeholder="Search events..."
+                value={searchQuery}
+                onChange={e => setSearchQuery(e.target.value)}
+                className="w-56 pl-9 pr-3 py-2 bg-slate-100 dark:bg-white/[0.04] border border-slate-200 dark:border-white/[0.08] text-sm text-slate-700 dark:text-slate-300 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-950/20 dark:focus:ring-cyan-400/20 rounded-lg transition-all"
+              />
             </div>
 
-            {/* Right – controls */}
-            <div className="flex items-center gap-2 flex-wrap">
-              <div className="flex items-center">
-                <button onClick={goPrev} className="w-8 h-8 rounded-l-lg border border-slate-200 dark:border-white/[0.08] bg-white dark:bg-white/[0.03] flex items-center justify-center text-slate-500 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-white/[0.06] transition-colors">
-                  <ChevronLeft size={15} />
+            <div className="flex items-center gap-1 p-1 bg-slate-100 dark:bg-white/[0.06] rounded-lg">
+              {(['month', 'week', 'day'] as const).map((v) => (
+                <button
+                  key={v}
+                  onClick={() => setView(v)}
+                  className={`px-3 py-1.5 text-xs sm:text-sm font-medium rounded-md transition-all ${
+                    view === v
+                      ? 'bg-white dark:bg-[#171717] text-slate-900 dark:text-white shadow-sm'
+                      : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                  }`}
+                >
+                  {v.charAt(0).toUpperCase() + v.slice(1)}
                 </button>
-                <button onClick={goNext} className="w-8 h-8 rounded-r-lg border border-l-0 border-slate-200 dark:border-white/[0.08] bg-white dark:bg-white/[0.03] flex items-center justify-center text-slate-500 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-white/[0.06] transition-colors">
-                  <ChevronRight size={15} />
-                </button>
-              </div>
-
-              <button onClick={goToday} className="px-3 py-1.5 rounded-lg border border-slate-200 dark:border-white/[0.08] bg-white dark:bg-white/[0.03] text-[12px] font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-white/[0.06] transition-colors">
-                Today
-              </button>
-
-              {/* Search */}
-              <div className="relative">
-                <Search size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400" />
-                <input
-                  type="text"
-                  placeholder="Search…"
-                  value={searchQuery}
-                  onChange={e => setSearchQuery(e.target.value)}
-                  className="w-36 sm:w-44 pl-8 pr-3 py-1.5 rounded-lg border border-slate-200 dark:border-white/[0.08] bg-white dark:bg-white/[0.03] text-[12px] text-slate-700 dark:text-slate-300 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-cyan-950/20 dark:focus:ring-cyan-400/20 transition-colors"
-                />
-              </div>
-
-              {/* New Schedule */}
-              <button
-                onClick={openModal}
-                className="flex items-center gap-1.5 px-3 sm:px-4 py-1.5 rounded-lg bg-cyan-950 hover:bg-cyan-900 text-white text-[12px] font-semibold transition-colors"
-              >
-                <Plus size={14} />
-                <span className="hidden sm:inline">New Schedule</span>
-              </button>
+              ))}
             </div>
+
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={openModal}
+              className="flex items-center gap-2 px-4 py-2 bg-cyan-950 hover:bg-cyan-900 text-white text-sm font-medium rounded-lg transition-colors"
+            >
+              <Plus size={18} />
+              <span className="hidden sm:inline">Add Event</span>
+            </motion.button>
           </div>
         </div>
 
-        {/* ── BODY ── */}
+        {/* MAIN CONTENT */}
         <div className="flex flex-1 overflow-hidden">
 
-          {/* ━━━ MAIN AREA ━━━ */}
-          <div className="flex-1 overflow-auto min-w-0">
-            {isLoading ? (
-              <div className="flex items-center justify-center h-full">
-                <div className="text-[13px] text-slate-500 dark:text-slate-400">Loading schedule…</div>
-              </div>
-            ) : (
-              /* ────── MONTH GRID ────── */
-              <div className="p-4">
-                <div className="grid grid-cols-7 mb-2">
-                  {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map(d => (
-                    <div key={d} className="text-center text-[11px] font-semibold text-slate-400 dark:text-slate-500 py-2">{d}</div>
+          {/* LEFT SIDEBAR */}
+          <AnimatePresence>
+            {(showSidebar || typeof window === 'undefined' || window.innerWidth >= 640) && (
+              <motion.aside
+                initial={{ x: -280 }}
+                animate={{ x: 0 }}
+                exit={{ x: -280 }}
+                transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+                className={`absolute inset-y-0 left-0 z-40 w-72 bg-white dark:bg-[#171717] border-r border-slate-200 dark:border-white/[0.08] sm:relative sm:transform-none sm:w-72 shadow-lg sm:shadow-none`}
+              >
+                <div className="p-5 h-full overflow-y-auto">
+                  <div className="flex items-center justify-between mb-4 sm:hidden">
+                    <span className="text-sm font-semibold text-slate-900 dark:text-white">Calendar</span>
+                    <button onClick={() => setShowSidebar(false)} className="p-2 hover:bg-slate-100 dark:hover:bg-white/[0.06] rounded-lg transition-colors">
+                      <X size={18} className="text-slate-600 dark:text-slate-400" />
+                    </button>
+                  </div>
+
+                  {/* Mini Calendar */}
+                  <div className="mb-6">
+                    <div className="flex items-center justify-between mb-4">
+                      <button onClick={() => setCalDate(d => subMonths(d, 1))} className="p-1.5 hover:bg-slate-100 dark:hover:bg-white/[0.06] rounded-lg transition-colors">
+                        <ChevronLeft size={16} className="text-slate-600 dark:text-slate-400" />
+                      </button>
+                      <span className="text-sm font-semibold text-slate-900 dark:text-white">
+                        {format(calDate, 'MMMM yyyy')}
+                      </span>
+                      <button onClick={() => setCalDate(d => addMonths(d, 1))} className="p-1.5 hover:bg-slate-100 dark:hover:bg-white/[0.06] rounded-lg transition-colors">
+                        <ChevronRight size={16} className="text-slate-600 dark:text-slate-400" />
+                      </button>
+                    </div>
+
+                    <div className="grid grid-cols-7 gap-1 mb-2">
+                      {['Mo','Tu','We','Th','Fr','Sa','Su'].map(d => (
+                        <div key={d} className="text-center text-[10px] font-semibold text-slate-400">{d}</div>
+                      ))}
+                    </div>
+
+                    <div className="grid grid-cols-7 gap-1">
+                      {calGrid.map((day, i) => {
+                        const isCurrent = day.getMonth() === calDate.getMonth()
+                        const isTodayDay = isToday(day)
+                        const isActive = isSameDay(day, selectedDate)
+                        const hasEvent = eventDates.has(format(day, 'yyyy-MM-dd'))
+                        return (
+                          <motion.button
+                            key={i}
+                            whileHover={{ scale: 1.1 }}
+                            whileTap={{ scale: 0.95 }}
+                            onClick={() => selectCalDay(day)}
+                            className={`w-8 h-8 text-xs font-medium flex items-center justify-center transition-colors relative mx-auto
+                              ${!isCurrent ? 'text-slate-300 dark:text-slate-600' : ''}
+                              ${isTodayDay && !isActive ? 'bg-cyan-950 text-white rounded-full' : ''}
+                              ${isActive ? 'bg-cyan-950 text-white rounded-full' : ''}
+                              ${!isTodayDay && !isActive && isCurrent ? 'hover:bg-slate-100 dark:hover:bg-white/[0.06] text-slate-700 dark:text-slate-300 rounded-full' : ''}
+                            `}
+                          >
+                            {day.getDate()}
+                            {hasEvent && !isActive && (
+                              <span className="absolute bottom-1 w-1 h-1 bg-cyan-500" />
+                            )}
+                          </motion.button>
+                        )
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Filters */}
+                  <div>
+                    <h3 className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-3">Event Types</h3>
+                    <div className="space-y-2">
+                      {Object.entries(TYPE_COLOR).map(([key, colors]) => {
+                        const isSelected = selectedTypes.has(key)
+                        return (
+                          <motion.label
+                            key={key}
+                            whileHover={{ x: 4 }}
+                            onClick={() => {
+                              const newTypes = new Set(selectedTypes)
+                              if (newTypes.has(key)) {
+                                if (newTypes.size > 1) newTypes.delete(key)
+                              } else {
+                                newTypes.add(key)
+                              }
+                              setSelectedTypes(newTypes)
+                            }}
+                            className="flex items-center gap-3 cursor-pointer p-2 rounded-lg hover:bg-slate-50 dark:hover:bg-white/[0.04] transition-colors"
+                          >
+                            <div className={`w-5 h-5 flex items-center justify-center transition-colors rounded-md ${
+                              isSelected ? colors.iconBg : `bg-slate-100 dark:bg-white/[0.06]`
+                            }`}>
+                              {isSelected && <CheckCircle2 size={14} className="text-white" />}
+                            </div>
+                            <span className={`text-sm capitalize ${isSelected ? 'text-slate-900 dark:text-white font-medium' : 'text-slate-600 dark:text-slate-400'}`}>
+                              {key}
+                            </span>
+                          </motion.label>
+                        )
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Upcoming Events */}
+                  <div className="mt-6">
+                    <h3 className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-3">Today's Schedule</h3>
+                    <div className="space-y-2">
+                      {dayEvents(new Date()).slice(0, 3).map((event, i) => {
+                        const colors = TYPE_COLOR[event.type] ?? TYPE_COLOR.chat
+                        const client = clientMap.get(event.client_id)
+                        const time = parseDateValue(event.scheduled_at)
+                        return (
+                          <motion.div
+                            key={event.id}
+                            initial={{ opacity: 0, x: -10 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ delay: i * 0.1 }}
+                            className={`p-3 rounded-lg border ${colors.bg} ${colors.border}`}
+                          >
+                            <div className="flex items-center gap-2 mb-1">
+                              <div className={`w-6 h-6 flex items-center justify-center rounded ${colors.iconBg}`}>
+                                {event.type === 'video' && <Video size={12} className="text-white" />}
+                                {event.type === 'call' && <Phone size={12} className="text-white" />}
+                                {event.type === 'chat' && <MessageCircle size={12} className="text-white" />}
+                              </div>
+                              <span className={`text-xs font-medium ${colors.text}`}>{client?.name ?? 'Client'}</span>
+                            </div>
+                            {time && (
+                              <p className="text-[10px] text-slate-500 dark:text-slate-400 ml-8">
+                                {format(time, 'h:mm a')}
+                              </p>
+                            )}
+                          </motion.div>
+                        )
+                      })}
+                      {dayEvents(new Date()).length === 0 && (
+                        <p className="text-xs text-slate-400 dark:text-slate-500 text-center py-4">No events today</p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </motion.aside>
+            )}
+          </AnimatePresence>
+
+          {/* Overlay for mobile */}
+          {showSidebar && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black/50 z-30 sm:hidden"
+              onClick={() => setShowSidebar(false)}
+            />
+          )}
+
+          {/* CALENDAR GRID */}
+          <div className="flex-1 overflow-auto bg-slate-50 dark:bg-[#0f0f0f]">
+            {view === 'week' && (
+              <div className="min-w-[800px] p-6">
+                {/* Day headers */}
+                <div className="grid grid-cols-8 mb-4">
+                  <div className="p-3" />
+                  {weekDays.map((day, i) => (
+                    <motion.div
+                      key={i}
+                      whileHover={{ scale: 1.02 }}
+                      className={`p-3 text-center rounded-lg ${isToday(day) ? 'bg-cyan-950/5 dark:bg-cyan-900/10' : ''}`}
+                    >
+                      <div className="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">{DAYS_SHORT[i]}</div>
+                      <div className={`text-lg font-semibold mt-1 w-8 h-8 flex items-center justify-center mx-auto rounded-full ${
+                        isToday(day) ? 'bg-cyan-950 text-white' : 'text-slate-900 dark:text-white'
+                      }`}>
+                        {format(day, 'd')}
+                      </div>
+                    </motion.div>
                   ))}
                 </div>
-                <div className="grid grid-cols-7 border-t border-l border-slate-200 dark:border-white/[0.06]">
-                  {monthGrid.map((day, i) => {
-                    const isCurrent = day.getMonth() === selectedDate.getMonth()
-                    const isToday = isSameDay(day, now)
-                    const isActive = isSameDay(day, selectedDate)
-                    const evts = dayEvents(day)
+
+                {/* Time slots */}
+                <div className="bg-white dark:bg-[#171717] rounded-lg border border-slate-200 dark:border-white/[0.08] overflow-hidden">
+                  {HOURS.map(hour => (
+                    <div key={hour} className="grid grid-cols-8 border-b border-slate-100 dark:border-white/[0.06] last:border-b-0">
+                      <div className="p-3 text-xs text-slate-400 text-right pr-4 border-r border-slate-100 dark:border-white/[0.06]">
+                        {format(new Date(2024, 0, 1, hour), 'h a')}
+                      </div>
+                      {weekDays.map((day, dayIndex) => {
+                        const events = dayEvents(day).filter(e => {
+                          const date = parseDateValue(e.scheduled_at)
+                          return date && date.getHours() === hour
+                        })
+                        const isTodayDay = isToday(day)
+                        return (
+                          <motion.div
+                            key={dayIndex}
+                            whileHover={{ backgroundColor: isTodayDay ? 'rgba(6, 182, 212, 0.05)' : 'rgba(148, 163, 184, 0.05)' }}
+                            className={`relative min-h-[60px] p-1 border-r border-slate-100 dark:border-white/[0.06] last:border-r-0 ${isTodayDay ? 'bg-cyan-950/5 dark:bg-cyan-900/10' : ''}`}
+                          >
+                            {events.map((event, eventIndex) => {
+                              const colors = TYPE_COLOR[event.type] ?? TYPE_COLOR.chat
+                              const client = clientMap.get(event.client_id)
+                              return (
+                                <motion.button
+                                  key={event.id}
+                                  initial={{ scale: 0.9, opacity: 0 }}
+                                  animate={{ scale: 1, opacity: 1 }}
+                                  transition={{ delay: eventIndex * 0.05 }}
+                                  whileHover={{ scale: 1.02 }}
+                                  whileTap={{ scale: 0.98 }}
+                                  onClick={() => setSelected(event)}
+                                  className={`w-full ${colors.bg} ${colors.border} border p-2 text-left transition-all hover:shadow-md z-10 relative rounded-md mb-1 last:mb-0`}
+                                >
+                                  <div className="flex items-center gap-2">
+                                    <div className={`w-6 h-6 flex items-center justify-center flex-shrink-0 rounded-md ${colors.iconBg}`}>
+                                      {event.type === 'video' && <Video size={14} className="text-white" />}
+                                      {event.type === 'call' && <Phone size={14} className="text-white" />}
+                                      {event.type === 'chat' && <MessageCircle size={14} className="text-white" />}
+                                    </div>
+                                    <div className="min-w-0 flex-1">
+                                      <div className="text-xs font-semibold text-slate-900 dark:text-white truncate">
+                                        {client?.name ?? 'Client'}
+                                      </div>
+                                      <div className="text-[10px] text-slate-500 dark:text-slate-400">
+                                        {format(parseDateValue(event.scheduled_at)!, 'h:mm a')}
+                                      </div>
+                                    </div>
+                                  </div>
+                                </motion.button>
+                              )
+                            })}
+                          </motion.div>
+                        )
+                      })}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {view === 'day' && (
+              <div className="min-w-[400px] p-6">
+                <div className="bg-white dark:bg-[#171717] rounded-lg border border-slate-200 dark:border-white/[0.08] overflow-hidden mb-4">
+                  <div className="p-4 text-center border-b border-slate-100 dark:border-white/[0.06]">
+                    <div className="text-sm font-medium text-slate-500 dark:text-slate-400 uppercase">
+                      {format(selectedDate, 'EEEE')}
+                    </div>
+                    <div className={`text-3xl font-semibold mt-1 ${isToday(selectedDate) ? 'text-cyan-950 dark:text-cyan-400' : 'text-slate-900 dark:text-white'}`}>
+                      {format(selectedDate, 'd')}
+                    </div>
+                  </div>
+                </div>
+                <div className="bg-white dark:bg-[#171717] rounded-lg border border-slate-200 dark:border-white/[0.08] overflow-hidden">
+                  {HOURS.map(hour => {
+                    const events = dayEvents(selectedDate).filter(e => {
+                      const date = parseDateValue(e.scheduled_at)
+                      return date && date.getHours() === hour
+                    })
                     return (
-                      <button
-                        key={i}
-                        onClick={() => {
-                          setSelectedDate(day)
-                          const first = evts[0]
-                          setSelected(first ?? null)
-                        }}
-                        className={`min-h-[100px] p-2 border-b border-r border-slate-200 dark:border-white/[0.06] text-left transition-colors hover:bg-slate-50 dark:hover:bg-white/[0.02] ${
-                          isActive ? 'bg-cyan-50 dark:bg-cyan-900/10' : !isCurrent ? 'bg-slate-50/50 dark:bg-white/[0.01]' : 'bg-white dark:bg-[#141414]'
-                        }`}
-                      >
-                        <span className={`text-[12px] font-semibold inline-flex items-center justify-center w-6 h-6 rounded-full ${
-                          isToday ? 'bg-cyan-950 text-white' : isCurrent ? 'text-slate-700 dark:text-slate-300' : 'text-slate-400 dark:text-slate-600'
-                        }`}>{day.getDate()}</span>
-                        <div className="mt-1 space-y-0.5">
-                          {evts.slice(0, 3).map(ev => {
-                            const colors = TYPE_COLOR[ev.type] ?? TYPE_COLOR.chat
+                      <div key={hour} className="flex border-b border-slate-100 dark:border-white/[0.06] last:border-b-0">
+                        <div className="w-20 p-3 text-xs text-slate-400 text-right pr-4 border-r border-slate-100 dark:border-white/[0.06] flex-shrink-0">
+                          {format(new Date(2024, 0, 1, hour), 'h a')}
+                        </div>
+                        <div className="flex-1 p-2">
+                          {events.map((event, i) => {
+                            const colors = TYPE_COLOR[event.type] ?? TYPE_COLOR.chat
+                            const client = clientMap.get(event.client_id)
                             return (
-                              <div key={ev.id} className={`${colors.bg} ${colors.text} rounded px-1.5 py-0.5 text-[10px] font-medium truncate`}>
-                                {clientMap.get(ev.client_id)?.name ?? 'Client'}
-                              </div>
+                              <motion.button
+                                key={event.id}
+                                initial={{ x: -20, opacity: 0 }}
+                                animate={{ x: 0, opacity: 1 }}
+                                transition={{ delay: i * 0.1 }}
+                                whileHover={{ scale: 1.01 }}
+                                onClick={() => setSelected(event)}
+                                className={`w-full ${colors.bg} ${colors.border} border p-3 text-left mb-2 last:mb-0 rounded-lg transition-all hover:shadow-md`}
+                              >
+                                <div className="flex items-center gap-3">
+                                  <div className={`w-8 h-8 flex items-center justify-center flex-shrink-0 rounded-lg ${colors.iconBg}`}>
+                                    {event.type === 'video' && <Video size={16} className="text-white" />}
+                                    {event.type === 'call' && <Phone size={16} className="text-white" />}
+                                    {event.type === 'chat' && <MessageCircle size={16} className="text-white" />}
+                                  </div>
+                                  <div className="flex-1 min-w-0 text-left">
+                                    <div className="text-sm font-semibold text-slate-900 dark:text-white">
+                                      {client?.name ?? 'Client'}
+                                    </div>
+                                    <div className="text-xs text-slate-500 dark:text-slate-400">
+                                      {format(parseDateValue(event.scheduled_at)!, 'h:mm a')} · {event.type}
+                                    </div>
+                                  </div>
+                                  <ArrowRight size={16} className="text-slate-400" />
+                                </div>
+                              </motion.button>
                             )
                           })}
-                          {evts.length > 3 && (
-                            <span className="text-[10px] text-slate-400 dark:text-slate-500">+{evts.length - 3} more</span>
-                          )}
                         </div>
-                      </button>
+                      </div>
                     )
                   })}
                 </div>
               </div>
             )}
-          </div>
 
-          {/* ━━━ RIGHT SIDEBAR ━━━ */}
-          <div className="hidden lg:flex flex-col w-[300px] xl:w-[320px] border-l border-slate-200 dark:border-white/[0.07] bg-white dark:bg-[#141414] overflow-y-auto flex-shrink-0">
-
-            {/* ── Mini Calendar ── */}
-            <div className="p-4 border-b border-slate-200 dark:border-white/[0.06]">
-              <div className="flex items-center justify-between mb-3">
-                <button onClick={() => setCalDate(d => subMonths(d, 1))} className="w-6 h-6 rounded flex items-center justify-center text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/[0.06] transition-colors">
-                  <ChevronLeft size={14} />
-                </button>
-                <span className="text-[13px] font-semibold text-slate-800 dark:text-white">
-                  {format(calDate, 'MMMM yyyy')}
-                </span>
-                <button onClick={() => setCalDate(d => addMonths(d, 1))} className="w-6 h-6 rounded flex items-center justify-center text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/[0.06] transition-colors">
-                  <ChevronRight size={14} />
-                </button>
-              </div>
-
-              <div className="grid grid-cols-7 mb-1">
-                {['Mo','Tu','We','Th','Fr','Sa','Su'].map(d => (
-                  <div key={d} className="text-center text-[10px] font-semibold text-slate-400 dark:text-slate-500 py-1">{d}</div>
-                ))}
-              </div>
-
-              <div className="grid grid-cols-7 gap-y-0.5">
-                {calGrid.map((day, i) => {
-                  const isCurrent = day.getMonth() === calDate.getMonth()
-                  const isToday = isSameDay(day, now)
-                  const isActive = isSameDay(day, selectedDate)
-                  const hasEvent = eventDates.has(format(day, 'yyyy-MM-dd'))
-                  return (
-                    <button
-                      key={i}
-                      onClick={() => selectCalDay(day)}
-                      className={`w-8 h-8 mx-auto rounded-full text-[11px] font-medium flex flex-col items-center justify-center transition-colors relative
-                        ${!isCurrent ? 'text-slate-300 dark:text-slate-600' : 'text-slate-700 dark:text-slate-300'}
-                        ${isToday && !isActive ? 'bg-cyan-950 text-white font-semibold' : ''}
-                        ${isActive ? 'ring-2 ring-cyan-950 dark:ring-cyan-400 font-semibold bg-cyan-950/10 dark:bg-cyan-900/30 text-cyan-900 dark:text-cyan-300' : ''}
-                        ${!isToday && !isActive ? 'hover:bg-slate-100 dark:hover:bg-white/[0.06]' : ''}
-                      `}
-                    >
-                      {day.getDate()}
-                      {hasEvent && (
-                        <span className="absolute bottom-0.5 w-1 h-1 rounded-full bg-cyan-950 dark:bg-cyan-400" />
-                      )}
-                    </button>
-                  )
-                })}
-              </div>
-            </div>
-
-            {/* ── Event Detail ── */}
-            {selected ? (
-              <div className="p-4 flex-1">
-                <div className="flex items-start justify-between mb-4">
-                  <h3 className="text-[15px] font-semibold text-slate-900 dark:text-white leading-snug">
-                    {selectedClient?.name ?? 'Client'} · <span className="capitalize">{selected.type}</span>
-                  </h3>
-                  <div className="flex items-center gap-1 flex-shrink-0">
-                    <button className="w-7 h-7 rounded-lg flex items-center justify-center text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/[0.06] transition-colors" title="Copy link">
-                      <Copy size={13} />
-                    </button>
-                    <Link href={`/checkins/new?client=${selected.client_id}`} className="w-7 h-7 rounded-lg flex items-center justify-center text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/[0.06] transition-colors" title="Edit">
-                      <Pencil size={13} />
-                    </Link>
-                  </div>
-                </div>
-
-                <div className="space-y-3 text-[12px]">
-                  <div className="flex items-center gap-2.5 text-slate-600 dark:text-slate-400">
-                    <Calendar size={14} className="text-slate-400 dark:text-slate-500 flex-shrink-0" />
-                    <span>{formatDate(selected.scheduled_at, 'EEEE, MMM d, yyyy')}</span>
-                  </div>
-                  <div className="flex items-center gap-2.5 text-slate-600 dark:text-slate-400">
-                    <Clock size={14} className="text-slate-400 dark:text-slate-500 flex-shrink-0" />
-                    <span>{formatDate(selected.scheduled_at, 'h:mm a')}</span>
-                  </div>
-                  <div className="flex items-center gap-2.5 text-slate-600 dark:text-slate-400">
-                    <Bell size={14} className="text-slate-400 dark:text-slate-500 flex-shrink-0" />
-                    <span>10 min before</span>
-                  </div>
-
-                  {/* Client */}
-                  <div className="flex items-center gap-2.5 pt-2">
-                    {selectedClient?.profile_photo_url ? (
-                      <img src={selectedClient.profile_photo_url} alt="" className="w-7 h-7 rounded-full object-cover" />
-                    ) : (
-                      <div className="w-7 h-7 rounded-full bg-slate-200 dark:bg-white/[0.08] flex items-center justify-center">
-                        <span className="text-[10px] font-semibold text-slate-500 dark:text-slate-400">{selectedClient?.name?.[0]?.toUpperCase() ?? 'C'}</span>
+            {view === 'month' && (
+              <div className="p-6">
+                <div className="bg-white dark:bg-[#171717] rounded-lg border border-slate-200 dark:border-white/[0.08] overflow-hidden">
+                  <div className="grid grid-cols-7 border-b border-slate-200 dark:border-white/[0.08]">
+                    {DAYS_SHORT.map(d => (
+                      <div key={d} className="p-3 text-center text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase bg-slate-50 dark:bg-white/[0.04]">
+                        {d}
                       </div>
-                    )}
-                    <span className="text-[13px] font-medium text-slate-700 dark:text-slate-300">{selectedClient?.name ?? 'Client'}</span>
+                    ))}
                   </div>
+                  {(() => {
+                    const firstDay = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), 1)
+                    const lastDay = new Date(selectedDate.getFullYear(), selectedDate.getMonth() + 1, 0)
+                    const startDate = startOfWeek(firstDay, { weekStartsOn: 1 })
+                    const endDate = endOfWeek(lastDay, { weekStartsOn: 1 })
+                    const allDays = eachDayOfInterval({ start: startDate, end: endDate })
 
-                  {/* Status */}
-                  <div className="flex items-center gap-2 pt-1">
-                    <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold capitalize ${
-                      selected.status === 'completed' ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400'
-                      : selected.status === 'cancelled' ? 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400'
-                      : 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400'
-                    }`}>{selected.status}</span>
-                    <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold capitalize ${
-                      selected.client_response === 'accepted' ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400'
-                      : selected.client_response === 'declined' ? 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400'
-                      : selected.client_response === 'reschedule_requested' ? 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400'
-                      : 'bg-slate-100 dark:bg-white/[0.06] text-slate-500 dark:text-slate-400'
-                    }`}>{selected.client_response?.replace('_', ' ')}</span>
-                  </div>
+                    const weeks: typeof allDays[] = []
+                    for (let i = 0; i < allDays.length; i += 7) {
+                      weeks.push(allDays.slice(i, i + 7))
+                    }
 
-                  {/* Proposed time */}
-                  {selected.proposed_scheduled_at && (
-                    <div className="mt-2 p-2.5 rounded-lg bg-amber-50 dark:bg-amber-900/15 border border-amber-200 dark:border-amber-800/30">
-                      <p className="text-[11px] font-semibold text-amber-700 dark:text-amber-400 mb-0.5">Proposed new time</p>
-                      <p className="text-[12px] text-amber-600 dark:text-amber-300">
-                        {formatDate(selected.proposed_scheduled_at, 'EEE, MMM d yyyy · h:mm a')}
-                      </p>
-                    </div>
-                  )}
-
-                  {/* Notes */}
-                  {selected.notes && (
-                    <div className="pt-3 border-t border-slate-200 dark:border-white/[0.06]">
-                      <p className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1.5">Notes</p>
-                      <p className="text-[12px] text-slate-600 dark:text-slate-400 leading-relaxed">{selected.notes}</p>
-                    </div>
-                  )}
-
-                  {/* Meeting link */}
-                  {selected.meeting_link && (
-                    <div className="pt-2">
-                      <a
-                        href={selected.meeting_link}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex items-center gap-1.5 text-[12px] font-medium text-cyan-700 dark:text-cyan-400 hover:text-cyan-600 transition-colors"
-                      >
-                        <Video size={13} />
-                        Join meeting
-                      </a>
-                    </div>
-                  )}
+                    return weeks.map((week, weekIndex) => (
+                      <div key={weekIndex} className="grid grid-cols-7 border-b border-slate-100 dark:border-white/[0.06] last:border-b-0">
+                        {week.map((day, i) => {
+                          const isCurrent = day.getMonth() === selectedDate.getMonth()
+                          const isTodayDay = isToday(day)
+                          const events = dayEvents(day)
+                          return (
+                            <motion.div
+                              key={i}
+                              whileHover={{ backgroundColor: 'rgba(148, 163, 184, 0.05)' }}
+                              onClick={() => { setSelectedDate(day); setView('day') }}
+                              className={`p-2 min-h-[100px] cursor-pointer border-r border-slate-100 dark:border-white/[0.06] last:border-r-0 ${
+                                !isCurrent ? 'bg-slate-50/50 dark:bg-white/[0.02]' : ''
+                              } ${isTodayDay ? 'bg-cyan-950/5 dark:bg-cyan-900/10' : ''}`}
+                            >
+                              <div className={`text-sm font-medium mb-2 w-7 h-7 flex items-center justify-center rounded-full ${
+                                isTodayDay ? 'bg-cyan-950 text-white' : isCurrent ? 'text-slate-900 dark:text-white' : 'text-slate-400'
+                              }`}>
+                                {format(day, 'd')}
+                              </div>
+                              <div className="space-y-1">
+                                {events.slice(0, 3).map(event => {
+                                  const colors = TYPE_COLOR[event.type] ?? TYPE_COLOR.chat
+                                  const client = clientMap.get(event.client_id)
+                                  return (
+                                    <div
+                                      key={event.id}
+                                      className={`${colors.bg} ${colors.text} px-2 py-1 text-[10px] font-medium truncate rounded-md`}
+                                    >
+                                      {client?.name?.split(' ')[0] ?? 'Client'}
+                                    </div>
+                                  )
+                                })}
+                                {events.length > 3 && (
+                                  <div className="text-[10px] text-slate-500 dark:text-slate-400 pl-1">
+                                    +{events.length - 3} more
+                                  </div>
+                                )}
+                              </div>
+                            </motion.div>
+                          )
+                        })}
+                      </div>
+                    ))
+                  })()}
                 </div>
-              </div>
-            ) : (
-              <div className="flex-1 flex flex-col items-center justify-center p-6 text-center">
-                <div className="w-14 h-14 rounded-2xl bg-slate-100 dark:bg-white/[0.05] flex items-center justify-center mb-3">
-                  <Calendar className="w-6 h-6 text-slate-300 dark:text-slate-600" />
-                </div>
-                <p className="text-[13px] font-medium text-slate-500 dark:text-slate-400">Select an event</p>
-                <p className="text-[11px] text-slate-400 dark:text-slate-500 mt-1">Click on an event to see details</p>
               </div>
             )}
-
-            {/* ── Day events list ── */}
-           
           </div>
         </div>
 
-        {/* ━━━ CREATE SCHEDULE MODAL ━━━ */}
-        {showModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-            <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setShowModal(false)} />
-            <div className="relative w-full max-w-md bg-white dark:bg-[#1a1a1a] rounded-2xl shadow-2xl overflow-hidden">
-              {/* Header */}
-              <div className="flex items-center justify-between px-6 pt-6 pb-4">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-cyan-950/10 dark:bg-cyan-900/20 flex items-center justify-center">
-                    <Calendar size={18} className="text-cyan-950 dark:text-cyan-400" />
+        {/* EVENT DETAIL POPUP */}
+        <AnimatePresence>
+          {selected && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 z-50 flex items-center justify-center p-4"
+              onClick={() => setSelected(null)}
+            >
+              <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
+              <motion.div
+                initial={{ scale: 0.95, opacity: 0, y: 20 }}
+                animate={{ scale: 1, opacity: 1, y: 0 }}
+                exit={{ scale: 0.95, opacity: 0, y: 20 }}
+                className="relative w-full max-w-md bg-white dark:bg-[#171717] rounded-xl shadow-2xl overflow-hidden border border-slate-200 dark:border-white/[0.08]"
+                onClick={e => e.stopPropagation()}
+              >
+                <div className="p-6">
+                  <div className="flex items-start justify-between mb-4">
+                    <div className="flex items-center gap-3">
+                      <div className="w-12 h-12 flex items-center justify-center bg-cyan-950 dark:bg-cyan-500 rounded-lg">
+                        <User size={24} className="text-white" />
+                      </div>
+                      <div>
+                        <h3 className="text-lg font-semibold text-slate-900 dark:text-white">
+                          {selectedClient?.name ?? 'Client'}
+                        </h3>
+                        <div className="flex items-center gap-2 mt-1">
+                          <span className={`inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium capitalize rounded-md ${
+                            TYPE_COLOR[selected.type]?.bg ?? 'bg-slate-100'
+                          } ${TYPE_COLOR[selected.type]?.text ?? 'text-slate-700'}`}>
+                            {selected.type === 'video' && <Video size={12} />}
+                            {selected.type === 'call' && <Phone size={12} />}
+                            {selected.type === 'chat' && <MessageCircle size={12} />}
+                            {selected.type}
+                          </span>
+                          <span className={`inline-flex items-center px-2 py-0.5 text-xs font-medium capitalize rounded-md ${
+                            selected.status === 'completed' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400'
+                            : selected.status === 'cancelled' ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
+                            : 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400'
+                          }`}>
+                            {selected.status}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                    <button onClick={() => setSelected(null)} className="p-2 hover:bg-slate-100 dark:hover:bg-white/[0.06] rounded-lg transition-colors">
+                      <X size={18} className="text-slate-400" />
+                    </button>
                   </div>
-                  <div>
-                    <h2 className="text-[16px] font-semibold text-slate-900 dark:text-white">Create Schedule</h2>
-                    <p className="text-[12px] text-slate-500 dark:text-slate-400">Fill in the data below to add a schedule</p>
+
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-3 text-sm p-3 bg-slate-50 dark:bg-white/[0.04] rounded-lg">
+                      <Calendar size={16} className="text-slate-400" />
+                      <span className="text-slate-700 dark:text-slate-300">
+                        {formatDate(selected.scheduled_at, 'EEEE, MMMM d, yyyy')}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-3 text-sm p-3 bg-slate-50 dark:bg-white/[0.04] rounded-lg">
+                      <Clock size={16} className="text-slate-400" />
+                      <span className="text-slate-700 dark:text-slate-300">
+                        {formatDate(selected.scheduled_at, 'h:mm a')}
+                      </span>
+                    </div>
+                    {selected.meeting_link && (
+                      <div className="flex items-center gap-3 text-sm p-3 bg-slate-50 dark:bg-white/[0.04] rounded-lg">
+                        <Video size={16} className="text-slate-400" />
+                        <a href={selected.meeting_link} target="_blank" rel="noopener noreferrer" className="text-cyan-600 dark:text-cyan-400 hover:underline font-medium">
+                          Join meeting
+                        </a>
+                      </div>
+                    )}
+                    {selected.notes && (
+                      <div className="pt-3">
+                        <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">Notes</p>
+                        <p className="text-sm text-slate-700 dark:text-slate-300 p-3 bg-slate-50 dark:bg-white/[0.04] rounded-lg">{selected.notes}</p>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="flex items-center gap-3 mt-6 pt-4 border-t border-slate-200 dark:border-white/[0.08]">
+                    <button className="flex-1 px-4 py-2.5 bg-cyan-950 hover:bg-cyan-900 text-white text-sm font-medium rounded-lg transition-colors">
+                      Reschedule
+                    </button>
+                    <button className="flex-1 px-4 py-2.5 bg-slate-100 dark:bg-white/[0.06] text-slate-700 dark:text-slate-300 text-sm font-medium rounded-lg transition-colors hover:bg-slate-200 dark:hover:bg-white/[0.1]">
+                      Cancel
+                    </button>
                   </div>
                 </div>
-                <button onClick={() => setShowModal(false)} className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:text-slate-600 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/[0.06] transition-colors">
-                  <X size={16} />
-                </button>
-              </div>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
-              {/* Form */}
-              <form onSubmit={handleCreate} className="px-6 pb-6 space-y-4">
-                {/* Participant */}
-                <div>
-                  <label className="block text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1.5">Participant</label>
-                  <select
-                    value={formClient}
-                    onChange={e => setFormClient(e.target.value)}
-                    required
-                    className="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-white/[0.1] bg-slate-50 dark:bg-white/[0.04] text-[13px] text-slate-700 dark:text-slate-300 focus:outline-none focus:ring-2 focus:ring-cyan-950/20 dark:focus:ring-cyan-400/20 transition-colors"
-                  >
-                    <option value="">Select client…</option>
-                    {clients.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-                  </select>
+        {/* CREATE MODAL */}
+        <AnimatePresence>
+          {showModal && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 z-50 flex items-center justify-center p-4"
+            >
+              <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setShowModal(false)} />
+              <motion.div
+                initial={{ scale: 0.95, opacity: 0, y: 20 }}
+                animate={{ scale: 1, opacity: 1, y: 0 }}
+                exit={{ scale: 0.95, opacity: 0, y: 20 }}
+                className="relative w-full max-w-md bg-white dark:bg-[#171717] rounded-xl shadow-2xl overflow-hidden border border-slate-200 dark:border-white/[0.08]"
+                onClick={e => e.stopPropagation()}
+              >
+                <div className="flex items-center justify-between px-6 pt-6 pb-4 border-b border-slate-100 dark:border-white/[0.08]">
+                  <div>
+                    <h2 className="text-lg font-semibold text-slate-900 dark:text-white">Add Event</h2>
+                    <p className="text-sm text-slate-500 dark:text-slate-400">Schedule a new session</p>
+                  </div>
+                  <button onClick={() => setShowModal(false)} className="p-2 hover:bg-slate-100 dark:hover:bg-white/[0.06] rounded-lg transition-colors">
+                    <X size={18} className="text-slate-400" />
+                  </button>
                 </div>
 
-                {/* Date & Time */}
-                <div className="grid grid-cols-2 gap-3">
+                <form onSubmit={handleCreate} className="px-6 py-4 space-y-4">
                   <div>
-                    <label className="block text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1.5">Date</label>
-                    <div className="relative">
-                      <Calendar size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+                    <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">Client</label>
+                    <select
+                      value={formClient}
+                      onChange={e => setFormClient(e.target.value)}
+                      required
+                      className="w-full px-3 py-2.5 bg-slate-50 dark:bg-white/[0.04] border border-slate-200 dark:border-white/[0.08] text-sm text-slate-700 dark:text-slate-300 focus:outline-none focus:ring-2 focus:ring-cyan-950/20 dark:focus:ring-cyan-400/20 rounded-lg transition-all"
+                    >
+                      <option value="">Select a client...</option>
+                      {clients.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                    </select>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">Date</label>
                       <input
                         type="date"
                         value={formDate}
                         onChange={e => setFormDate(e.target.value)}
                         required
-                        className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-slate-200 dark:border-white/[0.1] bg-slate-50 dark:bg-white/[0.04] text-[13px] text-slate-700 dark:text-slate-300 focus:outline-none focus:ring-2 focus:ring-cyan-950/20 dark:focus:ring-cyan-400/20 transition-colors"
+                        className="w-full px-3 py-2.5 bg-slate-50 dark:bg-white/[0.04] border border-slate-200 dark:border-white/[0.08] text-sm text-slate-700 dark:text-slate-300 focus:outline-none focus:ring-2 focus:ring-cyan-950/20 dark:focus:ring-cyan-400/20 rounded-lg transition-all"
                       />
                     </div>
-                  </div>
-                  <div>
-                    <label className="block text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1.5">Time</label>
-                    <div className="relative">
-                      <Clock size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+                    <div>
+                      <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">Time</label>
                       <input
                         type="time"
                         value={formTime}
                         onChange={e => setFormTime(e.target.value)}
                         required
-                        className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-slate-200 dark:border-white/[0.1] bg-slate-50 dark:bg-white/[0.04] text-[13px] text-slate-700 dark:text-slate-300 focus:outline-none focus:ring-2 focus:ring-cyan-950/20 dark:focus:ring-cyan-400/20 transition-colors"
+                        className="w-full px-3 py-2.5 bg-slate-50 dark:bg-white/[0.04] border border-slate-200 dark:border-white/[0.08] text-sm text-slate-700 dark:text-slate-300 focus:outline-none focus:ring-2 focus:ring-cyan-950/20 dark:focus:ring-cyan-400/20 rounded-lg transition-all"
                       />
                     </div>
                   </div>
-                </div>
 
-                {/* Type */}
-                <div>
-                  <label className="block text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1.5">Meeting Type</label>
-                  <select
-                    value={formType}
-                    onChange={e => setFormType(e.target.value as 'video' | 'call' | 'chat')}
-                    className="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-white/[0.1] bg-slate-50 dark:bg-white/[0.04] text-[13px] text-slate-700 dark:text-slate-300 focus:outline-none focus:ring-2 focus:ring-cyan-950/20 dark:focus:ring-cyan-400/20 transition-colors"
-                  >
-                    <option value="video">Video Call</option>
-                    <option value="call">Phone Call</option>
-                    <option value="chat">Chat</option>
-                  </select>
-                </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">Type</label>
+                    <select
+                      value={formType}
+                      onChange={e => setFormType(e.target.value as 'video' | 'call' | 'chat')}
+                      className="w-full px-3 py-2.5 bg-slate-50 dark:bg-white/[0.04] border border-slate-200 dark:border-white/[0.08] text-sm text-slate-700 dark:text-slate-300 focus:outline-none focus:ring-2 focus:ring-cyan-950/20 dark:focus:ring-cyan-400/20 rounded-lg transition-all"
+                    >
+                      <option value="video">Video Call</option>
+                      <option value="call">Phone Call</option>
+                      <option value="chat">Chat</option>
+                    </select>
+                  </div>
 
-                {/* Meeting link */}
-                <div>
-                  <label className="block text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1.5">Meeting Link</label>
-                  <div className="relative">
-                    <Link2 size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">Meeting Link</label>
                     <input
                       type="url"
                       value={formLink}
                       onChange={e => setFormLink(e.target.value)}
-                      placeholder="https://meet.google.com/…"
-                      className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-slate-200 dark:border-white/[0.1] bg-slate-50 dark:bg-white/[0.04] text-[13px] text-slate-700 dark:text-slate-300 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-cyan-950/20 dark:focus:ring-cyan-400/20 transition-colors"
+                      placeholder="https://meet.google.com/..."
+                      className="w-full px-3 py-2.5 bg-slate-50 dark:bg-white/[0.04] border border-slate-200 dark:border-white/[0.08] text-sm text-slate-700 dark:text-slate-300 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-950/20 dark:focus:ring-cyan-400/20 rounded-lg transition-all"
                     />
                   </div>
-                </div>
 
-                {/* Notes */}
-                <div>
-                  <label className="block text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1.5">Notes</label>
-                  <textarea
-                    value={formNotes}
-                    onChange={e => setFormNotes(e.target.value)}
-                    rows={3}
-                    placeholder="Agenda, topics to discuss…"
-                    className="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-white/[0.1] bg-slate-50 dark:bg-white/[0.04] text-[13px] text-slate-700 dark:text-slate-300 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-cyan-950/20 dark:focus:ring-cyan-400/20 transition-colors resize-none"
-                  />
-                </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">Notes</label>
+                    <textarea
+                      value={formNotes}
+                      onChange={e => setFormNotes(e.target.value)}
+                      rows={3}
+                      placeholder="Agenda, topics to discuss..."
+                      className="w-full px-3 py-2.5 bg-slate-50 dark:bg-white/[0.04] border border-slate-200 dark:border-white/[0.08] text-sm text-slate-700 dark:text-slate-300 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-950/20 dark:focus:ring-cyan-400/20 rounded-lg transition-all resize-none"
+                    />
+                  </div>
 
-                {/* Actions */}
-                <div className="flex items-center justify-end gap-3 pt-2">
-                  <button
-                    type="button"
-                    onClick={() => setShowModal(false)}
-                    className="px-4 py-2 rounded-xl text-[13px] font-semibold text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-white/[0.06] transition-colors"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={formLoading}
-                    className="px-5 py-2 rounded-xl bg-cyan-950 hover:bg-cyan-900 text-white text-[13px] font-semibold transition-colors disabled:opacity-50"
-                  >
-                    {formLoading ? 'Saving…' : 'Save Schedule'}
-                  </button>
-                </div>
-              </form>
-            </div>
-          </div>
-        )}
+                  <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-100 dark:border-white/[0.08]">
+                    <button
+                      type="button"
+                      onClick={() => setShowModal(false)}
+                      className="px-4 py-2.5 text-sm font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-white/[0.06] rounded-lg transition-colors"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={formLoading}
+                      className="px-5 py-2.5 bg-cyan-950 hover:bg-cyan-900 text-white text-sm font-medium rounded-lg transition-colors disabled:opacity-50"
+                    >
+                      {formLoading ? 'Saving...' : 'Save Event'}
+                    </button>
+                  </div>
+                </form>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </DashboardLayout>
   )

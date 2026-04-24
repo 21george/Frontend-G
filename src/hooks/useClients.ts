@@ -35,7 +35,7 @@ export const useUpdateClient = (id: string) =>
 export const useDeleteClient = () =>
   useToastMutation({
     mutationFn: (id: string) => clientsApi.remove(id),
-    successMessage: 'Client deleted',
+    successMessage: 'Client permanently deleted',
     errorMessage: 'Failed to delete client',
     invalidateKeys: [['clients']],
   })

@@ -56,3 +56,11 @@ export const useImportWorkoutPlans = () =>
     errorMessage: 'Failed to import plans',
     invalidateKeys: [['workout-plans']],
   })
+
+export const useAssignWorkoutPlan = (id: string) =>
+  useToastMutation({
+    mutationFn: (client_ids: string[]) => workoutPlansApi.assign(id, client_ids),
+    successMessage: 'Workout plan assigned successfully',
+    errorMessage: 'Failed to assign workout plan',
+    invalidateKeys: [['workout-plans'], ['workout-plan', id]],
+  })

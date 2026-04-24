@@ -20,10 +20,13 @@ export const workoutPlansApi = {
   import: (file: File) => {
     const formData = new FormData()
     formData.append('file', file)
+    // Don't set Content-Type header - browser will set it with boundary automatically
     return api.post<ApiResponse<{ imported: number; plan_ids: string[]; warnings: string[] }>>(
       '/workout-plans/import',
-      formData,
-      { headers: { 'Content-Type': 'multipart/form-data' } }
+      formData
     ).then(r => r.data)
   },
+
+  assign: (id: string, client_ids: string[]) =>
+    api.post(`/workout-plans/${id}/assign`, { client_ids }).then(r => r.data),
 }

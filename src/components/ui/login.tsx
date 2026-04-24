@@ -4,7 +4,7 @@ import * as React from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "./button";
 import {
   Form,
@@ -20,7 +20,7 @@ import { Loader2 } from "lucide-react";
 
 // Validation schema for the form
 const formSchema = z.object({
-  email: z.string().email({ message: "Please enter a valid email." }),
+  email: z.string().trim().email({ message: "Please enter a valid email." }),
   password: z
     .string()
     .min(8, { message: "Password must be at least 8 characters." }),
@@ -99,11 +99,23 @@ export function AuthFormSplitScreen({
 
   const itemVariants = {
     hidden: { y: 20, opacity: 0 },
-    visible: { y: 0, opacity: 1 },
+    visible: { y: 0, opacity: 1, transition: { type: 'spring' as const, stiffness: 100, damping: 20 } },
+  };
+
+  const pageVariants = {
+    initial: { opacity: 0 },
+    animate: { opacity: 1, transition: { duration: 0.3, ease: [0.4, 0, 0.2, 1] as const } },
+    exit: { opacity: 0, transition: { duration: 0.2 } },
   };
 
   return (
-    <div className="relative flex min-h-[100dvh] w-full flex-col md:flex-row">
+    <motion.div
+      initial="initial"
+      animate="animate"
+      exit="exit"
+      variants={pageVariants}
+      className="relative flex min-h-[100dvh] w-full flex-col md:flex-row"
+    >
       {/* Error toast */}
       {error && (
         <div className="fixed top-4 left-1/2 -translate-x-1/2 bg-red-500/90 text-white px-4 py-2 rounded-lg shadow-lg z-50 text-sm max-w-[90vw] text-center">
@@ -212,20 +224,32 @@ export function AuthFormSplitScreen({
               </form>
             </Form>
 
-            
+            <motion.div variants={itemVariants} className="text-center">
+              <p className="text-sm text-muted-foreground">
+                Don&apos;t have an account?{' '}
+                <a href={createAccountHref} className="text-blue-600 font-medium hover:underline">
+                  Create account
+                </a>
+              </p>
+            </motion.div>
           </motion.div>
         </div>
       </div>
 
       {/* Right Panel: Image */}
-      <div className="relative hidden md:block md:w-1/2">
+      <motion.div
+        initial={{ opacity: 0, scale: 1.05 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.5, delay: 0.2 }}
+        className="relative hidden md:block md:w-1/2"
+      >
         <img
           src={imageSrc}
           alt={imageAlt}
           className="h-full w-full object-cover"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
-      </div>
-    </div>
+      </motion.div>
+    </motion.div>
   );
 }
