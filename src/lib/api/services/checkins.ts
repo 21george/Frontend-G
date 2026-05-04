@@ -10,4 +10,7 @@ export const checkinsApi = {
 
   update: (id: string, data: Partial<CheckinMeeting>) =>
     api.put(`/checkins/${id}`, data).then(r => r.data),
+
+  delete: (id: string) =>
+    api.delete(`/checkins/${id}`).then(r => r.data),
 }

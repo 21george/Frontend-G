@@ -33,6 +33,12 @@ function SidebarContent({ onClose, collapsed = false }: SidebarContentProps) {
   const { theme, toggle } = useThemeStore()
   const isDark = theme === 'dark'
 
+  const brandIcon = (
+    <div className="w-8 h-8 bg-white/20 dark:bg-white/10 flex items-center justify-center ">
+      <Zap className="w-4 h-4 text-white" />
+    </div>
+  )
+
   return (
     <div className="flex flex-col h-full">
       {/* ── Brand ── */}
@@ -42,23 +48,17 @@ function SidebarContent({ onClose, collapsed = false }: SidebarContentProps) {
       )}>
         {!collapsed && (
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 bg-white/20 dark:bg-[#05384a] rounded-lg flex items-center justify-center shadow-lg">
-              <Zap className="w-4 h-4 text-white" />
-            </div>
+            {brandIcon}
             <span className="font-semibold text-white dark:text-white text-lg tracking-tight">CoachPro</span>
           </div>
         )}
-        {collapsed && (
-          <div className="w-8 h-8 bg-white/20 dark:bg-[#05384a] rounded-lg flex items-center justify-center shadow-lg">
-            <Zap className="w-4 h-4 text-white" />
-          </div>
-        )}
+        {collapsed && brandIcon}
 
         <div className={cn("flex items-center gap-1.5", collapsed && "hidden")}>
           <button
             onClick={toggle}
             title={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
-            className="inline-flex items-center justify-center w-9 h-9 rounded-lg border border-white/20 dark:border-white/[0.1] bg-white/10 dark:bg-white/[0.06] text-white/70 dark:text-neutral-400 hover:text-white dark:hover:text-white hover:bg-white/20 dark:hover:bg-white/[0.1] transition-colors"
+            className="inline-flex items-center justify-center w-9 h-9 border border-white/20 dark:border-white/[0.1] bg-white/10 dark:bg-white/[0.06] text-white/70 dark:text-neutral-400 hover:text-white dark:hover:text-white hover:bg-white/20 dark:hover:bg-white/[0.1] transition-colors"
             aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
           >
             {isDark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
@@ -66,7 +66,7 @@ function SidebarContent({ onClose, collapsed = false }: SidebarContentProps) {
           {onClose && (
             <button
               onClick={onClose}
-              className="lg:hidden text-white/60 dark:text-neutral-400 hover:text-white dark:hover:text-white transition-colors p-1 rounded-lg hover:bg-white/10 dark:hover:bg-white/10"
+              className="lg:hidden text-white/60 dark:text-neutral-400 hover:text-white dark:hover:text-white transition-colors p-1 hover:bg-white/10 dark:hover:bg-white/10"
               aria-label="Close menu"
             >
               <X className="w-5 h-5" />
@@ -90,10 +90,10 @@ function SidebarContent({ onClose, collapsed = false }: SidebarContentProps) {
                 href={href}
                 onClick={onClose}
                 className={cn(
-                  'flex items-center gap-4 px-4 py-3 rounded-xl text-base font-medium transition-all duration-150',
+                  'flex items-center gap-4 px-4 py-3 text-base font-medium transition-all duration-150',
                   collapsed ? 'justify-center px-2' : '',
                   active
-                    ? 'bg-white/15 dark:bg-[#05384a] text-white shadow-sm'
+                    ? 'bg-white/15 dark:bg-white/10 text-white '
                     : 'text-white/60 dark:text-neutral-400 hover:bg-white/10 dark:hover:bg-white/[0.08] hover:text-white dark:hover:text-white'
                 )}
                 tabIndex={0}
@@ -102,7 +102,7 @@ function SidebarContent({ onClose, collapsed = false }: SidebarContentProps) {
                 <Icon className="w-5 h-5 flex-shrink-0" />
                 {!collapsed && <span>{label}</span>}
                 {!collapsed && active && (
-                  <span className="ml-auto w-1.5 h-1.5 rounded-full bg-white/60 opacity-80" />
+                  <span className="ml-auto w-1.5 h-1.5 bg-white/60 opacity-80" />
                 )}
               </Link>
             </motion.div>
@@ -116,10 +116,10 @@ function SidebarContent({ onClose, collapsed = false }: SidebarContentProps) {
         collapsed ? "px-2 py-3" : "px-3 py-4"
       )}>
         <div className={cn(
-          "flex items-center rounded-xl hover:bg-white/10 dark:hover:bg-white/[0.06] transition-colors",
+          "flex items-center hover:bg-white/10 dark:hover:bg-white/[0.06] transition-colors",
           collapsed ? "justify-center p-2" : "gap-3 px-2 py-2"
         )}>
-          <div className="w-9 h-9 bg-gradient-to-br from-blue-400 to-blue-600 rounded-full flex items-center justify-center text-white text-sm font-semibold flex-shrink-0 ring-2 ring-white/20">
+          <div className="w-9 h-9 bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white text-sm font-semibold flex-shrink-0 ring-2 ring-white/20">
             {coach?.name?.[0]?.toUpperCase() ?? 'C'}
           </div>
           {!collapsed && (
@@ -131,7 +131,7 @@ function SidebarContent({ onClose, collapsed = false }: SidebarContentProps) {
               <button
                 onClick={logout}
                 title="Sign out"
-                className="text-white/50 hover:text-red-400 transition-colors p-1.5 rounded-lg hover:bg-red-400/10 flex-shrink-0"
+                className="text-white/50 hover:text-red-400 transition-colors p-1.5 hover:bg-red-400/10 flex-shrink-0"
               >
                 <LogOut className="w-4 h-4" />
               </button>
@@ -183,7 +183,7 @@ export default function Sidebar() {
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
         onClick={() => setMobileOpen(true)}
-        className="lg:hidden fixed top-4 left-4 z-50 p-2.5 bg-white dark:bg-[#333333] text-slate-900 dark:text-white rounded-xl shadow-lg border border-slate-200 dark:border-white/10"
+            className="lg:hidden fixed top-4 left-4 z-50 p-2.5 bg-white dark:bg-[#192230] text-[var(--text-primary)] border border-slate-200 dark:border-white/10"
         aria-label="Open menu"
       >
         <Menu className="w-5 h-5" />
@@ -211,7 +211,7 @@ export default function Sidebar() {
             animate={{ x: 0 }}
             exit={{ x: '-100%' }}
             transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-            className="lg:hidden fixed inset-y-0 left-0 z-50 w-64 bg-cyan-950 dark:bg-[#1a1a1a] flex flex-col shadow-sidebar border-r border-cyan-900 dark:border-white/[0.08]"
+            className="lg:hidden fixed inset-y-0 left-0 z-50 w-64 bg-sidebar dark:bg-sidebar-dark flex flex-col border-r border-white/10 dark:border-white/[0.06]"
             tabIndex={-1}
             aria-modal={mobileOpen}
             role="dialog"
@@ -225,7 +225,7 @@ export default function Sidebar() {
       <motion.aside
         initial={false}
         animate={{ width: collapsed ? 80 : 256 }}
-        className="hidden lg:flex bg-cyan-950 dark:bg-[#1a1a1a] flex-col h-screen fixed left-0 top-0 z-30 border-r border-cyan-900 dark:border-white/[0.08] overflow-hidden"
+        className="hidden lg:flex bg-sidebar dark:bg-sidebar-dark flex-col h-screen fixed left-0 top-0 z-30 border-r border-white/10 dark:border-white/[0.06] overflow-hidden"
       >
         <SidebarContent collapsed={collapsed} />
 
@@ -234,7 +234,7 @@ export default function Sidebar() {
           whileHover={{ scale: 1.1 }}
           whileTap={{ scale: 0.9 }}
           onClick={toggleCollapsed}
-          className="absolute -right-3 top-20 w-6 h-6 bg-white dark:bg-[#333333] border border-slate-200 dark:border-white/10 rounded-full flex items-center justify-center text-slate-500 dark:text-neutral-400 hover:text-slate-700 dark:hover:text-white shadow-md z-10"
+          className="absolute -right-3 top-20 w-6 h-6 bg-white dark:bg-[#192230] border border-slate-200 dark:border-white/10 flex items-center justify-center text-slate-500 dark:text-neutral-400 hover:text-slate-700 dark:hover:text-white z-10"
           aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
         >
           {collapsed ? (

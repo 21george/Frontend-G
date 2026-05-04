@@ -25,7 +25,7 @@ const CAT_GRADIENT: Record<string, string> = {
   strength: 'from-orange-500 to-red-500',   cardio:     'from-rose-500 to-pink-500',
   hiit:     'from-amber-500 to-orange-500',  yoga:       'from-emerald-500 to-teal-500',
   pilates:  'from-sky-500 to-blue-500',      stretching: 'from-violet-500 to-purple-500',
-  functional: 'from-cyan-500 to-blue-500',   other:      'from-slate-500 to-slate-600',
+  functional: 'from-brand-500 to-blue-500',   other:      'from-slate-500 to-slate-600',
 }
 
 type Tab = 'chat' | 'participants' | 'requests'
@@ -42,9 +42,9 @@ const EMPTY = 'text-center text-[12px] text-slate-400 dark:text-slate-500 mt-10'
 /* ── Shared Components ── */
 
 function Avatar({ src, name }: { src?: string; name?: string }) {
-  if (src) return <img src={src} alt={name} className="w-8 h-8 rounded-full object-cover" />
+  if (src) return <img src={src} alt={name} className="w-8 h-8 object-cover" />
   return (
-    <div className="w-8 h-8 rounded-full bg-slate-200 dark:bg-white/[0.1] flex items-center justify-center">
+    <div className="w-8 h-8 bg-slate-200 dark:bg-white/[0.1] flex items-center justify-center">
       <User size={14} className="text-slate-400" />
     </div>
   )
@@ -52,7 +52,7 @@ function Avatar({ src, name }: { src?: string; name?: string }) {
 
 function InfoCard({ icon: Icon, label, value }: { icon: any; label: string; value: string }) {
   return (
-    <div className="p-3 rounded-xl bg-slate-50 dark:bg-white/[0.03] border border-slate-100 dark:border-white/[0.06]">
+    <div className="p-3 bg-slate-50 dark:bg-white/[0.03] border border-slate-100 dark:border-white/[0.06]">
       <Icon size={14} className="text-slate-400 dark:text-slate-500 mb-1.5" />
       <p className="text-[10px] text-slate-400 dark:text-slate-500 font-semibold uppercase tracking-wider">{label}</p>
       <p className="text-[13px] font-semibold text-slate-700 dark:text-slate-200 mt-0.5">{value}</p>
@@ -92,7 +92,7 @@ export default function LiveTrainingDetailPage() {
     return (
       <DashboardLayout>
         <div className="flex items-center justify-center h-[60vh]">
-          <div className="w-8 h-8 border-2 border-cyan-600 border-t-transparent rounded-full animate-spin" />
+          <div className="w-8 h-8 border-2 border-brand-600 border-t-transparent animate-spin" />
         </div>
       </DashboardLayout>
     )
@@ -129,17 +129,17 @@ export default function LiveTrainingDetailPage() {
         {/* Top Bar */}
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-4">
-            <Link href="/live-training" className="p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-white/[0.06] transition-colors">
+            <Link href="/live-training" className="p-2 hover:bg-slate-100 dark:hover:bg-white/[0.06] transition-colors">
               <ArrowLeft size={18} className="text-slate-500 dark:text-slate-400" />
             </Link>
-            <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${CAT_GRADIENT[session.category] ?? CAT_GRADIENT.other} flex items-center justify-center`}>
+            <div className={`w-10 h-10 bg-gradient-to-br ${CAT_GRADIENT[session.category] ?? CAT_GRADIENT.other} flex items-center justify-center`}>
               <Signal size={18} className="text-white" />
             </div>
             <div>
               <div className="flex items-center gap-2">
                 <h1 className="text-lg font-semibold text-slate-900 dark:text-white">{session.title}</h1>
-                <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border ${st.badge}`}>
-                  <span className={`inline-block w-1.5 h-1.5 rounded-full mr-1 ${st.dot}`} />
+                <span className={`text-[10px] font-semibold px-2 py-0.5 border ${st.badge}`}>
+                  <span className={`inline-block w-1.5 h-1.5 mr-1 ${st.dot}`} />
                   {st.label}
                 </span>
               </div>
@@ -152,19 +152,19 @@ export default function LiveTrainingDetailPage() {
           <div className="flex items-center gap-2">
             {session.meeting_link && (
               <a href={session.meeting_link} target="_blank" rel="noopener noreferrer"
-                className="inline-flex items-center gap-1.5 px-4 py-2 text-[12px] font-semibold rounded-xl border border-slate-200 dark:border-white/[0.1] text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-white/[0.06] transition-colors">
+                className="inline-flex items-center gap-1.5 px-4 py-2 text-[12px] font-semibold border border-slate-200 dark:border-white/[0.1] text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-white/[0.06] transition-colors">
                 <ExternalLink size={13} /> Meeting Link
               </a>
             )}
             {isUpcoming && (
               <button onClick={() => goLive.mutateAsync(id).then(() => router.refresh())} disabled={goLive.isPending}
-                className="inline-flex items-center gap-1.5 px-5 py-2 bg-cyan-950 hover:from-cyan-400 hover:to-cyan-500 text-white text-[12px] font-semibold rounded-sm transition-all">
+                className="inline-flex items-center gap-1.5 px-5 py-2 bg-gradient-to-r from-brand-500 to-brand-700 hover:from-brand-400 hover:to-brand-500 text-white text-[12px] font-semibold -600/25 transition-all">
                 <Play size={13} /> Go Live
               </button>
             )}
             {isLive && (
               <button onClick={() => endSession.mutateAsync(id).then(() => router.refresh())} disabled={endSession.isPending}
-                className="inline-flex items-center gap-1.5 px-5 py-2 bg-gradient-to-r from-red-500 to-rose-600 hover:from-red-400 hover:to-rose-500 text-white text-[12px] font-semibold rounded-xl shadow-lg shadow-red-600/25 transition-all">
+                className="inline-flex items-center gap-1.5 px-5 py-2 bg-gradient-to-r from-red-500 to-rose-600 hover:from-red-400 hover:to-rose-500 text-white text-[12px] font-semibold -600/25 transition-all">
                 <Square size={13} /> End Session
               </button>
             )}
@@ -175,15 +175,15 @@ export default function LiveTrainingDetailPage() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Video / Main Area */}
           <div className="lg:col-span-2 space-y-4">
-            <div className="relative overflow-hidden aspect-video flex items-center justify-center bg-[#171717]">
-              <div className="absolute inset-0 bg-[#171717]" />
+            <div className="relative overflow-hidden aspect-video flex items-center justify-center bg-[#1A1A1A]">
+              <div className="absolute inset-0 bg-[#1A1A1A]" />
               <div className="relative text-center space-y-3">
-                <div className="w-16 h-16 mx-auto rounded-2xl bg-white/[0.06] border border-white/[0.1] flex items-center justify-center">
+                <div className="w-16 h-16 mx-auto bg-white/[0.06] border border-white/[0.1] flex items-center justify-center">
                   <Video size={28} className="text-slate-400" />
                 </div>
                 {isLive && session.meeting_link ? (
                   <a href={session.meeting_link} target="_blank" rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1.5 px-5 py-2.5 bg-gradient-to-r from-cyan-600 to-cyan-950 text-white text-[13px] font-semibold rounded-xl shadow-lg">
+                    className="inline-flex items-center gap-1.5 px-5 py-2.5 bg-brand-600 text-white text-[13px] font-semibold ">
                     <ExternalLink size={14} /> Open Meeting
                   </a>
                 ) : (
@@ -193,14 +193,14 @@ export default function LiveTrainingDetailPage() {
                 )}
               </div>
               {isLive && (
-                <div className="absolute top-4 left-4 flex items-center gap-1.5 px-3 py-1 rounded-full bg-red-500/90 backdrop-blur-sm">
-                  <span className="w-2 h-2 rounded-full bg-white animate-pulse" />
+                <div className="absolute top-4 left-4 flex items-center gap-1.5 px-3 py-1 bg-red-500/90 backdrop-blur-sm">
+                  <span className="w-2 h-2 bg-white animate-pulse" />
                   <span className="text-[11px] font-semibold text-white">LIVE</span>
                 </div>
               )}
             </div>
 
-            <div className={`${PANEL} rounded-2xl p-5`}>
+            <div className={`${PANEL} p-5`}>
               <h3 className="text-[13px] font-semibold text-slate-700 dark:text-slate-300 mb-3">Session Info</h3>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                 {infoCards.map(c => <InfoCard key={c.label} {...c} />)}
@@ -218,7 +218,7 @@ export default function LiveTrainingDetailPage() {
                 <button key={t.key} onClick={() => setActiveTab(t.key)}
                   className={`flex-1 flex items-center justify-center gap-1.5 py-3 text-[11px] font-semibold transition-colors ${
                     activeTab === t.key
-                      ? 'text-cyan-600 dark:text-cyan-400 border-b-2 border-cyan-600 dark:border-cyan-400'
+                      ? 'text-brand-600 dark:text-brand-400 border-b-2 border-brand-600 dark:border-brand-400'
                       : 'text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300'
                   }`}>
                   <t.icon size={13} /> {t.label}
@@ -235,7 +235,7 @@ export default function LiveTrainingDetailPage() {
                     {messages.length === 0 && <p className={EMPTY}>No messages yet</p>}
                     {messages.map((m: any) => (
                       <div key={m.id} className="flex gap-2.5">
-                        <div className="w-7 h-7 rounded-full bg-gradient-to-br from-cyan-600 to-cyan-950 flex items-center justify-center shrink-0">
+                        <div className="w-7 h-7 bg-brand-600 flex items-center justify-center shrink-0">
                           <span className="text-[10px] font-semibold text-white">{m.sender_name?.[0] ?? '?'}</span>
                         </div>
                         <div>
@@ -245,7 +245,7 @@ export default function LiveTrainingDetailPage() {
                               {m.sent_at ? new Date(m.sent_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ''}
                             </span>
                             {m.sender_role === 'coach' && (
-                              <span className="text-[9px] bg-cyan-950/10 dark:bg-cyan-400/10 text-cyan-700 dark:text-cyan-400 px-1.5 py-0.5 rounded font-semibold">Coach</span>
+                              <span className="text-[9px] bg-brand-600/10 dark:bg-brand-400/10 text-brand-700 dark:text-brand-400 px-1.5 py-0.5 font-semibold">Coach</span>
                             )}
                           </div>
                           <p className="text-[12px] text-slate-600 dark:text-slate-400 mt-0.5 leading-relaxed">{m.content}</p>
@@ -259,9 +259,9 @@ export default function LiveTrainingDetailPage() {
                     <div className="p-3 border-t border-slate-200 dark:border-white/[0.08]">
                       <div className="flex gap-2">
                         <input type="text" value={msg} onChange={e => setMsg(e.target.value)} onKeyDown={onKey} placeholder="Type a message…"
-                          className="flex-1 px-3 py-2 text-[12px] rounded-xl border border-slate-200 dark:border-white/[0.1] bg-white dark:bg-white/[0.04] text-slate-700 dark:text-slate-300 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-950/20 dark:focus:ring-cyan-400/20" />
+                          className="flex-1 px-3 py-2 text-[12px] border border-slate-200 dark:border-white/[0.1] bg-white dark:bg-white/[0.04] text-slate-700 dark:text-slate-300 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-600/20 dark:focus:ring-brand-400/20" />
                         <button onClick={send} disabled={!msg.trim() || sendChat.isPending}
-                          className="p-2.5 rounded-xl bg-gradient-to-r from-cyan-600 to-cyan-950 text-white shadow disabled:opacity-40 transition-opacity">
+                          className="p-2.5 bg-brand-600 text-white disabled:opacity-40 transition-opacity">
                           <Send size={14} />
                         </button>
                       </div>
@@ -275,7 +275,7 @@ export default function LiveTrainingDetailPage() {
                 <div className="p-4 space-y-2 overflow-y-auto max-h-[460px]">
                   {participants.length === 0 && <p className={EMPTY}>No participants yet</p>}
                   {participants.map((p: any) => (
-                    <div key={p.id} className="flex items-center gap-3 p-2.5 rounded-xl hover:bg-slate-50 dark:hover:bg-white/[0.04] transition-colors">
+                    <div key={p.id} className="flex items-center gap-3 p-2.5 hover:bg-slate-50 dark:hover:bg-white/[0.04] transition-colors">
                       <Avatar src={p.photo} name={p.name} />
                       <span className="text-[12px] font-semibold text-slate-700 dark:text-slate-300">{p.name}</span>
                     </div>
@@ -288,25 +288,25 @@ export default function LiveTrainingDetailPage() {
                 <div className="p-4 space-y-2 overflow-y-auto max-h-[460px]">
                   {requests.length === 0 && <p className={EMPTY}>No join requests</p>}
                   {requests.map((r: any) => (
-                    <div key={r.id} className="flex items-center justify-between p-3 rounded-xl bg-slate-50 dark:bg-white/[0.03] border border-slate-200 dark:border-white/[0.06]">
+                    <div key={r.id} className="flex items-center justify-between p-3 bg-slate-50 dark:bg-white/[0.03] border border-slate-200 dark:border-white/[0.06]">
                       <div className="flex items-center gap-2.5">
                         <Avatar src={r.client_photo} name={r.client_name} />
                         <div>
                           <span className="text-[12px] font-semibold text-slate-700 dark:text-slate-300">{r.client_name}</span>
-                          <span className={`ml-2 text-[10px] font-semibold px-1.5 py-0.5 rounded ${REQ_BADGE[r.status] ?? ''}`}>{r.status}</span>
+                          <span className={`ml-2 text-[10px] font-semibold px-1.5 py-0.5 ${REQ_BADGE[r.status] ?? ''}`}>{r.status}</span>
                         </div>
                       </div>
                       {r.status === 'pending' && (
                         <div className="flex gap-1.5">
                           <button
                             onClick={() => handleReq.mutate({ requestId: r.id, action: 'approved' })}
-                            className="p-1.5 rounded-lg bg-green-100 dark:bg-green-400/10 text-green-600 dark:text-green-400 hover:bg-green-200 dark:hover:bg-green-400/20 transition-colors"
+                            className="p-1.5 bg-green-100 dark:bg-green-400/10 text-green-600 dark:text-green-400 hover:bg-green-200 dark:hover:bg-green-400/20 transition-colors"
                           >
                             <CheckCircle2 size={14} />
                           </button>
                           <button
                             onClick={() => handleReq.mutate({ requestId: r.id, action: 'rejected' })}
-                            className="p-1.5 rounded-lg bg-red-100 dark:bg-red-400/10 text-red-500 dark:text-red-400 hover:bg-red-200 dark:hover:bg-red-400/20 transition-colors"
+                            className="p-1.5 bg-red-100 dark:bg-red-400/10 text-red-500 dark:text-red-400 hover:bg-red-200 dark:hover:bg-red-400/20 transition-colors"
                           >
                             <XCircle size={14} />
                           </button>

@@ -1,0 +1,333 @@
+client_name,week_start,day,exercise,sets,reps,rest_seconds,notes
+Alex Johnson,2026-05-04,monday,Barbell Bench Press,4,8-10,90,Keep shoulders retracted
+Alex Johnson,2026-05-04,monday,Incline Dumbbell Press,3,12,75,Focus on stretch at bottom
+Alex Johnson,2026-05-04,monday,Cable Flyes,3,15,60,Slow controlled movement
+Alex Johnson,2026-05-04,monday,Tricep Dips,3,10-12,60,Lean forward for chest emphasis
+Alex Johnson,2026-05-04,monday,Overhead Tricep Extension,3,12,60,Full range of motion
+Alex Johnson,2026-05-04,wednesday,Back Squat,5,5,120,Warm up with 2 light sets
+Alex Johnson,2026-05-04,wednesday,Romanian Deadlift,4,8,90,Slight bend in knees
+Alex Johnson,2026-05-04,wednesday,Walking Lunges,3,12 each leg,60,Hold dumbbells at sides
+Alex Johnson,2026-05-04,wednesday,Leg Press,3,12,75,Feet shoulder width apart
+Alex Johnson,2026-05-04,wednesday,Calf Raises,4,15-20,45,Pause at top for 2 seconds
+Alex Johnson,2026-05-04,friday,Overhead Press,4,6-8,90,Brace core tight
+Alex Johnson,2026-05-04,friday,Dumbbell Lateral Raise,4,12-15,60,Lead with elbows
+Alex Johnson,2026-05-04,friday,Face Pulls,3,15,60,External rotation at top
+Alex Johnson,2026-05-04,friday,Bicep Curls,3,10-12,60,Don't swing
+Alex Johnson,2026-05-04,friday,Hammer Curls,3,10-12,60,Pronated grip
+Sarah Mitchell,2026-05-04,monday,Deadlift,5,5,120,Mixed grip for heavy sets
+Sarah Mitchell,2026-05-04,monday,Pull-Ups,4,6-10,90,Use band if needed
+Sarah Mitchell,2026-05-04,monday,Bent Over Row,4,8-10,75,Pull to lower chest
+Sarah Mitchell,2026-05-04,monday,Single Arm Dumbbell Row,3,10 each,60,Keep back flat
+Sarah Mitchell,2026-05-04,monday,Barbell Curl,3,10,60,Strict form
+Sarah Mitchell,2026-05-04,monday,Hammer Curl,3,10,60,
+Sarah Mitchell,2026-05-04,tuesday,Front Squat,4,8,90,Elbows high
+Sarah Mitchell,2026-05-04,tuesday,Bulgarian Split Squat,3,10 each,75,Rear foot elevated
+Sarah Mitchell,2026-05-04,tuesday,Leg Extension,3,12,60,Squeeze at top
+Sarah Mitchell,2026-05-04,tuesday,Hamstring Curl,3,12,60,Control the negative
+Sarah Mitchell,2026-05-04,tuesday,Standing Calf Raise,4,15,45,
+Sarah Mitchell,2026-05-04,thursday,Incline Bench Press,4,8-10,90,30 degree angle
+Sarah Mitchell,2026-05-04,thursday,Dumbbell Shoulder Press,4,10,75,Seated for stability
+Sarah Mitchell,2026-05-04,thursday,Cable Crossover,3,12-15,60,From high to low
+Sarah Mitchell,2026-05-04,thursday,Lateral Raise,3,15,45,Light weight high reps
+Sarah Mitchell,2026-05-04,thursday,Tricep Pushdown,3,12,60,Rope attachment
+Sarah Mitchell,2026-05-04,saturday,Running Intervals,6,400m sprint / 200m jog,60,Track or treadmill
+Sarah Mitchell,2026-05-04,saturday,Plank,3,60 sec,45,Keep body straight
+Sarah Mitchell,2026-05-04,saturday,Mountain Climbers,3,20 each,30,Fast pace
+Sarah Mitchell,2026-05-04,saturday,Burpees,3,10,45,Chest to floor
+Marcus Chen,2026-05-04,monday,Power Clean,5,3,120,Focus on explosive hip extension
+Marcus Chen,2026-05-04,monday,Push Press,4,5,90,Leg drive then press
+Marcus Chen,2026-05-04,monday,Box Jump,4,5,90,Full extension at top
+Marcus Chen,2026-05-04,monday,Medicine Ball Slam,3,10,60,Full overhead to ground
+Marcus Chen,2026-05-04,wednesday,Back Squat,5,5,120,Work to heavy single
+Marcus Chen,2026-05-04,wednesday,Bench Press,5,5,120,Paused reps at 80%
+Marcus Chen,2026-05-04,wednesday,Weighted Pull-Ups,4,5,90,Weight vest or belt
+Marcus Chen,2026-05-04,wednesday,Farmer's Walk,3,40m,90,Heavy dumbbells
+Marcus Chen,2026-05-04,friday,Snatch,5,3,120,Start with PVC pipe warmup
+Marcus Chen,2026-05-04,friday,Overhead Squat,4,5,90,Focus on stability
+Marcus Chen,2026-05-04,friday,Tire Flips,3,5,120,Use legs not back
+Marcus Chen,2026-05-04,friday,Battle Ropes,3,30 sec,45,Alternating waves
+Emily Rodriguez,2026-05-04,monday,Yoga Flow,1,60 min,0,Sun salutation focus
+Emily Rodriguez,2026-05-04,monday,Bodyweight Squat,3,15,30,Pause at bottom
+Emily Rodriguez,2026-05-04,monday,Push-Ups,3,12,30,Modify on knees if needed
+Emily Rodriguez,2026-05-04,monday,Plank,3,30 sec,30,Engage full core
+Emily Rodriguez,2026-05-04,monday,Bird Dog,3,10 each,30,Slow and controlled
+Emily Rodriguez,2026-05-04,wednesday,Resistance Band Row,3,15,45,Anchor band at door
+Emily Rodriguez,2026-05-04,wednesday,Band Pull-Apart,3,15,30,Shoulder health
+Emily Rodriguez,2026-05-04,wednesday,Goblet Squat,3,12,45,Hold weight at chest
+Emily Rodriguez,2026-05-04,wednesday,Dumbbell Deadlift,3,10,60,Hinge at hips
+Emily Rodriguez,2026-05-04,wednesday,Side Plank,3,20 sec each,30,
+Emily Rodriguez,2026-05-04,friday,Swimming,1,30 min,0,Moderate pace
+Emily Rodriguez,2026-05-04,friday,Foam Rolling,1,10 min,0,Focus on quads and IT band
+Emily Rodriguez,2026-05-04,friday,Stretching Routine,1,15 min,0,Full body hold 30s each
+Emily Rodriguez,2026-05-04,friday,Wall Sit,3,30 sec,30,Thighs parallel
+Emily Rodriguez,2026-05-04,friday,Glute Bridge,3,15,30,Squeeze at top
+Jake Williams,2026-05-04,monday,Bench Press,5,5,120,5/3/1 progression
+Jake Williams,2026-05-04,monday,Dumbbell Fly,3,10,60,Stretch at bottom
+Jake Williams,2026-05-04,monday,Tricep Skull Crusher,3,10,60,Elbows fixed
+Jake Williams,2026-05-04,monday,Cable Tricep Pushdown,3,12,45,Rope attachment
+Jake Williams,2026-05-04,wednesday,Squat,5,5,120,5/3/1 progression
+Jake Williams,2026-05-04,wednesday,Leg Press,3,10,75,Feet high for glutes
+Jake Williams,2026-05-04,wednesday,Leg Curl,3,12,60,Control negative
+Jake Williams,2026-05-04,wednesday,Calf Raise,4,12,45,Standing
+Jake Williams,2026-05-04,friday,Overhead Press,5,5,120,5/3/1 progression
+Jake Williams,2026-05-04,friday,Barbell Row,4,8,75,Pendlay style
+Jake Williams,2026-05-04,friday,Face Pull,3,15,45,Band or cable
+Jake Williams,2026-05-04,friday,Bicep Curl,3,10,45,Barbell
+Olivia Park,2026-05-04,monday,Sumo Deadlift,4,8,90,Wide stance toes out
+Olivia Park,2026-05-04,monday,Hip Thrust,4,10,75,Full hip extension
+Olivia Park,2026-05-04,monday,Glute Kickback,3,12 each,45,Cable machine
+Olivia Park,2026-05-04,monday,Step-Ups,3,10 each,60,Weighted
+Olivia Park,2026-05-04,monday,Ab Wheel Rollout,3,10,45,From knees
+Olivia Park,2026-05-04,wednesday,Incline Dumbbell Press,4,10,75,30 degree bench
+Olivia Park,2026-05-04,wednesday,Lateral Raise,4,12,45,Light weight
+Olivia Park,2026-05-04,wednesday,Rear Delt Fly,3,15,45,Bent over
+Olivia Park,2026-05-04,wednesday,Bicep Curl,3,12,45,Alternating
+Olivia Park,2026-05-04,wednesday,Tricep Dip,3,10,60,Assisted if needed
+Olivia Park,2026-05-04,friday,Running,1,30 min,0,Zone 2 steady state
+Olivia Park,2026-05-04,friday,Cycling,1,20 min,0,Moderate resistance
+Olivia Park,2026-05-04,friday,Plank,3,45 sec,30,
+Olivia Park,2026-05-04,friday,Russian Twist,3,20,30,Weighted
+Olivia Park,2026-05-04,friday,Leg Raise,3,12,30,Controlled
+David Thompson,2026-05-04,monday,Flat Dumbbell Press,4,10,75,Full stretch at bottom
+David Thompson,2026-05-04,monday,Cable Crossover,3,12,60,High to low
+David Thompson,2026-05-04,monday,Shoulder Press,4,10,75,Seated dumbbell
+David Thompson,2026-05-04,monday,Lateral Raise,3,15,45,Burnout set at end
+David Thompson,2026-05-04,monday,Tricep Pushdown,3,12,45,Straight bar
+David Thompson,2026-05-04,tuesday,Pull-Ups,4,8,90,Weighted if strong
+David Thompson,2026-05-04,tuesday,Barbell Row,4,10,75,Pronated grip
+David Thompson,2026-05-04,tuesday,Face Pull,3,15,45,Rope attachment
+David Thompson,2026-05-04,tuesday,EZ Bar Curl,3,10,60,Strict form
+David Thompson,2026-05-04,tuesday,Reverse Curl,3,10,60,Overhand grip
+David Thompson,2026-05-04,thursday,Leg Press,4,12,75,Deep range of motion
+David Thompson,2026-05-04,thursday,Walking Lunge,3,12 each,60,With dumbbells
+David Thompson,2026-05-04,thursday,Leg Curl,3,12,60,Seated
+David Thompson,2026-05-04,thursday,Calf Raise,4,15,45,Standing machine
+David Thompson,2026-05-04,thursday,Ab Crunch,3,15,30,Weighted
+David Thompson,2026-05-04,saturday,HIIT Sprints,8,30 sec on / 30 sec off,0,Treadmill
+David Thompson,2026-05-04,saturday,Burpees,3,10,30,
+David Thompson,2026-05-04,saturday,Plank,3,45 sec,30,
+Mia Foster,2026-05-04,monday,Barbell Squat,4,8,90,Warm up progressively
+Mia Foster,2026-05-04,monday,Front Squat,3,8,75,Elbows up
+Mia Foster,2026-05-04,monday,Leg Extension,3,12,60,Slow negatives
+Mia Foster,2026-05-04,monday,Romanian Deadlift,3,10,75,Feel the hamstrings
+Mia Foster,2026-05-04,monday,Standing Calf Raise,4,15,45,Full ROM
+Mia Foster,2026-05-04,wednesday,Bench Press,4,8,90,Paused at chest
+Mia Foster,2026-05-04,wednesday,Dumbbell Press,3,10,60,Incline 30 degrees
+Mia Foster,2026-05-04,wednesday,Cable Fly,3,12,60,From low to high
+Mia Foster,2026-05-04,wednesday,Overhead Press,3,10,75,Standing
+Mia Foster,2026-05-04,wednesday,Tricep Extension,3,12,60,Overhead with rope
+Mia Foster,2026-05-04,friday,Deadlift,4,6,120,Conventional stance
+Mia Foster,2026-05-04,friday,Pull-Ups,4,8,90,Add weight if needed
+Mia Foster,2026-05-04,friday,Barbell Row,3,10,75,Pendlay style
+Mia Foster,2026-05-04,friday,Bicep Curl,3,12,45,Incline dumbbell
+Mia Foster,2026-05-04,friday,Face Pull,3,15,45,Rear delt focus
+Ryan O'Brien,2026-05-04,monday,Clean and Jerk,5,3,120,Technique first then load
+Ryan O'Brien,2026-05-04,monday,Front Squat,4,5,90,Clean grip
+Ryan O'Brien,2026-05-04,monday,Push Press,4,5,90,Leg drive
+Ryan O'Brien,2026-05-04,monday,Box Jump,3,5,60,Explosive
+Ryan O'Brien,2026-05-04,monday,Hanging Leg Raise,3,10,45,Strict form
+Ryan O'Brien,2026-05-04,wednesday,Snatch,5,3,120,Start with bar only
+Ryan O'Brien,2026-05-04,wednesday,Overhead Squat,4,5,90,Wide grip
+Ryan O'Brien,2026-05-04,wednesday,Drop Snatch,3,5,60,Quick feet
+Ryan O'Brien,2026-05-04,wednesday,Back Extension,3,12,45,Glute focus
+Ryan O'Brien,2026-05-04,wednesday,Ab Mat Sit-Up,3,15,30,
+Ryan O'Brien,2026-05-04,friday,Competition Lifts,1,60 min,0,Practice full lifts
+Ryan O'Brien,2026-05-04,friday,Accessory Work,1,20 min,0,Coach's choice
+Ryan O'Brien,2026-05-04,friday,Stretching,1,15 min,0,Focus on hips and shoulders
+Ryan O'Brien,2026-05-04,friday,Foam Rolling,1,10 min,0,Full body
+Ryan O'Brien,2026-05-04,friday,Ice Bath,1,10 min,0,Recovery
+Natalie Kim,2026-05-04,monday,Running,1,5 km,0,Easy pace warmup
+Natalie Kim,2026-05-04,monday,Bodyweight Circuit,4,10 each,30,Squats push-ups lunges
+Natalie Kim,2026-05-04,monday,Jump Rope,3,2 min,30,Alternate feet
+Natalie Kim,2026-05-04,monday,Burpees,3,10,30,Chest to floor
+Natalie Kim,2026-05-04,monday,Mountain Climbers,3,20 each,30,Fast pace
+Natalie Kim,2026-05-04,wednesday,Swimming,1,30 min,0,Mixed strokes
+Natalie Kim,2026-05-04,wednesday,Plank,3,45 sec,30,Full body tension
+Natalie Kim,2026-05-04,wednesday,Side Plank,3,30 sec each,30,
+Natalie Kim,2026-05-04,wednesday,Superman,3,12,30,Lower back focus
+Natalie Kim,2026-05-04,wednesday,Bird Dog,3,10 each,30,Slow and controlled
+Natalie Kim,2026-05-04,friday,HIIT Class,1,45 min,0,Group fitness
+Natalie Kim,2026-05-04,friday,Yoga,1,30 min,0,Vinyasa flow
+Natalie Kim,2026-05-04,friday,Meditation,1,10 min,0,Breathing focus
+Natalie Kim,2026-05-04,friday,Stretching,1,15 min,0,Full body
+Natalie Kim,2026-05-04,friday,Walk,1,20 min,0,Cool down
+Chris Adams,2026-05-04,monday,Bench Press,5,5,120,RPE 8
+Chris Adams,2026-05-04,monday,Close Grip Bench,3,8,75,Tricep focus
+Chris Adams,2026-05-04,monday,Dumbbell Fly,3,10,60,Stretch at bottom
+Chris Adams,2026-05-04,monday,Tricep Pushdown,3,12,45,Rope
+Chris Adams,2026-05-04,monday,Overhead Extension,3,10,45,Dumbbell
+Chris Adams,2026-05-04,tuesday,Squat,5,5,120,RPE 8
+Chris Adams,2026-05-04,tuesday,Leg Press,3,10,75,Feet shoulder width
+Chris Adams,2026-05-04,tuesday,Walking Lunge,3,10 each,60,With barbell
+Chris Adams,2026-05-04,tuesday,Leg Curl,3,12,60,Lying
+Chris Adams,2026-05-04,tuesday,Calf Raise,4,12,45,Seated
+Chris Adams,2026-05-04,thursday,Overhead Press,5,5,120,RPE 8
+Chris Adams,2026-05-04,thursday,Dumbbell Press,3,10,60,Seated
+Chris Adams,2026-05-04,thursday,Lateral Raise,3,15,45,Cable
+Chris Adams,2026-05-04,thursday,Face Pull,3,15,45,Rear delt
+Chris Adams,2026-05-04,thursday,Bicep Curl,3,10,45,Barbell
+Chris Adams,2026-05-04,saturday,Deadlift,5,5,120,RPE 8
+Chris Adams,2026-05-04,saturday,Barbell Row,4,8,75,Pendlay
+Chris Adams,2026-05-04,saturday,Pull-Ups,4,8,90,Weighted
+Chris Adams,2026-05-04,saturday,Hammer Curl,3,10,45,Neutral grip
+Chris Adams,2026-05-04,saturday,Reverse Curl,3,10,45,Overhand
+Lily Zhang,2026-05-04,monday,Pilates Reformer,1,50 min,0,Core focus
+Lily Zhang,2026-05-04,monday,Plank,3,30 sec,30,Forearm
+Lily Zhang,2026-05-04,monday,Dead Bug,3,10 each,30,Slow tempo
+Lily Zhang,2026-05-04,monday,Bridge,3,15,30,Single leg
+Lily Zhang,2026-05-04,monday,Clamshell,3,15 each,30,Band around knees
+Lily Zhang,2026-05-04,wednesday,Barre Class,1,45 min,0,Low impact
+Lily Zhang,2026-05-04,wednesday,Resistance Band Row,3,12,45,Anchor at door
+Lily Zhang,2026-05-04,wednesday,Band Chest Press,3,12,45,Anchor behind
+Lily Zhang,2026-05-04,wednesday,Band Lateral Raise,3,12,30,Standing on band
+Lily Zhang,2026-05-04,wednesday,Band Bicep Curl,3,12,30,Under foot
+Lily Zhang,2026-05-04,friday,Yoga,1,60 min,0,Power vinyasa
+Lily Zhang,2026-05-04,friday,Warrior Series,1,15 min,0,Warrior 1 2 3 flow
+Lily Zhang,2026-05-04,friday,Balance Poses,1,10 min,0,Tree and dancer
+Lily Zhang,2026-05-04,friday,Stretching,1,15 min,0,Deep holds
+Lily Zhang,2026-05-04,friday,Meditation,1,10 min,0,Guided
+Tom Martinez,2026-05-04,monday,Flat Bench Press,4,8,90,2 sec pause at chest
+Tom Martinez,2026-05-04,monday,Incline Dumbbell Press,3,10,75,30 degree angle
+Tom Martinez,2026-05-04,monday,Cable Crossover,3,12,60,High to low
+Tom Martinez,2026-05-04,monday,Dips,3,10,60,Weighted if strong
+Tom Martinez,2026-05-04,monday,Tricep Pushdown,3,12,45,Straight bar
+Tom Martinez,2026-05-04,tuesday,Deadlift,4,6,120,Warm up with 3 ramp sets
+Tom Martinez,2026-05-04,tuesday,Barbell Row,4,8,75,Pronated grip
+Tom Martinez,2026-05-04,tuesday,Pull-Ups,4,8,90,Bodyweight
+Tom Martinez,2026-05-04,tuesday,Face Pull,3,15,45,Rope attachment
+Tom Martinez,2026-05-04,tuesday,Barbell Curl,3,10,60,EZ bar
+Tom Martinez,2026-05-04,thursday,Squat,4,8,90,Ass to grass
+Tom Martinez,2026-05-04,thursday,Front Squat,3,8,75,Clean grip
+Tom Martinez,2026-05-04,thursday,Leg Press,3,12,60,Feet high
+Tom Martinez,2026-05-04,thursday,Leg Curl,3,12,45,Lying
+Tom Martinez,2026-05-04,thursday,Calf Raise,4,15,30,Standing
+Tom Martinez,2026-05-04,saturday,Overhead Press,4,8,90,Standing
+Tom Martinez,2026-05-04,saturday,Dumbbell Lateral Raise,4,12,45,Lead with elbows
+Tom Martinez,2026-05-04,saturday,Rear Delt Fly,3,15,45,Bent over
+Tom Martinez,2026-05-04,saturday,Shrugs,3,12,60,Barbell
+Tom Martinez,2026-05-04,saturday,Hammer Curl,3,10,45,Alternating
+Ava Bennett,2026-05-04,monday,Glute Bridge,4,12,60,Barbell hip thrust
+Ava Bennett,2026-05-04,monday,Sumo Squat,3,12,60,Wide stance
+Ava Bennett,2026-05-04,monday,Cable Kickback,3,12 each,45,Ankle strap
+Ava Bennett,2026-05-04,monday,Step-Ups,3,10 each,60,Weighted
+Ava Bennett,2026-05-04,monday,Ab Rollout,3,10,45,From knees
+Ava Bennett,2026-05-04,wednesday,Push-Ups,3,12,30,Elevated if needed
+Ava Bennett,2026-05-04,wednesday,Dumbbell Row,3,10 each,60,Single arm
+Ava Bennett,2026-05-04,wednesday,Shoulder Press,3,10,60,Dumbbell seated
+Ava Bennett,2026-05-04,wednesday,Bicep Curl,3,12,45,Alternating
+Ava Bennett,2026-05-04,wednesday,Tricep Dip,3,10,45,Bench
+Ava Bennett,2026-05-04,friday,Running,1,3 km,0,Easy pace
+Ava Bennett,2026-05-04,friday,Lunges,3,12 each,45,Walking
+Ava Bennett,2026-05-04,friday,Plank,3,30 sec,30,Forearm
+Ava Bennett,2026-05-04,friday,Side Plank,3,20 sec each,30,
+Ava Bennett,2026-05-04,friday,Stretching,1,15 min,0,Full body
+James Wilson,2026-05-04,monday,Power Clean,5,3,120,Technique at 60%
+James Wilson,2026-05-04,monday,Push Press,4,5,90,Leg drive
+James Wilson,2026-05-04,monday,Front Squat,4,5,90,Clean grip
+James Wilson,2026-05-04,monday,Weighted Pull-Ups,4,5,90,Add weight
+James Wilson,2026-05-04,monday,Ab Wheel,3,10,45,From knees
+James Wilson,2026-05-04,wednesday,Back Squat,5,5,120,Heavy day
+James Wilson,2026-05-04,wednesday,Bench Press,5,5,120,Heavy day
+James Wilson,2026-05-04,wednesday,Barbell Row,4,8,75,Pendlay
+James Wilson,2026-05-04,wednesday,Dumbbell Curl,3,10,45,Incline
+James Wilson,2026-05-04,wednesday,Tricep Extension,3,10,45,Overhead
+James Wilson,2026-05-04,friday,Deadlift,5,3,150,Work to heavy triple
+James Wilson,2026-05-04,friday,Weighted Dip,4,8,90,Add plates
+James Wilson,2026-05-04,friday,Farmer's Walk,3,40m,90,Heavy dumbbells
+James Wilson,2026-05-04,friday,Shrug,3,12,60,Barbell
+James Wilson,2026-05-04,friday,Plank,3,60 sec,30,Weighted
+Sophia Lee,2026-05-04,monday,Bodyweight Squat,3,15,30,Air squats
+Sophia Lee,2026-05-04,monday,Push-Ups,3,10,30,On knees if needed
+Sophia Lee,2026-05-04,monday,Lunges,3,10 each,30,Alternating
+Sophia Lee,2026-05-04,monday,Plank,3,20 sec,20,Forearm
+Sophia Lee,2026-05-04,monday,Glute Bridge,3,12,30,Squeeze at top
+Sophia Lee,2026-05-04,wednesday,Resistance Band Row,3,12,45,Anchor at door
+Sophia Lee,2026-05-04,wednesday,Band Chest Press,3,12,45,Anchor behind
+Sophia Lee,2026-05-04,wednesday,Band Shoulder Press,3,12,45,Standing on band
+Sophia Lee,2026-05-04,wednesday,Band Curl,3,12,30,Under foot
+Sophia Lee,2026-05-04,wednesday,Band Tricep Extension,3,12,30,Overhead
+Sophia Lee,2026-05-04,friday,Walking,1,30 min,0,Moderate pace
+Sophia Lee,2026-05-04,friday,Wall Sit,3,30 sec,30,Thighs parallel
+Sophia Lee,2026-05-04,friday,Step-Ups,3,10 each,30,Bodyweight
+Sophia Lee,2026-05-04,friday,Superman,3,10,30,Lower back
+Sophia Lee,2026-05-04,friday,Stretching,1,15 min,0,Full body
+Ethan Brooks,2026-05-04,monday,Bench Press,4,10,90,2 warm-up sets
+Ethan Brooks,2026-05-04,monday,Incline Dumbbell Press,3,10,75,30 degree angle
+Ethan Brooks,2026-05-04,monday,Cable Fly,3,12,60,Low to high
+Ethan Brooks,2026-05-04,monday,Lateral Raise,3,15,45,Cable lateral
+Ethan Brooks,2026-05-04,monday,Tricep Pushdown,3,12,45,Rope
+Ethan Brooks,2026-05-04,tuesday,Pull-Ups,4,8,90,Assisted if needed
+Ethan Brooks,2026-05-04,tuesday,Barbell Row,4,10,75,Pronated
+Ethan Brooks,2026-05-04,tuesday,Face Pull,3,15,45,Rear delts
+Ethan Brooks,2026-05-04,tuesday,EZ Bar Curl,3,10,60,Strict form
+Ethan Brooks,2026-05-04,tuesday,Hammer Curl,3,10,60,Alternating
+Ethan Brooks,2026-05-04,thursday,Squat,4,10,90,Ass to grass
+Ethan Brooks,2026-05-04,thursday,Romanian Deadlift,3,10,75,Feel hamstrings
+Ethan Brooks,2026-05-04,thursday,Bulgarian Split Squat,3,10 each,60,Rear foot elevated
+Ethan Brooks,2026-05-04,thursday,Leg Curl,3,12,60,Seated
+Ethan Brooks,2026-05-04,thursday,Calf Raise,4,15,45,Standing
+Ethan Brooks,2026-05-04,saturday,Overhead Press,4,10,90,Standing
+Ethan Brooks,2026-05-04,saturday,Dumbbell Press,3,10,60,Seated
+Ethan Brooks,2026-05-04,saturday,Rear Delt Fly,3,15,45,Bent over
+Ethan Brooks,2026-05-04,saturday,Shrugs,3,12,60,Dumbbell
+Ethan Brooks,2026-05-04,saturday,Ab Crunch,3,15,30,Weighted
+Grace Patel,2026-05-04,monday,Running,1,5 km,0,Zone 2 heart rate
+Grace Patel,2026-05-04,monday,Dynamic Stretching,1,10 min,0,Leg swings and hip circles
+Grace Patel,2026-05-04,monday,Burpees,3,10,45,Chest to floor
+Grace Patel,2026-05-04,monday,Box Jump,3,8,60,24 inch box
+Grace Patel,2026-05-04,monday,Battle Ropes,3,30 sec,45,Alternating waves
+Grace Patel,2026-05-04,wednesday,Swimming,1,40 min,0,Mixed strokes
+Grace Patel,2026-05-04,wednesday,Plank,3,45 sec,30,Forearm
+Grace Patel,2026-05-04,wednesday,Russian Twist,3,20,30,Weighted
+Grace Patel,2026-05-04,wednesday,Mountain Climbers,3,20 each,30,Fast pace
+Grace Patel,2026-05-04,wednesday,Wall Ball,3,15,45,Squat and throw
+Grace Patel,2026-05-04,friday,Cycling,1,45 min,0,Moderate resistance
+Grace Patel,2026-05-04,friday,Yoga,1,30 min,0,Vinyasa flow
+Grace Patel,2026-05-04,friday,Foam Rolling,1,10 min,0,Focus on legs
+Grace Patel,2026-05-04,friday,Stretching,1,15 min,0,Full body holds
+Grace Patel,2026-05-04,friday,Meditation,1,10 min,0,Breathing focus
+Leo Nguyen,2026-05-04,monday,Snatch,5,3,120,Start with bar warmup
+Leo Nguyen,2026-05-04,monday,Snatch Pull,3,5,90,Heavy
+Leo Nguyen,2026-05-04,monday,Overhead Squat,3,5,90,Stability focus
+Leo Nguyen,2026-05-04,monday,Drop Snatch,3,3,60,Quick feet
+Leo Nguyen,2026-05-04,monday,Ab Mat Sit-Up,3,15,30,
+Leo Nguyen,2026-05-04,wednesday,Clean and Jerk,5,3,120,Technique first
+Leo Nguyen,2026-05-04,wednesday,Front Squat,4,5,90,Clean grip
+Leo Nguyen,2026-05-04,wednesday,Push Press,4,5,90,Leg drive
+Leo Nguyen,2026-05-04,wednesday,Back Extension,3,12,45,Glute focus
+Leo Nguyen,2026-05-04,wednesday,Plank,3,45 sec,30,Weighted
+Leo Nguyen,2026-05-04,friday,Competition Lifts,1,45 min,0,Full snatch and clean and jerk
+Leo Nguyen,2026-05-04,friday,Accessory Squat,3,8,75,Tempo 3-0-3
+Leo Nguyen,2026-05-04,friday,Pull-Ups,3,10,60,Strict
+Leo Nguyen,2026-05-04,friday,Foam Rolling,1,10 min,0,Full body
+Leo Nguyen,2026-05-04,friday,Stretching,1,15 min,0,Hips and ankles
+Isabella Cruz,2026-05-04,monday,Dumbbell Squat,3,12,60,Goblet style
+Isabella Cruz,2026-05-04,monday,Lunges,3,10 each,45,Walking with weights
+Isabella Cruz,2026-05-04,monday,Glute Bridge,3,15,30,Single leg progression
+Isabella Cruz,2026-05-04,monday,Push-Ups,3,10,30,Full or modified
+Isabella Cruz,2026-05-04,monday,Plank,3,30 sec,30,Forearm
+Isabella Cruz,2026-05-04,wednesday,Dumbbell Row,3,10 each,60,Single arm bench
+Isabella Cruz,2026-05-04,wednesday,Dumbbell Press,3,10,60,Seated
+Isabella Cruz,2026-05-04,wednesday,Bicep Curl,3,12,45,Alternating
+Isabella Cruz,2026-05-04,wednesday,Tricep Extension,3,12,45,Overhead
+Isabella Cruz,2026-05-04,wednesday,Side Plank,3,20 sec each,30,
+Isabella Cruz,2026-05-04,friday,Yoga Flow,1,45 min,0,Vinyasa
+Isabella Cruz,2026-05-04,friday,Stretching,1,15 min,0,Deep holds
+Isabella Cruz,2026-05-04,friday,Wall Sit,3,30 sec,30,Thighs parallel
+Isabella Cruz,2026-05-04,friday,Bird Dog,3,10 each,30,Core stability
+Isabella Cruz,2026-05-04,friday,Walk,1,20 min,0,Cool down
+Daniel Harris,2026-05-04,monday,Bench Press,5,5,120,5/3/1 week 1
+Daniel Harris,2026-05-04,monday,Incline Press,3,8,75,Dumbbell
+Daniel Harris,2026-05-04,monday,Cable Fly,3,12,60,Low to high
+Daniel Harris,2026-05-04,monday,Tricep Skull Crusher,3,10,60,EZ bar
+Daniel Harris,2026-05-04,monday,Tricep Pushdown,3,12,45,Rope
+Daniel Harris,2026-05-04,wednesday,Squat,5,5,120,5/3/1 week 1
+Daniel Harris,2026-05-04,wednesday,Leg Press,3,12,60,Feet high
+Daniel Harris,2026-05-04,wednesday,Leg Curl,3,12,45,Lying
+Daniel Harris,2026-05-04,wednesday,Calf Raise,4,15,30,Standing
+Daniel Harris,2026-05-04,wednesday,Ab Wheel,3,10,45,From knees
+Daniel Harris,2026-05-04,friday,Deadlift,5,5,150,5/3/1 week 1
+Daniel Harris,2026-05-04,friday,Barbell Row,4,8,75,Pendlay
+Daniel Harris,2026-05-04,friday,Pull-Ups,4,8,90,Weighted
+Daniel Harris,2026-05-04,friday,Face Pull,3,15,45,Rear delts
+Daniel Harris,2026-05-04,friday,Bicep Curl,3,10,45,Barbell

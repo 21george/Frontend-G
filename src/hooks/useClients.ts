@@ -46,3 +46,19 @@ export const useRegenerateCode = (id: string) =>
     successMessage: 'Login code regenerated',
     errorMessage: 'Failed to regenerate code',
   })
+
+export const useBlockClient = (id: string) =>
+  useToastMutation({
+    mutationFn: () => clientsApi.block(id),
+    successMessage: 'Client blocked — all sessions invalidated',
+    errorMessage: 'Failed to block client',
+    invalidateKeys: [['client', id], ['clients']],
+  })
+
+export const useUnblockClient = (id: string) =>
+  useToastMutation({
+    mutationFn: () => clientsApi.unblock(id),
+    successMessage: 'Client unblocked — access restored',
+    errorMessage: 'Failed to unblock client',
+    invalidateKeys: [['client', id], ['clients']],
+  })

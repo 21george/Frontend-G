@@ -14,7 +14,7 @@ interface FormFieldProps {
 export function FormField({ label, error, required, children, className }: FormFieldProps) {
   return (
     <div className={cn('space-y-1.5', className)}>
-      <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">
+      <label className="block text-sm font-medium text-[var(--text-secondary)] ">
         {label}
         {required && <span className="text-red-500 ml-0.5">*</span>}
       </label>
@@ -33,11 +33,11 @@ export function TextInput({ error, className, ...props }: TextInputProps) {
   return (
     <input
       className={cn(
-        'w-full px-3 py-2 text-sm border rounded-md bg-white dark:bg-white/[0.04] text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 transition-colors',
-        'focus:outline-none focus:ring-2 focus:ring-cyan-700/30 focus:border-cyan-700',
+        'w-full px-3 py-2 text-sm border bg-white dark:bg-white/[0.04] text-[var(--text-primary)]  placeholder:text-slate-400 dark:placeholder:text-slate-500 transition-colors',
+        'focus:outline-none focus:ring-2 focus:ring-brand-700/30 focus:border-brand-700',
         error
           ? 'border-red-300 dark:border-red-500/50'
-          : 'border-slate-200 dark:border-white/[0.08]',
+          : 'border-[var(--border)] ',
         className,
       )}
       {...props}
@@ -54,11 +54,11 @@ export function TextArea({ error, className, ...props }: TextAreaProps) {
   return (
     <textarea
       className={cn(
-        'w-full px-3 py-2 text-sm border rounded-md bg-white dark:bg-white/[0.04] text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 transition-colors resize-none',
-        'focus:outline-none focus:ring-2 focus:ring-cyan-700/30 focus:border-cyan-700',
+        'w-full px-3 py-2 text-sm border bg-white dark:bg-white/[0.04] text-[var(--text-primary)]  placeholder:text-slate-400 dark:placeholder:text-slate-500 transition-colors resize-none',
+        'focus:outline-none focus:ring-2 focus:ring-brand-700/30 focus:border-brand-700',
         error
           ? 'border-red-300 dark:border-red-500/50'
-          : 'border-slate-200 dark:border-white/[0.08]',
+          : 'border-[var(--border)] ',
         className,
       )}
       {...props}
@@ -77,11 +77,11 @@ export function SelectInput({ error, options, placeholder, className, ...props }
   return (
     <select
       className={cn(
-        'w-full px-3 py-2 text-sm border rounded-md bg-white dark:bg-white/[0.04] text-slate-900 dark:text-white transition-colors',
-        'focus:outline-none focus:ring-2 focus:ring-cyan-700/30 focus:border-cyan-700',
+        'w-full px-3 py-2 text-sm border bg-white dark:bg-white/[0.04] text-[var(--text-primary)]  transition-colors',
+        'focus:outline-none focus:ring-2 focus:ring-brand-700/30 focus:border-brand-700',
         error
           ? 'border-red-300 dark:border-red-500/50'
-          : 'border-slate-200 dark:border-white/[0.08]',
+          : 'border-[var(--border)] ',
         className,
       )}
       {...props}
@@ -107,13 +107,13 @@ export function PageHeader({ title, subtitle, icon: Icon, actions }: PageHeaderP
     <div className="flex items-center justify-between mb-6">
       <div className="flex items-center gap-3">
         {Icon && (
-          <div className="w-10 h-10 bg-cyan-950 rounded-lg flex items-center justify-center">
+          <div className="w-10 h-10 bg-brand-950 flex items-center justify-center">
             <Icon className="w-5 h-5 text-white" />
           </div>
         )}
         <div>
-          <h1 className="text-2xl font-semibold text-slate-900 dark:text-white">{title}</h1>
-          {subtitle && <p className="text-slate-500 dark:text-slate-400 text-sm mt-0.5">{subtitle}</p>}
+          <h1 className="text-2xl font-semibold text-[var(--text-primary)] ">{title}</h1>
+          {subtitle && <p className="text-[var(--text-tertiary)] text-sm mt-0.5">{subtitle}</p>}
         </div>
       </div>
       {actions && <div className="flex items-center gap-2">{actions}</div>}

@@ -6,6 +6,7 @@ import { useAuthStore } from '@/store/auth'
 import { useState, useRef, useCallback, useEffect } from 'react'
 import api from '@/lib/api'
 import { useThemeStore } from '@/store/theme'
+import Image from 'next/image'
 import {
   User, Mail, Phone, Globe, Link as LinkIcon, Lock, Bell, Shield,
   CreditCard, ChevronRight, Loader2, Camera, Check,
@@ -19,7 +20,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 
 function Card({ children, className = '' }: { children: React.ReactNode; className?: string }) {
   return (
-    <div className={`bg-white dark:bg-[#171717] shadow-sm overflow-hidden ${className}`}>
+    <div className={`bg-[var(--bg-card)]  overflow-hidden ${className}`}>
       {children}
     </div>
   )
@@ -27,7 +28,7 @@ function Card({ children, className = '' }: { children: React.ReactNode; classNa
 
 function CardHeader({ icon, title }: { icon: React.ReactNode; title: string }) {
   return (
-    <div className="flex items-center gap-3 px-6 py-4 bg-slate-50 dark:bg-[#1a1a1a]">
+    <div className="flex items-center gap-3 px-6 py-4 bg-[var(--bg-subtle)] ">
       <div className="w-9 h-9 bg-blue-600 flex items-center justify-center">
         {icon}
       </div>
@@ -65,8 +66,8 @@ function InputField({
           placeholder={placeholder}
           className={`w-full px-4 py-2.5 pr-10 text-sm transition-all focus:outline-none focus:ring-2 focus:ring-blue-500/20 ${
             disabled
-              ? 'bg-slate-100 dark:bg-[#1a1a1a] text-slate-400 cursor-not-allowed'
-              : 'bg-white dark:bg-[#1a1a1a] text-slate-900 dark:text-white focus:border-blue-500'
+              ? 'bg-[var(--bg-subtle)]  text-slate-400 cursor-not-allowed'
+              : 'bg-[var(--bg-subtle)]  text-slate-900 dark:text-white focus:border-blue-500'
           }`}
         />
         {icon && <div className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400">{icon}</div>}
@@ -93,7 +94,7 @@ function SelectField({
         <select
           value={value}
           onChange={(e) => onChange(e.target.value)}
-          className="w-full px-4 py-2.5 pr-10 text-sm bg-white dark:bg-[#1a1a1a] text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 appearance-none cursor-pointer"
+          className="w-full px-4 py-2.5 pr-10 text-sm bg-[var(--bg-subtle)] text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 appearance-none cursor-pointer"
         >
           {options.map((opt) => (
             <option key={opt.value} value={opt.value}>
@@ -129,7 +130,7 @@ function Toggle({
     >
       <span
         aria-hidden="true"
-        className={`pointer-events-none inline-block h-4 w-4 transform bg-white shadow transition duration-200 ease-in-out ${
+        className={`pointer-events-none inline-block h-4 w-4 transform bg-white transition duration-200 ease-in-out ${
           checked ? 'translate-x-4' : 'translate-x-0'
         }`}
       />
@@ -151,7 +152,7 @@ function ToggleRow({
   onChange: (v: boolean) => void
 }) {
   return (
-    <div className="flex items-center justify-between py-3 px-4 hover:bg-slate-50 dark:hover:bg-[#1a1a1a] transition-colors">
+    <div className="flex items-center justify-between py-3 px-4 hover:bg-slate-50 dark:hover:bg-[#1E293B] transition-colors">
       <div className="flex items-center gap-3 flex-1">
         {icon && <div className="text-slate-400">{icon}</div>}
         <div className="flex-1">
@@ -180,7 +181,7 @@ function ActionRow({
   return (
     <button
       onClick={onClick}
-      className="w-full flex items-center justify-between py-3 px-4 hover:bg-slate-50 dark:hover:bg-[#1a1a1a] transition-colors text-left"
+      className="w-full flex items-center justify-between py-3 px-4 hover:bg-slate-50 dark:hover:bg-[#1E293B] transition-colors text-left"
     >
       <div className="flex items-center gap-3 flex-1">
         {icon && <div className="text-slate-400">{icon}</div>}
@@ -284,6 +285,8 @@ export default function SettingsPage() {
     setDirty(false)
   }
 
+  const MAX_FILE_SIZE = 5 * 1024 * 1024 // 5 MB
+
   // Photo handlers
   const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -293,23 +296,32 @@ export default function SettingsPage() {
       showToast('Only JPG, PNG, WEBP allowed')
       return
     }
+    if (file.size > MAX_FILE_SIZE) {
+      showToast('File too large (max 5 MB)')
+      return
+    }
     setPhotoUploading(true)
     try {
       const formData = new FormData()
       formData.append('photo', file)
-      // Explicitly set multipart/form-data - browser will add the boundary parameter automatically
       const { data: res } = await api.post(`/coach/profile/photo?ext=${ext}`, formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
       })
       const { upload_url, profile_photo } = res.data
       if (upload_url) {
-        await fetch(upload_url, { method: 'PUT', body: file, headers: { 'Content-Type': file.type } })
+        const uploadResponse = await fetch(upload_url, {
+          method: 'PUT',
+          body: file,
+          headers: { 'Content-Type': file.type },
+        })
+        if (!uploadResponse.ok) {
+          throw new Error('Failed to upload photo')
+        }
       }
       if (coach) updateCoach({ ...coach, profile_photo })
       showToast('Photo uploaded successfully')
     } catch (err: any) {
-      const errorMsg = err?.response?.data?.message || err?.message || 'Upload failed'
-      console.error('Photo upload error:', err)
+      const errorMsg = err?.response?.data?.message || 'Upload failed'
       showToast(errorMsg)
     } finally {
       setPhotoUploading(false)
@@ -370,7 +382,7 @@ export default function SettingsPage() {
             initial={{ opacity: 0, x: 20, y: -10 }}
             animate={{ opacity: 1, x: 0, y: 0 }}
             exit={{ opacity: 0, x: 20, y: -10 }}
-            className="fixed top-4 right-4 z-50 bg-blue-600 text-white text-sm px-4 py-2.5 shadow-lg flex items-center gap-2"
+            className="fixed top-4 right-4 z-50 bg-blue-600 text-white text-sm px-4 py-2.5 flex items-center gap-2"
           >
             <Check className="w-4 h-4" />
             {toast}
@@ -389,14 +401,34 @@ export default function SettingsPage() {
           <Card>
             <div className="p-6 space-y-6 ">
               {/* Photo Section */}
-              <div className="flex items-center gap-4 p-4 bg-slate-50 dark:bg-[#1a1a1a]">
-                <div className="relative">
+              <div className="flex items-center gap-4 rounded-10 p-4 bg-[var(--bg-subtle)]">
+                <div className="relative h-20 w-20 overflow-hidden rounded-10">
                   {coach?.profile_photo ? (
                     <>
-                      <img src={coach.profile_photo} alt={coach.name} className=" flex ml-9 w-20 h-20 object-cover border rounded-full" />
+                      <Image
+                        src={coach.profile_photo}
+                        alt={coach.name ?? 'Coach'}
+                        fill
+                        className="rounded-10 object-cover ring-2 ring-slate-200 dark:ring-white/[0.1]"
+                        sizes="80px"
+                        unoptimized
+                        onError={(e) => {
+                          // Fall back to initials on image load failure
+                          const target = e.currentTarget as HTMLImageElement
+                          target.style.display = 'none'
+                          const parent = target.parentElement
+                          if (parent) {
+                            const fallback = document.createElement('div')
+                            fallback.className = 'absolute inset-0 flex items-center justify-center rounded-10 bg-brand-600 text-white text-lg font-bold'
+                            fallback.textContent = coach.name?.[0]?.toUpperCase() ?? 'C'
+                            parent.appendChild(fallback)
+                          }
+                        }}
+                      />
                       <button
                         onClick={() => fileInputRef.current?.click()}
-                        className="absolute -bottom-1 -right-1 w-7 h-7 bg-blue-600 text-white flex items-center justify-center hover:bg-blue-700"
+                        className="absolute -bottom-1 -right-1 flex h-7 w-7 items-center justify-center rounded-10 bg-[var(--btn-bg)] text-white hover:bg-[var(--btn-hover)] z-10"
+                        aria-label="Change profile photo"
                       >
                         <Camera className="w-3.5 h-3.5" />
                       </button>
@@ -404,13 +436,14 @@ export default function SettingsPage() {
                   ) : (
                     <button
                       onClick={() => fileInputRef.current?.click()}
-                      className="w-20 h-20 border-2 border-dashed border-slate-300 dark:border-slate-600 flex items-center justify-center text-slate-400 hover:border-blue-500 hover:text-blue-500"
+                      className="flex h-full w-full items-center justify-center rounded-10 border-2 border-dashed border-slate-300 text-slate-400 transition-colors hover:border-[var(--btn-bg)] hover:text-[var(--btn-bg)] dark:border-slate-600"
+                      aria-label="Upload profile photo"
                     >
                       <Camera className="w-8 h-8" />
                     </button>
                   )}
                   {photoUploading && (
-                    <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+                    <div className="absolute inset-0 z-20 flex items-center justify-center rounded-10 bg-black/50">
                       <Loader2 className="w-6 h-6 text-white animate-spin" />
                     </div>
                   )}
@@ -566,7 +599,7 @@ export default function SettingsPage() {
       </div>
 
       {/* Sticky Save Bar */}
-      <div className="fixed bottom-0 left-0 lg:left-64 right-0 z-30 bg-white/90 dark:bg-[#171717]/90 backdrop-blur-md border-t border-slate-200 dark:border-slate-700 px-6 py-4">
+      <div className="fixed bottom-0 left-0 lg:left-64 right-0 z-30 bg-white/90 dark:bg-surface-card-dark/90 backdrop-blur-md border-t border-slate-200 dark:border-white/[0.08] px-6 py-4">
         <div className="max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3">
           <div className="text-sm">
             {dirty ? (
@@ -579,7 +612,7 @@ export default function SettingsPage() {
             <button
               onClick={handleCancel}
               disabled={!dirty || saving}
-              className="px-4 py-2 text-sm font-medium text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-[#1a1a1a] transition-colors disabled:opacity-50"
+              className="px-4 py-2 text-sm font-medium text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-[#1E293B] transition-colors disabled:opacity-50"
             >
               Cancel
             </button>
@@ -616,7 +649,7 @@ export default function SettingsPage() {
               initial={{ scale: 0.95, opacity: 0, y: 20 }}
               animate={{ scale: 1, opacity: 1, y: 0 }}
               exit={{ scale: 0.95, opacity: 0, y: 20 }}
-              className="relative bg-white dark:bg-[#171717] shadow-2xl border border-slate-200 dark:border-slate-700 w-full max-w-md p-6"
+              className="relative bg-[var(--bg-card)] border border-slate-200 dark:border-slate-700 w-full max-w-md p-6"
             >
               <div className="flex items-center gap-3 mb-5">
                 <div className="w-10 h-10 bg-blue-600 flex items-center justify-center">
@@ -648,7 +681,7 @@ export default function SettingsPage() {
                       setPwNew('')
                       setPwConfirm('')
                     }}
-                    className="px-4 py-2 text-sm font-medium text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-[#1a1a1a] transition-colors"
+                    className="px-4 py-2 text-sm font-medium text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-[#1E293B] transition-colors"
                   >
                     Cancel
                   </button>

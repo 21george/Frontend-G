@@ -48,9 +48,9 @@ function scoreColor(s: number) {
 // ── Input style ───────────────────────────────────────────────────────────────
 
 const inputCls = `
-  bg-white dark:bg-[#141414]
+  bg-white dark:bg-surface-page-dark
   border border-slate-200 dark:border-white/[0.07]
-  rounded-lg px-3 py-2 text-[13px]
+  px-3 py-2 text-[13px]
   text-slate-900 dark:text-white
   placeholder:text-slate-400 dark:placeholder:text-slate-700
   outline-none focus:border-green-400 dark:focus:border-green-500/60
@@ -63,7 +63,7 @@ function MacroPill({
   icon, label, value, unit, iconCls, bg,
 }: { icon: React.ReactNode; label: string; value: number; unit: string; iconCls: string; bg: string }) {
   return (
-    <div className={`flex flex-col items-center py-3 px-4 rounded-2xl ${bg}`}>
+    <div className={`flex flex-col items-center py-3 px-4 ${bg}`}>
       <span className={iconCls}>{icon}</span>
       <p className={`text-lg font-semibold mt-1 ${iconCls}`}>
         {value}<span className="text-xs font-normal ml-0.5">{unit}</span>
@@ -95,7 +95,7 @@ function ScoreDots({ score }: { score: number }) {
   return (
     <div className="flex items-center gap-0.5">
       {Array.from({ length: 10 }, (_, i) => (
-        <div key={i} className={`h-1.5 w-2.5 rounded-full ${i < score ? col : 'bg-slate-200 dark:bg-white/[0.1]'}`} />
+        <div key={i} className={`h-1.5 w-2.5 ${i < score ? col : 'bg-slate-200 dark:bg-white/[0.1]'}`} />
       ))}
     </div>
   )
@@ -183,12 +183,12 @@ export default function NutritionPlanDetailPage() {
   if (isLoading) return (
     <DashboardLayout>
       <div className="space-y-4 animate-pulse">
-        <div className="h-8 w-48 bg-slate-200 dark:bg-white/[0.06] rounded-xl" />
-        <div className="h-48 bg-slate-100 dark:bg-white/[0.04] rounded-2xl" />
+        <div className="h-8 w-48 bg-slate-200 dark:bg-white/[0.06] " />
+        <div className="h-48 bg-slate-100 dark:bg-white/[0.04] " />
         <div className="grid grid-cols-4 gap-3">
-          {[...Array(4)].map((_, i) => <div key={i} className="h-24 bg-slate-100 dark:bg-white/[0.04] rounded-2xl" />)}
+          {[...Array(4)].map((_, i) => <div key={i} className="h-24 bg-slate-100 dark:bg-white/[0.04] " />)}
         </div>
-        <div className="h-40 bg-slate-100 dark:bg-white/[0.04] rounded-2xl" />
+        <div className="h-40 bg-slate-100 dark:bg-white/[0.04] " />
       </div>
     </DashboardLayout>
   )
@@ -248,14 +248,14 @@ export default function NutritionPlanDetailPage() {
           <div className="flex items-center gap-2">
             <button
               onClick={() => setShowDelete(true)}
-              className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-red-200 dark:border-red-900/40 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 text-sm font-medium transition-colors"
+              className="flex items-center gap-1.5 px-3.5 py-2 border border-red-200 dark:border-red-900/40 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 text-sm font-medium transition-colors"
             >
               <Trash2 size={14} /> Delete
             </button>
             <button
               onClick={handleSave}
               disabled={saving}
-              className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-cyan-950 hover:bg-cyan-900 text-white text-sm font-semibold transition-colors disabled:opacity-50 shadow-sm shadow-cyan-950/20"
+              className="flex items-center gap-1.5 px-4 py-2 bg-brand-600 hover:bg-brand-700 text-white text-sm font-semibold transition-colors disabled:opacity-50 -600/20"
             >
               {saved ? <><Check size={14} /> Saved</> : <><Save size={14} /> {saving ? 'Saving…' : 'Save Changes'}</>}
             </button>
@@ -268,8 +268,8 @@ export default function NutritionPlanDetailPage() {
             {/* Gradient panel */}
             <div className="sm:w-56 flex-shrink-0 bg-gradient-to-br from-green-400 via-emerald-500 to-teal-600 p-6 flex flex-col justify-between min-h-[180px]">
               <div className="flex gap-1.5 flex-wrap">
-                <span className="text-[11px] bg-white/20 text-white px-2 py-0.5 rounded-full font-semibold">Nutrition Plan</span>
-                {clientName && <span className="text-[11px] bg-white/20 text-white px-2 py-0.5 rounded-full font-semibold">{clientName}</span>}
+                <span className="text-[11px] bg-white/20 text-white px-2 py-0.5 font-semibold">Nutrition Plan</span>
+                {clientName && <span className="text-[11px] bg-white/20 text-white px-2 py-0.5 font-semibold">{clientName}</span>}
               </div>
               <div>
                 <Salad className="w-10 h-10 text-white/80 mb-2" />
@@ -317,7 +317,7 @@ export default function NutritionPlanDetailPage() {
                   { icon: <Salad size={15} />, label: 'Protein',  value: weeklyAvg.protein_g, unit: 'g',    iconCls: 'text-green-600',  bg: 'bg-green-50 dark:bg-green-900/20'  },
                   { icon: <Droplets size={15}/>,label: 'Fat',     value: weeklyAvg.fat_g,     unit: 'g',    iconCls: 'text-slate-500',  bg: 'bg-slate-100 dark:bg-slate-800/60' },
                 ].map(m => (
-                  <div key={m.label} className={`flex items-center gap-2 px-3 py-2 rounded-xl ${m.bg}`}>
+                  <div key={m.label} className={`flex items-center gap-2 px-3 py-2 ${m.bg}`}>
                     <span className={m.iconCls}>{m.icon}</span>
                     <div>
                       <p className="text-[10px] text-slate-200 dark:text-slate-400 leading-none">{m.label}</p>
@@ -349,11 +349,11 @@ export default function NutritionPlanDetailPage() {
               const totals = dayTotals(day)
               const isOpen = !!openDays[day.day]
               return (
-                <div key={day.day} className="border border-slate-200/80 dark:border-white/[0.07] overflow-hidden bg-white dark:bg-[#171717] shadow-sm">
+                <div key={day.day} className="border border-slate-200/80 dark:border-white/[0.07] overflow-hidden bg-[var(--bg-card)] ">
                   {/* Day header */}
                   <button
                     onClick={() => toggleDay(day.day)}
-                    className="w-full flex items-center justify-between px-5 py-3.5 bg-white dark:bg-[#171717] hover:bg-slate-50 dark:hover:bg-white/[0.03] transition-colors text-left"
+                    className="w-full flex items-center justify-between px-5 py-3.5 bg-[var(--bg-card)] hover:bg-slate-50 dark:hover:bg-white/[0.03] transition-colors text-left"
                   >
                     <div className="flex items-center gap-3">
                       {isOpen
@@ -375,8 +375,8 @@ export default function NutritionPlanDetailPage() {
                       {day.meals.map((meal, mi) => (
                         <div key={mi}>
                           {/* Meal header */}
-                          <div className="flex items-center gap-3 px-4 py-2.5 bg-slate-50 dark:bg-[#171717] border-b border-slate-100 dark:border-white/[0.05]">
-                            <div className="w-2 h-2 rounded-full bg-green-500 flex-shrink-0" />
+                          <div className="flex items-center gap-3 px-4 py-2.5 bg-[var(--bg-card)] border-b border-slate-100 dark:border-white/[0.05]">
+                            <div className="w-2 h-2 bg-green-500 flex-shrink-0" />
                             <input
                               value={meal.meal_name}
                               onChange={e => updateMeal(di, mi, 'meal_name', e.target.value)}
@@ -447,7 +447,7 @@ export default function NutritionPlanDetailPage() {
               <button
                 onClick={handleSave}
                 disabled={saving}
-                className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-cyan-950 hover:bg-cyan-900 text-white text-sm font-semibold transition-colors disabled:opacity-50 shadow-sm shadow-cyan-950/20"
+                className="flex items-center gap-2 px-6 py-2.5 bg-brand-600 hover:bg-brand-700 text-white text-sm font-semibold transition-colors disabled:opacity-50 -600/20"
               >
                 {saved ? <><Check size={14} /> Saved!</> : <><Save size={14} /> {saving ? 'Saving…' : 'Save Changes'}</>}
               </button>
@@ -505,7 +505,7 @@ export default function NutritionPlanDetailPage() {
               {plan.client_id && (
                 <Link
                   href={`/clients/${plan.client_id}`}
-                  className="block w-full text-center py-2 rounded-xl border border-green-200 dark:border-green-900/40 text-green-600 dark:text-green-400 text-sm font-semibold hover:bg-green-50 dark:hover:bg-green-900/20 transition-colors"
+                  className="block w-full text-center py-2 border border-green-200 dark:border-green-900/40 text-green-600 dark:text-green-400 text-sm font-semibold hover:bg-green-50 dark:hover:bg-green-900/20 transition-colors"
                 >
                   View Client Profile →
                 </Link>
@@ -514,19 +514,19 @@ export default function NutritionPlanDetailPage() {
 
             {/* Notes */}
             {plan.notes && (
-              <div className="rounded-2xl border border-slate-200/80 dark:border-white/[0.07] bg-white dark:bg-[#171717] p-4 shadow-sm">
+              <div className="border border-slate-200/80 dark:border-white/[0.07] bg-[var(--bg-card)] p-4 ">
                 <h3 className="text-sm font-semibold text-slate-900 dark:text-white mb-2">Notes</h3>
                 <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">{plan.notes}</p>
               </div>
             )}
 
             {/* Danger zone */}
-            <div className="rounded-2xl border border-red-100 dark:border-red-900/30 bg-red-50/50 dark:bg-red-900/10 p-4">
+            <div className="border border-red-100 dark:border-red-900/30 bg-red-50/50 dark:bg-red-900/10 p-4">
               <h3 className="text-sm font-semibold text-red-700 dark:text-red-400 mb-1">Danger Zone</h3>
               <p className="text-xs text-red-500 dark:text-red-400/80 mb-3">Permanently delete this nutrition plan. This cannot be undone.</p>
               <button
                 onClick={() => setShowDelete(true)}
-                className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-red-500 hover:bg-red-600 text-white text-sm font-semibold transition-colors w-full justify-center"
+                className="flex items-center gap-1.5 px-4 py-2 bg-red-500 hover:bg-red-600 text-white text-sm font-semibold transition-colors w-full justify-center"
               >
                 <Trash2 size={14} /> Delete Plan
               </button>

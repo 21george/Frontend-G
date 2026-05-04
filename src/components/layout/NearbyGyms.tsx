@@ -102,10 +102,10 @@ function GymMap({ gyms, userLocation }: { gyms: Gym[]; userLocation: { lat: numb
               style={{ left: pos.x - 12, top: pos.y - 24 }}
             >
               <div className="relative group cursor-pointer">
-                <div className="w-6 h-6 bg-emerald-500 rounded-full flex items-center justify-center shadow-lg ring-2 ring-white dark:ring-slate-700">
+                <div className="w-6 h-6 bg-emerald-500 flex items-center justify-center ring-2 ring-white dark:ring-slate-700">
                   <Dumbbell className="w-3 h-3 text-white" />
                 </div>
-                <div className="absolute -bottom-6 left-1/2 -translate-x-1/2 whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity bg-slate-900 text-white text-[10px] px-2 py-0.5 rounded pointer-events-none z-10">
+                <div className="absolute -bottom-6 left-1/2 -translate-x-1/2 whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity bg-slate-900 text-white text-[10px] px-2 py-0.5 pointer-events-none z-10">
                   {gym.name}
                 </div>
               </div>
@@ -122,7 +122,7 @@ function GymMap({ gyms, userLocation }: { gyms: Gym[]; userLocation: { lat: numb
         className="absolute"
         style={{ left: center.x - 8, top: center.y - 8 }}
       >
-        <div className="w-4 h-4 bg-blue-500 rounded-full ring-4 ring-blue-500/30 animate-pulse" />
+        <div className="w-4 h-4 bg-blue-500 ring-4 ring-blue-500/30 animate-pulse" />
       </motion.div>
     </div>
   )
@@ -148,14 +148,14 @@ export function NearbyGymsButton() {
         whileTap={{ scale: 0.95 }}
         onClick={() => setOpen(true)}
         title="Find fitness studios nearby"
-        className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200/60 dark:border-emerald-700/30 text-emerald-700 dark:text-emerald-300 text-xs font-medium hover:bg-emerald-100 dark:hover:bg-emerald-900/40 transition-colors shadow-sm"
+        className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200/60 dark:border-emerald-700/30 text-emerald-700 dark:text-emerald-300 text-xs font-medium hover:bg-emerald-100 dark:hover:bg-emerald-900/40 transition-colors "
       >
         <MapPin className="w-3.5 h-3.5 shrink-0" />
         <span className="hidden sm:inline">Nearby Gyms</span>
         <span className="sm:hidden">Nearby</span>
         {loading && <Loader2 className="w-3 h-3 animate-spin" />}
         {!loading && gyms.length > 0 && (
-          <span className="ml-0.5 text-[10px] font-bold bg-emerald-500 text-white px-1.5 py-0.5 rounded-full min-w-[18px] text-center">
+          <span className="ml-0.5 text-[10px] font-bold bg-emerald-500 text-white px-1.5 py-0.5 min-w-[18px] text-center">
             {gyms.length}
           </span>
         )}
@@ -181,16 +181,16 @@ export function NearbyGymsButton() {
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
               transition={{ duration: 0.2, type: 'spring' }}
-              className="fixed inset-x-4 sm:inset-x-auto sm:left-1/2 sm:-translate-x-1/2 sm:top-20 sm:w-[600px] z-50 bg-white dark:bg-[#1a1a1a] rounded-2xl sm:rounded-3xl shadow-2xl overflow-hidden max-h-[80vh] flex flex-col"
+              className="fixed inset-x-4 sm:inset-x-auto sm:left-1/2 sm:-translate-x-1/2 sm:top-20 sm:w-[600px] z-50 bg-white dark:bg-slate-800 sm:overflow-hidden max-h-[80vh] flex flex-col"
             >
               {/* Header */}
               <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100 dark:border-white/[0.08] shrink-0">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center shadow-lg shadow-emerald-500/20">
+                  <div className="w-10 h-10 bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center -500/20">
                     <Dumbbell className="w-5 h-5 text-white" />
                   </div>
                   <div>
-                    <h2 className="text-base font-semibold text-slate-900 dark:text-white">
+                    <h2 className="text-base font-semibold text-[var(--text-primary)] ">
                       Fitness Studios Nearby
                     </h2>
                     <p className="text-xs text-slate-500 dark:text-neutral-400">
@@ -202,13 +202,13 @@ export function NearbyGymsButton() {
                   <button
                     onClick={reload}
                     title="Refresh"
-                    className="p-2 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-white/[0.08] transition-colors"
+                    className="p-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-white/[0.08] transition-colors"
                   >
                     <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
                   </button>
                   <button
                     onClick={() => setOpen(false)}
-                    className="p-2 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-white/[0.08] transition-colors"
+                    className="p-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-white/[0.08] transition-colors"
                   >
                     <X className="w-5 h-5" />
                   </button>
@@ -217,12 +217,12 @@ export function NearbyGymsButton() {
 
               {/* View toggle */}
               <div className="flex items-center gap-2 px-5 py-3 border-b border-slate-100 dark:border-white/[0.06] shrink-0">
-                <div className="flex items-center bg-slate-100 dark:bg-white/[0.06] rounded-xl p-1">
+                <div className="flex items-center bg-slate-100 dark:bg-white/[0.06] p-1">
                   <button
                     onClick={() => setView('list')}
-                    className={`px-4 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                    className={`px-4 py-1.5 text-xs font-medium transition-all ${
                       view === 'list'
-                        ? 'bg-white dark:bg-white/10 text-slate-900 dark:text-white shadow-sm'
+                        ? 'bg-white dark:bg-white/10 text-[var(--text-primary)]  '
                         : 'text-slate-500 dark:text-neutral-400'
                     }`}
                   >
@@ -230,9 +230,9 @@ export function NearbyGymsButton() {
                   </button>
                   <button
                     onClick={() => setView('map')}
-                    className={`px-4 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                    className={`px-4 py-1.5 text-xs font-medium transition-all ${
                       view === 'map'
-                        ? 'bg-white dark:bg-white/10 text-slate-900 dark:text-white shadow-sm'
+                        ? 'bg-white dark:bg-white/10 text-[var(--text-primary)]  '
                         : 'text-slate-500 dark:text-neutral-400'
                     }`}
                   >
@@ -276,7 +276,7 @@ export function NearbyGymsButton() {
                             transition={{ delay: i * 0.05 }}
                             className="flex items-center gap-4 px-5 py-4 hover:bg-slate-50 dark:hover:bg-white/[0.03] transition-colors group"
                           >
-                            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center shrink-0 shadow-md">
+                            <div className="w-10 h-10 bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center shrink-0 ">
                               <Dumbbell className="w-5 h-5 text-white" />
                             </div>
                             <div className="flex-1 min-w-0">
@@ -288,14 +288,14 @@ export function NearbyGymsButton() {
                               )}
                             </div>
                             <div className="flex items-center gap-2">
-                              <span className="text-xs font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/30 px-2.5 py-1 rounded-full shrink-0">
+                              <span className="text-xs font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/30 px-2.5 py-1 shrink-0">
                                 {formatDistance(gym.distance)}
                               </span>
                               <a
                                 href={`https://www.google.com/maps/dir/?api=1&destination=${gym.location.lat},${gym.location.lon}`}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="p-2 rounded-lg text-slate-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors opacity-0 group-hover:opacity-100"
+                                className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors opacity-0 group-hover:opacity-100"
                                 title="Get directions"
                               >
                                 <Navigation className="w-4 h-4" />

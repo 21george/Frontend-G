@@ -14,3 +14,10 @@ export const useWorkoutLogs = (clientId: string) =>
     queryFn: () => mediaApi.clientLogs(clientId),
     enabled: !!clientId,
   })
+
+export const useWorkoutProgress = (clientId: string) =>
+  useQuery({
+    queryKey: ['workout-progress', clientId],
+    queryFn: () => mediaApi.clientWorkoutProgress(clientId),
+    enabled: !!clientId,
+  })

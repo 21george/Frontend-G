@@ -9,6 +9,12 @@ export const useWorkoutPlans = (clientId?: string, status?: string, planType?: W
     queryFn: () => workoutPlansApi.list({ client_id: clientId, status, plan_type: planType }),
   })
 
+export const useSavedWorkoutPlans = (params?: { page?: number; limit?: number; offset?: number }) =>
+  useQuery({
+    queryKey: ['workout-plans', 'saved', params],
+    queryFn: () => workoutPlansApi.saved(params),
+  })
+
 export const useWorkoutPlan = (id: string) =>
   useQuery({
     queryKey: ['workout-plan', id],

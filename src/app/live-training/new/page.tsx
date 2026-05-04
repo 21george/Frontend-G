@@ -61,7 +61,7 @@ export default function NewLiveTrainingPage() {
     }
   }
 
-  const inputCls = 'w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-white/[0.1] bg-white dark:bg-white/[0.04] text-[13px] text-slate-700 dark:text-slate-300 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-cyan-950/20 dark:focus:ring-cyan-400/20 transition-colors'
+  const inputCls = 'w-full px-4 py-3 border border-slate-200 dark:border-white/[0.1] bg-white dark:bg-white/[0.04] text-[13px] text-slate-700 dark:text-slate-300 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-brand-600/20 dark:focus:ring-brand-400/20 transition-colors'
   const labelCls = 'block text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2'
 
   return (
@@ -72,7 +72,7 @@ export default function NewLiveTrainingPage() {
         </Link>
 
         <div className="flex items-center gap-4 mb-8">
-          <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-cyan-600 to-cyan-950 flex items-center justify-center shadow-lg shadow-cyan-950/25">
+          <div className="w-12 h-12 bg-gradient-to-br from-brand-500 to-brand-700 flex items-center justify-center -600/25">
             <Signal size={22} className="text-white" />
           </div>
           <div>
@@ -83,9 +83,9 @@ export default function NewLiveTrainingPage() {
 
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Session Info Card */}
-          <div className="bg-white dark:bg-white/[0.03] border border-slate-200 dark:border-white/[0.08] rounded-2xl p-6 space-y-5">
+          <div className="bg-white dark:bg-white/[0.03] border border-slate-200 dark:border-white/[0.08] p-6 space-y-5">
             <div className="flex items-center gap-2 mb-1">
-              <Sparkles size={14} className="text-cyan-600 dark:text-cyan-400" />
+              <Sparkles size={14} className="text-brand-600 dark:text-brand-400" />
               <h2 className="text-[13px] font-semibold text-slate-700 dark:text-slate-300">Session Details</h2>
             </div>
 
@@ -136,9 +136,9 @@ export default function NewLiveTrainingPage() {
           </div>
 
           {/* Schedule Card */}
-          <div className="bg-white dark:bg-white/[0.03] border border-slate-200 dark:border-white/[0.08] rounded-2xl p-6 space-y-5">
+          <div className="bg-white dark:bg-white/[0.03] border border-slate-200 dark:border-white/[0.08] p-6 space-y-5">
             <div className="flex items-center gap-2 mb-1">
-              <Calendar size={14} className="text-cyan-600 dark:text-cyan-400" />
+              <Calendar size={14} className="text-brand-600 dark:text-brand-400" />
               <h2 className="text-[13px] font-semibold text-slate-700 dark:text-slate-300">Schedule</h2>
             </div>
 
@@ -193,9 +193,9 @@ export default function NewLiveTrainingPage() {
           </div>
 
           {/* Settings Card */}
-          <div className="bg-white dark:bg-white/[0.03] border border-slate-200 dark:border-white/[0.08] rounded-2xl p-6 space-y-5">
+          <div className="bg-white dark:bg-white/[0.03] border border-slate-200 dark:border-white/[0.08] p-6 space-y-5">
             <div className="flex items-center gap-2 mb-1">
-              <FileText size={14} className="text-cyan-600 dark:text-cyan-400" />
+              <FileText size={14} className="text-brand-600 dark:text-brand-400" />
               <h2 className="text-[13px] font-semibold text-slate-700 dark:text-slate-300">Settings</h2>
             </div>
 
@@ -213,7 +213,7 @@ export default function NewLiveTrainingPage() {
               </div>
             </div>
 
-            <div className="flex items-center justify-between p-4 rounded-xl bg-slate-50 dark:bg-white/[0.03] border border-slate-200 dark:border-white/[0.06]">
+            <div className="flex items-center justify-between p-4 bg-slate-50 dark:bg-white/[0.03] border border-slate-200 dark:border-white/[0.06]">
               <div>
                 <p className="text-[13px] font-semibold text-slate-700 dark:text-slate-300">Require Approval</p>
                 <p className="text-[11px] text-slate-400 dark:text-slate-500 mt-0.5">Clients must request to join and you approve them</p>
@@ -221,13 +221,13 @@ export default function NewLiveTrainingPage() {
               <button
                 type="button"
                 onClick={() => setRequiresApproval(v => !v)}
-                className={`relative w-11 h-6 rounded-full transition-colors ${
+                className={`relative w-11 h-6 transition-colors ${
                   requiresApproval
-                    ? 'bg-cyan-950'
+                    ? 'bg-brand-600'
                     : 'bg-slate-300 dark:bg-white/[0.15]'
                 }`}
               >
-                <span className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform ${
+                <span className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white transition-transform ${
                   requiresApproval ? 'translate-x-5' : 'translate-x-0'
                 }`} />
               </button>
@@ -238,14 +238,14 @@ export default function NewLiveTrainingPage() {
           <div className="flex items-center justify-end gap-3 pt-2">
             <Link
               href="/live-training"
-              className="px-5 py-2.5 rounded-xl text-[13px] font-semibold text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-white/[0.06] transition-colors"
+              className="px-5 py-2.5 text-[13px] font-semibold text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-white/[0.06] transition-colors"
             >
               Cancel
             </Link>
             <button
               type="submit"
               disabled={loading}
-              className="px-6 py-2.5 bg-gradient-to-r from-cyan-600 to-cyan-950 hover:from-cyan-500 hover:to-cyan-900 text-white text-[13px] font-semibold rounded-xl shadow-lg shadow-cyan-950/25 transition-all hover:shadow-xl disabled:opacity-50"
+              className="px-6 py-2.5 bg-gradient-to-r from-brand-500 to-brand-700 hover:from-brand-400 hover:to-brand-800 text-white text-[13px] font-semibold -600/25 transition-all hover:disabled:opacity-50"
             >
               {loading ? 'Creating…' : 'Create Session'}
             </button>

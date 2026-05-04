@@ -30,10 +30,10 @@ interface CallData {
 }
 
 const CallCard: React.FC<{ call: CallData }> = ({ call }) => (
-  <div className="bg-gray-50 border border-gray-200 rounded-xl p-3">
+  <div className="bg-gray-50 border border-gray-200 p-3">
     {/* Header */}
     <div className="flex items-center gap-2 mb-2.5">
-      <div className={`w-9 h-9 rounded-full bg-gradient-to-br ${call.avatarColor} flex items-center justify-center text-[12px] font-semibold text-white flex-shrink-0`}>
+      <div className={`w-9 h-9 bg-gradient-to-br ${call.avatarColor} flex items-center justify-center text-[12px] font-semibold text-white flex-shrink-0`}>
         {call.agentInitials}
       </div>
       <div>
@@ -61,7 +61,7 @@ const CallCard: React.FC<{ call: CallData }> = ({ call }) => (
     <div className="flex items-center gap-1 text-[10px] text-gray-500 mb-1.5">
       <UserIcon size={10} />
       {call.assignee}
-      <div className="w-4 h-4 rounded bg-gray-100 flex items-center justify-center text-[9px] text-gray-500 ml-0.5">
+      <div className="w-4 h-4 bg-gray-100 flex items-center justify-center text-[9px] text-gray-500 ml-0.5">
         {call.assigneeCount}
       </div>
     </div>
@@ -69,7 +69,7 @@ const CallCard: React.FC<{ call: CallData }> = ({ call }) => (
     {/* Dots */}
     <div className="flex flex-wrap gap-[3px] my-1.5">
       {call.dots.map((d, i) => (
-        <div key={i} className={`w-[9px] h-[9px] rounded-full ${dotClass[d]}`} />
+        <div key={i} className={`w-[9px] h-[9px] ${dotClass[d]}`} />
       ))}
     </div>
 

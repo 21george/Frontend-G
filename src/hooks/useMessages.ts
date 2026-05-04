@@ -1,14 +1,20 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { messagesApi } from '@/lib/api'
+import { shouldRetryRequest } from '@/lib/api/errors'
+import { useAuthStore } from '@/store/auth'
 import toast from 'react-hot-toast'
 
-export const useMessages = (clientId: string) =>
-  useQuery({
+export const useMessages = (clientId: string) => {
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
+
+  return useQuery({
     queryKey: ['messages', clientId],
     queryFn: () => messagesApi.list(clientId),
-    refetchInterval: 5000,
-    enabled: !!clientId,
+    enabled: isAuthenticated && !!clientId,
+    refetchInterval: isAuthenticated ? 5000 : false,
+    retry: shouldRetryRequest,
   })
+}
 
 export const useSendMessage = () => {
   const qc = useQueryClient()

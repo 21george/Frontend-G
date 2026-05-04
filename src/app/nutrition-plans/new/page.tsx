@@ -80,7 +80,7 @@ export default function NewNutritionPlanPage() {
             <div key={di} className="card p-4">
               <h3 className="font-semibold text-slate-900 dark:text-white mb-4 capitalize">{day.day} (template for all days)</h3>
               {day.meals.map((meal, mi) => (
-                <div key={mi} className="bg-slate-50 dark:bg-[#141414] rounded-lg p-3 mb-3">
+                <div key={mi} className="bg-slate-50 dark:bg-surface-page-dark p-3 mb-3">
                   <div className="flex gap-2 mb-2">
                     <input value={meal.meal_name} className="input text-sm w-32" placeholder="Meal" readOnly />
                     <input value={meal.time} className="input text-sm w-28" type="time" readOnly />
@@ -101,12 +101,12 @@ export default function NewNutritionPlanPage() {
                       <input type="number" value={food.carbs_g} onChange={e => updateFood(di, mi, fi, 'carbs_g', +e.target.value)} className="input text-sm" placeholder="C(g)" />
                     </div>
                   ))}
-                  <button type="button" onClick={() => addFood(di, mi)} className="text-xs text-cyan-700 dark:text-cyan-400 hover:text-cyan-800 dark:hover:text-cyan-300 flex items-center gap-1">
+                  <button type="button" onClick={() => addFood(di, mi)} className="text-xs text-brand-700 dark:text-brand-400 hover:text-brand-800 dark:hover:text-brand-300 flex items-center gap-1">
                     <Plus className="w-3 h-3" /> Add food
                   </button>
                 </div>
               ))}
-              <button type="button" onClick={() => addMeal(di)} className="text-sm text-cyan-700 dark:text-cyan-400 hover:text-cyan-800 dark:hover:text-cyan-300 flex items-center gap-1 mt-2">
+              <button type="button" onClick={() => addMeal(di)} className="text-sm text-brand-700 dark:text-brand-400 hover:text-brand-800 dark:hover:text-brand-300 flex items-center gap-1 mt-2">
                 <Plus className="w-3.5 h-3.5" /> Add meal
               </button>
             </div>

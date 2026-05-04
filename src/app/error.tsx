@@ -20,7 +20,7 @@ export default function GlobalError({
         <p className="text-[var(--text-secondary)] mb-4">An unexpected error occurred. Please try again.</p>
         <button
           onClick={reset}
-          className="px-4 py-2 bg-[var(--accent)] text-white rounded-lg hover:opacity-90 transition-opacity"
+          className="px-4 py-2 bg-[var(--accent)] text-white hover:opacity-90 transition-opacity"
         >
           Try again
         </button>

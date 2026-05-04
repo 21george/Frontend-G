@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuthStore } from '@/store/auth'
 import Sidebar from '@/components/layout/Sidebar'
@@ -16,12 +16,38 @@ function AuthLayout({
   showHeader?: boolean
   showGreeting?: boolean
 }) {
-  const { isAuthenticated } = useAuthStore()
+  const { isAuthenticated, accessToken, refreshAccessToken, clearAuth } = useAuthStore()
   const router = useRouter()
+  const refreshInProgressRef = useRef(false)
 
   useEffect(() => {
-    if (!isAuthenticated) router.replace('/auth/login')
-  }, [isAuthenticated, router])
+    if (!isAuthenticated) {
+      router.replace('/auth/login')
+      return
+    }
+    // Silently obtain a new access token on app load when the in-memory
+    // token is absent (e.g. after a page refresh rehydrated coach/isAuthenticated
+    // from localStorage but accessToken was not persisted).
+    if (!accessToken && !refreshInProgressRef.current) {
+      refreshInProgressRef.current = true
+      refreshAccessToken()
+        .then((token) => {
+          if (!token) {
+            // Refresh returned null — session is invalid
+            clearAuth()
+            router.replace('/auth/login')
+          }
+        })
+        .catch(() => {
+          // Unexpected error — clear auth and redirect
+          clearAuth()
+          router.replace('/auth/login')
+        })
+        .finally(() => {
+          refreshInProgressRef.current = false
+        })
+    }
+  }, [isAuthenticated, accessToken, refreshAccessToken, clearAuth, router])
 
   if (!isAuthenticated) return null
 
@@ -31,7 +57,7 @@ function AuthLayout({
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       transition={{ duration: 0.2, ease: 'easeInOut' }}
-      className="min-h-screen flex bg-slate-100 dark:bg-[#141414]"
+      className="min-h-screen flex bg-slate-100 dark:bg-surface-page-dark"
     >
       <Sidebar />
       <main className="flex-1 min-h-screen overflow-x-hidden">

@@ -52,7 +52,7 @@ export default function NewClientPage() {
       <DashboardLayout>
         <div >
           <div className="card p-8 text-center">
-            <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <div className="w-16 h-16 bg-green-100 flex items-center justify-center mx-auto mb-4">
               <Check className="w-8 h-8 text-green-600" />
             </div>
             <h2 className="text-xl font-semibold text-gray-900 mb-2">Client Created!</h2>
@@ -62,11 +62,11 @@ export default function NewClientPage() {
                 : 'Share this login code with your client. They use it to log into the app.'}
             </p>
             {emailSent && (
-              <div className="flex items-center justify-center gap-2 mb-4 px-4 py-2.5 rounded-xl bg-green-50 border border-green-200 text-green-700 text-[13px] font-medium">
+              <div className="flex items-center justify-center gap-2 mb-4 px-4 py-2.5 bg-green-50 border border-green-200 text-green-700 text-[13px] font-medium">
                 <Check className="w-4 h-4" /> Email sent with login code
               </div>
             )}
-            <div className="bg-brand-light border-2 border-brand rounded-xl p-6 mb-4">
+            <div className="bg-brand-light border-2 border-brand p-6 mb-4">
               <p className="text-sm text-brand font-medium mb-1">Client Login Code</p>
               <p className="text-3xl font-semibold tracking-widest text-brand-dark font-mono">{generatedCode}</p>
             </div>

@@ -32,6 +32,7 @@ export interface Client {
   profile_photo_url?: string
   notes?: string
   active: boolean
+  is_blocked?: boolean
   created_at: string
 }
 
@@ -56,10 +57,23 @@ export interface WorkoutPlan {
   plan_type?: WorkoutPlanType
   client_id?: string
   client_ids?: string[]
+  assigned_client?: {
+    id: string
+    name: string
+    profile_photo_url: string | null
+  }
   group_name?: string
   title: string
   week_start: string
-  status: 'active' | 'completed' | 'draft'
+  /** Lifecycle status of the workout plan:
+   *  - `'draft'`  — In-progress or unsaved edits; not yet visible to the client.
+   *  - `'saved'`  — Persisted but not currently active; available for future assignment.
+   *  - `'active'` — Currently assigned and in use by the client.
+   *  - `'completed'` — All days finished; no further edits expected.
+   *
+   *  Typical transitions: draft → saved → active → completed.
+   */
+  status: 'active' | 'completed' | 'draft' | 'saved'
   days: WorkoutDay[]
   notes?: string
   created_at: string
@@ -116,6 +130,7 @@ export interface NutritionPlan {
     fat_g: number
   }
   days: NutritionDay[]
+  status: 'active' | 'completed' | 'draft'
   notes?: string
   created_at: string
 }

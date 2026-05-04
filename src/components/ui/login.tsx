@@ -39,6 +39,7 @@ interface AuthFormSplitScreenProps {
   forgotPasswordHref: string;
   createAccountHref: string;
   error?: string | null;
+  onDismissError?: () => void;
 }
 
 /**
@@ -62,6 +63,7 @@ export function AuthFormSplitScreen({
   forgotPasswordHref,
   createAccountHref,
   error,
+  onDismissError,
 }: AuthFormSplitScreenProps) {
   const [isLoading, setIsLoading] = React.useState(false);
 
@@ -117,11 +119,30 @@ export function AuthFormSplitScreen({
       className="relative flex min-h-[100dvh] w-full flex-col md:flex-row"
     >
       {/* Error toast */}
-      {error && (
-        <div className="fixed top-4 left-1/2 -translate-x-1/2 bg-red-500/90 text-white px-4 py-2 rounded-lg shadow-lg z-50 text-sm max-w-[90vw] text-center">
-          {error}
-        </div>
-      )}
+      <AnimatePresence>
+        {error && (
+          <motion.div
+            key="error-toast"
+            initial={{ opacity: 0, y: -16 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -16 }}
+            transition={{ duration: 0.2 }}
+            role="alert"
+            aria-live="polite"
+            className="fixed top-4 left-1/2 -translate-x-1/2 flex items-center gap-3 bg-red-500/90 text-white px-4 py-2 z-50 text-sm max-w-[90vw] rounded-lg shadow-lg"
+          >
+            <span className="flex-1 text-center">{error}</span>
+            <button
+              type="button"
+              aria-label="Dismiss error"
+              onClick={() => onDismissError?.()}
+              className="ml-2 text-white/80 hover:text-white transition-colors leading-none"
+            >
+              ✕
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Left Panel: Form */}
       <div className="flex w-full flex-col items-center justify-center bg-background px-5 py-10 sm:p-8 md:w-1/2 min-h-[100dvh] md:min-h-0">

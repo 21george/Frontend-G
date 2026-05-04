@@ -101,7 +101,7 @@ export default function MiniCalendar() {
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.9 }}
             onClick={prev}
-            className="w-7 h-7 rounded-lg flex items-center justify-center text-slate-400 hover:text-slate-900 hover:bg-slate-100 dark:text-neutral-400 dark:hover:text-white dark:hover:bg-white/[0.08] transition-colors"
+            className="w-7 h-7 flex items-center justify-center text-slate-400 hover:text-slate-900 hover:bg-slate-100 dark:text-neutral-400 dark:hover:text-white dark:hover:bg-white/[0.08] transition-colors"
           >
             <ChevronLeft className="w-4 h-4" />
           </motion.button>
@@ -109,7 +109,7 @@ export default function MiniCalendar() {
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.9 }}
             onClick={next}
-            className="w-7 h-7 rounded-lg flex items-center justify-center text-slate-400 hover:text-slate-900 hover:bg-slate-100 dark:text-neutral-400 dark:hover:text-white dark:hover:bg-white/[0.08] transition-colors"
+            className="w-7 h-7 flex items-center justify-center text-slate-400 hover:text-slate-900 hover:bg-slate-100 dark:text-neutral-400 dark:hover:text-white dark:hover:bg-white/[0.08] transition-colors"
           >
             <ChevronRight className="w-4 h-4" />
           </motion.button>
@@ -141,17 +141,17 @@ export default function MiniCalendar() {
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               onClick={() => setSelectedDay(d)}
-              className={`aspect-square rounded-lg flex items-center justify-center text-xs font-medium transition-all duration-150 relative ${
+              className={`aspect-square flex items-center justify-center text-xs font-medium transition-all duration-150 relative ${
                 selectedFlag
-                  ? 'bg-cyan-950 text-white shadow-md shadow-cyan-900/30'
+                  ? 'bg-brand-600 text-white -700/30'
                   : todayFlag
-                    ? 'bg-gradient-to-br from-cyan-500 to-blue-500 text-white shadow-md shadow-cyan-500/30'
+                    ? 'bg-gradient-to-br from-brand-500 to-blue-500 text-white -500/30'
                     : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-neutral-300 dark:hover:bg-white/[0.08] dark:hover:text-white'
               }`}
             >
               {d}
               {hasEvents && !selectedFlag && !todayFlag && (
-                <span className="absolute bottom-1 w-1 h-1 bg-emerald-500 rounded-full" />
+                <span className="absolute bottom-1 w-1 h-1 bg-emerald-500 " />
               )}
             </motion.button>
           )
@@ -170,7 +170,7 @@ export default function MiniCalendar() {
             className="mt-4 pt-4 border-t border-slate-200 dark:border-white/[0.08] overflow-hidden"
           >
             <div className="flex items-center gap-2 mb-3">
-              <Calendar className="w-4 h-4 text-cyan-600 dark:text-cyan-400" />
+              <Calendar className="w-4 h-4 text-brand-600 dark:text-brand-400" />
               <h4 className="text-xs font-semibold text-slate-700 dark:text-slate-300">
                 {dayProgram.date.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' })}
               </h4>
@@ -178,7 +178,7 @@ export default function MiniCalendar() {
 
             {dayProgram.checkins.length === 0 ? (
               <div className="text-center py-4">
-                <div className="w-10 h-10 mx-auto mb-2 rounded-full bg-slate-100 dark:bg-white/[0.06] flex items-center justify-center">
+                <div className="w-10 h-10 mx-auto mb-2 bg-slate-100 dark:bg-white/[0.06] flex items-center justify-center">
                   <Calendar className="w-5 h-5 text-slate-400" />
                 </div>
                 <p className="text-xs text-slate-500 dark:text-neutral-400">No scheduled events</p>
@@ -191,9 +191,9 @@ export default function MiniCalendar() {
                     initial={{ opacity: 0, x: -10 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: i * 0.05 }}
-                    className="flex items-start gap-3 p-2.5 rounded-xl bg-slate-50 dark:bg-white/[0.04] border border-slate-100 dark:border-white/[0.06]"
+                    className="flex items-start gap-3 p-2.5 bg-slate-50 dark:bg-white/[0.04] border border-slate-100 dark:border-white/[0.06]"
                   >
-                    <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center shrink-0">
+                    <div className="w-8 h-8 bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center shrink-0">
                       <Clock className="w-4 h-4 text-white" />
                     </div>
                     <div className="flex-1 min-w-0">

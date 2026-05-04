@@ -4,7 +4,7 @@ import { useCreateWorkoutPlan, useClients } from '@/lib/hooks'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useForm, useFieldArray } from 'react-hook-form'
 import { useState } from 'react'
-import { ArrowLeft, Plus, Trash2 } from 'lucide-react'
+import { ArrowLeft, Plus, Trash2, Save, Send } from 'lucide-react'
 import Link from 'next/link'
 import { DAYS } from '@/lib/utils'
 
@@ -47,11 +47,22 @@ export default function NewWorkoutPlanPage() {
       exercises: d.exercises.map((e, j) => j === ei ? { ...e, [field]: value } : e)
     } : d))
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent, saveMode: 'assign' | 'save') => {
     e.preventDefault()
     setLoading(true)
     try {
-      await createPlan.mutateAsync({ title, client_id: clientId, week_start: weekStart, status, days, notes } as any)
+      const planStatus = saveMode === 'save' ? 'draft' : status
+      const payload: any = {
+        title,
+        week_start: weekStart || undefined,
+        status: planStatus,
+        days,
+        notes,
+      }
+      if (saveMode === 'assign' && clientId) {
+        payload.client_id = clientId
+      }
+      await createPlan.mutateAsync(payload)
       router.push('/workout-plans')
     } finally {
       setLoading(false)
@@ -66,22 +77,22 @@ export default function NewWorkoutPlanPage() {
         </Link>
         <h1 className="text-2xl font-semibold text-slate-900 dark:text-white mb-6">New Workout Plan</h1>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="bg-white dark:bg-[#171717] p-4 sm:p-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <form className="space-y-6">
+          <div className="bg-[var(--bg-card)] p-4 sm:p-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="label">Plan Title *</label>
               <input value={title} onChange={e => setTitle(e.target.value)} className="input" placeholder="Week 1 — Strength" required />
             </div>
             <div>
-              <label className="label">Client *</label>
-              <select value={clientId} onChange={e => setClientId(e.target.value)} className="input" required>
-                <option value="">Select client…</option>
+              <label className="label">Client <span className="text-slate-400 font-normal">(optional — leave empty to save as draft)</span></label>
+              <select value={clientId} onChange={e => setClientId(e.target.value)} className="input">
+                <option value="">Save without assigning…</option>
                 {clients.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
               </select>
             </div>
             <div>
-              <label className="label">Week Start *</label>
-              <input type="date" value={weekStart} onChange={e => setWeekStart(e.target.value)} className="input" required />
+              <label className="label">Week Start</label>
+              <input type="date" value={weekStart} onChange={e => setWeekStart(e.target.value)} className="input" />
             </div>
             <div>
               <label className="label">Status</label>
@@ -99,7 +110,7 @@ export default function NewWorkoutPlanPage() {
           {/* Days */}
           <div className="space-y-4">
             {days.map((day, di) => (
-              <div key={di} className="bg-white dark:bg-[#171717] p-3 sm:p-4">
+              <div key={di} className="bg-[var(--bg-card)] p-3 sm:p-4">
                 <div className="flex items-center justify-between mb-4">
                   <div>
                     <label className="label">Day</label>
@@ -114,7 +125,7 @@ export default function NewWorkoutPlanPage() {
 
                 <div className="space-y-3">
                   {day.exercises.map((ex, ei) => (
-                    <div key={ei} className="bg-slate-50 dark:bg-[#171717] p-3 sm:p-4 grid grid-cols-2 sm:grid-cols-12 gap-2 items-start">
+                    <div key={ei} className="bg-slate-50 dark:bg-gray-800 p-3 sm:p-4 grid grid-cols-2 sm:grid-cols-12 gap-2 items-start">
                       <div className="col-span-2 sm:col-span-4">
                         <label className="label text-xs">Exercise Name</label>
                         <input value={ex.name} onChange={e => updateExercise(di, ei, 'name', e.target.value)}
@@ -161,8 +172,13 @@ export default function NewWorkoutPlanPage() {
             <button type="button" onClick={addDay} className="btn-secondary flex items-center justify-center gap-2">
               <Plus className="w-4 h-4" /> Add Day
             </button>
-            <button type="submit" disabled={loading} className="btn-primary flex-1 py-3 bg-cyan-950">
-              {loading ? 'Saving…' : 'Save Workout Plan'}
+            <button type="submit" onClick={(e) => handleSubmit(e, 'save')} disabled={loading || !title.trim()} className="btn-secondary flex-1 py-3 flex items-center justify-center gap-2">
+              <Save className="w-4 h-4" />
+              {loading ? 'Saving…' : 'Save as Draft'}
+            </button>
+            <button type="submit" onClick={(e) => handleSubmit(e, 'assign')} disabled={loading || !title.trim() || !clientId} className="btn-primary flex-1 py-3 bg-brand-600 flex items-center justify-center gap-2">
+              <Send className="w-4 h-4" />
+              {loading ? 'Saving…' : 'Assign to Client'}
             </button>
           </div>
         </form>

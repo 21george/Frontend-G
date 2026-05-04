@@ -41,7 +41,7 @@ export default function WorkedTimeChart({ data = MOCK_DATA }: Props) {
         />
         <Tooltip
           contentStyle={{
-            backgroundColor: '#333333',
+            backgroundColor: '#1E293B',
             border: '1px solid rgba(255,255,255,0.1)',
             borderRadius: '12px',
             boxShadow: '0 4px 12px rgba(0,0,0,0.4)',

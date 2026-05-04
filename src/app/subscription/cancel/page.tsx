@@ -50,7 +50,7 @@ export default function SubscriptionCancelPage() {
           </Button>
         </div>
 
-        <div className="mt-8 p-4 bg-blue-50 rounded-lg border border-blue-200">
+        <div className="mt-8 p-4 bg-blue-50 border border-blue-200">
           <p className="text-sm text-blue-800">
             <strong>Tip:</strong> All paid plans include a 14-day free trial.
             You won&apos;t be charged until the trial ends.

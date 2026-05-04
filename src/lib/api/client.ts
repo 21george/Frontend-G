@@ -1,4 +1,5 @@
 import axios from 'axios'
+import { parseApiError } from './errors'
 
 const resolveBaseUrl = () => {
   const raw = process.env.NEXT_PUBLIC_API_URL?.trim() || 'http://localhost:8000/v1'
@@ -12,6 +13,18 @@ const api = axios.create({
   timeout: 30_000,
   withCredentials: true, // send httpOnly cookies automatically
 })
+
+// Token management for Bearer authentication
+let getAuthToken: () => string | null = () => null
+
+export const setAuthTokenGetter = (getter: () => string | null) => {
+  getAuthToken = getter
+}
+
+export const setAuthToken = (token: string) => {
+  // Token is now stored in auth store, this is for compatibility
+  getAuthToken = () => token
+}
 
 // ── Response: refresh on 401, global error normalisation ──────────────────────
 let isRefreshing = false
@@ -32,6 +45,35 @@ export const setAuthInvalidationCallback = (callback: () => void) => {
   onAuthInvalidated = callback
 }
 
+let onTokenRefreshed: ((token: string) => void) | null = null
+
+/**
+ * Register a callback invoked when the access token is refreshed.
+ *
+ * ⚠ The callback MUST write the new token to auth storage synchronously
+ * (e.g. via a synchronous setter like `setToken`) before returning.
+ * This ensures that the retried `api(original)` call reads the updated
+ * token via `getAuthToken` immediately — async or batched state updates
+ * (e.g. React setState) may not be flushed in time for the retry.
+ */
+export const setTokenRefreshCallback = (callback: (token: string) => void) => {
+  onTokenRefreshed = callback
+}
+
+// Request interceptor to add Bearer token
+api.interceptors.request.use(
+  (config) => {
+    const token = getAuthToken()
+    // Auth endpoints (especially /auth/refresh) must rely on the httpOnly cookie
+    const isAuthPath = AUTH_PATHS.some((p) => config.url?.includes(p))
+    if (token && config.headers && !isAuthPath) {
+      config.headers.Authorization = `Bearer ${token}`
+    }
+    return config
+  },
+  (error) => Promise.reject(error)
+)
+
 api.interceptors.response.use(
   (r) => r,
   async (error) => {
@@ -39,9 +81,10 @@ api.interceptors.response.use(
     const url = original?.url || ''
     const status = error?.response?.status
 
-    // Log error for debugging
-    if (status && status >= 400) {
-      console.error(`API Error ${status}: ${url}`, error?.response?.data)
+    // Log structured error info for debugging (skip 401/403 — handled below)
+    if (status && status >= 400 && status !== 401 && status !== 403) {
+      const parsed = parseApiError(error)
+      console.error(`[API] ${parsed.status} ${parsed.title}: ${parsed.message}`)
     }
 
     // Handle 403 Forbidden - session expired or invalid, redirect to login
@@ -75,7 +118,21 @@ api.interceptors.response.use(
 
     try {
       // httpOnly refresh_token cookie is sent automatically
-      await api.post('/auth/refresh')
+      const res = await api.post('/auth/refresh')
+      const newToken: string | undefined =
+        res.data?.data?.access_token ?? res.data?.access_token
+      if (newToken) {
+        if (onTokenRefreshed) {
+          onTokenRefreshed(newToken)
+        } else {
+          // No token callback registered — surface misconfiguration and abort
+          const misconfig = new Error('[API] Token refresh succeeded but no token callback is registered. Retried requests will use the old token.')
+          console.error(misconfig.message)
+          processQueue(misconfig)
+          onAuthInvalidated?.()
+          return Promise.reject(misconfig)
+        }
+      }
       processQueue()
       return api(original)
     } catch (err) {

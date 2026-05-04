@@ -11,7 +11,7 @@ import {
 import { motion } from 'framer-motion'
 
 const FILE_TYPE_CONFIG: Record<string, { label: string; icon: typeof ImageIcon; gradient: string }> = {
-  image: { label: 'Image', icon: ImageIcon, gradient: 'from-blue-500 to-cyan-500' },
+  image: { label: 'Image', icon: ImageIcon, gradient: 'from-blue-500 to-brand-500' },
   video: { label: 'Video', icon: Video, gradient: 'from-purple-500 to-pink-500' },
 }
 
@@ -83,7 +83,7 @@ export default function MediaPage() {
             <nav className="flex items-center gap-2 text-xs text-slate-500 dark:text-neutral-400 mb-3 uppercase tracking-tighter">
               <span>Dashboard</span>
               <ChevronRight className="w-3 h-3" />
-              <span className="text-cyan-950 dark:text-[#b3d2ef]">Client Media</span>
+              <span className="text-brand-600 dark:text-brand-300">Client Media</span>
             </nav>
             <h1 className="text-3xl lg:text-4xl font-bold text-slate-900 dark:text-white tracking-tight">
               Client Media
@@ -92,7 +92,7 @@ export default function MediaPage() {
               View and manage photos and videos uploaded by your clients for progress tracking.
             </p>
           </div>
-          <button className="inline-flex items-center gap-2 px-5 py-2.5 bg-cyan-950 hover:bg-cyan-900 text-white text-sm font-bold rounded-lg transition-colors shadow-lg shadow-cyan-950/25">
+          <button className="inline-flex items-center gap-2 px-5 py-2.5 bg-brand-600 hover:bg-brand-700 text-white text-sm font-bold transition-colors -600/25">
             <Upload className="w-4 h-4" />
             <span className="hidden sm:inline">Upload Media</span>
             <span className="sm:hidden">Upload</span>
@@ -101,9 +101,9 @@ export default function MediaPage() {
 
         {/* ── CLIENT SELECTOR ── */}
         {!selectedClient ? (
-          <div className="bg-white dark:bg-[#171717] rounded-xl border border-slate-200/80 dark:border-white/[0.08] p-8 lg:p-12">
+          <div className="bg-[var(--bg-card)] border border-slate-200/80 dark:border-white/[0.08] p-8 lg:p-12">
             <div className="max-w-md mx-auto text-center">
-              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center mx-auto mb-4 shadow-lg shadow-cyan-500/20">
+              <div className="w-16 h-16 bg-gradient-to-br from-brand-500 to-blue-600 flex items-center justify-center mx-auto mb-4 -500/20">
                 <ImageIcon className="w-8 h-8 text-white" />
               </div>
               <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-2">
@@ -116,7 +116,7 @@ export default function MediaPage() {
                 <select
                   value={selectedClient}
                   onChange={e => setSelectedClient(e.target.value)}
-                  className="w-full px-4 py-3 bg-slate-50 dark:bg-white/[0.04] border border-slate-200 dark:border-white/[0.08] text-sm text-slate-700 dark:text-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-cyan-950/20 dark:focus:ring-cyan-400/20 appearance-none cursor-pointer"
+                  className="w-full px-4 py-3 bg-slate-50 dark:bg-white/[0.04] border border-slate-200 dark:border-white/[0.08] text-sm text-slate-700 dark:text-slate-300 focus:outline-none focus:ring-2 focus:ring-brand-600/20 dark:focus:ring-brand-400/20 appearance-none cursor-pointer"
                 >
                   <option value="">Select a client...</option>
                   {clients.map(c => (
@@ -135,7 +135,7 @@ export default function MediaPage() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0 }}
-                className="bg-white dark:bg-[#171717] rounded-xl p-4 lg:p-5 border border-slate-200/80 dark:border-white/[0.08] flex flex-col justify-between shadow-sm"
+                className="bg-[var(--bg-card)] p-4 lg:p-5 border border-slate-200/80 dark:border-white/[0.08] flex flex-col justify-between "
               >
                 <span className="text-slate-500 dark:text-neutral-400 text-[10px] lg:text-xs font-semibold uppercase tracking-wider">Total Media</span>
                 <div className="mt-3 lg:mt-4 flex items-baseline gap-2">
@@ -148,7 +148,7 @@ export default function MediaPage() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.05 }}
-                className="bg-white dark:bg-[#171717] rounded-xl p-4 lg:p-5 border border-slate-200/80 dark:border-white/[0.08] flex flex-col justify-between shadow-sm"
+                className="bg-[var(--bg-card)] p-4 lg:p-5 border border-slate-200/80 dark:border-white/[0.08] flex flex-col justify-between "
               >
                 <span className="text-slate-500 dark:text-neutral-400 text-[10px] lg:text-xs font-semibold uppercase tracking-wider">Images</span>
                 <div className="mt-3 lg:mt-4 flex items-baseline gap-2">
@@ -161,7 +161,7 @@ export default function MediaPage() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.1 }}
-                className="bg-white dark:bg-[#171717] rounded-xl p-4 lg:p-5 border border-slate-200/80 dark:border-white/[0.08] flex flex-col justify-between shadow-sm"
+                className="bg-[var(--bg-card)] p-4 lg:p-5 border border-slate-200/80 dark:border-white/[0.08] flex flex-col justify-between "
               >
                 <span className="text-slate-500 dark:text-neutral-400 text-[10px] lg:text-xs font-semibold uppercase tracking-wider">Videos</span>
                 <div className="mt-3 lg:mt-4 flex items-baseline gap-2">
@@ -174,7 +174,7 @@ export default function MediaPage() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.15 }}
-                className="bg-white dark:bg-[#171717] rounded-xl p-4 lg:p-5 border border-slate-200/80 dark:border-white/[0.08] flex flex-col justify-between shadow-sm"
+                className="bg-[var(--bg-card)] p-4 lg:p-5 border border-slate-200/80 dark:border-white/[0.08] flex flex-col justify-between "
               >
                 <span className="text-slate-500 dark:text-neutral-400 text-[10px] lg:text-xs font-semibold uppercase tracking-wider">Storage Used</span>
                 <div className="mt-3 lg:mt-4 flex items-baseline gap-2">
@@ -192,9 +192,9 @@ export default function MediaPage() {
                   <button
                     key={type}
                     onClick={() => setTypeFilter(type)}
-                    className={`px-3 py-1.5 rounded-lg border text-[12px] font-medium transition-colors flex items-center gap-1.5 ${
+                    className={`px-3 py-1.5 border text-[12px] font-medium transition-colors flex items-center gap-1.5 ${
                       typeFilter === type
-                        ? 'bg-cyan-950 text-white border-cyan-950'
+                        ? 'bg-brand-600 text-white border-brand-600'
                         : 'border-slate-200 dark:border-white/[0.1] bg-white dark:bg-white/[0.04] text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-white/[0.08]'
                     }`}
                   >
@@ -211,7 +211,7 @@ export default function MediaPage() {
                   placeholder="Search files..."
                   value={search}
                   onChange={e => setSearch(e.target.value)}
-                  className="w-full sm:w-64 pl-9 pr-3 py-1.5 rounded-lg border border-slate-200 dark:border-white/[0.1] bg-white dark:bg-white/[0.04] text-[12px] font-medium text-slate-600 dark:text-slate-300 focus:outline-none focus:ring-2 focus:ring-cyan-950/20 dark:focus:ring-cyan-400/20"
+                  className="w-full sm:w-64 pl-9 pr-3 py-1.5 border border-slate-200 dark:border-white/[0.1] bg-white dark:bg-white/[0.04] text-[12px] font-medium text-slate-600 dark:text-slate-300 focus:outline-none focus:ring-2 focus:ring-brand-600/20 dark:focus:ring-brand-400/20"
                 />
               </div>
             </div>
@@ -222,8 +222,8 @@ export default function MediaPage() {
                 <div className="text-sm text-slate-500 dark:text-slate-400">Loading media...</div>
               </div>
             ) : filtered.length === 0 ? (
-              <div className="bg-white dark:bg-[#171717] rounded-xl border border-slate-200/80 dark:border-white/[0.08] p-12 text-center">
-                <div className="w-16 h-16 rounded-2xl bg-slate-100 dark:bg-white/[0.04] flex items-center justify-center mx-auto mb-4">
+              <div className="bg-[var(--bg-card)] border border-slate-200/80 dark:border-white/[0.08] p-12 text-center">
+                <div className="w-16 h-16 bg-slate-100 dark:bg-white/[0.04] flex items-center justify-center mx-auto mb-4">
                   <ImageIcon className="w-8 h-8 text-slate-300 dark:text-slate-600" />
                 </div>
                 <p className="text-sm font-medium text-slate-600 dark:text-slate-400">No media found</p>
@@ -245,11 +245,11 @@ export default function MediaPage() {
                       initial={{ opacity: 0, scale: 0.9 }}
                       animate={{ opacity: 1, scale: 1 }}
                       transition={{ delay: index * 0.03 }}
-                      className="group relative aspect-square rounded-xl overflow-hidden bg-slate-100 dark:bg-white/[0.04] border border-slate-200 dark:border-white/[0.08] hover:shadow-lg transition-all"
+                      className="group relative aspect-square overflow-hidden bg-slate-100 dark:bg-white/[0.04] border border-slate-200 dark:border-white/[0.08] hover:transition-all"
                     >
                       {m.type === 'video' ? (
                         <div className="absolute inset-0 flex flex-col items-center justify-center gap-2">
-                          <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${typeConf.gradient} flex items-center justify-center shadow-lg`}>
+                          <div className={`w-12 h-12 bg-gradient-to-br ${typeConf.gradient} flex items-center justify-center `}>
                             <TypeIcon size={20} className="text-white" />
                           </div>
                           <span className="text-xs font-medium text-slate-600 dark:text-slate-400">Video</span>
@@ -262,7 +262,7 @@ export default function MediaPage() {
                         />
                       ) : (
                         <div className="absolute inset-0 flex flex-col items-center justify-center gap-2">
-                          <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${typeConf.gradient} flex items-center justify-center shadow-lg`}>
+                          <div className={`w-12 h-12 bg-gradient-to-br ${typeConf.gradient} flex items-center justify-center `}>
                             <TypeIcon size={20} className="text-white" />
                           </div>
                           <span className="text-xs font-medium text-slate-600 dark:text-slate-400">Image</span>
@@ -276,19 +276,19 @@ export default function MediaPage() {
                             href={m.url}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="flex-1 px-2 py-1.5 bg-white/90 dark:bg-white text-slate-900 text-xs font-medium rounded-lg text-center hover:bg-white transition-colors flex items-center justify-center gap-1"
+                            className="flex-1 px-2 py-1.5 bg-white/90 dark:bg-white text-slate-900 text-xs font-medium text-center hover:bg-white transition-colors flex items-center justify-center gap-1"
                           >
                             <Eye size={12} />
                             View
                           </a>
-                          <button className="p-1.5 bg-white/90 dark:bg-white text-slate-900 rounded-lg hover:bg-white transition-colors">
+                          <button className="p-1.5 bg-white/90 dark:bg-white text-slate-900 hover:bg-white transition-colors">
                             <Download size={14} />
                           </button>
                         </div>
                       </div>
 
                       {/* Type badge */}
-                      <div className="absolute top-2 left-2 px-2 py-1 bg-black/50 backdrop-blur-sm rounded-lg text-[10px] font-medium text-white uppercase tracking-tight">
+                      <div className="absolute top-2 left-2 px-2 py-1 bg-black/50 backdrop-blur-sm text-[10px] font-medium text-white uppercase tracking-tight">
                         {typeConf.label}
                       </div>
                     </motion.div>
@@ -298,9 +298,9 @@ export default function MediaPage() {
             )}
 
             {/* ── CLIENT INFO CARD ── */}
-            <div className="bg-gradient-to-br from-cyan-950/10 to-blue-950/10 dark:from-[#05254e] dark:to-[#00193b] rounded-xl p-6 border border-cyan-950/20 dark:border-[#b3d2ef]/30">
+            <div className="bg-gradient-to-br from-brand-600/10 to-blue-950/10 dark:from-brand-950 dark:to-slate-900 p-6 border border-brand-600/20 dark:border-brand-300/30">
               <div className="flex items-start gap-3">
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center flex-shrink-0">
+                <div className="w-10 h-10 bg-gradient-to-br from-brand-500 to-blue-600 flex items-center justify-center flex-shrink-0">
                   <Calendar className="w-5 h-5 text-white" />
                 </div>
                 <div className="flex-1">

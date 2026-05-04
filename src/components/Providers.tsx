@@ -5,7 +5,14 @@ import { useThemeStore } from '@/store/theme'
 
 function ThemeSync() {
   const theme = useThemeStore(s => s.theme)
+  const [mounted, setMounted] = useState(false)
+
   useEffect(() => {
+    setMounted(true)
+  }, [])
+
+  useEffect(() => {
+    if (!mounted) return
     const root = document.documentElement
     if (theme === 'dark') {
       root.classList.add('dark')
@@ -14,7 +21,8 @@ function ThemeSync() {
       root.classList.remove('dark')
       root.style.colorScheme = 'light'
     }
-  }, [theme])
+  }, [theme, mounted])
+
   return null
 }
 

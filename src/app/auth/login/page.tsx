@@ -25,11 +25,11 @@ export default function LoginPage() {
     setError(null);
     try {
       const res = await apiClient.post('/auth/coach/login', data);
-      const coachData = res.data?.data?.coach;
-      if (!coachData) {
+      const { coach, access_token } = res.data?.data || {};
+      if (!coach || !access_token) {
         throw new Error('Invalid response from server');
       }
-      setCoach(coachData);
+      setCoach(coach, access_token);
       router.push('/dashboard');
     } catch (e: any) {
       let msg = 'Login failed. Please try again.';

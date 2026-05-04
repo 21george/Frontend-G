@@ -70,7 +70,7 @@ export default function NewTeamWorkoutPlanPage() {
         </Link>
 
         <div className="flex items-center gap-3 mb-6">
-          <div className="w-10 h-10 rounded-xl  bg-cyan-950 dark:bg-emerald-900/30 flex items-center justify-center">
+          <div className="w-10 h-10 bg-brand-600 dark:bg-emerald-900/30 flex items-center justify-center">
             <Shield className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
           </div>
           <div>
@@ -134,20 +134,20 @@ export default function NewTeamWorkoutPlanPage() {
                       key={client.id}
                       type="button"
                       onClick={() => toggleClient(client.id)}
-                      className={`flex items-center gap-3 p-3 rounded-xl border transition-all text-left ${
+                      className={`flex items-center gap-3 p-3 border transition-all text-left ${
                         selected
                           ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20 dark:border-emerald-500/60'
                           : 'border-slate-200 dark:border-white/[0.07] hover:border-slate-300 dark:hover:border-white/[0.12]'
                       }`}
                     >
-                      <div className="w-8 h-8 rounded-full bg-gradient-to-br from-emerald-500 to-emerald-700 flex items-center justify-center text-white text-xs font-semibold flex-shrink-0">
+                      <div className="w-8 h-8 bg-gradient-to-br from-emerald-500 to-emerald-700 flex items-center justify-center text-white text-xs font-semibold flex-shrink-0">
                         {client.name[0]?.toUpperCase()}
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium text-slate-900 dark:text-white truncate">{client.name}</p>
                         <p className="text-xs text-slate-400 truncate">{client.email || 'No email'}</p>
                       </div>
-                      <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-colors ${
+                      <div className={`w-5 h-5 border-2 flex items-center justify-center flex-shrink-0 transition-colors ${
                         selected ? 'border-emerald-500 bg-emerald-500' : 'border-slate-200 dark:border-white/20'
                       }`}>
                         {selected && <Check className="w-3 h-3 text-white" />}
@@ -173,7 +173,7 @@ export default function NewTeamWorkoutPlanPage() {
                 </div>
                 <div className="space-y-3">
                   {day.exercises.map((ex, ei) => (
-                    <div key={ei} className="bg-slate-50 dark:bg-white/[0.03] rounded-xl p-3 grid grid-cols-12 gap-2 items-start">
+                    <div key={ei} className="bg-slate-50 dark:bg-white/[0.03] p-3 grid grid-cols-12 gap-2 items-start">
                       <div className="col-span-4">
                         <input value={ex.name} onChange={e => updateExercise(di, ei, 'name', e.target.value)}
                           className="input text-sm" placeholder="Exercise name" />
@@ -216,7 +216,7 @@ export default function NewTeamWorkoutPlanPage() {
           </div>
 
           <div className="flex gap-3">
-            <button type="submit" disabled={loading} className="btn-primary bg-cyan-950">
+            <button type="submit" disabled={loading} className="btn-primary bg-brand-600">
               {loading ? 'Creating…' : `Create Team Plan${selectedIds.length > 0 ? ` for ${selectedIds.length} Member${selectedIds.length > 1 ? 's' : ''}` : ''}`}
             </button>
             <Link href="/workout-plans" className="btn-secondary">Cancel</Link>

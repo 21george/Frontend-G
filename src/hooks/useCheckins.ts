@@ -17,10 +17,24 @@ export const useCreateCheckin = () =>
     invalidateKeys: [['checkins']],
   })
 
-export const useUpdateCheckin = (id: string) =>
+export const useUpdateCheckin = (id?: string) =>
   useToastMutation({
-    mutationFn: (data: Partial<CheckinMeeting>) => checkinsApi.update(id, data),
+    mutationFn: ({ id: payloadId, ...data }: Partial<CheckinMeeting> & { id?: string }) => {
+      const targetId = id || payloadId
+      if (!targetId) {
+        return Promise.reject(new Error('Check-in id is required'))
+      }
+      return checkinsApi.update(targetId, data)
+    },
     successMessage: 'Check-in updated',
     errorMessage: 'Failed to update check-in',
+    invalidateKeys: [['checkins']],
+  })
+
+export const useDeleteCheckin = () =>
+  useToastMutation({
+    mutationFn: (id: string) => checkinsApi.delete(id),
+    successMessage: 'Check-in cancelled',
+    errorMessage: 'Failed to cancel check-in',
     invalidateKeys: [['checkins']],
   })

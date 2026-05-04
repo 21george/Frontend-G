@@ -152,7 +152,7 @@ export default function VerifyEmailPage() {
       >
         {/* Icon */}
         <motion.div variants={itemVariants} className="flex justify-center mb-6">
-          <div className={`w-16 h-16 rounded-2xl flex items-center justify-center transition-colors duration-500 ${success ? 'bg-emerald-100' : 'bg-blue-50'}`}>
+          <div className={`w-16 h-16 flex items-center justify-center transition-colors duration-500 ${success ? 'bg-emerald-100' : 'bg-blue-50'}`}>
             {success ? (
               <motion.svg
                 initial={{ scale: 0 }}
@@ -200,10 +200,10 @@ export default function VerifyEmailPage() {
                   onKeyDown={(e) => handleKeyDown(i, e)}
                   onPaste={i === 0 ? handlePaste : undefined}
                   disabled={isVerifying}
-                  className="w-12 h-14 text-center text-xl font-semibold rounded-xl border-2 border-slate-200 bg-white
+                  className="w-12 h-14 text-center text-xl font-semibold border-2 border-slate-200 bg-white
                     focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none
                     disabled:opacity-50 transition-all duration-200
-                    dark:bg-[#141414] dark:border-white/10 dark:text-white dark:focus:border-blue-400"
+                    dark:bg-surface-page-dark dark:border-white/10 dark:text-white dark:focus:border-blue-400"
                 />
               ))}
             </motion.div>

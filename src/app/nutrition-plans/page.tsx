@@ -52,7 +52,7 @@ function MacroPill({
   icon, value, unit, color, bg,
 }: { icon: React.ReactNode; value: number; unit: string; color: string; bg: string }) {
   return (
-    <div className={`flex items-center gap-1.5 px-3 py-2 rounded-xl ${bg}`}>
+    <div className={`flex items-center gap-1.5 px-3 py-2 ${bg}`}>
       <span className={color}>{icon}</span>
       <p className={`text-sm font-semibold ${color}`}>
         {value}<span className="text-xs font-normal ml-0.5">{unit}</span>
@@ -73,7 +73,7 @@ function MealBadge({ type }: { type: string }) {
   }
   const key = type in BADGE ? type : 'Other'
   return (
-    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold ${BADGE[key]}`}>
+    <span className={`inline-flex items-center px-2 py-0.5 text-[11px] font-semibold ${BADGE[key]}`}>
       {type}
     </span>
   )
@@ -86,7 +86,7 @@ function ScoreBar({ score, max = 10 }: { score: number; max?: number }) {
   return (
     <div className="flex items-center gap-0.5">
       {Array.from({ length: max }, (_, i) => (
-        <div key={i} className={`h-1.5 w-3 rounded-full ${i < score ? filled : 'bg-slate-200 dark:bg-white/[0.08]'}`} />
+        <div key={i} className={`h-1.5 w-3 ${i < score ? filled : 'bg-slate-200 dark:bg-white/[0.08]'}`} />
       ))}
     </div>
   )
@@ -107,10 +107,10 @@ function FeaturedPlanCard({ plan, clientName }: { plan: NutritionPlan; clientNam
         <div className="sm:w-52 flex-shrink-0 bg-gradient-to-br from-green-400 via-emerald-500 to-teal-600 p-6 flex flex-col justify-between min-h-[180px]">
           <div className="flex flex-wrap gap-1.5">
             {types.slice(0, 2).map(t => (
-              <span key={t} className="text-[11px] bg-white/20 text-white px-2 py-0.5 rounded-full font-semibold">{t}</span>
+              <span key={t} className="text-[11px] bg-white/20 text-white px-2 py-0.5 font-semibold">{t}</span>
             ))}
             {types.length === 0 && (
-              <span className="text-[11px] bg-white/20 text-white px-2 py-0.5 rounded-full font-semibold">General</span>
+              <span className="text-[11px] bg-white/20 text-white px-2 py-0.5 font-semibold">General</span>
             )}
           </div>
           <div>
@@ -147,7 +147,7 @@ function FeaturedPlanCard({ plan, clientName }: { plan: NutritionPlan; clientNam
             <MacroPill icon={<Droplets size={14} />} value={fat_g}     unit="g F"  color="text-slate-500"  bg="bg-slate-100 dark:bg-slate-800/60"  />
             <Link
               href={`/nutrition-plans/${plan.id}`}
-              className="ml-auto flex items-center gap-1.5 px-4 py-2 rounded-xl bg-cyan-950 hover:bg-cyan-900 text-white text-sm font-semibold transition-colors shadow-sm shadow-cyan-950/25"
+              className="ml-auto flex items-center gap-1.5 px-4 py-2 bg-brand-600 hover:bg-brand-700 text-white text-sm font-semibold transition-colors -600/25"
             >
               View Plan <ChevronRight size={14} />
             </Link>
@@ -187,10 +187,10 @@ function PlanRow({ plan, clientName }: { plan: NutritionPlan; clientName?: strin
   return (
     <Link
       href={`/nutrition-plans/${plan.id}`}
-      className="flex items-center gap-4 px-4 py-3.5 hover:bg-slate-50 dark:hover:bg-white/[0.03] transition-colors rounded-xl group"
+      className="flex items-center gap-4 px-4 py-3.5 hover:bg-slate-50 dark:hover:bg-white/[0.03] transition-colors group"
     >
       {/* Icon */}
-      <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${primary ? iconBg[primary] : 'bg-green-100 dark:bg-green-900/30'}`}>
+      <div className={`w-10 h-10 flex items-center justify-center flex-shrink-0 ${primary ? iconBg[primary] : 'bg-green-100 dark:bg-green-900/30'}`}>
         <MealIcon size={18} className={primary ? iconColor[primary] : 'text-green-600'} />
       </div>
 
@@ -231,9 +231,9 @@ function MiniPlanCard({ plan, rank }: { plan: NutritionPlan; rank?: number }) {
   return (
     <Link
       href={`/nutrition-plans/${plan.id}`}
-      className="flex items-center gap-3 p-2 rounded-xl hover:bg-slate-50 dark:hover:bg-white/[0.04] transition-colors group"
+      className="flex items-center gap-3 p-2 hover:bg-slate-50 dark:hover:bg-white/[0.04] transition-colors group"
     >
-      <div className={`w-10 h-10 rounded-xl flex-shrink-0 flex items-center justify-center ${
+      <div className={`w-10 h-10 flex-shrink-0 flex items-center justify-center ${
         types[0] === 'Breakfast' ? 'bg-orange-100 dark:bg-orange-900/30' :
         types[0] === 'Lunch'     ? 'bg-blue-100 dark:bg-blue-900/30'     :
         types[0] === 'Dinner'    ? 'bg-indigo-100 dark:bg-indigo-900/30' :
@@ -251,7 +251,7 @@ function MiniPlanCard({ plan, rank }: { plan: NutritionPlan; rank?: number }) {
         </div>
       </div>
       {rank !== undefined && rank < 3 && (
-        <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-lg flex-shrink-0 ${
+        <span className={`text-[10px] font-semibold px-1.5 py-0.5 flex-shrink-0 ${
           rank === 0 ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400' :
           rank === 1 ? 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400'   :
                        'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400'
@@ -268,10 +268,10 @@ function MiniPlanCard({ plan, rank }: { plan: NutritionPlan; rank?: number }) {
 function SkeletonRow() {
   return (
     <div className="flex items-center gap-4 px-4 py-3.5">
-      <div className="w-10 h-10 rounded-xl bg-slate-200 dark:bg-white/[0.06] animate-pulse flex-shrink-0" />
+      <div className="w-10 h-10 bg-slate-200 dark:bg-white/[0.06] animate-pulse flex-shrink-0" />
       <div className="flex-1 space-y-2">
-        <div className="h-4 w-48 bg-slate-200 dark:bg-white/[0.06] rounded animate-pulse" />
-        <div className="h-3 w-32 bg-slate-100 dark:bg-white/[0.04] rounded animate-pulse" />
+        <div className="h-4 w-48 bg-slate-200 dark:bg-white/[0.06] animate-pulse" />
+        <div className="h-3 w-32 bg-slate-100 dark:bg-white/[0.04] animate-pulse" />
       </div>
     </div>
   )
@@ -340,12 +340,12 @@ export default function NutritionPlansPage() {
                 value={search}
                 onChange={e => setSearch(e.target.value)}
                 placeholder="Search menu…"
-                className="pl-9 pr-3 py-2 w-44 rounded-xl border border-slate-200 dark:border-white/[0.08] bg-white dark:bg-[#171717] text-sm text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-950/20 focus:border-cyan-950 transition-colors"
+                className="pl-9 pr-3 py-2 w-44 border border-slate-200 dark:border-white/[0.08] bg-[var(--bg-card)] text-sm text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-600/20 focus:border-brand-600 transition-colors"
               />
             </div>
             {/* Filter icon */}
             <button
-              className="w-9 h-9 rounded-xl border border-slate-200 dark:border-white/[0.08] flex items-center justify-center text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-white/[0.05] transition-colors bg-white dark:bg-[#171717]"
+              className="w-9 h-9 border border-slate-200 dark:border-white/[0.08] flex items-center justify-center text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-white/[0.05] transition-colors bg-[var(--bg-card)] "
               title="Filter"
             >
               <SlidersHorizontal size={14} />
@@ -362,13 +362,13 @@ export default function NutritionPlansPage() {
 
             {/* Featured plan */}
             {isLoading ? (
-              <div className="h-48 rounded-2xl bg-slate-200 dark:bg-white/[0.04] animate-pulse" />
+              <div className="h-48 bg-slate-200 dark:bg-white/[0.04] animate-pulse" />
             ) : featured ? (
               <FeaturedPlanCard plan={featured} clientName={clientMap[featured.client_id]} />
             ) : null}
 
             {/* All plans card */}
-            <div className=" bg-white dark:bg-[#171717]">
+            <div className=" bg-[var(--bg-card)] ">
 
               {/* Tabs + sort */}
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-4 pt-4 pb-3 border-b border-slate-100 dark:border-white/[0.05]">
@@ -377,16 +377,16 @@ export default function NutritionPlansPage() {
                   {MEAL_TABS.map(tab => {
                     const active = activeTab === tab
                     const activeCls =
-                      tab === 'All'       ? 'bg-cyan-950 text-white shadow-sm shadow-green-500/20'   :
-                      tab === 'Breakfast' ? 'bg-cyan-950 text-white shadow-sm shadow-orange-500/20' :
-                      tab === 'Lunch'     ? 'bg-cyan-950 text-white shadow-sm shadow-blue-500/20'     :
-                      tab === 'Snack'     ? 'bg-cyan-950 text-white shadow-sm shadow-purple-500/20' :
-                                            'bg-cyan-950 text-white shadow-sm shadow-indigo-500/20'
+                      tab === 'All'       ? 'bg-brand-600 text-white -500/20'   :
+                      tab === 'Breakfast' ? 'bg-brand-600 text-white -500/20' :
+                      tab === 'Lunch'     ? 'bg-brand-600 text-white -500/20'     :
+                      tab === 'Snack'     ? 'bg-brand-600 text-white -500/20' :
+                                            'bg-brand-600 text-white -500/20'
                     return (
                       <button
                         key={tab}
                         onClick={() => setActiveTab(tab)}
-                        className={`px-3 py-1 rounded-full text-xs font-semibold transition-all ${
+                        className={`px-3 py-1 text-xs font-semibold transition-all ${
                           active
                             ? activeCls
                             : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/[0.04]'
@@ -403,7 +403,7 @@ export default function NutritionPlansPage() {
                   <select
                     value={sortBy}
                     onChange={e => setSortBy(e.target.value as typeof sortBy)}
-                    className="text-xs border border-slate-200 dark:border-white/[0.08] bg-white dark:bg-[#141414] text-slate-600 dark:text-slate-400 rounded-lg px-2 py-1.5 focus:outline-none cursor-pointer"
+                    className="text-xs border border-slate-200 dark:border-white/[0.08] bg-white dark:bg-surface-page-dark text-slate-600 dark:text-slate-400 px-2 py-1.5 focus:outline-none cursor-pointer"
                   >
                     <option value="calories">Calories</option>
                     <option value="score">Health Score</option>
@@ -422,7 +422,7 @@ export default function NutritionPlansPage() {
                     <p className="text-sm font-medium text-slate-500 dark:text-slate-400">
                       {search ? 'No plans match your search' : activeTab !== 'All' ? `No ${activeTab} plans yet` : 'No nutrition plans yet'}
                     </p>
-                    <Link href="/nutrition-plans/new" className="mt-3 text-xs text-cyan-950 dark:text-cyan-400 font-semibold hover:underline">
+                    <Link href="/nutrition-plans/new" className="mt-3 text-xs text-brand-600 dark:text-brand-400 font-semibold hover:underline">
                       Create your first plan →
                     </Link>
                   </div>
@@ -447,8 +447,8 @@ export default function NutritionPlansPage() {
                   <div key={i} className="flex items-center gap-3 py-2">
                     <div className="w-10 h-10 animate-pulse" />
                     <div className="flex-1 space-y-1.5">
-                      <div className="h-3.5 w-32 bg-slate-200 dark:bg-white/[0.06] rounded animate-pulse" />
-                      <div className="h-3 w-20 bg-slate-100 dark:bg-white/[0.04] rounded animate-pulse" />
+                      <div className="h-3.5 w-32 bg-slate-200 dark:bg-white/[0.06] animate-pulse" />
+                      <div className="h-3 w-20 bg-slate-100 dark:bg-white/[0.04] animate-pulse" />
                     </div>
                   </div>
                 ))
@@ -468,10 +468,10 @@ export default function NutritionPlansPage() {
               {isLoading ? (
                 [...Array(3)].map((_, i) => (
                   <div key={i} className="flex items-center gap-3 py-2">
-                    <div className="w-10 h-10 rounded-xl bg-slate-200 dark:bg-white/[0.06] animate-pulse" />
+                    <div className="w-10 h-10 bg-slate-200 dark:bg-white/[0.06] animate-pulse" />
                     <div className="flex-1 space-y-1.5">
-                      <div className="h-3.5 w-32 bg-slate-200 dark:bg-white/[0.06] rounded animate-pulse" />
-                      <div className="h-3 w-20 bg-slate-100 dark:bg-white/[0.04] rounded animate-pulse" />
+                      <div className="h-3.5 w-32 bg-slate-200 dark:bg-white/[0.06] animate-pulse" />
+                      <div className="h-3 w-20 bg-slate-100 dark:bg-white/[0.04] animate-pulse" />
                     </div>
                   </div>
                 ))
@@ -493,7 +493,7 @@ export default function NutritionPlansPage() {
                     { icon: <Salad size={18} />, value: avgCarbs,    unit: 'g',    label: 'Avg Carbs',    iconCls: 'text-amber-600',  bg: 'bg-amber-50 dark:bg-amber-900/20'  },
                     { icon: <Droplets size={18}/>,value: avgFat,     unit: 'g',    label: 'Avg Fat',      iconCls: 'text-slate-500',  bg: 'bg-slate-100 dark:bg-slate-800/50' },
                   ].map(({ icon, value, unit, label, iconCls, bg }) => (
-                    <div key={label} className={`flex flex-col items-center py-3 rounded-xl ${bg}`}>
+                    <div key={label} className={`flex flex-col items-center py-3 ${bg}`}>
                       <span className={iconCls}>{icon}</span>
                       <p className={`text-base font-semibold mt-1 ${iconCls}`}>{value}<span className="text-[10px] font-normal ml-0.5">{unit}</span></p>
                       <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">{label}</p>

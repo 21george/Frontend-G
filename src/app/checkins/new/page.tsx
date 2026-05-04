@@ -33,7 +33,7 @@ export default function NewCheckinPage() {
 
   return (
     <DashboardLayout>
-      <div className="max-w-lg">
+      <div className="">
         <Link href="/checkins" className="flex items-center gap-1 text-sm text-gray-500 dark:text-slate-400 hover:text-gray-700 dark:hover:text-white mb-6">
           <ArrowLeft className="w-3 h-3" /> Back to Schedule
         </Link>

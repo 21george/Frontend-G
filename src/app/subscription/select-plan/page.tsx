@@ -151,7 +151,7 @@ export default function SelectPlanPage() {
     <div className="relative min-h-[100dvh] bg-gradient-to-b from-slate-50 to-white">
       {/* Error toast */}
       {error && (
-        <div className="fixed top-4 left-1/2 -translate-x-1/2 bg-red-500/90 text-white px-4 py-2 rounded-lg shadow-lg z-50 text-sm max-w-[90vw] text-center">
+        <div className="fixed top-4 left-1/2 -translate-x-1/2 bg-red-500/90 text-white px-4 py-2 z-50 text-sm max-w-[90vw] text-center">
           {error}
         </div>
       )}
@@ -190,15 +190,15 @@ export default function SelectPlanPage() {
               key={plan.id}
               variants={itemVariants}
               whileHover={{ y: -8, transition: { duration: 0.2 } }}
-              className={`relative flex flex-col rounded-2xl border-2 bg-white p-8 shadow-lg transition-all ${
+              className={`relative flex flex-col border-2 bg-white p-8 transition-all ${
                 plan.highlighted
-                  ? 'border-blue-500 shadow-blue-500/20'
+                  ? 'border-blue-500 -500/20'
                   : 'border-slate-200'
               }`}
             >
               {plan.highlighted && (
                 <div className="absolute -top-4 left-1/2 -translate-x-1/2">
-                  <span className="bg-blue-500 text-white text-xs font-semibold px-3 py-1 rounded-full">
+                  <span className="bg-blue-500 text-white text-xs font-semibold px-3 py-1 ">
                     MOST POPULAR
                   </span>
                 </div>
@@ -265,7 +265,7 @@ export default function SelectPlanPage() {
               { title: 'Analytics', desc: 'Progress insights & reports' },
             ].map((item, idx) => (
               <div key={idx} className="flex items-start gap-3">
-                <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
+                <div className="h-10 w-10 bg-blue-100 flex items-center justify-center flex-shrink-0">
                   <Check className="h-5 w-5 text-blue-600" />
                 </div>
                 <div>

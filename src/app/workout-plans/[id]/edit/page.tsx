@@ -81,7 +81,7 @@ export default function EditWorkoutPlanPage() {
     return (
       <DashboardLayout>
         <div className="max-w-4xl animate-pulse space-y-4">
-          <div className="h-8 w-48 bg-gray-200 rounded" />
+          <div className="h-8 w-48 bg-gray-200 " />
           <div className="card p-6 h-64 bg-gray-100" />
         </div>
       </DashboardLayout>
@@ -153,7 +153,7 @@ export default function EditWorkoutPlanPage() {
 
                 <div className="space-y-3">
                   {day.exercises.map((ex, ei) => (
-                    <div key={ei} className="rounded-lg p-3 grid grid-cols-12 gap-2 items-start">
+                    <div key={ei} className="p-3 grid grid-cols-12 gap-2 items-start">
                       <div className="col-span-4">
                         <input value={ex.name} onChange={e => updateExercise(di, ei, 'name', e.target.value)}
                                className="input text-sm" placeholder="Exercise name" />

@@ -11,7 +11,7 @@ interface Props {
 }
 
 const iconColors = {
-  blue:   'bg-cyan-950 text-white',
+  blue:   'bg-brand-600 text-white',
   green:  'bg-emerald-500 text-white',
   purple: 'bg-purple-500 text-white',
   orange: 'bg-orange-500 text-white',
@@ -21,7 +21,7 @@ const iconColors = {
 export function StatsCard({ title, value, icon: Icon, color = 'blue', sub, trend }: Props) {
   return (
     <div className="card flex items-center gap-4 p-5">
-      <div className={cn('w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0', iconColors[color])}>
+      <div className={cn('w-12 h-12 flex items-center justify-center flex-shrink-0', iconColors[color])}>
         <Icon className="w-6 h-6" />
       </div>
       <div className="min-w-0">

@@ -35,7 +35,7 @@ export default function AnalyticsPage() {
     <DashboardLayout>
       <div className="space-y-6">
         <div className="flex items-center gap-3">
-          <button onClick={() => router.back()} className="p-2 rounded-lg hover:bg-gray-100 text-gray-500">
+          <button onClick={() => router.back()} className="p-2 hover:bg-gray-100 text-gray-500">
             <ArrowLeft className="w-5 h-5" />
           </button>
           <div>
@@ -46,7 +46,7 @@ export default function AnalyticsPage() {
 
         {isLoading ? (
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-            {[1,2,3].map(i => <div key={i} className="h-32 bg-white rounded-2xl animate-pulse" />)}
+            {[1,2,3].map(i => <div key={i} className="h-32 bg-white animate-pulse" />)}
           </div>
         ) : (
           <>
@@ -54,7 +54,7 @@ export default function AnalyticsPage() {
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <Card>
                 <CardBody className="flex items-center gap-4">
-                  <div className="w-12 h-12 bg-orange-50 rounded-xl flex items-center justify-center">
+                  <div className="w-12 h-12 bg-orange-50 flex items-center justify-center">
                     <Flame className="w-6 h-6 text-orange-500" />
                   </div>
                   <div>
@@ -65,7 +65,7 @@ export default function AnalyticsPage() {
               </Card>
               <Card>
                 <CardBody className="flex items-center gap-4">
-                  <div className="w-12 h-12 bg-brand-50 rounded-xl flex items-center justify-center">
+                  <div className="w-12 h-12 bg-brand-50 flex items-center justify-center">
                     <Dumbbell className="w-6 h-6 text-brand-500" />
                   </div>
                   <div>
@@ -76,7 +76,7 @@ export default function AnalyticsPage() {
               </Card>
               <Card>
                 <CardBody className="flex items-center gap-4">
-                  <div className="w-12 h-12 bg-green-50 rounded-xl flex items-center justify-center">
+                  <div className="w-12 h-12 bg-green-50 flex items-center justify-center">
                     <TrendingUp className="w-6 h-6 text-green-500" />
                   </div>
                   <div>

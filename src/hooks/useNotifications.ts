@@ -1,5 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { notificationsApi } from '@/lib/api/services/notifications'
+import { shouldRetryRequest } from '@/lib/api/errors'
+import { useAuthStore } from '@/store/auth'
 import type { Notification } from '@/types'
 
 interface UseNotificationsOptions {
@@ -21,7 +23,7 @@ export function useNotifications(options: UseNotificationsOptions = {}) {
     refetchInterval = 5000,
   } = options
 
-  const queryClient = useQueryClient()
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
 
   const {
     data,
@@ -31,7 +33,9 @@ export function useNotifications(options: UseNotificationsOptions = {}) {
   } = useQuery({
     queryKey: ['notifications', { page, type, unreadOnly }],
     queryFn: () => notificationsApi.list({ page, type, unread: unreadOnly }),
-    refetchInterval,
+    enabled: isAuthenticated,
+    refetchInterval: isAuthenticated ? refetchInterval : false,
+    retry: shouldRetryRequest,
   })
 
   return {
@@ -48,10 +52,14 @@ export function useNotifications(options: UseNotificationsOptions = {}) {
  * Polls every 5 seconds for real-time badge updates
  */
 export function useUnreadNotificationCount() {
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
+
   const { data, isLoading } = useQuery({
     queryKey: ['notifications', 'unread-count'],
     queryFn: () => notificationsApi.getUnreadCount(),
-    refetchInterval: 5000,
+    enabled: isAuthenticated,
+    refetchInterval: isAuthenticated ? 5000 : false,
+    retry: shouldRetryRequest,
   })
 
   return {
@@ -68,6 +76,7 @@ export function useMarkNotificationRead() {
 
   return useMutation({
     mutationFn: (id: string) => notificationsApi.markRead(id),
+    retry: shouldRetryRequest,
     onSuccess: () => {
       // Invalidate notifications queries to refresh the list
       queryClient.invalidateQueries({ queryKey: ['notifications'] })
@@ -83,6 +92,7 @@ export function useMarkAllNotificationsRead() {
 
   return useMutation({
     mutationFn: () => notificationsApi.markAllRead(),
+    retry: shouldRetryRequest,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['notifications'] })
       queryClient.invalidateQueries({ queryKey: ['notifications', 'unread-count'] })
@@ -98,6 +108,7 @@ export function useDeleteNotification() {
 
   return useMutation({
     mutationFn: (id: string) => notificationsApi.remove(id),
+    retry: shouldRetryRequest,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['notifications'] })
       queryClient.invalidateQueries({ queryKey: ['notifications', 'unread-count'] })

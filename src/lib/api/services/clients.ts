@@ -19,4 +19,10 @@ export const clientsApi = {
 
   regenerateCode: (id: string) =>
     api.post<ApiResponse<{ login_code: string }>>(`/coach/clients/${id}/regenerate-code`).then(r => r.data),
+
+  block: (id: string) =>
+    api.post<ApiResponse<Client>>(`/coach/clients/${id}/block`).then(r => r.data.data),
+
+  unblock: (id: string) =>
+    api.post<ApiResponse<Client>>(`/coach/clients/${id}/unblock`).then(r => r.data.data),
 }

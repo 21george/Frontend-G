@@ -14,9 +14,9 @@ import { motion } from 'framer-motion'
 import type { WorkoutPlanType, WorkoutPlan } from '@/types'
 
 const TYPE_CONFIG: Record<NonNullable<WorkoutPlanType>, { label: string; icon: typeof Dumbbell; gradient: string; glow: string }> = {
-  individual: { label: 'Individual', icon: Dumbbell, gradient: 'from-blue-500 to-blue-600', glow: 'shadow-blue-500/20' },
-  group:      { label: 'Group',      icon: Users,    gradient: 'from-amber-500 to-amber-600', glow: 'shadow-amber-500/20' },
-  team:       { label: 'Team',       icon: Shield,   gradient: 'from-emerald-500 to-emerald-600', glow: 'shadow-emerald-500/20' },
+  individual: { label: 'Individual', icon: Dumbbell, gradient: 'from-blue-500 to-blue-600', glow: 'shadow-lg shadow-blue-500/20' },
+  group:      { label: 'Group',      icon: Users,    gradient: 'from-amber-500 to-amber-600', glow: 'shadow-lg shadow-amber-500/20' },
+  team:       { label: 'Team',       icon: Shield,   gradient: 'from-emerald-500 to-emerald-600', glow: 'shadow-lg shadow-emerald-500/20' },
 }
 
 const STATUS_CONFIG: Record<string, { label: string; dot: string; badge: string }> = {
@@ -84,7 +84,7 @@ function UnassignedPlansCard({ plans, clients }: { plans: WorkoutPlan[]; clients
 
       {unassignedPlans.length === 0 ? (
         <div className="p-8 text-center">
-          <div className="w-16 h-16 rounded-2xl bg-emerald-50 dark:bg-emerald-950/20 flex items-center justify-center mx-auto mb-4">
+          <div className="w-16 h-16 bg-emerald-50 dark:bg-emerald-950/20 flex items-center justify-center mx-auto mb-4">
             <CheckCircle2 className="w-8 h-8 text-emerald-500" />
           </div>
           <p className="text-sm font-medium text-slate-900 dark:text-white">All plans are assigned!</p>
@@ -94,19 +94,19 @@ function UnassignedPlansCard({ plans, clients }: { plans: WorkoutPlan[]; clients
         <>
           {/* Stats Grid */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 p-5 border-b border-slate-100 dark:border-white/[0.06]">
-            <div className="text-center p-3 bg-slate-50 dark:bg-white/[0.04] rounded-xl">
+            <div className="text-center p-3 bg-slate-50 dark:bg-white/[0.04]">
               <div className="text-2xl font-bold text-slate-900 dark:text-white">{unassignedPlans.length}</div>
               <div className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5 uppercase tracking-wider font-semibold">Plans</div>
             </div>
-            <div className="text-center p-3 bg-slate-50 dark:bg-white/[0.04] rounded-xl">
+            <div className="text-center p-3 bg-slate-50 dark:bg-white/[0.04]">
               <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">{workoutStats.totalDays}</div>
               <div className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5 uppercase tracking-wider font-semibold">Workout Days</div>
             </div>
-            <div className="text-center p-3 bg-slate-50 dark:bg-white/[0.04] rounded-xl">
+            <div className="text-center p-3 bg-slate-50 dark:bg-white/[0.04]">
               <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">{workoutStats.totalExercises}</div>
               <div className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5 uppercase tracking-wider font-semibold">Exercises</div>
             </div>
-            <div className="text-center p-3 bg-slate-50 dark:bg-white/[0.04] rounded-xl">
+            <div className="text-center p-3 bg-slate-50 dark:bg-white/[0.04]">
               <div className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">{workoutStats.muscleGroups}</div>
               <div className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5 uppercase tracking-wider font-semibold">Muscle Groups</div>
             </div>
@@ -129,14 +129,13 @@ function UnassignedPlansCard({ plans, clients }: { plans: WorkoutPlan[]; clients
                 >
                   <div className="flex items-start justify-between gap-4">
                     <div className="flex items-start gap-3 flex-1">
-                      <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${typeConf.gradient} flex items-center justify-center shadow-lg ${typeConf.glow} flex-shrink-0`}>
+                      <div className={`w-10 h-10 bg-gradient-to-br ${typeConf.gradient} flex items-center justify-center ${typeConf.glow} flex-shrink-0`}>
                         <TypeIcon size={18} className="text-white" />
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-1">
                           <h3 className="text-sm font-semibold text-slate-900 dark:text-white truncate">{plan.title}</h3>
-                          <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-tight border ${
-                            plan.status === 'active' ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/20' :
+                          <span className={`inline-flex items-center px-2 py-0.5 text-[10px] font-bold uppercase tracking-tight border ${ plan.status === 'active' ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/20' :
                             plan.status === 'draft' ? 'bg-slate-500/15 text-slate-600 dark:text-slate-400 border-slate-500/20' :
                             'bg-blue-500/15 text-blue-600 dark:text-blue-400 border-blue-500/20'
                           }`}>
@@ -162,14 +161,14 @@ function UnassignedPlansCard({ plans, clients }: { plans: WorkoutPlan[]; clients
                     <div className="flex items-center gap-2">
                       <Link
                         href={`/workout-plans/${plan.id}/assign`}
-                        className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-cyan-950 hover:bg-cyan-900 text-white text-xs font-medium rounded-lg transition-colors"
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-cyan-950 hover:bg-cyan-900 text-white text-xs font-medium transition-colors"
                       >
                         <Users size={12} />
                         Assign
                       </Link>
                       <Link
                         href={`/workout-plans/${plan.id}`}
-                        className="p-1.5 hover:bg-slate-100 dark:hover:bg-white/[0.06] rounded-lg transition-colors"
+                        className="p-1.5 hover:bg-slate-100 dark:hover:bg-white/[0.06] transition-colors"
                       >
                         <ChevronRight size={16} className="text-slate-400" />
                       </Link>
@@ -182,7 +181,7 @@ function UnassignedPlansCard({ plans, clients }: { plans: WorkoutPlan[]; clients
                       <div className="text-[10px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">Workout Breakdown</div>
                       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
                         {plan.days.slice(0, 3).map((day, di) => (
-                          <div key={di} className="bg-slate-50 dark:bg-white/[0.04] rounded-lg p-2">
+                          <div key={di} className="bg-slate-50 dark:bg-white/[0.04] p-2">
                             <div className="text-xs font-semibold text-slate-900 dark:text-white capitalize mb-1">{day.day}</div>
                             <div className="text-[10px] text-slate-500 dark:text-slate-400">
                               {day.exercises?.length || 0} exercises
@@ -260,13 +259,13 @@ function WorkoutDetailsTable({ plans }: { plans: WorkoutPlan[] }) {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: 0.1 }}
-      className="bg-white dark:bg-[#171717] rounded-2xl border border-slate-200/80 dark:border-white/[0.08] overflow-hidden shadow-sm"
+      className="bg-white dark:bg-[#171717] border border-slate-200/80 dark:border-white/[0.08] overflow-hidden"
     >
       {/* Header */}
       <div className="px-6 py-5 border-b border-slate-100 dark:border-white/[0.06]">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500 to-pink-600 flex items-center justify-center shadow-lg">
+            <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-pink-600 flex items-center justify-center">
               <BarChart3 className="w-5 h-5 text-white" />
             </div>
             <div>
@@ -279,7 +278,7 @@ function WorkoutDetailsTable({ plans }: { plans: WorkoutPlan[] }) {
             </div>
           </div>
           <div className="flex items-center gap-2 text-xs">
-            <div className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 dark:bg-white/[0.04] rounded-lg">
+            <div className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 dark:bg-white/[0.04]">
               <Dumbbell size={12} className="text-slate-400" />
               <span className="font-semibold text-slate-700 dark:text-slate-300">{allExercises.length} Total Exercises</span>
             </div>
@@ -311,7 +310,7 @@ function WorkoutDetailsTable({ plans }: { plans: WorkoutPlan[] }) {
               >
                 <td className="px-5 py-4">
                   <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center text-white text-xs font-bold">
+                    <div className="w-8 h-8 bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center text-white text-xs font-bold">
                       {ex.order + 1}
                     </div>
                     <div>
@@ -322,28 +321,28 @@ function WorkoutDetailsTable({ plans }: { plans: WorkoutPlan[] }) {
                 </td>
                 <td className="px-5 py-4">
                   <div className="flex items-center gap-2">
-                    <div className="px-2.5 py-1 bg-slate-100 dark:bg-white/[0.04] rounded-md">
+                    <div className="px-2.5 py-1 bg-slate-100 dark:bg-white/[0.04]">
                       <span className="text-xs font-medium text-slate-700 dark:text-slate-300 capitalize">{ex.dayName}</span>
                     </div>
                   </div>
                 </td>
                 <td className="px-5 py-4">
                   <div className="text-center">
-                    <div className="inline-flex items-center justify-center w-10 h-8 bg-slate-100 dark:bg-white/[0.04] rounded-lg">
+                    <div className="inline-flex items-center justify-center w-10 h-8 bg-slate-100 dark:bg-white/[0.04]">
                       <span className="text-sm font-bold text-slate-900 dark:text-white">{ex.sets}</span>
                     </div>
                   </div>
                 </td>
                 <td className="px-5 py-4">
                   <div className="text-center">
-                    <div className="inline-flex items-center justify-center w-10 h-8 bg-slate-100 dark:bg-white/[0.04] rounded-lg">
+                    <div className="inline-flex items-center justify-center w-10 h-8 bg-slate-100 dark:bg-white/[0.04]">
                       <span className="text-sm font-bold text-slate-900 dark:text-white">{ex.reps}</span>
                     </div>
                   </div>
                 </td>
                 <td className="px-5 py-4">
                   <div className="text-center">
-                    <div className="inline-flex items-center justify-center w-10 h-8 bg-slate-100 dark:bg-white/[0.04] rounded-lg">
+                    <div className="inline-flex items-center justify-center w-10 h-8 bg-slate-100 dark:bg-white/[0.04]">
                       <span className="text-sm font-bold text-slate-900 dark:text-white">{ex.restSeconds}s</span>
                     </div>
                   </div>
@@ -365,7 +364,7 @@ function WorkoutDetailsTable({ plans }: { plans: WorkoutPlan[] }) {
 
       {allExercises.length === 0 && (
         <div className="p-12 text-center">
-          <div className="w-16 h-16 rounded-2xl bg-slate-100 dark:bg-white/[0.04] flex items-center justify-center mx-auto mb-4">
+          <div className="w-16 h-16 bg-slate-100 dark:bg-white/[0.04] flex items-center justify-center mx-auto mb-4">
             <Dumbbell className="w-8 h-8 text-slate-300 dark:text-slate-600" />
           </div>
           <p className="text-sm font-medium text-slate-600 dark:text-slate-400">No exercises configured</p>
@@ -423,8 +422,7 @@ export default function WorkoutPlansPage() {
               <button
                 key={s}
                 onClick={() => setFilter(s)}
-                className={`px-3 py-1.5 rounded-lg border text-[12px] font-medium transition-colors ${
-                  filter === s
+                className={`px-3 py-1.5 border text-[12px] font-medium transition-colors ${ filter === s
                     ? 'bg-cyan-950 text-white border-cyan-950'
                     : 'border-slate-200 dark:border-white/[0.1] bg-white dark:bg-white/[0.04] text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-white/[0.08]'
                 }`}
@@ -440,7 +438,7 @@ export default function WorkoutPlansPage() {
               placeholder="Search plans..."
               value={search}
               onChange={e => setSearch(e.target.value)}
-              className="w-full sm:w-64 pl-9 pr-3 py-1.5 rounded-lg border border-slate-200 dark:border-white/[0.1] bg-white dark:bg-white/[0.04] text-[12px] font-medium text-slate-600 dark:text-slate-300 focus:outline-none focus:ring-2 focus:ring-cyan-950/20 dark:focus:ring-cyan-400/20"
+              className="w-full sm:w-64 pl-9 pr-3 py-1.5 border border-slate-200 dark:border-white/[0.1] bg-white dark:bg-white/[0.04] text-[12px] font-medium text-slate-600 dark:text-slate-300 focus:outline-none focus:ring-2 focus:ring-cyan-950/20 dark:focus:ring-cyan-400/20"
             />
           </div>
         </div>
@@ -449,14 +447,14 @@ export default function WorkoutPlansPage() {
         <QueryWrapper
           query={query}
           emptyIcon={Dumbbell}
-          emptyTitle="No workout plans yet"
-          emptyDescription="Create your first workout plan to get started"
+          emptyTitle="You haven't created any plans yet."
+          emptyDescription="Create your first workout plan to get started."
           emptyAction={
             <div className="flex gap-2 justify-center mt-4 flex-wrap">
-              <Link href="/workout-plans/new" className="px-4 py-2 bg-cyan-950 text-white rounded-lg text-sm font-medium hover:bg-cyan-900 transition-colors">
+              <Link href="/workout-plans/new" className="px-4 py-2 bg-cyan-950 text-white text-sm font-medium hover:bg-cyan-900 transition-colors">
                 New Plan
               </Link>
-              <Link href="/workout-plans/import" className="px-4 py-2 bg-white dark:bg-[#05254e] text-slate-700 dark:text-white border border-slate-200 dark:border-slate-700 rounded-lg text-sm font-medium hover:bg-slate-50 dark:hover:bg-[#0a2b57] transition-colors">
+              <Link href="/workout-plans/import" className="px-4 py-2 bg-white dark:bg-[#05254e] text-slate-700 dark:text-white border border-slate-200 dark:border-slate-700 text-sm font-medium hover:bg-slate-50 dark:hover:bg-[#0a2b57] transition-colors">
                 Import Excel
               </Link>
             </div>
@@ -464,7 +462,7 @@ export default function WorkoutPlansPage() {
           isEmpty={(data) => (data?.data ?? []).length === 0}
         >
           {() => (
-            <div className="bg-white dark:bg-[#171717] rounded-xl border border-slate-200/80 dark:border-white/[0.08] overflow-hidden shadow-sm">
+            <div className="bg-white dark:bg-[#171717] border border-slate-200/80 dark:border-white/[0.08] overflow-hidden">
               <div className="overflow-x-auto">
                 <table className="w-full text-left">
                   <thead>
@@ -492,7 +490,7 @@ export default function WorkoutPlansPage() {
                         >
                           <td className="px-4 lg:px-6 py-4">
                             <div className="flex items-center gap-3">
-                              <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${typeConf.gradient} flex items-center justify-center shadow-lg ${typeConf.glow} flex-shrink-0`}>
+                              <div className={`w-10 h-10 bg-gradient-to-br ${typeConf.gradient} flex items-center justify-center ${typeConf.glow} flex-shrink-0`}>
                                 <TypeIcon size={18} className="text-white" />
                               </div>
                               <div>
@@ -508,8 +506,7 @@ export default function WorkoutPlansPage() {
                           </td>
 
                           <td className="px-4 lg:px-6 py-4 hidden sm:table-cell">
-                            <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase tracking-tight border ${
-                              plan.plan_type === 'team' ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/20' :
+                            <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 text-[10px] font-bold uppercase tracking-tight border ${ plan.plan_type === 'team' ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/20' :
                               plan.plan_type === 'group' ? 'bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/20' :
                                                            'bg-blue-500/15 text-blue-600 dark:text-blue-400 border-blue-500/20'
                             }`}>
@@ -526,8 +523,8 @@ export default function WorkoutPlansPage() {
                           </td>
 
                           <td className="px-4 lg:px-6 py-4">
-                            <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase tracking-tight border ${statusConf.badge}`}>
-                              <span className={`w-1.5 h-1.5 rounded-full ${statusConf.dot}`} />
+                            <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 text-[10px] font-bold uppercase tracking-tight border ${statusConf.badge}`}>
+                              <span className={`w-1.5 h-1.5 ${statusConf.dot}`} />
                               {statusConf.label}
                             </span>
                           </td>

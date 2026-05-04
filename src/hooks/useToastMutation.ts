@@ -1,5 +1,6 @@
 import { useMutation, useQueryClient, type UseMutationOptions } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
+import { parseApiError } from '@/lib/api/errors'
 
 interface ToastMutationOptions<TData, TVariables> extends Omit<UseMutationOptions<TData, Error, TVariables>, 'mutationFn'> {
   mutationFn: (vars: TVariables) => Promise<TData>
@@ -29,8 +30,8 @@ export function useToastMutation<TData = unknown, TVariables = void>({
       onSuccess?.(data, vars)
     },
     onError: (error, vars) => {
-      const msg = (error as any)?.response?.data?.message || error.message || errorMessage
-      toast.error(msg)
+      const parsed = parseApiError(error)
+      toast.error(parsed.message || errorMessage)
       onError?.(error, vars)
     },
     ...rest,

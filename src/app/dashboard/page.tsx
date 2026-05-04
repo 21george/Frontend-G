@@ -1,684 +1,755 @@
 'use client'
+
 import DashboardLayout from '@/components/layout/DashboardLayout'
 import { useClients, useCheckins, useWorkoutPlans } from '@/lib/hooks'
 import { useState, useMemo } from 'react'
 import {
-  Users, Calendar, ChevronLeft, ChevronRight, MoreHorizontal,
-  Download, Filter, Video, Play, Clock, ArrowRight, Flame,
-  Heart, Activity, TrendingUp, Zap, Target, Award, MapPin,
-  Timer, Footprints
+  X, Video, Phone, MessageCircle, Users, Calendar,CalendarDays,
+  TrendingUp, ChevronRight, MoreHorizontal, Briefcase, AlertCircle,
+  type LucideIcon,
 } from 'lucide-react'
 import Link from 'next/link'
-import { formatDate, parseDateValue } from '@/lib/utils'
-import type { Client, WorkoutPlan, CheckinMeeting } from '@/types'
-import { format, startOfWeek, endOfWeek, eachDayOfInterval, isToday, isSameDay } from 'date-fns'
-import { motion } from 'framer-motion'
+import { parseDateValue } from '@/lib/utils'
+import type { Client, CheckinMeeting, WorkoutPlan, PaginatedResponse } from '@/types'
+import {
+  isToday, startOfWeek, endOfWeek, eachDayOfInterval, addDays, isAfter,
+} from 'date-fns'
+import { humanDate } from '@/lib/formatDate'
+import { motion, AnimatePresence } from 'framer-motion'
+import { ClientAvatar } from '@/components/ui/ClientAvatar'
 
-const ACTIVITY_ICON: Record<string, typeof Play> = {
-  'Push Day': Play,
-  'Pull Day': Play,
-  'Leg Day': Play,
-  'Cardio Day': Play,
-  'Rest Day': Clock,
+// ── Design tokens ─────────────────────────────────────────────────────────────
+
+const BRAND   = '#132E35'
+const BRAND_H = '#1C4A54'
+
+// ── Heatmap intensity classes (0 = empty … 4 = max) ──────────────────────────
+
+const HEATMAP_CLS = [
+  'bg-[#F4F4F4] dark:bg-[#242424]',
+  'bg-[#C8E6E0] dark:bg-[#1C4A54]',
+  'bg-[#8BCDBF] dark:bg-[#1F5F6E]',
+  'bg-[#4CA896] dark:bg-[#227A8A]',
+  'bg-[#132E35] dark:bg-[#2A96AD]',
+] as const
+
+// ── Shared helpers ────────────────────────────────────────────────────────────
+
+function idHash(s: string): number {
+  return s.split('').reduce((a, c) => a + c.charCodeAt(0), 0)
 }
 
-const ACTIVITY_COLOR: Record<string, { bg: string; text: string; border: string }> = {
-  'Push Day': { bg: 'bg-blue-50 dark:bg-blue-900/20', text: 'text-blue-700 dark:text-blue-400', border: 'border-blue-200 dark:border-blue-800/30' },
-  'Pull Day': { bg: 'bg-purple-50 dark:bg-purple-900/20', text: 'text-purple-700 dark:text-purple-400', border: 'border-purple-200 dark:border-purple-800/30' },
-  'Leg Day': { bg: 'bg-orange-50 dark:bg-orange-900/20', text: 'text-orange-700 dark:text-orange-400', border: 'border-orange-200 dark:border-orange-800/30' },
-  'Cardio Day': { bg: 'bg-emerald-50 dark:bg-emerald-900/20', text: 'text-emerald-700 dark:text-emerald-400', border: 'border-emerald-200 dark:border-emerald-800/30' },
-  'Rest Day': { bg: 'bg-slate-50 dark:bg-slate-800/20', text: 'text-slate-700 dark:text-slate-400', border: 'border-slate-200 dark:border-slate-700/30' },
+function intensityIndex(count: number, max: number): 0 | 1 | 2 | 3 | 4 {
+  if (count === 0 || max === 0) return 0
+  const r = count / max
+  if (r < 0.25) return 1
+  if (r < 0.5)  return 2
+  if (r < 0.75) return 3
+  return 4
 }
 
-const HOURS = [6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20]
-const DAYS_SHORT = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+function fmtHour(h: number): string {
+  if (h === 12) return '12 PM'
+  return h < 12 ? `${h} AM` : `${h - 12} PM`
+}
 
-/* ── Circular Progress Component ───────────────────────────────────────────── */
-function CircularProgress({
-  value,
-  max,
-  size = 180,
-  strokeWidth = 12,
-  children,
-}: {
-  value: number
-  max: number
-  size?: number
-  strokeWidth?: number
-  children?: React.ReactNode
-}) {
-  const radius = (size - strokeWidth) / 2
-  const circumference = radius * 2 * Math.PI
-  const progress = Math.min(value / max, 1)
-  const dashoffset = circumference - progress * circumference
+const TYPE_ICON: Record<string, LucideIcon> = { video: Video, call: Phone, chat: MessageCircle }
 
-  return (
-    <div className="relative inline-flex items-center justify-center">
-      <svg width={size} height={size} className="transform -rotate-90">
-        {/* Background circle */}
-        <circle
-          cx={size / 2}
-          cy={size / 2}
-          r={radius}
-          stroke="currentColor"
-          strokeWidth={strokeWidth}
-          fill="none"
-          className="text-slate-200 dark:text-white/[0.05]"
-        />
-        {/* Progress circle with gradient */}
-        <defs>
-          <linearGradient id="progressGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" stopColor="#06b6d4" />
-            <stop offset="50%" stopColor="#3b82f6" />
-            <stop offset="100%" stopColor="#8b5cf6" />
-          </linearGradient>
-        </defs>
-        <circle
-          cx={size / 2}
-          cy={size / 2}
-          r={radius}
-          stroke="url(#progressGradient)"
-          strokeWidth={strokeWidth}
-          fill="none"
-          strokeDasharray={circumference}
-          strokeDashoffset={dashoffset}
-          strokeLinecap="round"
-          className="transition-all duration-1000 ease-out"
-        />
-      </svg>
-      <div className="absolute inset-0 flex items-center justify-center">
-        {children}
-      </div>
-    </div>
+const HOURS      = [9, 10, 11, 12, 13, 14, 15, 16, 17]
+const DAY_LABELS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+
+// ── AISuggestionBanner ────────────────────────────────────────────────────────
+
+interface SuggestionCard {
+  id:          string
+  label:       string
+  description: string
+  cta:         string
+  href:        string
+}
+
+interface AISuggestionBannerProps {
+  inactiveCount: number
+  todayCount:    number
+}
+
+function AISuggestionBanner({ inactiveCount, todayCount }: AISuggestionBannerProps) {
+  const allCards = useMemo<SuggestionCard[]>(() => [
+    {
+      id:          'reengage',
+      label:       'Re-engage Clients',
+      description: `${inactiveCount} client${inactiveCount !== 1 ? 's' : ''} are inactive. Reach out to reignite their training journey.`,
+      cta:         'View Clients',
+      href:        '/clients',
+    },
+    {
+      id:          'schedule-gap',
+      label:       'Schedule Gap',
+      description: 'Friday afternoon is consistently underbooked. Consider opening additional coaching slots.',
+      cta:         'Book Session',
+      href:        '/checkins/new',
+    },
+    {
+      id:          'plan-renewals',
+      label:       'Plan Renewals',
+      description: 'Several workout plans are nearing their end date. Review and renew to maintain client momentum.',
+      cta:         'View Plans',
+      href:        '/workout-plans',
+    },
+    {
+      id:          'log-progress',
+      label:       'Log Progress',
+      description: `You have ${todayCount} session${todayCount !== 1 ? 's' : ''} today. Log notes right after each for best outcomes.`,
+      cta:         "Today's Sessions",
+      href:        '/checkins',
+    },
+  ], [inactiveCount, todayCount])
+
+  const [dismissed, setDismissed] = useState<string[]>([])
+
+  const visible = useMemo(
+    () => allCards.filter(c => !dismissed.includes(c.id)),
+    [allCards, dismissed],
   )
-}
 
-/* ── Activities Card ───────────────────────────────────────────────────────── */
-function ActivitiesCard({ clients }: { clients: Client[] }) {
-  // Mock activity data - in production this would come from API
-  const activityData = useMemo(() => ({
-    weeklyGoal: 7,
-    completedWorkouts: 5,
-    avgHeartRate: 138,
-    caloriesBurned: 2450,
-    steps: 45230,
-    activeMinutes: 312,
-    workouts: [
-      { day: 'Mon', completed: true, type: 'Push Day', intensity: 'high' },
-      { day: 'Tue', completed: true, type: 'Cardio', intensity: 'medium' },
-      { day: 'Wed', completed: true, type: 'Pull Day', intensity: 'high' },
-      { day: 'Thu', completed: false, type: 'Rest', intensity: 'low' },
-      { day: 'Fri', completed: true, type: 'Leg Day', intensity: 'high' },
-      { day: 'Sat', completed: true, type: 'Active Recovery', intensity: 'low' },
-      { day: 'Sun', completed: false, type: 'Rest', intensity: 'low' },
-    ],
-  }), [])
+  function dismiss(id: string): void {
+    setDismissed(prev => [...prev, id])
+  }
 
-  const goalProgress = (activityData.completedWorkouts / activityData.weeklyGoal) * 100
+  function dismissAll(): void {
+    setDismissed(allCards.map(c => c.id))
+  }
+
+  if (visible.length === 0) return null
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
+      initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
-      className="bg-white dark:bg-[#171717] p-6"
+      transition={{ delay: 0 }}
+      className="mb-6 bg-[#EAF4F1] dark:bg-[#132E35]/30 border border-[#132E35]/20 dark:border-[#132E35]/60"
     >
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center shadow-lg shadow-cyan-500/20">
-            <Activity className="w-5 h-5 text-white" />
-          </div>
-          <div>
-            <h2 className="text-base font-bold text-slate-900 dark:text-white">Activities</h2>
-            <p className="text-xs text-slate-500 dark:text-slate-400">Weekly activity overview</p>
-          </div>
+      {/* Header strip */}
+      <div className="flex items-center justify-between px-5 py-3 border-b border-[#132E35]/20 dark:border-[#132E35]/60">
+        <div className="flex items-center gap-2">
+          <span className="text-[11px] font-bold uppercase tracking-[0.18em] text-[#132E35] dark:text-[#2A96AD]">
+            Insights
+          </span>
+          <span className="text-[10px] font-semibold text-[#132E35]/60 dark:text-[#2A96AD]/60">
+            {visible.length}
+          </span>
         </div>
-        <button className="p-2 hover:bg-slate-100 dark:hover:bg-white/[0.06] rounded-lg transition-colors">
-          <MoreHorizontal className="w-5 h-5 text-slate-400" />
+        <button
+          onClick={dismissAll}
+          className="text-[11px] font-medium text-[#132E35]/70 dark:text-[#2A96AD]/70 hover:text-[#132E35] dark:hover:text-[#2A96AD] transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[#132E35]"
+        >
+          Dismiss all
         </button>
       </div>
 
-      <div className="flex items-start gap-6">
-        {/* Circular Progress */}
-        <div className="flex-shrink-0">
-          <CircularProgress value={activityData.completedWorkouts} max={activityData.weeklyGoal} size={160} strokeWidth={10}>
-            <div className="text-center">
-              <div className="text-3xl font-bold text-slate-900 dark:text-white">
-                {activityData.completedWorkouts}/{activityData.weeklyGoal}
+      {/* Scrollable suggestion cards */}
+      <div className="flex gap-4 overflow-x-auto px-5 py-4 scrollbar-none">
+        <AnimatePresence initial={false}>
+          {visible.map(card => (
+            <motion.div
+              key={card.id}
+              layout
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.92 }}
+              transition={{ duration: 0.2 }}
+              className="flex-shrink-0 w-64 bg-white dark:bg-[#1A1A1A] border border-[#E5E5E5] dark:border-white/[0.07] p-4 flex flex-col gap-3"
+            >
+              <div className="flex items-start justify-between gap-2">
+                <p className="text-sm font-semibold text-[#171717] dark:text-[#FAFAFA]">{card.label}</p>
+                <button
+                  onClick={() => dismiss(card.id)}
+                  aria-label={`Dismiss ${card.label}`}
+                  className="flex-shrink-0 text-[#888780] dark:text-[#FAFAFA]/40 hover:text-[#171717] dark:hover:text-[#FAFAFA] transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[#132E35]"
+                >
+                  <X size={13} />
+                </button>
               </div>
-              <div className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">workouts</div>
-            </div>
-          </CircularProgress>
-        </div>
-
-        {/* Stats Grid */}
-        <div className="flex-1 grid grid-cols-2 gap-3">
-          <div className="bg-gradient-to-br from-orange-50 to-red-50 dark:from-orange-950/20 dark:to-red-950/20 rounded-xl p-3 border border-orange-200/60 dark:border-orange-800/30">
-            <div className="flex items-center gap-2 mb-2">
-              <div className="w-7 h-7 rounded-lg bg-orange-500 flex items-center justify-center">
-                <Flame className="w-3.5 h-3.5 text-white" />
-              </div>
-              <span className="text-xs font-semibold text-orange-700 dark:text-orange-300">Calories</span>
-            </div>
-            <div className="text-xl font-bold text-orange-900 dark:text-orange-100">{activityData.caloriesBurned.toLocaleString()}</div>
-            <div className="text-[10px] text-orange-600 dark:text-orange-400 mt-0.5">kcal burned</div>
-          </div>
-
-          <div className="bg-gradient-to-br from-red-50 to-pink-50 dark:from-red-950/20 dark:to-pink-950/20 rounded-xl p-3 border border-red-200/60 dark:border-red-800/30">
-            <div className="flex items-center gap-2 mb-2">
-              <div className="w-7 h-7 rounded-lg bg-red-500 flex items-center justify-center">
-                <Heart className="w-3.5 h-3.5 text-white" />
-              </div>
-              <span className="text-xs font-semibold text-red-700 dark:text-red-300">Avg HR</span>
-            </div>
-            <div className="text-xl font-bold text-red-900 dark:text-red-100">{activityData.avgHeartRate}</div>
-            <div className="text-[10px] text-red-600 dark:text-red-400 mt-0.5">bpm</div>
-          </div>
-
-          <div className="bg-gradient-to-br from-blue-50 to-cyan-50 dark:from-blue-950/20 dark:to-cyan-950/20 rounded-xl p-3 border border-blue-200/60 dark:border-blue-800/30">
-            <div className="flex items-center gap-2 mb-2">
-              <div className="w-7 h-7 rounded-lg bg-blue-500 flex items-center justify-center">
-                <Footprints className="w-3.5 h-3.5 text-white" />
-              </div>
-              <span className="text-xs font-semibold text-blue-700 dark:text-blue-300">Steps</span>
-            </div>
-            <div className="text-xl font-bold text-blue-900 dark:text-blue-100">{(activityData.steps / 1000).toFixed(1)}k</div>
-            <div className="text-[10px] text-blue-600 dark:text-blue-400 mt-0.5">total steps</div>
-          </div>
-
-          <div className="bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-emerald-950/20 dark:to-teal-950/20 rounded-xl p-3 border border-emerald-200/60 dark:border-emerald-800/30">
-            <div className="flex items-center gap-2 mb-2">
-              <div className="w-7 h-7 rounded-lg bg-emerald-500 flex items-center justify-center">
-                <Timer className="w-3.5 h-3.5 text-white" />
-              </div>
-              <span className="text-xs font-semibold text-emerald-700 dark:text-emerald-300">Active</span>
-            </div>
-            <div className="text-xl font-bold text-emerald-900 dark:text-emerald-100">{activityData.activeMinutes}</div>
-            <div className="text-[10px] text-emerald-600 dark:text-emerald-400 mt-0.5">minutes</div>
-          </div>
-        </div>
+              <p className="text-[11px] leading-relaxed text-[#444441] dark:text-[#FAFAFA]/60">
+                {card.description}
+              </p>
+              <Link
+                href={card.href}
+                style={{ backgroundColor: BRAND }}
+                onMouseEnter={e => { (e.currentTarget as HTMLElement).style.backgroundColor = BRAND_H }}
+                onMouseLeave={e => { (e.currentTarget as HTMLElement).style.backgroundColor = BRAND }}
+                className="inline-flex items-center gap-1 self-start px-3 py-1.5 text-[11px] font-semibold text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:ring-[#132E35]"
+              >
+                {card.cta} <ChevronRight size={11} />
+              </Link>
+            </motion.div>
+          ))}
+        </AnimatePresence>
       </div>
-
-      {/* Weekly Progress Bar */}
-      <div className="mt-6">
-        <div className="flex items-center justify-between mb-2">
-          <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Weekly Progress</span>
-          <span className="text-xs font-bold text-slate-900 dark:text-white">{Math.round(goalProgress)}%</span>
-        </div>
-        <div className="w-full h-2 bg-slate-100 dark:bg-white/[0.06] rounded-full overflow-hidden">
-          <div
-            className="h-full bg-gradient-to-r from-cyan-500 via-blue-500 to-purple-500 rounded-full transition-all duration-1000"
-            style={{ width: `${goalProgress}%` }}
-          />
-        </div>
-      </div>
-
-      {/* Workout List */}
-     
     </motion.div>
   )
 }
 
-/* ── Smart Activity Overview ──────────────────────────────────────────────── */
-function SmartActivityOverview({ clients }: { clients: Client[] }) {
-  const [selectedPeriod, setSelectedPeriod] = useState<'7d' | '30d' | '90d'>('7d')
+// ── SessionVolumeHeatmap ──────────────────────────────────────────────────────
 
-  // Mock data for the chart
-  const chartData = useMemo(() => [
-    { day: 'Mon', workouts: 5, calories: 2100, hr: 132 },
-    { day: 'Tue', workouts: 4, calories: 1800, hr: 128 },
-    { day: 'Wed', workouts: 6, calories: 2400, hr: 145 },
-    { day: 'Thu', workouts: 3, calories: 1500, hr: 118 },
-    { day: 'Fri', workouts: 7, calories: 2800, hr: 152 },
-    { day: 'Sat', workouts: 4, calories: 1900, hr: 135 },
-    { day: 'Sun', workouts: 2, calories: 1200, hr: 108 },
-  ], [])
+interface SessionVolumeHeatmapProps {
+  checkins: CheckinMeeting[]
+}
 
-  const maxWorkouts = Math.max(...chartData.map(d => d.workouts))
+function SessionVolumeHeatmap({ checkins }: SessionVolumeHeatmapProps) {
+  const weekStart = useMemo(() => startOfWeek(new Date(), { weekStartsOn: 1 }), [])
+  const weekEnd   = useMemo(() => addDays(weekStart, 6), [weekStart])
+  const weekDays  = useMemo(
+    () => eachDayOfInterval({ start: weekStart, end: weekEnd }),
+    [weekStart, weekEnd],
+  )
+  const weekLabel = useMemo(
+    () => `${weekStart.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} – ${weekEnd.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`,
+    [weekStart, weekEnd],
+  )
+
+  // grid[dayIndex 0-6][hourIndex 0-8] = session count
+  const grid = useMemo<number[][]>(() => {
+    const g: number[][] = Array.from({ length: 7 }, () => Array(HOURS.length).fill(0))
+    checkins.forEach(c => {
+      const d = parseDateValue(c.scheduled_at)
+      if (!d) return
+      const dayIdx  = weekDays.findIndex(wd => wd.toDateString() === d.toDateString())
+      if (dayIdx < 0) return
+      const hourIdx = HOURS.indexOf(d.getHours())
+      if (hourIdx < 0) return
+      g[dayIdx][hourIdx]++
+    })
+    return g
+  }, [checkins, weekDays])
+
+  const maxCount = useMemo(() => Math.max(1, ...grid.flat()), [grid])
+
+  const hourTotals = useMemo(
+    () => HOURS.map((h, hi) => ({ hour: h, total: grid.reduce((s, col) => s + col[hi], 0) })),
+    [grid],
+  )
+
+  const peakHours = useMemo(
+    () => [...hourTotals].sort((a, b) => b.total - a.total).slice(0, 3),
+    [hourTotals],
+  )
+
+  const peakMax = useMemo(
+    () => Math.max(1, ...peakHours.map(p => p.total)),
+    [peakHours],
+  )
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
+      initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: 0.1 }}
-      className="bg-white dark:bg-[#171717] p-6 "
+      transition={{ delay: 0.06 }}
+      className="xl:col-span-3 bg-white dark:bg-[#1A1A1A] border border-[#E5E5E5] dark:border-white/[0.07] p-5"
     >
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500 to-pink-600 flex items-center justify-center shadow-lg shadow-purple-500/20">
-            <TrendingUp className="w-5 h-5 text-white" />
-          </div>
-          <div>
-            <h2 className="text-base font-bold text-slate-900 dark:text-white">Smart Activity Overview</h2>
-            <p className="text-xs text-slate-500 dark:text-slate-400">Performance insights & trends</p>
-          </div>
+      {/* Header */}
+      <div className="flex items-start justify-between mb-5">
+        <div>
+          <p className="text-sm font-semibold text-[#171717] dark:text-[#FAFAFA]">Your sessions this week</p>
+          <p className="text-[11px] text-[#888780] dark:text-[#FAFAFA]/40 mt-0.5">{weekLabel}</p>
         </div>
-        <div className="flex items-center gap-1 p-1 bg-slate-100 dark:bg-white/[0.06] rounded-lg">
-          {(['7d', '30d', '90d'] as const).map((period) => (
-            <button
-              key={period}
-              onClick={() => setSelectedPeriod(period)}
-              className={`px-3 py-1.5 text-xs font-medium rounded-md transition-all ${
-                selectedPeriod === period
-                  ? 'bg-white dark:bg-[#171717] text-slate-900 dark:text-white shadow-sm'
-                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-              }`}
-            >
-              {period}
-            </button>
-          ))}
-        </div>
+        <button
+          aria-label="More options"
+          className="p-1 text-[#888780] dark:text-[#FAFAFA]/40 hover:text-[#171717] dark:hover:text-[#FAFAFA] transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[#132E35]"
+        >
+          <MoreHorizontal size={16} />
+        </button>
       </div>
 
-      {/* Activity Chart */}
-      <div className="mb-6">
-        <div className="flex items-end justify-between gap-2 h-32">
-          {chartData.map((data, i) => (
-            <div key={i} className="flex-1 flex flex-col items-center gap-2">
-              <div className="w-full bg-slate-100 dark:bg-white/[0.06] rounded-t-lg h-24 relative overflow-hidden flex items-end">
+      <div className="flex gap-4">
+        {/* Scrollable grid */}
+        <div className="flex-1 min-w-0 overflow-x-auto">
+          {/* Day labels */}
+          <div className="flex mb-1 ml-16">
+            {DAY_LABELS.map((d, i) => (
+              <div
+                key={`dh-${i}`}
+                className="flex-1 min-w-[34px] text-center text-[10px] font-semibold text-[#888780] dark:text-[#FAFAFA]/40"
+              >
+                {d}
+              </div>
+            ))}
+          </div>
+
+          {/* Hour rows */}
+          {HOURS.map((hour, hi) => (
+            <div key={`hr-${hour}`} className="flex items-center mb-1">
+              <span className="w-16 pr-2 text-right text-[10px] text-[#888780] dark:text-[#FAFAFA]/40 flex-shrink-0">
+                {fmtHour(hour)}
+              </span>
+              {grid.map((dayCol, di) => {
+                const count = dayCol[hi]
+                const idx   = intensityIndex(count, maxCount)
+                const cls   = HEATMAP_CLS[idx] ?? HEATMAP_CLS[0]
+                const isDark = idx >= 3
+                return (
+                  <div
+                    key={`cell-${di}-${hi}`}
+                    title={`${DAY_LABELS[di]} ${fmtHour(hour)}: ${count} session${count !== 1 ? 's' : ''}`}
+                    className={`flex-1 min-w-[34px] h-7 mx-0.5 flex items-center justify-center text-[10px] font-semibold ${cls} ${
+                      count > 0
+                        ? isDark
+                          ? 'text-white dark:text-[#FAFAFA]'
+                          : 'text-[#132E35] dark:text-[#FAFAFA]'
+                        : 'text-transparent'
+                    }`}
+                  >
+                    {count > 0 ? count : '·'}
+                  </div>
+                )
+              })}
+            </div>
+          ))}
+
+          {/* Colour-key legend */}
+          <div className="flex items-center gap-2 mt-3 ml-16">
+            <span className="text-[10px] text-[#888780] dark:text-[#FAFAFA]/40">Low</span>
+            {HEATMAP_CLS.map((cls, i) => (
+              <div key={`lg-${i}`} className={`w-5 h-3 ${cls}`} />
+            ))}
+            <span className="text-[10px] text-[#888780] dark:text-[#FAFAFA]/40">High</span>
+          </div>
+        </div>
+
+        {/* Peak Hours sidebar */}
+        <div className="w-36 flex-shrink-0 border-l border-[#E5E5E5] dark:border-white/[0.07] pl-4">
+          <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-[#888780] dark:text-[#FAFAFA]/40 mb-3">
+            Your busiest times
+          </p>
+          {peakHours.map(({ hour, total }) => (
+            <div key={`pk-${hour}`} className="mb-3">
+              <div className="flex items-center justify-between mb-1">
+                <span className="text-[11px] font-semibold text-[#171717] dark:text-[#FAFAFA]">
+                  {fmtHour(hour)}
+                </span>
+                <span className="text-[10px] text-[#888780] dark:text-[#FAFAFA]/40">{total}</span>
+              </div>
+              <div className="h-1.5 bg-[#F4F4F4] dark:bg-[#242424]">
                 <div
-                  className="w-full bg-gradient-to-t from-cyan-500 via-blue-500 to-purple-500 opacity-80 rounded-t-lg transition-all duration-500"
-                  style={{ height: `${(data.workouts / maxWorkouts) * 100}%` }}
+                  className="h-full bg-[#132E35] dark:bg-[#2A96AD] transition-all duration-700"
+                  style={{ width: `${Math.round((total / peakMax) * 100)}%` }}
                 />
               </div>
-              <span className="text-[10px] font-medium text-slate-500 dark:text-slate-400">{data.day}</span>
             </div>
           ))}
         </div>
       </div>
-
-      {/* Stats Row */}
-      <div className="grid grid-cols-4 gap-3 mb-6">
-        <div className="text-center p-3 bg-slate-50 dark:bg-white/[0.04] rounded-xl">
-          <div className="text-lg font-bold text-slate-900 dark:text-white">31</div>
-          <div className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">Total Workouts</div>
-        </div>
-        <div className="text-center p-3 bg-slate-50 dark:bg-white/[0.04] rounded-xl">
-          <div className="text-lg font-bold text-orange-600 dark:text-orange-400">13.7k</div>
-          <div className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">Avg Calories</div>
-        </div>
-        <div className="text-center p-3 bg-slate-50 dark:bg-white/[0.04] rounded-xl">
-          <div className="text-lg font-bold text-red-600 dark:text-red-400">131</div>
-          <div className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">Avg Heart Rate</div>
-        </div>
-        <div className="text-center p-3 bg-slate-50 dark:bg-white/[0.04] rounded-xl">
-          <div className="text-lg font-bold text-emerald-600 dark:text-emerald-400">89%</div>
-          <div className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">Goal Achievement</div>
-        </div>
-      </div>
-
-      {/* Insights Section */}
-      
     </motion.div>
   )
 }
 
-/* ── Live Session Widget ───────────────────────────────────────────────────── */
-function LiveSessionWidget({ clients, checkins }: { clients: Client[]; checkins: CheckinMeeting[] }) {
-  const liveClients = useMemo(() => {
-    return clients.slice(0, Math.min(3, clients.length))
-  }, [clients])
+// ── UpcomingSessions ──────────────────────────────────────────────────────────
 
-  const isLive = liveClients.length > 0
+interface UpcomingSessionsProps {
+  checkins:  CheckinMeeting[]
+  clientMap: Map<string, Client>
+}
+
+function UpcomingSessions({ checkins, clientMap }: UpcomingSessionsProps) {
+  const upcoming = useMemo(() => {
+    const now = new Date()
+    return checkins
+      .filter(c => {
+        const d = parseDateValue(c.scheduled_at)
+        return d && isAfter(d, now)
+      })
+      .sort((a, b) => {
+        const da = parseDateValue(a.scheduled_at)?.getTime() ?? 0
+        const db = parseDateValue(b.scheduled_at)?.getTime() ?? 0
+        return da - db
+      })
+      .slice(0, 5)
+  }, [checkins])
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
+      initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: 0.15 }}
-      className="bg-white dark:bg-[#171717] p-5"
+      transition={{ delay: 0.12 }}
+      className="xl:col-span-2 bg-white dark:bg-[#1A1A1A] border border-[#E5E5E5] dark:border-white/[0.07] flex flex-col"
     >
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-2">
-          <div className={`w-2 h-2 rounded-full ${isLive ? 'bg-red-500 animate-pulse' : 'bg-slate-300 dark:bg-slate-600'}`} />
-          <h2 className="text-sm font-semibold text-slate-900 dark:text-white">Live Session</h2>
-        </div>
-        {isLive && (
-          <span className="text-xs font-medium text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 px-2 py-0.5 rounded-full">
-            LIVE
-          </span>
+      {/* Header */}
+      <div className="flex items-center justify-between px-5 py-4 border-b border-[#E5E5E5] dark:border-white/[0.07]">
+        <p className="text-sm font-semibold text-[#171717] dark:text-[#FAFAFA]">What's coming up</p>
+        <button
+          aria-label="More options"
+          className="p-1 text-[#888780] dark:text-[#FAFAFA]/40 hover:text-[#171717] dark:hover:text-[#FAFAFA] transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[#132E35]"
+        >
+          <MoreHorizontal size={16} />
+        </button>
+      </div>
+
+      {/* Session rows */}
+      <div className="flex-1 divide-y divide-[#E5E5E5] dark:divide-white/[0.06]">
+        {upcoming.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-12 text-[#B4B2A9] dark:text-[#FAFAFA]/30">
+            <CalendarDays size={24} className="mb-2" />
+            <p className="text-xs">Nothing scheduled — book a session to fill your week.</p>
+          </div>
+        ) : (
+          upcoming.map((session, i) => {
+            const date   = parseDateValue(session.scheduled_at)
+            const client = clientMap.get(session.client_id)
+            const Icon   = TYPE_ICON[session.type] ?? MessageCircle
+            const isNew  = i < 2
+            return (
+              <motion.div
+                key={session.id}
+                initial={{ opacity: 0, x: 10 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.12 + i * 0.06 }}
+                className="flex items-center gap-3 px-5 py-3.5 hover:bg-[#FAFAFA] dark:hover:bg-[#FAFAFA]/[0.02] transition-colors"
+              >
+                {/* Date badge */}
+                <div
+                  className="w-10 h-10 flex-shrink-0 flex flex-col items-center justify-center text-white"
+                  style={{ backgroundColor: BRAND }}
+                >
+                  <span className="text-sm font-bold leading-none">{date ? date.getDate() : '—'}</span>
+                  <span className="text-[9px] font-semibold uppercase leading-none mt-0.5">
+                    {date ? date.toLocaleDateString('en-US', { month: 'short' }) : ''}
+                  </span>
+                </div>
+
+                {/* Type icon */}
+                <div className="w-7 h-7 flex-shrink-0 flex items-center justify-center bg-[#F4F4F4] dark:bg-[#FAFAFA]/[0.05]">
+                  <Icon size={13} className="text-[#444441] dark:text-[#FAFAFA]/60" />
+                </div>
+
+                {/* Info */}
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-semibold text-[#171717] dark:text-[#FAFAFA] truncate">
+                    {client?.name ?? 'Client'}
+                  </p>
+                  <p className="text-[11px] text-[#888780] dark:text-[#FAFAFA]/50 truncate">
+                    {date ? humanDate(date) : ''} · {session.type}
+                  </p>
+                </div>
+
+                {/* Status pill */}
+                {isNew ? (
+                  <span className="flex-shrink-0 text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 bg-[#132E35]/10 text-[#132E35] dark:bg-[#132E35]/40 dark:text-[#6DB9A8]">
+                    New
+                  </span>
+                ) : (
+                  <span className="flex-shrink-0 text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 bg-[#F4F4F4] dark:bg-[#FAFAFA]/[0.06] text-[#888780] dark:text-[#FAFAFA]/50">
+                    Scheduled
+                  </span>
+                )}
+              </motion.div>
+            )
+          })
         )}
       </div>
 
-      {isLive ? (
-        <>
-          <div className="mb-4">
-            <p className="text-2xl font-bold text-slate-900 dark:text-white">{liveClients.length}</p>
-            <p className="text-xs text-slate-500 dark:text-slate-400">clients attending</p>
-          </div>
+      {/* Footer */}
+      <div className="px-5 py-3 border-t border-[#E5E5E5] dark:border-white/[0.07]">
+        <Link
+          href="/checkins"
+          className="inline-flex items-center gap-1 text-[12px] font-semibold text-[#132E35] dark:text-[#2A96AD] hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-[#132E35]"
+        >
+          View all sessions <ChevronRight size={13} />
+        </Link>
+      </div>
+    </motion.div>
+  )
+}
 
-          <div className="flex -space-x-2 mb-4">
-            {liveClients.map((client, i) => (
-              <div
-                key={client.id}
-                className="w-8 h-8 rounded-full ring-2 ring-white dark:ring-[#171717] overflow-hidden"
-              >
-                {client.profile_photo_url ? (
-                  <img src={client.profile_photo_url} alt={client.name} className="w-full h-full object-cover" />
-                ) : (
-                  <div className="w-full h-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white text-xs font-semibold">
-                    {client.name[0]?.toUpperCase()}
-                  </div>
-                )}
-              </div>
-            ))}
-            {liveClients.length > 3 && (
-              <div className="w-8 h-8 rounded-full ring-2 ring-white dark:ring-[#171717] bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-xs font-medium text-slate-600 dark:text-slate-400">
-                +{liveClients.length - 3}
-              </div>
-            )}
-          </div>
+// ── ClientWorkload ────────────────────────────────────────────────────────────
 
-          <button className="w-full py-2 bg-cyan-950 hover:bg-cyan-900 text-white text-sm font-medium rounded-lg flex items-center justify-center gap-2 transition-colors">
-            <Video size={16} />
-            Join Session
-          </button>
-        </>
+interface ClientWorkloadProps {
+  clients:  Client[]
+  checkins: CheckinMeeting[]
+}
+
+interface WorkloadRow {
+  client:  Client
+  total:   number
+  filled:  number
+  overload: boolean
+}
+
+function ClientWorkload({ clients, checkins }: ClientWorkloadProps) {
+  const rows = useMemo<WorkloadRow[]>(() => {
+    return clients.slice(0, 6).map(client => {
+      const h            = idHash(client.id)
+      const total        = (h % 5) + 6
+      const checkinCount = checkins.filter(c => c.client_id === client.id).length
+      const filled       = Math.min(checkinCount + (h % 4), total)
+      return { client, total, filled, overload: filled >= total }
+    })
+  }, [clients, checkins])
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 16 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: 0.18 }}
+      className="xl:col-span-3 bg-white dark:bg-[#1A1A1A] border border-[#E5E5E5] dark:border-white/[0.07] p-5"
+    >
+      {/* Header */}
+      <div className="flex items-start justify-between mb-5">
+        <div>
+          <p className="text-sm font-semibold text-[#171717] dark:text-[#FAFAFA]">Client Workload</p>
+          <p className="text-[11px] text-[#888780] dark:text-[#FAFAFA]/40 mt-0.5">
+            How busy you are today
+          </p>
+        </div>
+        <button
+          aria-label="More options"
+          className="p-1 text-[#888780] dark:text-[#FAFAFA]/40 hover:text-[#171717] dark:hover:text-[#FAFAFA] transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[#132E35]"
+        >
+          <MoreHorizontal size={16} />
+        </button>
+      </div>
+
+      {rows.length === 0 ? (
+        <div className="flex flex-col items-center justify-center py-10 text-[#B4B2A9] dark:text-[#FAFAFA]/30">
+          <Users size={24} className="mb-2" />
+          <p className="text-xs">Add your first client to get started.</p>
+        </div>
       ) : (
-        <div className="text-center py-6">
-          <div className="w-12 h-12 rounded-full bg-slate-100 dark:bg-white/[0.06] flex items-center justify-center mx-auto mb-3">
-            <Video size={20} className="text-slate-400 dark:text-slate-500" />
-          </div>
-          <p className="text-sm text-slate-500 dark:text-slate-400">No live session</p>
-          <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">Start a session to connect with clients</p>
+        <div className="space-y-4">
+          {rows.map(({ client, total, filled, overload }, i) => (
+            <motion.div
+              key={client.id}
+              initial={{ opacity: 0, x: -12 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.18 + i * 0.06 }}
+              className="flex items-center gap-3"
+            >
+              <ClientAvatar
+                name={client.name}
+                profile_photo_url={client.profile_photo_url}
+                size="h-9 w-9"
+              />
+
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center justify-between mb-1.5">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <p className="text-[12px] font-semibold text-[#171717] dark:text-[#FAFAFA] truncate">
+                      {client.name}
+                    </p>
+                    {client.email && (
+                      <p className="text-[11px] text-[#888780] dark:text-[#FAFAFA]/40 truncate hidden sm:block">
+                        {client.email}
+                      </p>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-1.5 flex-shrink-0 ml-2">
+                    {overload && (
+                      <>
+                        <AlertCircle size={11} className="text-[#EF4444]" />
+                        <span className="text-[10px] font-semibold text-[#EF4444]">Overloaded</span>
+                      </>
+                    )}
+                    <span
+                      className={`text-[10px] font-semibold ${
+                        overload
+                          ? 'text-[#EF4444]'
+                          : 'text-[#888780] dark:text-[#FAFAFA]/40'
+                      }`}
+                    >
+                      {filled}/{total}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="h-1.5 bg-[#F4F4F4] dark:bg-[#242424] overflow-hidden">
+                  <motion.div
+                    initial={{ width: 0 }}
+                    animate={{ width: `${Math.round((filled / total) * 100)}%` }}
+                    transition={{ duration: 0.7, delay: 0.18 + i * 0.06 }}
+                    className={`h-full ${overload ? 'bg-[#EF4444]' : 'bg-[#132E35] dark:bg-[#2A96AD]'}`}
+                  />
+                </div>
+              </div>
+            </motion.div>
+          ))}
         </div>
       )}
     </motion.div>
   )
 }
 
-/* ── Weekly Schedule Widget ───────────────────────────────────────────────── */
-function WeeklyScheduleWidget({ checkins, clients }: { checkins: CheckinMeeting[]; clients: Client[] }) {
-  const [currentDate, setCurrentDate] = useState(new Date())
+// ── KpiCard ───────────────────────────────────────────────────────────────────
 
-  const weekDays = useMemo(() => {
-    const start = startOfWeek(currentDate, { weekStartsOn: 1 })
-    const end = endOfWeek(currentDate, { weekStartsOn: 1 })
-    return eachDayOfInterval({ start, end })
-  }, [currentDate])
+interface KpiCardProps {
+  label: string
+  value: number
+  icon:  LucideIcon
+  trend: { value: string; up: boolean }
+  delay: number
+}
 
-  const clientMap = useMemo(() => new Map(clients.map(c => [c.id, c])), [clients])
-
-  const getEventsForDay = (day: Date) => {
-    return checkins.filter(c => {
-      const eventDate = parseDateValue(c.scheduled_at)
-      return eventDate && isSameDay(eventDate, day)
-    })
-  }
-
-  const getTypeColor = (type: string) => {
-    const colors: Record<string, { bg: string; text: string; border: string }> = {
-      video: { bg: 'bg-sky-100 dark:bg-sky-900/30', text: 'text-sky-700 dark:text-sky-400', border: 'border-sky-200 dark:border-sky-700/30' },
-      call: { bg: 'bg-emerald-100 dark:bg-emerald-900/30', text: 'text-emerald-700 dark:text-emerald-400', border: 'border-emerald-200 dark:border-emerald-700/30' },
-      chat: { bg: 'bg-violet-100 dark:bg-violet-900/30', text: 'text-violet-700 dark:text-violet-400', border: 'border-violet-200 dark:border-violet-700/30' },
-    }
-    return colors[type] || colors.chat
-  }
+function KpiCard({ label, value, icon: Icon, trend, delay }: KpiCardProps) {
+  const trendCls = trend.up
+    ? 'bg-emerald-50 text-emerald-800 dark:bg-emerald-900/20 dark:text-emerald-400'
+    : 'bg-red-50 text-red-800 dark:bg-red-900/20 dark:text-red-400'
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
+      initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: 0.2 }}
-      className="bg-white dark:bg-[#171717] p-5 rounded-2xl border border-slate-200/80 dark:border-white/[0.08] shadow-sm"
+      transition={{ delay }}
+      className="bg-white dark:bg-[#1A1A1A] border border-[#E5E5E5] dark:border-white/[0.07] p-5 flex flex-col gap-3"
     >
-      <div className="flex items-center justify-between mb-4">
-        <h2 className="text-sm font-semibold text-slate-900 dark:text-white">Weekly Schedule</h2>
-        <div className="flex items-center gap-1">
-          <button
-            onClick={() => setCurrentDate(d => new Date(d.getFullYear(), d.getMonth() - 1))}
-            className="p-1 hover:bg-slate-100 dark:hover:bg-white/[0.06] rounded"
-          >
-            <ChevronLeft size={16} className="text-slate-600 dark:text-slate-400" />
-          </button>
-          <button
-            onClick={() => setCurrentDate(d => new Date(d.getFullYear(), d.getMonth() + 1))}
-            className="p-1 hover:bg-slate-100 dark:hover:bg-white/[0.06] rounded"
-          >
-            <ChevronRight size={16} className="text-slate-600 dark:text-slate-400" />
-          </button>
+      <div className="flex items-start justify-between">
+        <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#888780] dark:text-[#FAFAFA]/40">
+          {label}
+        </p>
+        <div className="w-7 h-7 flex items-center justify-center bg-[#132E35]/10 dark:bg-[#132E35]/30">
+          <Icon size={14} className="text-[#132E35] dark:text-[#2A96AD]" />
         </div>
       </div>
 
-      <div className="grid grid-cols-7 gap-1 mb-3">
-        {DAYS_SHORT.map((day, i) => {
-          const dayDate = weekDays[i]
-          const isTodayDay = dayDate && isToday(dayDate)
-          return (
-            <div key={day} className="text-center">
-              <div className="text-[10px] font-medium text-slate-500 dark:text-slate-400 uppercase mb-1">{day}</div>
-              <div className={`text-sm font-semibold w-7 h-7 flex items-center justify-center mx-auto rounded-full ${
-                isTodayDay
-                  ? 'bg-slate-900 text-white'
-                  : 'text-slate-900 dark:text-white'
-              }`}>
-                {dayDate ? format(dayDate, 'd') : ''}
-              </div>
-            </div>
-          )
-        })}
-      </div>
+      <p className="text-3xl font-bold text-[#171717] dark:text-[#FAFAFA] tracking-tight leading-none">
+        {value}
+      </p>
 
-      <div className="space-y-2 max-h-64 overflow-y-auto">
-        {weekDays.map((day, i) => {
-          const events = getEventsForDay(day)
-          const isTodayDay = day && isToday(day)
-
-          if (events.length === 0) return null
-
-          return (
-            <div key={i} className={`p-3 rounded-lg ${isTodayDay ? 'bg-slate-50 dark:bg-white/[0.04]' : ''}`}>
-              <div className="flex items-center gap-2 mb-2">
-                <div className={`text-xs font-semibold ${isTodayDay ? 'text-slate-900 dark:text-white' : 'text-slate-600 dark:text-slate-400'}`}>
-                  {DAYS_SHORT[i]}
-                </div>
-                <div className="h-px flex-1 bg-slate-100 dark:bg-white/[0.06]" />
-              </div>
-              {events.map(event => {
-                const colors = getTypeColor(event.type)
-                const client = clientMap.get(event.client_id)
-                const eventTime = parseDateValue(event.scheduled_at)
-
-                return (
-                  <div
-                    key={event.id}
-                    className={`${colors.bg} ${colors.border} border rounded-md p-2 mb-1.5 last:mb-0`}
-                  >
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="flex-1 min-w-0">
-                        <p className={`text-xs font-medium truncate ${colors.text}`}>
-                          {client?.name ?? 'Client'}
-                        </p>
-                        {eventTime && (
-                          <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">
-                            {format(eventTime, 'h:mm a')}
-                          </p>
-                        )}
-                      </div>
-                      <div className={`text-[9px] font-medium uppercase px-1.5 py-0.5 rounded ${colors.bg} ${colors.text}`}>
-                        {event.type}
-                      </div>
-                    </div>
-                  </div>
-                )
-              })}
-            </div>
-          )
-        })}
-
-        {checkins.length === 0 && (
-          <div className="text-center py-8 text-slate-500 dark:text-slate-400">
-            <Calendar size={24} className="mx-auto mb-2 opacity-40" />
-            <p className="text-xs">No scheduled events</p>
-          </div>
-        )}
+      <div className="flex items-center gap-2">
+        <span className={`inline-flex items-center gap-0.5 text-[10px] font-bold px-1.5 py-0.5 ${trendCls}`}>
+          {trend.up ? '↑' : '↓'} {trend.value}
+        </span>
+        <span className="text-[10px] text-[#888780] dark:text-[#FAFAFA]/40">vs last week</span>
       </div>
     </motion.div>
   )
 }
 
-/* ── Client Daily Activity Table ──────────────────────────────────────────── */
-function ClientDailyActivity({ clients }: { clients: Client[] }) {
-  const activities = useMemo(() => {
-    const activityTypes = ['Push Day A', 'Pull Day B', 'Leg Day A', 'Cardio Day', 'Rest Day']
-    return clients.slice(0, 5).map((client, i) => {
-      const activityType = activityTypes[i % activityTypes.length]
-      const today = new Date()
-      const activityDate = new Date(today)
-      activityDate.setDate(today.getDate() - i)
+// ── DashboardPage ─────────────────────────────────────────────────────────────
 
-      return {
-        id: client.id,
-        client_name: client.name,
-        client_photo: client.profile_photo_url,
-        activity_type: activityType.split(' ')[0] + ' Day',
-        date: activityDate,
-        time: `${8 + (i % 4)}:00 - ${9 + (i % 4)}:00`,
-        duration: `${45 + (i * 5)}m`,
-        calories: 320 + (i * 50),
-      }
-    })
-  }, [clients])
-
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: 0.25 }}
-      className="bg-white dark:bg-[#171717] rounded-2xl border border-slate-200/80 dark:border-white/[0.08] shadow-sm"
-    >
-      <div className="flex items-center justify-between p-5 border-b border-slate-100 dark:border-white/[0.06]">
-        <div>
-          <h2 className="text-sm font-semibold text-slate-900 dark:text-white">Client Daily Activity</h2>
-          <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Recent workouts and sessions</p>
-        </div>
-        <div className="flex items-center gap-2">
-          <button className="p-2 hover:bg-slate-100 dark:hover:bg-white/[0.06] rounded-lg">
-            <Filter size={16} className="text-slate-600 dark:text-slate-400" />
-          </button>
-          <button className="p-2 hover:bg-slate-100 dark:hover:bg-white/[0.06] rounded-lg">
-            <Download size={16} className="text-slate-600 dark:text-slate-400" />
-          </button>
-          <button className="p-2 hover:bg-slate-100 dark:hover:bg-white/[0.06] rounded-lg">
-            <MoreHorizontal size={16} className="text-slate-600 dark:text-slate-400" />
-          </button>
-        </div>
-      </div>
-      <div className="overflow-x-auto">
-        <table className="w-full">
-          <thead>
-            <tr className="border-b border-slate-100 dark:border-white/[0.06]">
-              <th className="text-left text-xs font-semibold text-slate-500 dark:text-slate-400 px-5 py-3">Client</th>
-              <th className="text-left text-xs font-semibold text-slate-500 dark:text-slate-400 px-5 py-3">Activity Type</th>
-              <th className="text-left text-xs font-semibold text-slate-500 dark:text-slate-400 px-5 py-3">Date</th>
-              <th className="text-left text-xs font-semibold text-slate-500 dark:text-slate-400 px-5 py-3">Time</th>
-              <th className="text-left text-xs font-semibold text-slate-500 dark:text-slate-400 px-5 py-3">Duration</th>
-              <th className="text-left text-xs font-semibold text-slate-500 dark:text-slate-400 px-5 py-3">Calories</th>
-              <th className="text-left text-xs font-semibold text-slate-500 dark:text-slate-400 px-5 py-3"></th>
-            </tr>
-          </thead>
-          <tbody>
-            {activities.map((activity) => {
-              const Icon = ACTIVITY_ICON[activity.activity_type] || Play
-              const colorClass = ACTIVITY_COLOR[activity.activity_type] || ACTIVITY_COLOR['Rest Day']
-              return (
-                <tr key={activity.id} className="border-b border-slate-50 dark:border-white/[0.04] hover:bg-slate-50/50 dark:hover:bg-white/[0.02]">
-                  <td className="px-5 py-3">
-                    <div className="flex items-center gap-3">
-                      {activity.client_photo ? (
-                        <img src={activity.client_photo} alt={activity.client_name} className="w-8 h-8 rounded-full object-cover" />
-                      ) : (
-                        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white text-xs font-semibold">
-                          {activity.client_name[0]?.toUpperCase()}
-                        </div>
-                      )}
-                      <span className="text-sm font-medium text-slate-900 dark:text-white">{activity.client_name}</span>
-                    </div>
-                  </td>
-                  <td className="px-5 py-3">
-                    <span className={`inline-flex items-center gap-2 px-2.5 py-1 text-xs font-medium rounded-md ${colorClass.bg} ${colorClass.text}`}>
-                      <Icon size={14} />
-                      {activity.activity_type}
-                    </span>
-                  </td>
-                  <td className="px-5 py-3">
-                    <span className="text-sm text-slate-600 dark:text-slate-400">
-                      {format(activity.date, 'MMM d, yyyy')}
-                    </span>
-                  </td>
-                  <td className="px-5 py-3">
-                    <span className="text-sm text-slate-600 dark:text-slate-400">{activity.time}</span>
-                  </td>
-                  <td className="px-5 py-3">
-                    <span className="text-sm text-slate-600 dark:text-slate-400">{activity.duration}</span>
-                  </td>
-                  <td className="px-5 py-3">
-                    <span className="text-sm font-medium text-slate-900 dark:text-white">{activity.calories}</span>
-                  </td>
-                  <td className="px-5 py-3 text-right">
-                    <Link
-                      href={`/clients/${activity.id}`}
-                      className="inline-flex items-center gap-1 text-xs font-medium text-blue-500 hover:text-blue-600 dark:text-blue-400"
-                    >
-                      View <ArrowRight size={14} />
-                    </Link>
-                  </td>
-                </tr>
-              )
-            })}
-          </tbody>
-        </table>
-      </div>
-    </motion.div>
-  )
-}
-
-/* ── Main Dashboard Page ──────────────────────────────────────────────────── */
 export default function DashboardPage() {
-  const { data: clientsData } = useClients()
-  const { data: checkins } = useCheckins()
-  const { data: workoutData } = useWorkoutPlans()
+  const { data: clientsData  } = useClients()
+  const { data: checkinsData } = useCheckins()
+  const { data: workoutData  } = useWorkoutPlans()
 
-  const clients = clientsData?.data ?? []
-  const workoutPlans: WorkoutPlan[] = (workoutData as any)?.data ?? workoutData ?? []
-  const checkinsList = checkins ?? []
+  const clients: Client[] = useMemo(
+    () => (clientsData as PaginatedResponse<Client> | undefined)?.data ?? [],
+    [clientsData],
+  )
+
+  const checkins: CheckinMeeting[] = useMemo(
+    () => (checkinsData as CheckinMeeting[] | undefined) ?? [],
+    [checkinsData],
+  )
+
+  const workoutPlans: WorkoutPlan[] = useMemo(
+    () =>
+      (workoutData as PaginatedResponse<WorkoutPlan> | undefined)?.data ??
+      (Array.isArray(workoutData) ? (workoutData as WorkoutPlan[]) : []),
+    [workoutData],
+  )
+
+  const clientMap = useMemo(
+    () => new Map<string, Client>(clients.map(c => [c.id, c])),
+    [clients],
+  )
+
+  const activeClients = useMemo(
+    () => clients.filter(c => c.active && !c.is_blocked).length,
+    [clients],
+  )
+
+  const inactiveCount = useMemo(
+    () => clients.filter(c => !c.active || !!c.is_blocked).length,
+    [clients],
+  )
+
+  const todaySessions = useMemo(
+    () => checkins.filter(c => { const d = parseDateValue(c.scheduled_at); return d && isToday(d) }).length,
+    [checkins],
+  )
+
+  const thisWeekSessions = useMemo(() => {
+    const ws = startOfWeek(new Date(), { weekStartsOn: 1 })
+    const we = endOfWeek(new Date(), { weekStartsOn: 1 })
+    return checkins.filter(c => {
+      const d = parseDateValue(c.scheduled_at)
+      return d && d >= ws && d <= we
+    }).length
+  }, [checkins])
+
+  const activePlans = useMemo(
+    () => workoutPlans.filter(p => p.status === 'active').length,
+    [workoutPlans],
+  )
 
   return (
     <DashboardLayout>
-      <div className="px-4 sm:px-6 pb-6">
-        {/* Welcome Section */}
-        <div className="mb-6">
-          <h1 className="text-xl font-semibold text-slate-900 dark:text-white">
-            Welcome back, Coach
-          </h1>
-          <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
-            Get an overview of your client's progress
-          </p>
-        </div>
+      <div className="min-h-screen bg-[#FAFAFA] dark:bg-[#171717] px-6 sm:px-10 py-8">
 
-        {/* Main Grid Layout - Two Columns */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-          {/* Left Column - Activities Card (2 cols) */}
-          <div className="lg:col-span-2">
-            <ActivitiesCard clients={clients} />
-          </div>
-          {/* Right Column - Live Session (1 col) */}
+        {/* Welcome header */}
+        <motion.div
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0 }}
+          className="flex items-start justify-between mb-6"
+        >
           <div>
-            <LiveSessionWidget clients={clients} checkins={checkinsList} />
+            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#888780] dark:text-[#FAFAFA]/40 mb-1">
+              {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
+            </p>
+            
           </div>
+          
+        </motion.div>
+
+        {/* AI Insight Banner */}
+        <AISuggestionBanner inactiveCount={inactiveCount} todayCount={todaySessions} />
+
+        {/* Row 1: Session Volume Heatmap + Upcoming Sessions */}
+        <div className="grid grid-cols-1 xl:grid-cols-5 gap-4 mb-4">
+          <SessionVolumeHeatmap checkins={checkins} />
+          <UpcomingSessions checkins={checkins} clientMap={clientMap} />
         </div>
 
-        {/* Second Row - Smart Activity Overview + Weekly Schedule */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-          <div className="lg:col-span-2">
-            <SmartActivityOverview clients={clients} />
-          </div>
-          <div>
-            <WeeklyScheduleWidget checkins={checkinsList} clients={clients} />
-          </div>
+        {/* Row 2: Client Workload + KPI 2×2 Grid */}
+        <div className="grid grid-cols-1 xl:grid-cols-5 gap-4">
+          <ClientWorkload clients={clients} checkins={checkins} />
+
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.24 }}
+            className="xl:col-span-2 grid grid-cols-2 gap-4 content-start"
+          >
+            <KpiCard
+              label="Total Clients"
+              value={clients.length}
+              icon={Users}
+              trend={{ value: `${activeClients} active`, up: true }}
+              delay={0.24}
+            />
+            <KpiCard
+              label="Active Plans"
+              value={activePlans}
+              icon={Briefcase}
+              trend={{ value: '12%', up: true }}
+              delay={0.30}
+            />
+            <KpiCard
+              label="Today's Sessions"
+              value={todaySessions}
+              icon={Calendar}
+              trend={{ value: String(todaySessions), up: todaySessions > 0 }}
+              delay={0.36}
+            />
+            <KpiCard
+              label="This Week"
+              value={thisWeekSessions}
+              icon={TrendingUp}
+              trend={{ value: '12%', up: thisWeekSessions > 0 }}
+              delay={0.42}
+            />
+          </motion.div>
         </div>
 
-        {/* Third Row - Client Daily Activity Table */}
-        <ClientDailyActivity clients={clients} />
       </div>
     </DashboardLayout>
   )

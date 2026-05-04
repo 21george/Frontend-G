@@ -103,7 +103,7 @@ export default function RegisterPage() {
     <div className="relative flex min-h-[100dvh] w-full flex-col md:flex-row">
       {/* Error toast */}
       {error && (
-        <div className="fixed top-4 left-1/2 -translate-x-1/2 bg-red-500/90 text-white px-4 py-2 rounded-lg shadow-lg z-50 text-sm max-w-[90vw] text-center">
+        <div className="fixed top-4 left-1/2 -translate-x-1/2 bg-red-500/90 text-white px-4 py-2 z-50 text-sm max-w-[90vw] text-center">
           {error}
         </div>
       )}
@@ -204,9 +204,9 @@ export default function RegisterPage() {
                         {/* Password strength bar */}
                         {passwordValue && (
                           <div className="mt-2">
-                            <div className="h-1.5 w-full rounded-full bg-slate-200 overflow-hidden">
+                            <div className="h-1.5 w-full bg-slate-200 overflow-hidden">
                               <div
-                                className={`h-full rounded-full transition-all duration-300 ${strength.color} ${strength.width}`}
+                                className={`h-full transition-all duration-300 ${strength.color} ${strength.width}`}
                               />
                             </div>
                             <p className="text-xs text-slate-500 mt-1">{strength.label}</p>
@@ -281,7 +281,7 @@ export default function RegisterPage() {
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent" />
         <div className="absolute bottom-12 left-8 right-8">
-          <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-6 text-white border border-white/20">
+          <div className="bg-white/10 backdrop-blur-lg p-6 text-white border border-white/20">
             <p className="text-lg font-semibold">&ldquo;CoachPro saved me 10+ hours a week managing clients.&rdquo;</p>
             <p className="text-sm mt-2 text-white/80">— Sarah M., Certified Personal Trainer</p>
           </div>

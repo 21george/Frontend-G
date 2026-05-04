@@ -1,6 +1,7 @@
 'use client'
 
 import DashboardLayout from '@/components/layout/DashboardLayout'
+import DashboardHeader from '@/components/layout/DashboardHeader'
 import { useClients } from '@/lib/hooks'
 import { useState, useMemo } from 'react'
 import Link from 'next/link'
@@ -14,6 +15,11 @@ import { motion } from 'framer-motion'
 
 // Status badge configuration - using your app's color scheme
 const statusConfig: Record<string, { label: string; lightClass: string; darkClass: string }> = {
+  'blocked': {
+    label: 'Blocked',
+    lightClass: 'bg-orange-50 text-orange-700 border border-orange-200/60',
+    darkClass: 'dark:bg-orange-900/30 dark:text-orange-400 dark:border-orange-800'
+  },
   'on-track': {
     label: 'On Track',
     lightClass: 'bg-emerald-50 text-emerald-700 border border-emerald-200/60',
@@ -37,6 +43,7 @@ const statusConfig: Record<string, { label: string; lightClass: string; darkClas
 }
 
 function getStatusForClient(client: any): string {
+  if (client.is_blocked) return 'blocked'
   if (!client.active) return 'completed'
   const daysSinceCreated = client.created_at
     ? Math.floor((Date.now() - new Date(client.created_at).getTime()) / (1000 * 60 * 60 * 24))
@@ -57,6 +64,14 @@ export default function ClientsPage() {
   const query = useClients(search)
   const clients = query.data?.data ?? []
   const total = query.data?.pagination?.total ?? clients.length
+  const quickActions = useMemo(() => ([
+    {
+      href: '/clients/new',
+      label: 'Add Client',
+      icon: Plus,
+      color: 'bg-blue-50 text-blue-700 hover:bg-blue-100 dark:bg-blue-900/30 dark:text-blue-400 dark:hover:bg-blue-900/50',
+    },
+  ]), [])
 
   // Calculate stats
   const stats = useMemo(() => {
@@ -83,19 +98,20 @@ export default function ClientsPage() {
   return (
     <DashboardLayout>
       <div className="min-h-screen">
-        {/* Header Section */}
-        
+        <DashboardHeader
+          title="Clients"
+          subtitle="Track progress, manage relationships, and stay on top of client activity."
+          quickActions={quickActions}
+        />
 
-        
-
-          {/* Search Bar */}
+        {/* Search Bar */}
         <div className="relative mb-6">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
           <input
             value={search}
             onChange={e => setSearch(e.target.value)}
             placeholder="Search clients"
-            className="w-5/4 bg-white dark:bg-[#141414] border border-slate-200 dark:border-white/[0.1] rounded-m py-3 pl-11 pr-4 text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder:text-neutral-500 focus:outline-none focus:border-cyan-700/30 focus:ring-2 focus:ring-cyan-700/20 transition-colors"
+            className="w-5/4 bg-white dark:bg-surface-page-dark border border-slate-200 dark:border-white/[0.1] py-3 pl-11 pr-4 text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder:text-neutral-500 focus:outline-none focus:border-brand-700/30 focus:ring-2 focus:ring-brand-700/20 transition-colors"
           />
         </div>
 
@@ -104,16 +120,16 @@ export default function ClientsPage() {
           <div className='p-6'> 
             <div className="flex justify-between items-center mb-6">
               <h3 className="text-lg font-bold text-slate-900 dark:text-white tracking-tight flex items-center gap-2">
-                <Activity className="w-5 h-5 text-cyan-950 dark:text-[#b3d2ef]" />
+                <Activity className="w-5 h-5 text-brand-600 dark:text-brand-300" />
                 Daily Protocol Adherence
               </h3>
               <div className="flex items-center gap-4 text-xs">
                 <div className="flex items-center gap-1.5">
-                  <div className="h-2 w-2 rounded-full bg-emerald-500"></div>
+                  <div className="h-2 w-2 bg-emerald-500"></div>
                   <span className="text-slate-500 dark:text-neutral-400">Completed</span>
                 </div>
                 <div className="flex items-center gap-1.5">
-                  <div className="h-2 w-2 rounded-full bg-slate-300 dark:bg-slate-700"></div>
+                  <div className="h-2 w-2 bg-slate-300 dark:bg-slate-700"></div>
                   <span className="text-slate-500 dark:text-neutral-400">Missed</span>
                 </div>
               </div>
@@ -131,9 +147,9 @@ export default function ClientsPage() {
                 { day: 'S', completed: 30, total: 100 },
               ].map((d, i) => (
                 <div key={i} className="flex flex-col items-center gap-2 w-full">
-                  <div className="w-full bg-slate-100 dark:bg-slate-800 rounded-t-lg h-40 relative overflow-hidden">
+                  <div className="w-full bg-slate-100 dark:bg-slate-800 -lg h-40 relative overflow-hidden">
                     <div
-                      className="absolute bottom-0 w-full bg-gradient-to-t from-emerald-600 to-emerald-400 opacity-80 rounded-t-lg transition-all duration-500"
+                      className="absolute bottom-0 w-full bg-gradient-to-t from-emerald-600 to-emerald-400 opacity-80 -lg transition-all duration-500"
                       style={{ height: `${(d.completed / d.total) * 100}%` }}
                     />
                   </div>
@@ -153,11 +169,11 @@ export default function ClientsPage() {
         <QueryWrapper
           query={query}
           emptyIcon={Users}
-          emptyTitle="No clients yet"
-          emptyDescription="Add your first client to get started"
+          emptyTitle="Add your first client to get started."
+          emptyDescription="Create client profiles to manage workouts, nutrition, and progress."
           emptyAction={
             <Link href="/clients/new">
-              <Button className="bg-cyan-950 text-white hover:bg-cyan-900">
+              <Button className="bg-brand-600 text-white hover:bg-brand-700">
                 <Plus className="w-4 h-4" /> Add Client
               </Button>
             </Link>
@@ -165,7 +181,7 @@ export default function ClientsPage() {
           isEmpty={(data) => (data?.data ?? []).length === 0}
         >
           {(data) => (
-            <div className="bg-white dark:bg-[#171717] rounded-xl border border-slate-200/80 dark:border-white/[0.08] overflow-hidden shadow-sm">
+            <div className="bg-[var(--bg-card)] border border-slate-200/80 dark:border-white/[0.08] overflow-hidden ">
               <div className="overflow-x-auto">
                 <table className="w-full text-left">
                   <thead>
@@ -199,10 +215,10 @@ export default function ClientsPage() {
                                 <img
                                   src={client.profile_photo_url}
                                   alt={client.name}
-                                  className="h-10 w-10 rounded-xl object-cover bg-slate-100 dark:bg-slate-800"
+                                  className="h-10 w-10 object-cover bg-slate-100 dark:bg-slate-800"
                                 />
                               ) : (
-                                <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white text-sm font-semibold flex-shrink-0">
+                                <div className="h-10 w-10 bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white text-sm font-semibold flex-shrink-0">
                                   {client.name?.[0]?.toUpperCase() ?? 'C'}
                                 </div>
                               )}
@@ -223,9 +239,9 @@ export default function ClientsPage() {
                                 <span className="text-slate-900 dark:text-white font-medium">{progress}%</span>
                                 <span className="text-slate-500 dark:text-neutral-400">Week {Math.ceil(progress / 16)}/6</span>
                               </div>
-                              <div className="h-1.5 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+                              <div className="h-1.5 w-full bg-slate-100 dark:bg-slate-800 overflow-hidden">
                                 <div
-                                  className={`h-full rounded-full transition-all ${
+                                  className={`h-full transition-all ${
                                     progress < 30 ? 'bg-red-500' : progress < 60 ? 'bg-blue-500' : 'bg-emerald-500'
                                   }`}
                                   style={{ width: `${progress}%` }}
@@ -251,7 +267,7 @@ export default function ClientsPage() {
                           </td>
 
                           <td className="px-4 lg:px-6 py-4">
-                            <span className={`px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase tracking-tight ${status.lightClass} ${status.darkClass}`}>
+                            <span className={`px-2.5 py-1 text-[10px] font-bold uppercase tracking-tight ${status.lightClass} ${status.darkClass}`}>
                               {status.label}
                             </span>
                           </td>
@@ -260,13 +276,13 @@ export default function ClientsPage() {
                             <div className="flex items-center justify-end gap-2">
                               <Link
                                 href={`/clients/${client.id}`}
-                                className="p-2 text-slate-400 hover:text-cyan-950 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/[0.08] transition-colors rounded-lg"
+                                className="p-2 text-slate-400 hover:text-brand-600 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/[0.08] transition-colors "
                               >
                                 <MessageSquare className="w-4 h-4" />
                               </Link>
                               <Link
                                 href={`/clients/${client.id}`}
-                                className="p-2 text-slate-400 hover:text-slate-600 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/[0.08] transition-colors rounded-lg"
+                                className="p-2 text-slate-400 hover:text-slate-600 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/[0.08] transition-colors "
                               >
                                 <MoreVertical className="w-4 h-4" />
                               </Link>
@@ -285,10 +301,10 @@ export default function ClientsPage() {
                   Showing 1-{Math.min(10, total)} of {total} clients
                 </span>
                 <div className="flex gap-2">
-                  <button className="p-1.5 rounded-lg border border-slate-200 dark:border-white/[0.1] text-slate-400 hover:bg-slate-100 dark:hover:bg-white/[0.08] transition-colors disabled:opacity-50" disabled>
+                  <button className="p-1.5 border border-slate-200 dark:border-white/[0.1] text-slate-400 hover:bg-slate-100 dark:hover:bg-white/[0.08] transition-colors disabled:opacity-50" disabled>
                     <ChevronLeft className="w-4 h-4" />
                   </button>
-                  <button className="p-1.5 rounded-lg border border-slate-200 dark:border-white/[0.1] text-slate-400 hover:bg-slate-100 dark:hover:bg-white/[0.08] transition-colors disabled:opacity-50" disabled={total <= 10}>
+                  <button className="p-1.5 border border-slate-200 dark:border-white/[0.1] text-slate-400 hover:bg-slate-100 dark:hover:bg-white/[0.08] transition-colors disabled:opacity-50" disabled={total <= 10}>
                     <ChevronRight className="w-4 h-4" />
                   </button>
                 </div>

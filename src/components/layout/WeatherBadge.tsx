@@ -41,21 +41,28 @@ const weatherBgDark: Record<string, string> = {
 }
 
 export function WeatherBadge() {
-  const { weather, loading } = useWeather()
+  const { weather, loading, error } = useWeather()
 
   if (loading) {
     return (
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        className="relative overflow-hidden w-32 h-20 rounded-2xl bg-slate-100 dark:bg-white/[0.06] animate-pulse"
+        className="relative overflow-hidden w-32 h-20 bg-slate-100 dark:bg-white/[0.06] animate-pulse"
       >
         <div className="absolute inset-0 bg-gradient-to-br from-slate-200/50 to-slate-100 dark:from-white/[0.08] dark:to-transparent" />
       </motion.div>
     )
   }
 
-  if (!weather) return null
+  if (error || !weather) {
+    return (
+      <div className="flex items-center gap-2 px-3 py-2 bg-slate-100 dark:bg-white/[0.06] text-slate-500 dark:text-slate-400 text-xs">
+        <Cloud className="w-4 h-4" />
+        <span>Weather unavailable</span>
+      </div>
+    )
+  }
 
   const Icon = ICON_MAP[weather.icon] ?? Cloud
   const gradient = weatherGradients[weather.icon] ?? weatherGradients.cloud
@@ -66,11 +73,13 @@ export function WeatherBadge() {
       initial={{ opacity: 0, scale: 0.9 }}
       animate={{ opacity: 1, scale: 1 }}
       transition={{ duration: 0.3 }}
-      className="relative overflow-hidden w-40 h-24 rounded-2xl cursor-pointer group"
+      className="relative overflow-hidden w-40 h-24 group"
+      aria-label={`${weather.condition}, ${weather.temp} degrees in ${weather.city}`}
     >
-      {/* Animated background gradient */}
-      <div className={`absolute inset-0 bg-gradient-to-br ${gradient} opacity-90 dark:opacity-100 transition-opacity`} />
-      <div className={`absolute inset-0 bg-gradient-to-br ${bgDark} dark:opacity-100 opacity-0`} />
+      {/* Light-mode gradient */}
+      <div className={`absolute inset-0 bg-gradient-to-br ${gradient} opacity-90 dark:opacity-0 transition-opacity`} />
+      {/* Dark-mode subtle gradient */}
+      <div className={`absolute inset-0 bg-gradient-to-br ${bgDark} opacity-0 dark:opacity-100 transition-opacity`} />
 
       {/* Subtle animated shine */}
       <motion.div
@@ -88,16 +97,16 @@ export function WeatherBadge() {
             animate={{ rotate: [0, 5, -5, 0] }}
             transition={{ duration: 4, repeat: Infinity, repeatDelay: 2 }}
           >
-            <Icon className="w-6 h-6 text-white drop-shadow-lg" />
+            <Icon className="w-6 h-6 text-white drop-" />
           </motion.div>
-          <span className="text-2xl font-bold text-white drop-shadow-md">
+          <span className="text-2xl font-bold text-white drop-">
             {weather.temp}°
           </span>
         </div>
 
         {/* Bottom row: City + Condition */}
         <div className="mt-auto">
-          <p className="text-[10px] font-medium text-white/90 truncate drop-shadow">
+          <p className="text-[10px] font-medium text-white/90 truncate drop-">
             {weather.city}
           </p>
           <p className="text-[9px] text-white/70 truncate">
