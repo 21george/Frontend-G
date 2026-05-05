@@ -4,7 +4,7 @@ interface CardProps { children: React.ReactNode; className?: string; }
 
 export function Card({ children, className }: CardProps) {
   return (
-    <div className={clsx('border border-[var(--border)] bg-[var(--bg-card)]', className)}>
+    <div className={clsx('border border-[var(--border)] bg-[var(--bg-card)] rounded-2xl', className)}>
       {children}
     </div>
   );

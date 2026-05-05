@@ -265,7 +265,7 @@ export default function WorkoutPlanDetailPage() {
                         <div key={`${day.key}-mobile-${exercise.name}-${index}`}>
                           <p className="text-sm font-medium text-slate-800 dark:text-slate-100">{exercise.name}</p>
                           <p className="mt-1 text-[11px] text-slate-400 dark:text-slate-500">
-                            {exercise.sets} sets • {exercise.reps} reps • {exercise.rest_seconds}s rest
+                            {exercise.sets} sets • {exercise.reps} reps • {(exercise.rest_seconds ?? '—')}s rest
                           </p>
                         </div>
                       ))}
@@ -385,7 +385,7 @@ export default function WorkoutPlanDetailPage() {
                                 <div key={`${day.key}-${exercise.name}-${index}`}>
                                   <p className="text-sm font-medium text-slate-800 dark:text-slate-100">{exercise.name}</p>
                                   <p className="mt-1 text-[11px] text-slate-400 dark:text-slate-500">
-                                    {exercise.sets} sets • {exercise.reps} reps • {exercise.rest_seconds}s rest
+                                    {exercise.sets} sets • {exercise.reps} reps • {(exercise.rest_seconds ?? '—')}s rest
                                   </p>
                                 </div>
                               ))}

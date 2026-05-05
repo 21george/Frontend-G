@@ -2,7 +2,7 @@
 
 import DashboardLayout from '@/components/layout/DashboardLayout'
 import { useClients, useCheckins, useWorkoutPlans } from '@/lib/hooks'
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import {
   X, Video, Phone, MessageCircle, Users, Calendar,CalendarDays,
   TrendingUp, ChevronRight, MoreHorizontal, Briefcase, AlertCircle,
@@ -351,8 +351,15 @@ interface UpcomingSessionsProps {
 }
 
 function UpcomingSessions({ checkins, clientMap }: UpcomingSessionsProps) {
+  const [now, setNow] = useState(() => new Date())
+  
+  // Update "now" every minute to keep the filter fresh
+  useEffect(() => {
+    const interval = setInterval(() => setNow(new Date()), 60 * 1000)
+    return () => clearInterval(interval)
+  }, [])
+  
   const upcoming = useMemo(() => {
-    const now = new Date()
     return checkins
       .filter(c => {
         const d = parseDateValue(c.scheduled_at)
@@ -364,7 +371,7 @@ function UpcomingSessions({ checkins, clientMap }: UpcomingSessionsProps) {
         return da - db
       })
       .slice(0, 5)
-  }, [checkins])
+  }, [checkins, now])
 
   return (
     <motion.div
@@ -396,7 +403,11 @@ function UpcomingSessions({ checkins, clientMap }: UpcomingSessionsProps) {
             const date   = parseDateValue(session.scheduled_at)
             const client = clientMap.get(session.client_id)
             const Icon   = TYPE_ICON[session.type] ?? MessageCircle
-            const isNew  = i < 2
+            // Mark as "New" if responded/scheduled within the last 24 hours
+            const respondedAt = session.client_responded_at ? new Date(session.client_responded_at) : null
+            const now = new Date()
+            const twentyFourHoursAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000)
+            const isNew = respondedAt !== null && respondedAt > twentyFourHoursAgo
             return (
               <motion.div
                 key={session.id}

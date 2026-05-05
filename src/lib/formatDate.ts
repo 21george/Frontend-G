@@ -49,5 +49,6 @@ export function humanDate(date: Date | string): string {
   if (isTomorrow(d)) return `Tomorrow at ${timeStr}`
   const daysAhead = differenceInDays(d, now)
   if (daysAhead <= 7) return `This ${format(d, 'EEEE')} at ${timeStr}`
-  return `${format(d, 'MMMM d')} at ${timeStr}`
+  if (d.getFullYear() === now.getFullYear()) return `${format(d, 'MMMM d')} at ${timeStr}`
+  return `${format(d, 'MMMM d, yyyy')} at ${timeStr}`
 }

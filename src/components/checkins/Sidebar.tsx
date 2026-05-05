@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo, useCallback } from 'react'
+import { useState, useMemo } from 'react'
 import { ChevronLeft, ChevronRight, CheckCircle2, MapPin, ArrowRight, Video, Phone, MessageCircle } from 'lucide-react'
 import { format, isToday, isSameDay, addMonths, subMonths, startOfWeek, endOfWeek, eachDayOfInterval } from 'date-fns'
 import { motion } from 'framer-motion'
@@ -132,11 +132,11 @@ interface TodaysScheduleProps {
 }
 
 export function TodaysSchedule({ checkins, clientMap, onSelectEvent }: TodaysScheduleProps) {
-  const dayEvents = useCallback(
-    (day: Date) =>
+  const todayEvents = useMemo(
+    () =>
       checkins.filter(c => {
         const d = parseDateValue(c.scheduled_at)
-        return d ? isSameDay(d, day) : false
+        return d ? isSameDay(d, new Date()) : false
       }),
     [checkins],
   )
@@ -145,7 +145,7 @@ export function TodaysSchedule({ checkins, clientMap, onSelectEvent }: TodaysSch
     <div>
       <h3 className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400 mb-4">Today</h3>
       <div className="space-y-3">
-        {dayEvents(new Date()).slice(0, 4).map((event, i) => {
+        {todayEvents.slice(0, 4).map((event, i) => {
           const colors = EVENT_TYPES[event.type as keyof typeof EVENT_TYPES] ?? EVENT_TYPES.chat
           const client = clientMap.get(event.client_id)
           const time = parseDateValue(event.scheduled_at)
@@ -175,7 +175,7 @@ export function TodaysSchedule({ checkins, clientMap, onSelectEvent }: TodaysSch
             </motion.div>
           )
         })}
-        {dayEvents(new Date()).length === 0 && (
+        {todayEvents.length === 0 && (
           <div className="text-center py-6">
             <MapPin size={20} className="mx-auto text-slate-400 mb-2" />
             <p className="text-xs text-slate-500 dark:text-slate-400">No events today</p>

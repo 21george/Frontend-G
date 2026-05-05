@@ -192,7 +192,7 @@ export default function SelectPlanPage() {
               whileHover={{ y: -8, transition: { duration: 0.2 } }}
               className={`relative flex flex-col border-2 bg-white p-8 transition-all ${
                 plan.highlighted
-                  ? 'border-blue-500 -500/20'
+                  ? 'border-blue-500 shadow-lg shadow-blue-500/20'
                   : 'border-slate-200'
               }`}
             >

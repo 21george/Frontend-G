@@ -78,7 +78,7 @@ export default function NotificationsPage() {
           <div>
             <h1 className="text-2xl font-semibold text-slate-900 dark:text-white">Notifications</h1>
             <p className="text-sm text-slate-500 dark:text-slate-400">
-              {unreadCount > 0 ? `${unreadCount} unread message${unreadCount === 1 ? '' : 's'}` : 'Nothing new.'}
+              {unreadCount > 0 ? `${unreadCount} unread notification${unreadCount === 1 ? '' : 's'}` : 'Nothing new.'}
             </p>
           </div>
         </div>
@@ -145,7 +145,7 @@ export default function NotificationsPage() {
             return (
               <div
                 key={notification.id}
-                className={`group relative flex items-start gap-4 p-4 border transition-all hover:${
+                className={`group relative flex items-start gap-4 p-4 border transition-all ${
                   notification.read
                     ? 'bg-white dark:bg-slate-800/50 border-slate-200 dark:border-white/10'
                     : 'bg-blue-50/50 dark:bg-blue-900/10 border-blue-200 dark:border-blue-800/50'

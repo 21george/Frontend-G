@@ -48,7 +48,7 @@ const notificationColors: Record<string, string> = {
 
 function getNavigationLink(notification: Notification): string {
   const { type, data } = notification
-  const clientId = data.clientId
+  const clientId = data?.clientId
   if (type === 'new_message' && clientId) return `/messages?client=${clientId}`
   if ((type === 'workout_completed' || type === 'profile_updated') && clientId)
     return `/clients/${clientId}`
@@ -119,14 +119,18 @@ export default function NotificationsButton() {
 
   // Restore focus when modal closes
   useEffect(() => {
-    let rafId: number
+    let rafId: number | undefined
     if (prevShowAllRef.current === true && !showAll) {
       rafId = requestAnimationFrame(() => {
         triggerRef.current?.focus()
       })
     }
     prevShowAllRef.current = showAll
-    return () => cancelAnimationFrame(rafId)
+    return () => {
+      if (rafId !== undefined) {
+        cancelAnimationFrame(rafId)
+      }
+    }
   }, [showAll])
 
   const handleMarkAllRead = () => markAllRead.mutate(undefined)
@@ -142,6 +146,7 @@ export default function NotificationsButton() {
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
         onClick={() => setIsOpen(!isOpen)}
+        aria-label="Open notifications"
         className="relative p-2 bg-slate-100 dark:bg-white/[0.06] text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-white/[0.1] transition-colors"
       >
         <Bell className="w-5 h-5" />
@@ -186,6 +191,7 @@ export default function NotificationsButton() {
                   )}
                   <button
                     onClick={() => setIsOpen(false)}
+                    aria-label="Close notifications"
                     className="p-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-white/[0.08]"
                   >
                     <X className="w-4 h-4" />
@@ -343,6 +349,7 @@ export default function NotificationsButton() {
                   )}
                   <button
                     onClick={() => setShowAll(false)}
+                    aria-label="Close notifications"
                     className="p-1.5 hover:bg-slate-100 dark:hover:bg-white/[0.06] transition-colors"
                   >
                     <X className="w-4 h-4 text-slate-400" />

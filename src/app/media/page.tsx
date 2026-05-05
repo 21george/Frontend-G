@@ -92,7 +92,7 @@ export default function MediaPage() {
               View and manage photos and videos uploaded by your clients for progress tracking.
             </p>
           </div>
-          <button className="inline-flex items-center gap-2 px-5 py-2.5 bg-brand-600 hover:bg-brand-700 text-white text-sm font-bold transition-colors -600/25">
+          <button className="inline-flex items-center gap-2 px-5 py-2.5 bg-brand-600 hover:bg-brand-700 text-white text-sm font-bold transition-colors">
             <Upload className="w-4 h-4" />
             <span className="hidden sm:inline">Upload Media</span>
             <span className="sm:hidden">Upload</span>
@@ -103,7 +103,7 @@ export default function MediaPage() {
         {!selectedClient ? (
           <div className="bg-[var(--bg-card)] border border-slate-200/80 dark:border-white/[0.08] p-8 lg:p-12">
             <div className="max-w-md mx-auto text-center">
-              <div className="w-16 h-16 bg-gradient-to-br from-brand-500 to-blue-600 flex items-center justify-center mx-auto mb-4 -500/20">
+              <div className="w-16 h-16 bg-gradient-to-br from-brand-500 to-blue-600 flex items-center justify-center mx-auto mb-4">
                 <ImageIcon className="w-8 h-8 text-white" />
               </div>
               <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-2">
@@ -281,7 +281,10 @@ export default function MediaPage() {
                             <Eye size={12} />
                             View
                           </a>
-                          <button className="p-1.5 bg-white/90 dark:bg-white text-slate-900 hover:bg-white transition-colors">
+                          <button
+                            aria-label={`Download ${m.title || 'file'}`}
+                            className="p-1.5 bg-white/90 dark:bg-white text-slate-900 hover:bg-white transition-colors"
+                          >
                             <Download size={14} />
                           </button>
                         </div>

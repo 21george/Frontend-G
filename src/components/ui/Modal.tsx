@@ -134,7 +134,7 @@ export function Modal({ open, onClose, title, children, size = 'md' }: Props) {
         aria-labelledby={title ? titleId : undefined}
         className={cn(
           'relative w-full animate-scale-in',
-          'bg-[var(--bg-card)] border border-[var(--border)]  dark:-elevated',
+          'bg-[var(--bg-card)] border border-[var(--border)] shadow-elevated dark:shadow-dark-elevated',
           sizes[size]
         )}
       >

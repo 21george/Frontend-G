@@ -152,7 +152,7 @@ export default function VerifyEmailPage() {
       >
         {/* Icon */}
         <motion.div variants={itemVariants} className="flex justify-center mb-6">
-          <div className={`w-16 h-16 flex items-center justify-center transition-colors duration-500 ${success ? 'bg-emerald-100' : 'bg-blue-50'}`}>
+          <div className={`w-16 h-16 flex items-center justify-center transition-colors duration-500 ${success ? 'bg-emerald-100 dark:bg-emerald-900' : 'bg-blue-50 dark:bg-blue-900'}`}>
             {success ? (
               <motion.svg
                 initial={{ scale: 0 }}

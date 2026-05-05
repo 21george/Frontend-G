@@ -2260,7 +2260,11 @@ export default function ClientDetailPage() {
                                         </button>
 
                                         {/* More menu dot */}
-                                        <button className="w-8 h-8 border border-slate-200 dark:border-white/[0.08] flex items-center justify-center text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-white/[0.06] transition-colors">
+                                        <button
+                                          className="w-8 h-8 border border-slate-200 dark:border-white/[0.08] flex items-center justify-center text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-white/[0.06] transition-colors"
+                                          aria-label="More options"
+                                          title="More options"
+                                        >
                                           <MoreVertical size={14} />
                                         </button>
                                       </div>

@@ -121,6 +121,7 @@ api.interceptors.response.use(
       const res = await api.post('/auth/refresh')
       const newToken: string | undefined =
         res.data?.data?.access_token ?? res.data?.access_token
+      
       if (newToken) {
         if (onTokenRefreshed) {
           onTokenRefreshed(newToken)
@@ -132,7 +133,18 @@ api.interceptors.response.use(
           onAuthInvalidated?.()
           return Promise.reject(misconfig)
         }
+      } else {
+        // Refresh response didn't include a new token — treat as refresh failure
+        const refreshError = new Error('[API] Token refresh did not return a new access token')
+        console.error(refreshError.message)
+        processQueue(refreshError)
+        onAuthInvalidated?.()
+        if (typeof window !== 'undefined' && !window.location.pathname.startsWith('/auth')) {
+          window.location.href = '/auth/login'
+        }
+        return Promise.reject(refreshError)
       }
+      
       processQueue()
       return api(original)
     } catch (err) {

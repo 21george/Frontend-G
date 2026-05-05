@@ -111,7 +111,7 @@ export default function ClientsPage() {
             value={search}
             onChange={e => setSearch(e.target.value)}
             placeholder="Search clients"
-            className="w-5/4 bg-white dark:bg-surface-page-dark border border-slate-200 dark:border-white/[0.1] py-3 pl-11 pr-4 text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder:text-neutral-500 focus:outline-none focus:border-brand-700/30 focus:ring-2 focus:ring-brand-700/20 transition-colors"
+            className="w-full bg-white dark:bg-surface-page-dark border border-slate-200 dark:border-white/[0.1] py-3 pl-11 pr-4 text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder:text-neutral-500 focus:outline-none focus:border-brand-700/30 focus:ring-2 focus:ring-brand-700/20 transition-colors"
           />
         </div>
 
@@ -147,9 +147,9 @@ export default function ClientsPage() {
                 { day: 'S', completed: 30, total: 100 },
               ].map((d, i) => (
                 <div key={i} className="flex flex-col items-center gap-2 w-full">
-                  <div className="w-full bg-slate-100 dark:bg-slate-800 -lg h-40 relative overflow-hidden">
+                  <div className="w-full bg-slate-100 dark:bg-slate-800 h-40 relative overflow-hidden">
                     <div
-                      className="absolute bottom-0 w-full bg-gradient-to-t from-emerald-600 to-emerald-400 opacity-80 -lg transition-all duration-500"
+                      className="absolute bottom-0 w-full bg-gradient-to-t from-emerald-600 to-emerald-400 opacity-80 transition-all duration-500"
                       style={{ height: `${(d.completed / d.total) * 100}%` }}
                     />
                   </div>

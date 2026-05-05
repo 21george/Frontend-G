@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Image from 'next/image'
 
 interface ClientAvatarProps {
@@ -16,6 +16,9 @@ interface ClientAvatarProps {
 
 export function ClientAvatar({ name, profile_photo_url, initials, size = 'h-11 w-11' }: ClientAvatarProps) {
   const [imgError, setImgError] = useState(false)
+
+  // Reset error state when URL changes so new images can load
+  useEffect(() => setImgError(false), [profile_photo_url])
 
   if (profile_photo_url && !imgError) {
     return (
@@ -34,6 +37,7 @@ export function ClientAvatar({ name, profile_photo_url, initials, size = 'h-11 w
 
   return (
     <div
+      role="img"
       className={`flex ${size} items-center justify-center rounded-full bg-brand-600 text-sm font-bold text-white dark:bg-brand-500`}
       aria-label={name ?? 'Client'}
     >

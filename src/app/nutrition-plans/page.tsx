@@ -147,7 +147,7 @@ function FeaturedPlanCard({ plan, clientName }: { plan: NutritionPlan; clientNam
             <MacroPill icon={<Droplets size={14} />} value={fat_g}     unit="g F"  color="text-slate-500"  bg="bg-slate-100 dark:bg-slate-800/60"  />
             <Link
               href={`/nutrition-plans/${plan.id}`}
-              className="ml-auto flex items-center gap-1.5 px-4 py-2 bg-brand-600 hover:bg-brand-700 text-white text-sm font-semibold transition-colors -600/25"
+              className="ml-auto flex items-center gap-1.5 px-4 py-2 bg-brand-600 hover:bg-brand-700 text-white text-sm font-semibold transition-colors"
             >
               View Plan <ChevronRight size={14} />
             </Link>

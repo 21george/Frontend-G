@@ -7,13 +7,20 @@ export const useCheckins = (clientId?: string) =>
   useQuery({
     queryKey: ['checkins', clientId],
     queryFn: () => checkinsApi.list(clientId),
+    retry: (failureCount, error: any) => {
+      // Don't retry on authentication errors
+      if (error?.response?.status === 401 || error?.response?.status === 403) {
+        return false
+      }
+      return failureCount < 3
+    },
   })
 
 export const useCreateCheckin = () =>
   useToastMutation({
     mutationFn: (data: Partial<CheckinMeeting> & { client_id: string }) => checkinsApi.create(data),
     successMessage: 'Check-in scheduled',
-    errorMessage: 'Failed to schedule check-in',
+    errorMessage: 'Failed to schedule check-in. Please try again.',
     invalidateKeys: [['checkins']],
   })
 
@@ -27,7 +34,7 @@ export const useUpdateCheckin = (id?: string) =>
       return checkinsApi.update(targetId, data)
     },
     successMessage: 'Check-in updated',
-    errorMessage: 'Failed to update check-in',
+    errorMessage: 'Failed to update check-in. Please try again.',
     invalidateKeys: [['checkins']],
   })
 
@@ -35,6 +42,6 @@ export const useDeleteCheckin = () =>
   useToastMutation({
     mutationFn: (id: string) => checkinsApi.delete(id),
     successMessage: 'Check-in cancelled',
-    errorMessage: 'Failed to cancel check-in',
+    errorMessage: 'Failed to cancel check-in. Please try again.',
     invalidateKeys: [['checkins']],
   })

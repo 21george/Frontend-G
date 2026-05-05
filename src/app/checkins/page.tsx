@@ -83,6 +83,9 @@ export default function SchedulePage() {
         meeting_link: data.meeting_link,
         notes: data.notes,
       })
+      setShowModal(false)
+    } catch {
+      // Error is already logged by the API interceptor; surface via React Query error state
     } finally {
       setFormLoading(false)
     }
@@ -93,6 +96,9 @@ export default function SchedulePage() {
     try {
       await updateCheckin.mutateAsync({ id, scheduled_at })
       setSelected(null)
+      setShowRescheduleModal(false)
+    } catch {
+      // Error is already logged by the API interceptor; surface via React Query error state
     } finally {
       setRescheduling(false)
     }
@@ -104,14 +110,14 @@ export default function SchedulePage() {
 
         {/* ═══════════ HEADER ═══════════ */}
         <header className="relative px-6 sm:px-10 pt-8 pb-6 bg-[#FDFBF7] dark:bg-[#121212]">
-          <div />
+          <div className="absolute top-0 left-0 right-0 h-px bg-slate-200 dark:bg-white/[0.08]" />
 
           <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-6">
             <div className="space-y-1">
               <motion.p
                 initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#f4f3f2] dark:text-[#f0eeec]"
+                className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400"
               >
                 {format(selectedDate, 'EEEE')}
               </motion.p>
@@ -119,20 +125,50 @@ export default function SchedulePage() {
                 initial={{ opacity: 0, y: 12 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.05 }}
-                className="text-4xl sm:text-5xl font-serif font-medium text-[#1A1A1A] dark:text-[#f0efee] tracking-tight leading-none"
+                className="text-4xl sm:text-5xl font-serif font-medium text-slate-900 dark:text-slate-100 tracking-tight leading-none"
               >
                 {format(selectedDate, 'MMMM')}{' '}
-                <span className="italic text-[#C65D3B]">{format(selectedDate, 'yyyy')}</span>
+                <span className="italic text-brand-600 dark:text-brand-400">{format(selectedDate, 'yyyy')}</span>
               </motion.h1>
               <motion.p
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.12 }}
-                className="text-sm text-[#fcfcfc] dark:text-[#A89B8C] pt-1"
+                className="text-sm text-slate-600 dark:text-slate-400 pt-1"
               >
                 {format(selectedDate, 'd MMMM yyyy')} &mdash; {filteredEvents.length} scheduled
               </motion.p>
             </div>
+
+            {/* Right: controls */}
+            <motion.div
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.1 }}
+              className="flex items-center gap-3"
+            >
+              {/* Search */}
+              <div className="relative">
+                <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                <input
+                  type="text"
+                  placeholder="Search..."
+                  value={searchQuery}
+                  onChange={e => setSearchQuery(e.target.value)}
+                  className="w-44 pl-9 pr-3 py-2 bg-transparent border border-slate-200 dark:border-white/[0.08] text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 transition-colors rounded-lg"
+                />
+              </div>
+
+              {/* Create button */}
+              <button
+                onClick={() => setShowModal(true)}
+                className="flex items-center gap-2 px-5 py-2.5 text-sm font-semibold text-white transition-colors rounded-lg shadow-sm hover:shadow hover:bg-brand-700"
+                style={{ backgroundColor: ACCENT }}
+              >
+                <Plus size={16} />
+                <span className="hidden sm:inline">New Event</span>
+              </button>
+            </motion.div>
           </div>
         </header>
 

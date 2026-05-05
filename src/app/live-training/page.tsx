@@ -102,12 +102,12 @@ export default function LiveTrainingPage() {
  { icon: Users, value: stats.total, label: 'Total Participants', gradient: 'from-violet-500 to-violet-600', accent: 'from-violet-500/10', hover: 'hover:border-violet-500/30 hover:shadow-violet-500/5', glow: 'shadow-lg shadow-violet-500/20', pulse: false },
  ].map(({ icon: Icon, value, label, gradient, accent, hover, glow, pulse }) => (
  <div key={label} className={`group relative overflow-hidden bg-white dark:bg-white/[0.04] p-5 backdrop-blur-sm transition-all hover:shadow-lg ${hover}`}>
- <div className={`absolute top-0 right-0 w-24 h-24 bg-gradient-to-bl ${accent} to-transparent-full`} />
+ <div className={`absolute top-0 right-0 w-24 h-24 bg-gradient-to-bl ${accent} to-transparent`} />
  <div className="flex items-center gap-3 mb-3">
  <div className={`w-10 h-10 bg-gradient-to-br ${gradient} flex items-center justify-center ${glow}`}>
  <Icon size={18} className="text-white" />
  </div>
- {pulse && <div className="w-2 h-2 bg-green-400 animate-pulse" />}
+ {pulse && <div className="w-2 h-2 bg-green-400 animate-pulse rounded-full" />}
  </div>
  <p className="text-2xl font-semibold text-slate-900 dark:text-white">{value}</p>
  <p className="text-[12px] text-slate-500 dark:text-slate-400 mt-0.5">{label}</p>
@@ -181,7 +181,7 @@ export default function LiveTrainingPage() {
  {session.title}
  </p>
  <span className={`inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-semibold border ${statusConf.badge}`}>
- <span className={`w-1.5 h-1.5 ${statusConf.dot}`} />
+ <span className={`w-1.5 h-1.5 rounded-full ${statusConf.dot}`} />
  {statusConf.label}
  </span>
  </div>

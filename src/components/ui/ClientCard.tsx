@@ -43,7 +43,7 @@ export function ClientCard({ client, href }: ClientCardProps) {
       {/* Stats */}
       <div className="flex gap-3 py-1.5 border-t border-b border-slate-100 dark:border-white/[0.06] mb-2">
         <div className={`flex items-center gap-1 text-[11px] ${client.active ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
-          <span className="w-1.5 h-1.5 bg-current" />
+          <span className="w-1.5 h-1.5 bg-current rounded-full" />
           {client.active ? 'Active' : 'Inactive'}
         </div>
         {client.phone && (

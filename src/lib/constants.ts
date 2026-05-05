@@ -25,8 +25,15 @@ export const ACCENT = {
   DEFAULT: '#10B981',
   dark: '#059669',
   50: '#ECFDF5',
+  100: '#D1FAE5',
+  200: '#A7F3D0',
+  300: '#6EE7B7',
+  400: '#34D399',
   500: '#10B981',
   600: '#059669',
+  700: '#047857',
+  800: '#065F46',
+  900: '#064E3B',
 }
 
 // Semantic colors
@@ -89,9 +96,9 @@ export const STATUS = {
     border: 'border-emerald-200 dark:border-emerald-800',
   },
   cancelled: {
-    bg: 'bg-danger/10 dark:bg-danger/20',
-    text: 'text-danger',
-    border: 'border-danger/20 dark:border-danger/30',
+    bg: 'bg-danger-50 dark:bg-danger-900/20',
+    text: 'text-danger-500 dark:text-danger-400',
+    border: 'border-danger-200 dark:border-danger-800',
   },
   scheduled: {
     bg: 'bg-brand-50 dark:bg-brand-900/20',

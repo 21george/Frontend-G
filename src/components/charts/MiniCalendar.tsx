@@ -143,9 +143,9 @@ export default function MiniCalendar() {
               onClick={() => setSelectedDay(d)}
               className={`aspect-square flex items-center justify-center text-xs font-medium transition-all duration-150 relative ${
                 selectedFlag
-                  ? 'bg-brand-600 text-white -700/30'
+                  ? 'bg-brand-600 text-white ring-2 ring-brand-700/30'
                   : todayFlag
-                    ? 'bg-gradient-to-br from-brand-500 to-blue-500 text-white -500/30'
+                    ? 'bg-gradient-to-br from-brand-500 to-blue-500 text-white ring-2 ring-brand-500/30'
                     : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-neutral-300 dark:hover:bg-white/[0.08] dark:hover:text-white'
               }`}
             >

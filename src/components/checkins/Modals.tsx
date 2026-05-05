@@ -155,9 +155,10 @@ export function CreateEventModal({ isOpen, onClose, selectedDate, clients, onSub
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault()
+    const date = new Date(`${formDate}T${formTime}`)
     await onSubmit({
       client_id: formClient,
-      scheduled_at: `${formDate}T${formTime}`,
+      scheduled_at: date.toISOString(),
       type: formType,
       meeting_link: formLink,
       notes: formNotes,
@@ -305,11 +306,9 @@ export function RescheduleModal({ isOpen, onClose, selected, onUpdate, isLoading
   const [rescheduleTime, setRescheduleTime] = useState('')
   const [rescheduleError, setRescheduleError] = useState<string | null>(null)
 
-  if (!selected) return null
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!selected.id || !rescheduleDate || !rescheduleTime) return
+    if (!selected?.id || !rescheduleDate || !rescheduleTime) return
 
     setRescheduleError(null)
     const newDateTime = new Date(`${rescheduleDate}T${rescheduleTime}:00`)
@@ -324,7 +323,7 @@ export function RescheduleModal({ isOpen, onClose, selected, onUpdate, isLoading
 
   return (
     <AnimatePresence>
-      {isOpen && (
+      {isOpen && selected && (
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}

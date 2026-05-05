@@ -9,7 +9,7 @@ import { useThemeStore } from '@/store/theme'
 import Image from 'next/image'
 import {
   User, Mail, Phone, Globe, Link as LinkIcon, Lock, Bell, Shield,
-  CreditCard, ChevronRight, Loader2, Camera, Check,
+  CreditCard, ChevronRight, Loader2, Camera, Check, X,
   Moon, Sun, LogOut, Key, MessageSquare, Calendar, UserCheck
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -226,7 +226,7 @@ export default function SettingsPage() {
   // UI state
   const [saving, setSaving] = useState(false)
   const [photoUploading, setPhotoUploading] = useState(false)
-  const [toast, setToast] = useState<string | null>(null)
+  const [toast, setToast] = useState<{ type: 'success' | 'error'; message: string } | null>(null)
   const [dirty, setDirty] = useState(false)
   const [showPwModal, setShowPwModal] = useState(false)
   const [pwSaving, setPwSaving] = useState(false)
@@ -234,9 +234,13 @@ export default function SettingsPage() {
   const [pwCurrent, setPwCurrent] = useState('')
   const [pwNew, setPwNew] = useState('')
   const [pwConfirm, setPwConfirm] = useState('')
+  const [imageErrored, setImageErrored] = useState(false)
 
-  const showToast = useCallback((msg: string) => {
-    setToast(msg)
+  // Reset image error state when profile photo changes
+  useEffect(() => setImageErrored(false), [coach?.profile_photo])
+
+  const showToast = useCallback((msg: string, type: 'success' | 'error' = 'success') => {
+    setToast({ type, message: msg })
     setTimeout(() => setToast(null), 2500)
   }, [])
 
@@ -322,7 +326,7 @@ export default function SettingsPage() {
       showToast('Photo uploaded successfully')
     } catch (err: any) {
       const errorMsg = err?.response?.data?.message || 'Upload failed'
-      showToast(errorMsg)
+      showToast(errorMsg, 'error')
     } finally {
       setPhotoUploading(false)
       if (e.target) e.target.value = ''
@@ -382,10 +386,14 @@ export default function SettingsPage() {
             initial={{ opacity: 0, x: 20, y: -10 }}
             animate={{ opacity: 1, x: 0, y: 0 }}
             exit={{ opacity: 0, x: 20, y: -10 }}
-            className="fixed top-4 right-4 z-50 bg-blue-600 text-white text-sm px-4 py-2.5 flex items-center gap-2"
+            className={`fixed top-4 right-4 z-50 text-white text-sm px-4 py-2.5 flex items-center gap-2 ${
+              toast.type === 'error'
+                ? 'bg-error-600'
+                : 'bg-blue-600'
+            }`}
           >
-            <Check className="w-4 h-4" />
-            {toast}
+            {toast.type === 'error' ? <X className="w-4 h-4" /> : <Check className="w-4 h-4" />}
+            {toast.message}
           </motion.div>
         )}
       </AnimatePresence>
@@ -405,26 +413,21 @@ export default function SettingsPage() {
                 <div className="relative h-20 w-20 overflow-hidden rounded-10">
                   {coach?.profile_photo ? (
                     <>
-                      <Image
-                        src={coach.profile_photo}
-                        alt={coach.name ?? 'Coach'}
-                        fill
-                        className="rounded-10 object-cover ring-2 ring-slate-200 dark:ring-white/[0.1]"
-                        sizes="80px"
-                        unoptimized
-                        onError={(e) => {
-                          // Fall back to initials on image load failure
-                          const target = e.currentTarget as HTMLImageElement
-                          target.style.display = 'none'
-                          const parent = target.parentElement
-                          if (parent) {
-                            const fallback = document.createElement('div')
-                            fallback.className = 'absolute inset-0 flex items-center justify-center rounded-10 bg-brand-600 text-white text-lg font-bold'
-                            fallback.textContent = coach.name?.[0]?.toUpperCase() ?? 'C'
-                            parent.appendChild(fallback)
-                          }
-                        }}
-                      />
+                      {!imageErrored ? (
+                        <Image
+                          src={coach.profile_photo}
+                          alt={coach.name ?? 'Coach'}
+                          fill
+                          className="rounded-10 object-cover ring-2 ring-slate-200 dark:ring-white/[0.1]"
+                          sizes="80px"
+                          unoptimized
+                          onError={() => setImageErrored(true)}
+                        />
+                      ) : (
+                        <div className="absolute inset-0 flex items-center justify-center rounded-10 bg-brand-600 text-white text-lg font-bold">
+                          {coach.name?.[0]?.toUpperCase() ?? 'C'}
+                        </div>
+                      )}
                       <button
                         onClick={() => fileInputRef.current?.click()}
                         className="absolute -bottom-1 -right-1 flex h-7 w-7 items-center justify-center rounded-10 bg-[var(--btn-bg)] text-white hover:bg-[var(--btn-hover)] z-10"

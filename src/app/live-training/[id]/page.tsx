@@ -158,13 +158,13 @@ export default function LiveTrainingDetailPage() {
             )}
             {isUpcoming && (
               <button onClick={() => goLive.mutateAsync(id).then(() => router.refresh())} disabled={goLive.isPending}
-                className="inline-flex items-center gap-1.5 px-5 py-2 bg-gradient-to-r from-brand-500 to-brand-700 hover:from-brand-400 hover:to-brand-500 text-white text-[12px] font-semibold -600/25 transition-all">
+                className="inline-flex items-center gap-1.5 px-5 py-2 bg-gradient-to-r from-brand-500 to-brand-700 hover:from-brand-400 hover:to-brand-500 text-white text-[12px] font-semibold shadow-lg shadow-brand-600/25 transition-all">
                 <Play size={13} /> Go Live
               </button>
             )}
             {isLive && (
               <button onClick={() => endSession.mutateAsync(id).then(() => router.refresh())} disabled={endSession.isPending}
-                className="inline-flex items-center gap-1.5 px-5 py-2 bg-gradient-to-r from-red-500 to-rose-600 hover:from-red-400 hover:to-rose-500 text-white text-[12px] font-semibold -600/25 transition-all">
+                className="inline-flex items-center gap-1.5 px-5 py-2 bg-gradient-to-r from-red-500 to-rose-600 hover:from-red-400 hover:to-rose-500 text-white text-[12px] font-semibold shadow-lg shadow-rose-600/25 transition-all">
                 <Square size={13} /> End Session
               </button>
             )}

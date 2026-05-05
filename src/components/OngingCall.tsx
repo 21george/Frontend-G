@@ -69,7 +69,10 @@ const CallCard: React.FC<{ call: CallData }> = ({ call }) => (
     {/* Dots */}
     <div className="flex flex-wrap gap-[3px] my-1.5">
       {call.dots.map((d, i) => (
-        <div key={i} className={`w-[9px] h-[9px] ${dotClass[d]}`} />
+        <div
+          key={i}
+          className={`w-[9px] h-[9px] rounded-full ${dotClass[d] ?? 'bg-gray-300'}`}
+        />
       ))}
     </div>
 

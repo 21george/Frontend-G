@@ -174,22 +174,22 @@ export default function DashboardHeader({
   const monthName = now.toLocaleDateString('en-US', { month: 'long' })
   const dateLabel = `${dayName}, ${dayNum} ${monthName}`
 
-  void showGreeting
-
   return (
     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 mb-6 sm:mb-8">
       <div className="min-w-0">
-        <nav className="flex items-center gap-2 text-xs text-[var(--text-tertiary)] mb-1">
+        <nav className="flex items-center gap-2 text-xs text-[var(--text-tertiary)] mb-1" aria-label="Breadcrumb">
           <span>Dashboard</span>
           <ChevronRight className="w-3 h-3" />
           <span className="text-blue-600 dark:text-blue-400 font-medium">{heading}</span>
-          <div>
+        </nav>
+        {showGreeting !== false && (
+          <div className="mb-1">
             <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#888780] dark:text-[#FAFAFA]/40 mb-0.5">
               Good {getGreeting()}, {coach?.name ?? 'there'}
             </p>
             <p className="text-[10px] text-[var(--text-tertiary)]">{dateLabel}</p>
           </div>
-        </nav>
+        )}
         <h1 className="text-xl sm:text-2xl font-bold text-[var(--text-primary)] tracking-tight">{heading}</h1>
         <p className="text-slate-500 dark:text-neutral-200 text-xs sm:text-sm mt-1">{subtitle}</p>
       </div>

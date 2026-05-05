@@ -72,7 +72,7 @@ export default function NewLiveTrainingPage() {
         </Link>
 
         <div className="flex items-center gap-4 mb-8">
-          <div className="w-12 h-12 bg-gradient-to-br from-brand-500 to-brand-700 flex items-center justify-center -600/25">
+          <div className="w-12 h-12 bg-gradient-to-br from-brand-500 to-brand-700 flex items-center justify-center shadow-lg shadow-brand-600/25">
             <Signal size={22} className="text-white" />
           </div>
           <div>
@@ -221,13 +221,13 @@ export default function NewLiveTrainingPage() {
               <button
                 type="button"
                 onClick={() => setRequiresApproval(v => !v)}
-                className={`relative w-11 h-6 transition-colors ${
+                className={`relative w-11 h-6 rounded-full transition-colors ${
                   requiresApproval
                     ? 'bg-brand-600'
                     : 'bg-slate-300 dark:bg-white/[0.15]'
                 }`}
               >
-                <span className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white transition-transform ${
+                <span className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full transition-transform ${
                   requiresApproval ? 'translate-x-5' : 'translate-x-0'
                 }`} />
               </button>
@@ -245,7 +245,7 @@ export default function NewLiveTrainingPage() {
             <button
               type="submit"
               disabled={loading}
-              className="px-6 py-2.5 bg-gradient-to-r from-brand-500 to-brand-700 hover:from-brand-400 hover:to-brand-800 text-white text-[13px] font-semibold -600/25 transition-all hover:disabled:opacity-50"
+              className="px-6 py-2.5 bg-gradient-to-r from-brand-500 to-brand-700 hover:from-brand-400 hover:to-brand-800 text-white text-[13px] font-semibold shadow-lg shadow-brand-600/25 transition-all hover:disabled:opacity-50"
             >
               {loading ? 'Creating…' : 'Create Session'}
             </button>

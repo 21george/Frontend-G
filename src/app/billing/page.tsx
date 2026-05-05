@@ -266,7 +266,7 @@ export default function BillingPage() {
                 transition={{ delay: plan.tier === 'free' ? 0 : plan.tier === 'pro' ? 0.1 : 0.2 }}
                 className={`relative p-6 border transition-all ${
                   isCurrent
-                    ? 'border-brand-500 dark:border-brand-400 -500/10'
+                    ? 'border-brand-500 dark:border-brand-400 bg-brand-500/10'
                     : 'border-slate-200 dark:border-white/[0.08] hover:border-slate-300 dark:hover:border-white/20'
                 } bg-white dark:bg-surface-card-dark`}
               >
@@ -303,7 +303,7 @@ export default function BillingPage() {
                   <button
                     onClick={() => checkout.mutate(plan.tier as 'pro' | 'business')}
                     disabled={checkout.isPending}
-                    className="w-full py-2.5 text-center text-sm font-medium text-white bg-brand-600 hover:bg-brand-700 transition-all disabled:opacity-50 -600/25"
+                    className="w-full py-2.5 text-center text-sm font-medium text-white bg-brand-600 hover:bg-brand-700 transition-all disabled:opacity-50 shadow-lg shadow-brand-600/25"
                   >
                     {checkout.isPending ? 'Redirecting...' : `Upgrade to ${plan.name}`}
                   </button>

@@ -42,7 +42,7 @@ const FALLBACK_MESSAGES: Record<number, string> = {
   409: 'A conflict occurred. The data may have already been modified.',
   422: 'Some fields contain invalid values.',
   429: 'You\'re making too many requests. Please wait a moment.',
-  500: 'Something went wrong on our end. Please try again later.',
+  500: 'The server encountered an error. Please try again in a moment.',
   502: 'The server is temporarily unavailable. Please try again.',
   503: 'The service is temporarily unavailable. Please try again later.',
   504: 'The gateway timed out. Please try again later.',
@@ -59,6 +59,7 @@ const INTERNAL_PATTERNS = [
   /jwt/i,                      // token internals
   /bcrypt/i,                   // hashing internals
   /ECONNREFUSED|ETIMEDOUT/i,  // raw network errors
+  /inactive/i,                 // backend internal state details
 ]
 
 function isInternalMessage(msg: string): boolean {

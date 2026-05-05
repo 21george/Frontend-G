@@ -97,16 +97,16 @@ export function WeatherBadge() {
             animate={{ rotate: [0, 5, -5, 0] }}
             transition={{ duration: 4, repeat: Infinity, repeatDelay: 2 }}
           >
-            <Icon className="w-6 h-6 text-white drop-" />
+            <Icon className="w-6 h-6 text-white" />
           </motion.div>
-          <span className="text-2xl font-bold text-white drop-">
+          <span className="text-2xl font-bold text-white">
             {weather.temp}°
           </span>
         </div>
 
         {/* Bottom row: City + Condition */}
         <div className="mt-auto">
-          <p className="text-[10px] font-medium text-white/90 truncate drop-">
+          <p className="text-[10px] font-medium text-white/90 truncate">
             {weather.city}
           </p>
           <p className="text-[9px] text-white/70 truncate">

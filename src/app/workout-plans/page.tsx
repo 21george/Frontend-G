@@ -524,7 +524,7 @@ export default function WorkoutPlansPage() {
 
                           <td className="px-4 lg:px-6 py-4">
                             <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 text-[10px] font-bold uppercase tracking-tight border ${statusConf.badge}`}>
-                              <span className={`w-1.5 h-1.5 ${statusConf.dot}`} />
+                              <span className={`w-1.5 h-1.5 rounded-full ${statusConf.dot}`} />
                               {statusConf.label}
                             </span>
                           </td>

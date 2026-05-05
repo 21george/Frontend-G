@@ -181,7 +181,7 @@ export default function AssignWorkoutPlanPage() {
                       onClick={() => toggleClient(client.id)}
                       className={`relative p-4 border text-left transition-all ${
                         isSelected
-                          ? 'bg-brand-600/5 dark:bg-brand-600/20 border-brand-500/50 -500/10'
+                          ? 'bg-brand-600/5 dark:bg-brand-600/20 border-brand-500/50 ring-1 ring-brand-500/10'
                           : 'bg-slate-50 dark:bg-white/[0.02] border-slate-200/80 dark:border-white/[0.08] hover:border-slate-300 dark:hover:border-white/[0.15]'
                       }`}
                     >
