@@ -8,13 +8,14 @@ import { useThemeStore } from '@/store/theme'
 import {
   LayoutDashboard, Users, Dumbbell, Salad, Calendar, Radio,
   Image, Settings, LogOut, Zap, Menu, X, Sun, Moon, CreditCard,
-  ChevronLeft, ChevronRight,
+  ChevronLeft, ChevronRight, MessageSquare,
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 
 const NAV = [
   { href: '/dashboard',         label: 'Dashboard',        icon: LayoutDashboard },
   { href: '/clients',           label: 'Clients',          icon: Users },
+  { href: '/messages',           label: 'Messages',         icon: MessageSquare },
   { href: '/workout-plans',     label: 'Workout Plans',    icon: Dumbbell },
   { href: '/nutrition-plans',   label: 'Nutrition',        icon: Salad },
   { href: '/checkins',          label: 'Schedule',         icon: Calendar },
@@ -34,7 +35,7 @@ function SidebarContent({ onClose, collapsed = false }: SidebarContentProps) {
   const isDark = theme === 'dark'
 
   const brandIcon = (
-    <div className="w-8 h-8 bg-white/20 dark:bg-white/10 flex items-center justify-center ">
+    <div className="w-8 h-8 bg-white/20 dark:bg-white/10 flex items-center justify-center rounded-lg">
       <Zap className="w-4 h-4 text-white" />
     </div>
   )
@@ -119,7 +120,8 @@ function SidebarContent({ onClose, collapsed = false }: SidebarContentProps) {
           "flex items-center hover:bg-white/10 dark:hover:bg-white/[0.06] transition-colors",
           collapsed ? "justify-center p-2" : "gap-3 px-2 py-2"
         )}>
-          <div className="w-9 h-9 bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white text-sm font-semibold flex-shrink-0 ring-2 ring-white/20">
+          <div className="w-9 h-9 bg-gradient-to-br from-brand-400 to-brand-600 flex items-center justify-center text-white text-sm font-semibold flex-shrink-0 ring-2 ring-white/20 rounded-lg"
+            style={{ background: 'var(--btn-bg)' }}>
             {coach?.name?.[0]?.toUpperCase() ?? 'C'}
           </div>
           {!collapsed && (

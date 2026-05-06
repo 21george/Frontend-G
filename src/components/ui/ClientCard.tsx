@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { Mail, Phone, Calendar } from 'lucide-react'
+import { Mail, Phone, Calendar, MessageSquare } from 'lucide-react'
 import { formatDate } from '@/lib/utils'
 import type { Client } from '@/types'
 
@@ -16,7 +16,7 @@ export function ClientCard({ client, href }: ClientCardProps) {
   return (
     <Link
       href={link}
-      className="bg-[var(--bg-card)] border border-[var(--border)] p-3 hover:border-slate-300 dark:hover:border-white/20 transition-colors block"
+      className="bg-[var(--bg-card)] border border-[var(--border)] p-3 rounded-lg hover:border-[var(--border-hover)] transition-colors block"
     >
       {/* Header */}
       <div className="flex items-center gap-2 mb-2.5">
@@ -24,30 +24,38 @@ export function ClientCard({ client, href }: ClientCardProps) {
           <img
             src={client.profile_photo_url}
             alt={client.name}
-            className="w-9 h-9 object-cover flex-shrink-0"
+            className="w-9 h-9 object-cover rounded-lg flex-shrink-0"
           />
         ) : (
-          <div className="w-9 h-9 bg-gradient-to-br from-brand-800 to-brand-600 flex items-center justify-center text-[12px] font-semibold text-white flex-shrink-0">
+          <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-brand-800 to-brand-600 flex items-center justify-center text-[12px] font-semibold text-white flex-shrink-0">
             {client.name[0]?.toUpperCase()}
           </div>
         )}
         <div className="flex-1 min-w-0">
           <div className="text-[12px] font-semibold text-[var(--text-primary)] truncate">{client.name}</div>
           <div className="flex items-center gap-1 text-[var(--text-tertiary)] text-[10px] mt-0.5">
-            <Mail size={10} className="text-slate-400 dark:text-slate-500" />
+            <Mail size={10} className="text-[var(--text-tertiary)]" />
             <span className="truncate">{client.email || 'No email'}</span>
           </div>
         </div>
+        <Link
+          href={`/messages?client=${client.id}`}
+          onClick={(e) => e.stopPropagation()}
+          className="p-1.5 rounded-md text-[var(--text-tertiary)] hover:text-brand-600 hover:bg-[var(--bg-subtle)] transition-colors"
+          title="Message client"
+        >
+          <MessageSquare size={14} />
+        </Link>
       </div>
 
       {/* Stats */}
-      <div className="flex gap-3 py-1.5 border-t border-b border-slate-100 dark:border-white/[0.06] mb-2">
-        <div className={`flex items-center gap-1 text-[11px] ${client.active ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
+      <div className="flex gap-3 py-1.5 border-t border-b border-[var(--border)] mb-2">
+        <div className={`flex items-center gap-1 text-[11px] ${client.active ? 'text-accent-600 dark:text-accent-400' : 'text-danger dark:text-red-400'}`}>
           <span className="w-1.5 h-1.5 bg-current rounded-full" />
           {client.active ? 'Active' : 'Inactive'}
         </div>
         {client.phone && (
-          <div className="flex items-center gap-1 text-[11px] text-slate-400 dark:text-slate-500">
+          <div className="flex items-center gap-1 text-[11px] text-[var(--text-tertiary)]">
             <Phone size={11} />
             {client.phone}
           </div>
@@ -55,13 +63,13 @@ export function ClientCard({ client, href }: ClientCardProps) {
       </div>
 
       {/* Language */}
-      <div className="flex items-center gap-1 text-[10px] text-slate-400 dark:text-slate-600 mb-1.5">
+      <div className="flex items-center gap-1 text-[10px] text-[var(--text-tertiary)] mb-1.5">
         <span className="uppercase">{client.language}</span>
       </div>
 
       {/* Footer */}
       <div className="flex items-center justify-between mt-1">
-        <span className="text-[10px] text-slate-400 dark:text-slate-600 flex items-center gap-1">
+        <span className="text-[10px] text-[var(--text-tertiary)] flex items-center gap-1">
           <Calendar size={10} />
           {formatDate(client.created_at, 'MMM yyyy')}
         </span>

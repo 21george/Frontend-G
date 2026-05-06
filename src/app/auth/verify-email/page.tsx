@@ -203,7 +203,7 @@ export default function VerifyEmailPage() {
                   className="w-12 h-14 text-center text-xl font-semibold border-2 border-slate-200 bg-white
                     focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none
                     disabled:opacity-50 transition-all duration-200
-                    dark:bg-surface-page-dark dark:border-white/10 dark:text-white dark:focus:border-blue-400"
+                    dark:bg-[#121212] dark:border-white/10 dark:text-white dark:focus:border-blue-400"
                 />
               ))}
             </motion.div>

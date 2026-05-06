@@ -38,7 +38,7 @@ export function EventDetailModal({ selected, clientMap, onClose, onReschedule, o
           animate={{ scale: 1, opacity: 1, y: 0 }}
           exit={{ scale: 0.94, opacity: 0, y: 16 }}
           transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-          className="relative w-full max-w-md bg-white dark:bg-surface-card-dark overflow-hidden border border-slate-200 dark:border-white/[0.08] rounded-xl shadow-elevated dark:shadow-dark-elevated"
+          className="relative w-full max-w-md bg-white dark:bg-[#1A1A1A] overflow-hidden border border-slate-200 dark:border-white/[0.08] rounded-xl shadow-elevated dark:shadow-dark-elevated"
           onClick={e => e.stopPropagation()}
         >
           {/* Accent top bar */}

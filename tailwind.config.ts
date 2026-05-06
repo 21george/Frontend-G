@@ -6,22 +6,22 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        /* ── Primary brand palette (Indigo-based enterprise) ─────────── */
+        /* ── Primary brand palette (Teal-based, matching dashboard) ─── */
         brand: {
-          50:  '#EEF2FF',
-          100: '#E0E7FF',
-          200: '#C7D2FE',
-          300: '#A5B4FC',
-          400: '#818CF8',
-          500: '#6366F1',
-          600: '#4F46E5',
-          700: '#4338CA',
-          800: '#3730A3',
-          900: '#312E81',
-          950: '#1E1B4B',
-          DEFAULT: '#4F46E5',
-          dark:  '#4338CA',
-          light: '#EEF2FF',
+          50:  '#EAF4F1',
+          100: '#C8E6E0',
+          200: '#A5D4C8',
+          300: '#8BCDBF',
+          400: '#6DB9A8',
+          500: '#4CA896',
+          600: '#132E35',
+          700: '#1C4A54',
+          800: '#0F2027',
+          900: '#0A161C',
+          950: '#030608',
+          DEFAULT: '#132E35',
+          dark:  '#1C4A54',
+          light: '#EAF4F1',
         },
         /* ── Semantic colours ─────────────────────────────────────────── */
         accent: {
@@ -38,8 +38,8 @@ const config: Config = {
           800: '#065F46',
           900: '#064E3B',
         },
-        warn:   { DEFAULT: '#F59E0B', 50: '#FFFBEB' },
-        danger: { DEFAULT: '#EF4444', 50: '#FEF2F2' },
+        warn:   { DEFAULT: '#F59E0B', 50: '#FFFBEB', 100: '#FEF3C7', 700: '#B45309' },
+        danger: { DEFAULT: '#EF4444', 50: '#FEF2F2', 100: '#FEE2E2', 600: '#DC2626', 700: '#B91C1C' },
         /* ── Sidebar ──────────────────────────────────────────────────── */
         sidebar: {
           DEFAULT: '#11212D',

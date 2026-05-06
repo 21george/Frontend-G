@@ -63,7 +63,7 @@ export function MonthView({ selectedDate, onSelectDate, checkins, clientMap, fil
       initial="hidden"
       animate="show"
     >
-      <div className="bg-white dark:bg-surface-card-dark border border-slate-200 dark:border-white/[0.06] overflow-hidden rounded-lg shadow-card dark:shadow-dark-card">
+      <div className="bg-white dark:bg-[#1A1A1A] border border-slate-200 dark:border-white/[0.06] overflow-hidden rounded-lg shadow-card dark:shadow-dark-card">
         <div className="grid grid-cols-7 border-b border-slate-200 dark:border-white/[0.06]">
           {DAYS_SHORT.map(d => (
             <div key={d} className="p-3 text-center text-[10px] font-bold uppercase tracking-[0.15em] text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-white/[0.02]">

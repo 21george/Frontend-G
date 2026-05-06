@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { messagesApi } from '@/lib/api'
+import { messagesApi } from '@/lib/api/services/messages'
 import { shouldRetryRequest } from '@/lib/api/errors'
 import { useAuthStore } from '@/store/auth'
 import toast from 'react-hot-toast'
@@ -16,12 +16,53 @@ export const useMessages = (clientId: string) => {
   })
 }
 
+export const useUnreadMessages = () => {
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
+
+  return useQuery({
+    queryKey: ['messages', 'unread'],
+    queryFn: () => messagesApi.getUnreadMessages(),
+    enabled: isAuthenticated,
+    refetchInterval: isAuthenticated ? 5000 : false,
+    retry: shouldRetryRequest,
+  })
+}
+
+export const useUnreadMessageCount = () => {
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
+
+  return useQuery({
+    queryKey: ['messages', 'unread-count'],
+    queryFn: () => messagesApi.getUnreadCount(),
+    enabled: isAuthenticated,
+    refetchInterval: isAuthenticated ? 5000 : false,
+    retry: shouldRetryRequest,
+  })
+}
+
+export const useMarkAllMessagesRead = () => {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: () => messagesApi.markAllRead(),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['messages', 'unread-count'] })
+      qc.invalidateQueries({ queryKey: ['messages'] })
+    },
+    onError: (error: any) => {
+      toast.error(error?.response?.data?.message || 'Failed to mark messages as read')
+    },
+  })
+}
+
 export const useSendMessage = () => {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: (data: { client_id: string; content: string; media_url?: string; media_type?: string; media_filename?: string }) =>
       messagesApi.send(data),
-    onSuccess: (_, v) => qc.invalidateQueries({ queryKey: ['messages', v.client_id] }),
+    onSuccess: (_, v) => {
+      qc.invalidateQueries({ queryKey: ['messages', v.client_id] })
+      qc.invalidateQueries({ queryKey: ['messages', 'unread-count'] })
+    },
     onError: (error: any) => {
       toast.error(error?.response?.data?.message || 'Failed to send message')
     },

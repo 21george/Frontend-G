@@ -5,8 +5,16 @@ import { useState, useEffect } from 'react'
 export interface WeatherData {
   temp: number
   condition: string
-  icon: string      // Lucide-compatible key
+  icon: string
   city: string
+  humidity?: number
+  windSpeed?: number
+  forecast?: Array<{
+    day: string
+    temp: number
+    icon: string
+    condition: string
+  }>
 }
 
 function decodeWMO(code: number): { condition: string; icon: string } {
@@ -19,6 +27,12 @@ function decodeWMO(code: number): { condition: string; icon: string } {
   if (code <= 82)  return { condition: 'Showers',       icon: 'cloud-drizzle'  }
   if (code <= 99)  return { condition: 'Thunderstorm',  icon: 'cloud-lightning'}
   return { condition: 'Unknown', icon: 'cloud' }
+}
+
+function getDayName(dateStr: string): string {
+  const date = new Date(dateStr)
+  const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+  return days[date.getDay()]
 }
 
 export function useWeather() {
@@ -52,13 +66,31 @@ export function useWeather() {
 
           // Weather via Open-Meteo (free, no key)
           const wtRes  = await fetch(
-            `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current_weather=true`
+            `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current_weather=true&daily=weather_code,temperature_2m_max,temperature_2m_min&timezone=auto`
           )
           const wtJson = await wtRes.json()
           const cw     = wtJson.current_weather
           const { condition, icon } = decodeWMO(cw.weathercode)
 
-          setWeather({ temp: Math.round(cw.temperature), condition, icon, city })
+          // Build forecast (next 5 days)
+          const forecast = wtJson.daily?.time?.slice(1, 6).map((date: string, i: number) => {
+            const wmo = wtJson.daily.weather_code[i + 1]
+            const decoded = decodeWMO(wmo)
+            return {
+              day: getDayName(date),
+              temp: Math.round(wtJson.daily.temperature_2m_max[i + 1]),
+              icon: decoded.icon,
+              condition: decoded.condition,
+            }
+          }) ?? []
+
+          setWeather({
+            temp: Math.round(cw.temperature),
+            condition,
+            icon,
+            city,
+            forecast,
+          })
         } catch (e: any) {
           setError(e.message ?? 'Failed to load weather')
         } finally {
@@ -66,12 +98,47 @@ export function useWeather() {
         }
       },
       (err) => {
-        setError(err.message)
-        setLoading(false)
+        // Fallback to Munich, Germany for demo/development
+        setError('Using demo location (Munich)')
+        fetchWeatherFallback(48.1351, 11.5820, 'Munich')
       },
       { timeout: 8000 }
     )
   }, [])
+
+  async function fetchWeatherFallback(lat: number, lon: number, city: string) {
+    try {
+      const wtRes = await fetch(
+        `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true&daily=weather_code,temperature_2m_max,temperature_2m_min&timezone=auto`
+      )
+      const wtJson = await wtRes.json()
+      const cw = wtJson.current_weather
+      const { condition, icon } = decodeWMO(cw.weathercode)
+
+      const forecast = wtJson.daily?.time?.slice(1, 6).map((date: string, i: number) => {
+        const wmo = wtJson.daily.weather_code[i + 1]
+        const decoded = decodeWMO(wmo)
+        return {
+          day: getDayName(date),
+          temp: Math.round(wtJson.daily.temperature_2m_max[i + 1]),
+          icon: decoded.icon,
+          condition: decoded.condition,
+        }
+      }) ?? []
+
+      setWeather({
+        temp: Math.round(cw.temperature),
+        condition,
+        icon,
+        city,
+        forecast,
+      })
+    } catch (e: any) {
+      setError('Failed to load weather data')
+    } finally {
+      setLoading(false)
+    }
+  }
 
   return { weather, loading, error }
 }

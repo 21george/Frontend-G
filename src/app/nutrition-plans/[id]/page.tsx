@@ -48,7 +48,7 @@ function scoreColor(s: number) {
 // ── Input style ───────────────────────────────────────────────────────────────
 
 const inputCls = `
-  bg-white dark:bg-surface-page-dark
+  bg-white dark:bg-[#121212]
   border border-slate-200 dark:border-white/[0.07]
   px-3 py-2 text-[13px]
   text-slate-900 dark:text-white

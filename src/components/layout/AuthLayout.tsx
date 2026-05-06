@@ -57,7 +57,7 @@ function AuthLayout({
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       transition={{ duration: 0.2, ease: 'easeInOut' }}
-      className="min-h-screen flex bg-slate-100 dark:bg-surface-page-dark"
+      className="min-h-screen flex bg-slate-100 dark:bg-[#121212]"
     >
       <Sidebar />
       <main className="flex-1 min-h-screen overflow-x-hidden">

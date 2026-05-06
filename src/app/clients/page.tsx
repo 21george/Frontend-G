@@ -111,7 +111,7 @@ export default function ClientsPage() {
             value={search}
             onChange={e => setSearch(e.target.value)}
             placeholder="Search clients"
-            className="w-full bg-white dark:bg-surface-page-dark border border-slate-200 dark:border-white/[0.1] py-3 pl-11 pr-4 text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder:text-neutral-500 focus:outline-none focus:border-brand-700/30 focus:ring-2 focus:ring-brand-700/20 transition-colors"
+            className="w-full bg-white dark:bg-[#121212] border border-slate-200 dark:border-white/[0.1] py-3 pl-11 pr-4 text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder:text-neutral-500 focus:outline-none focus:border-brand-700/30 focus:ring-2 focus:ring-brand-700/20 transition-colors"
           />
         </div>
 
@@ -275,14 +275,16 @@ export default function ClientsPage() {
                           <td className="px-4 lg:px-6 py-4 text-right">
                             <div className="flex items-center justify-end gap-2">
                               <Link
-                                href={`/clients/${client.id}`}
-                                className="p-2 text-slate-400 hover:text-brand-600 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/[0.08] transition-colors "
+                                href={`/messages?client=${client.id}`}
+                                className="p-2 rounded-md text-[var(--text-tertiary)] hover:text-brand-600 dark:hover:text-brand-400 hover:bg-[var(--bg-subtle)] transition-colors"
+                                title="Message client"
                               >
                                 <MessageSquare className="w-4 h-4" />
                               </Link>
                               <Link
                                 href={`/clients/${client.id}`}
-                                className="p-2 text-slate-400 hover:text-slate-600 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/[0.08] transition-colors "
+                                className="p-2 rounded-md text-[var(--text-tertiary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-subtle)] transition-colors"
+                                title="View client"
                               >
                                 <MoreVertical className="w-4 h-4" />
                               </Link>

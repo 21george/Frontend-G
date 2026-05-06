@@ -21,7 +21,7 @@ export {
 } from './useWorkoutPlans'
 export { useNutritionPlans, useNutritionPlan, useCreateNutritionPlan, useUpdateNutritionPlan, useDeleteNutritionPlan } from './useNutritionPlans'
 export { useCheckins, useCreateCheckin, useUpdateCheckin, useDeleteCheckin } from './useCheckins'
-export { useMessages, useSendMessage, useUploadMessageMedia } from './useMessages'
+export { useMessages, useSendMessage, useUploadMessageMedia, useUnreadMessageCount, useMarkAllMessagesRead, useUnreadMessages } from './useMessages'
 export { useClientMedia, useWorkoutLogs, useWorkoutProgress } from './useMedia'
 export { useClientAnalytics } from './useAnalytics'
 export { useWeather } from './useWeather'

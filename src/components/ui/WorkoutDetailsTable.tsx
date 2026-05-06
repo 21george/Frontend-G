@@ -49,7 +49,7 @@ export function WorkoutDetailsTable({ plans }: { plans: WorkoutPlan[] }) {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: 0.1 }}
-      className="bg-white dark:bg-surface-card-dark border border-slate-200/80 dark:border-white/[0.08] overflow-hidden "
+      className="bg-white dark:bg-[#1A1A1A] border border-slate-200/80 dark:border-white/[0.08] overflow-hidden "
     >
       {/* Header */}
       <div className="px-6 py-5 border-b border-slate-100 dark:border-white/[0.06]">

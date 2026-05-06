@@ -344,9 +344,12 @@ export interface Notification {
   type: NotificationType
   title: string
   body: string
+  from?: string
+  when?: string
   data: {
     clientId?: string
     clientName?: string
+    coachName?: string
     workoutLogId?: string
     workoutPlanName?: string
     messageId?: string

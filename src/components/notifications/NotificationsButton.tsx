@@ -23,10 +23,11 @@ import {
   useMarkNotificationRead,
   useDeleteNotification,
 } from '@/hooks/useNotifications'
+import { useUnreadMessageCount, useMarkAllMessagesRead } from '@/hooks/useMessages'
 import { humanDate } from '@/lib/formatDate'
 import type { Notification } from '@/types'
 
-// ── Icon & colour maps ────────────────────────────────────────────────────────
+// ── Icon & colour maps (matching enterprise palette) ─────────────────────────
 
 const notificationIcons: Record<string, React.ComponentType<{ className?: string }>> = {
   workout_completed: Dumbbell,
@@ -38,12 +39,27 @@ const notificationIcons: Record<string, React.ComponentType<{ className?: string
 }
 
 const notificationColors: Record<string, string> = {
-  workout_completed: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400',
-  new_message: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
+  workout_completed: 'bg-accent-100 text-accent-700 dark:bg-accent-900/30 dark:text-accent-400',
+  new_message: 'bg-brand-100 text-brand-700 dark:bg-brand-900/30 dark:text-brand-400',
   profile_updated: 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400',
-  checkin_reminder: 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400',
-  live_session_reminder: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
-  checkin_scheduled: 'bg-brand-100 text-brand-700 dark:bg-brand-700/30 dark:text-brand-400',
+  checkin_reminder: 'bg-warn-100 text-warn-700 dark:bg-warn-900/30 dark:text-warn-400',
+  live_session_reminder: 'bg-danger-100 text-danger-700 dark:bg-danger-900/30 dark:text-danger-400',
+  checkin_scheduled: 'bg-brand-100 text-brand-700 dark:bg-brand-900/30 dark:text-brand-400',
+}
+
+function formatWhen(sentAt: string): string {
+  const now = new Date()
+  const sent = new Date(sentAt)
+  const diffMs = now.getTime() - sent.getTime()
+  const diffMins = Math.floor(diffMs / 60000)
+  const diffHours = Math.floor(diffMs / 3600000)
+  const diffDays = Math.floor(diffMs / 86400000)
+
+  if (diffMins < 1) return 'Just now'
+  if (diffMins < 60) return `${diffMins}m ago`
+  if (diffHours < 24) return `${diffHours}h ago`
+  if (diffDays < 7) return `${diffDays}d ago`
+  return humanDate(sentAt)
 }
 
 function getNavigationLink(notification: Notification): string {
@@ -63,24 +79,26 @@ export default function NotificationsButton() {
   const [filter, setFilter] = useState<'all' | 'unread'>('all')
   const [page, setPage] = useState(1)
 
-  const { notifications } = useNotifications({
-    page: 1,
-    unreadOnly: false,
-    refetchInterval: 3000,
-  })
   const {
-    notifications: filteredNotifications,
+    notifications: allNotifications,
     pagination,
     isLoading,
   } = useNotifications({ page, unreadOnly: filter === 'unread', refetchInterval: 5000 })
-  const { count: unreadCount } = useUnreadNotificationCount()
+  const { count: unreadNotificationCount } = useUnreadNotificationCount()
+  const { data: unreadMessagesData } = useUnreadMessageCount()
+  const unreadMessageCount = unreadMessagesData?.data?.count ?? 0
+  const totalUnread = unreadNotificationCount + unreadMessageCount
+
   const markAllRead = useMarkAllNotificationsRead()
+  const markAllMessagesRead = useMarkAllMessagesRead()
   const markRead = useMarkNotificationRead()
   const deleteNotif = useDeleteNotification()
 
   const modalRef = useRef<HTMLDivElement>(null)
   const triggerRef = useRef<HTMLButtonElement>(null)
   const prevShowAllRef = useRef(false)
+
+  const displayNotifications = allNotifications
 
   // Close modal on Escape key
   useEffect(() => {
@@ -133,11 +151,14 @@ export default function NotificationsButton() {
     }
   }, [showAll])
 
-  const handleMarkAllRead = () => markAllRead.mutate(undefined)
+  const handleMarkAllRead = () => {
+    markAllRead.mutate(undefined)
+    markAllMessagesRead.mutate(undefined)
+  }
   const handleMarkRead = (id: string) => markRead.mutate(id)
   const handleDelete = (id: string) => deleteNotif.mutate(id)
 
-  const displayedNotifications = notifications.slice(0, 10)
+  const displayedNotifications = allNotifications.slice(0, 10)
 
   return (
     <div className="relative">
@@ -147,12 +168,12 @@ export default function NotificationsButton() {
         whileTap={{ scale: 0.95 }}
         onClick={() => setIsOpen(!isOpen)}
         aria-label="Open notifications"
-        className="relative p-2 bg-slate-100 dark:bg-white/[0.06] text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-white/[0.1] transition-colors"
+        className="relative p-2 rounded-lg bg-[var(--bg-subtle)] text-[var(--text-secondary)] hover:bg-[var(--border-hover)] transition-colors"
       >
         <Bell className="w-5 h-5" />
-        {unreadCount > 0 && (
-          <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] px-1 bg-red-500 border-2 border-white dark:border-slate-900 text-[10px] font-bold text-white flex items-center justify-center">
-            {unreadCount > 9 ? '9+' : unreadCount}
+        {totalUnread > 0 && (
+          <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] px-1 bg-danger border-2 border-[var(--bg-page)] rounded-full text-[10px] font-bold text-white flex items-center justify-center">
+            {totalUnread > 9 ? '9+' : totalUnread}
           </span>
         )}
       </motion.button>
@@ -174,37 +195,28 @@ export default function NotificationsButton() {
               initial={{ opacity: 0, y: 10, scale: 0.95 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: 10, scale: 0.95 }}
-              className="absolute right-0 mt-2 w-80 sm:w-96 bg-white dark:bg-slate-800 border border-slate-200 dark:border-white/[0.1] z-50 overflow-hidden"
+              className="absolute right-0 mt-2 w-80 sm:w-[420px] bg-[var(--bg-card)] border border-[var(--border)] rounded-xl shadow-overlay dark:shadow-dark-elevated z-50 overflow-hidden"
             >
               {/* Header */}
-              <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100 dark:border-white/[0.08]">
+              <div className="flex items-center justify-between px-5 py-4 border-b border-[var(--border)]">
                 <h3 className="text-sm font-semibold text-[var(--text-primary)]">Notifications</h3>
-                <div className="flex items-center gap-1">
-                  {unreadCount > 0 && (
-                    <button
-                      onClick={handleMarkAllRead}
-                      className="text-xs text-blue-500 hover:text-blue-600 dark:text-blue-400 font-medium flex items-center gap-1"
-                    >
-                      <CheckCheck className="w-3 h-3" />
-                      Clear all
-                    </button>
-                  )}
-                  <button
-                    onClick={() => setIsOpen(false)}
-                    aria-label="Close notifications"
-                    className="p-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-white/[0.08]"
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
-                </div>
+                <button
+                  onClick={() => setIsOpen(false)}
+                  aria-label="Close notifications"
+                  className="p-1.5 rounded-md text-[var(--text-tertiary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-subtle)] transition-colors"
+                >
+                  <X className="w-4 h-4" />
+                </button>
               </div>
 
               {/* Notifications list */}
-              <div className="max-h-80 overflow-y-auto">
+              <div className="max-h-[400px] overflow-y-auto">
                 {displayedNotifications.length === 0 ? (
-                  <div className="px-4 py-8 text-center">
-                    <Bell className="w-8 h-8 text-slate-300 dark:text-slate-600 mx-auto mb-2" />
-                    <p className="text-sm text-[var(--text-tertiary)]">You&apos;re all caught up!</p>
+                  <div className="px-4 py-12 text-center">
+                    <div className="w-12 h-12 rounded-full bg-[var(--bg-subtle)] flex items-center justify-center mx-auto mb-3">
+                      <Bell className="w-6 h-6 text-[var(--text-tertiary)]" />
+                    </div>
+                    <p className="text-sm text-[var(--text-secondary)]">You&apos;re all caught up!</p>
                   </div>
                 ) : (
                   displayedNotifications.map((notification, i) => {
@@ -218,39 +230,50 @@ export default function NotificationsButton() {
                           if (!notification.read) handleMarkRead(notification.id)
                           setIsOpen(false)
                         }}
-                        className={`block px-4 py-3 border-b border-slate-50 dark:border-white/[0.05] hover:bg-slate-50 dark:hover:bg-white/[0.04] transition-colors cursor-pointer ${
-                          !notification.read ? 'bg-blue-50/50 dark:bg-blue-900/10' : ''
+                        className={`block px-5 py-3.5 border-b border-[var(--border)] hover:bg-[var(--bg-subtle)] transition-colors cursor-pointer ${
+                          !notification.read ? 'bg-brand-50/30 dark:bg-brand-900/5' : ''
                         }`}
                       >
                         <motion.div
                           initial={{ opacity: 0, x: -10 }}
                           animate={{ opacity: 1, x: 0 }}
                           transition={{ delay: i * 0.03 }}
-                          className="flex items-start gap-3"
+                          className="flex items-start gap-3.5"
                         >
                           <div
-                            className={`p-1.5 flex-shrink-0 ${
+                            className={`p-2 rounded-lg flex-shrink-0 ${
                               !notification.read
-                                ? 'bg-blue-100 text-blue-600 dark:bg-blue-900/40 dark:text-blue-400'
-                                : 'bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400'
+                                ? notificationColors[notification.type] || 'bg-brand-100 text-brand-600 dark:bg-brand-900/40 dark:text-brand-400'
+                                : 'bg-[var(--bg-subtle)] text-[var(--text-tertiary)]'
                             }`}
                           >
                             <Icon className="w-4 h-4" />
                           </div>
                           <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium text-[var(--text-primary)] truncate">
-                              {notification.title}
-                            </p>
-                            <p className="text-xs text-[var(--text-tertiary)] mt-0.5 truncate">
-                              {notification.body}
-                            </p>
-                            <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-1">
-                              {humanDate(notification.sent_at)}
-                            </p>
+                            <div className="flex items-start justify-between gap-2">
+                              <div className="flex-1 min-w-0">
+                                <p className="text-sm font-medium text-[var(--text-primary)] truncate">
+                                  {notification.title}
+                                </p>
+                                <p className="text-xs text-[var(--text-secondary)] mt-0.5 line-clamp-2">
+                                  {notification.body}
+                                </p>
+                              </div>
+                              {!notification.read && (
+                                <div className="w-2 h-2 rounded-full bg-brand-500 mt-1.5 flex-shrink-0" />
+                              )}
+                            </div>
+                            <div className="flex items-center gap-2 mt-1.5">
+                              {notification.from && (
+                                <span className="text-[11px] text-[var(--text-secondary)]">
+                                  {notification.from}
+                                </span>
+                              )}
+                              <span className="text-[11px] text-[var(--text-tertiary)]">
+                                {formatWhen(notification.sent_at)}
+                              </span>
+                            </div>
                           </div>
-                          {!notification.read && (
-                            <div className="w-2 h-2 bg-blue-500 mt-1.5 flex-shrink-0" />
-                          )}
                         </motion.div>
                       </Link>
                     )
@@ -259,15 +282,24 @@ export default function NotificationsButton() {
               </div>
 
               {/* Footer */}
-              <button
-                onClick={() => {
-                  setPage(1)
-                  setShowAll(true)
-                }}
-                className="w-full px-4 py-3 bg-slate-50 dark:bg-white/[0.04] border-t border-slate-100 dark:border-white/[0.08] text-xs text-blue-500 hover:text-blue-600 dark:text-blue-400 dark:hover:text-blue-300 font-medium text-center block"
-              >
-                See all notifications
-              </button>
+              <div className="flex items-center justify-between px-4 py-3 border-t border-[var(--border)] bg-[var(--bg-subtle)]">
+                <button
+                  onClick={handleMarkAllRead}
+                  className="flex items-center gap-1.5 text-xs font-medium text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
+                >
+                  <CheckCheck className="w-3.5 h-3.5" />
+                  Mark all as read
+                </button>
+                <button
+                  onClick={() => {
+                    setPage(1)
+                    setShowAll(true)
+                  }}
+                  className="px-3 py-1.5 bg-brand-600 text-white text-xs font-medium rounded-md hover:bg-brand-700 transition-colors"
+                >
+                  View all notifications
+                </button>
+              </div>
             </motion.div>
           </>
         )}
@@ -291,26 +323,26 @@ export default function NotificationsButton() {
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
               transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-              className="fixed inset-x-4 top-[5%] bottom-[5%] sm:inset-x-auto sm:left-1/2 sm:top-[8%] sm:bottom-[8%] sm:w-[560px] sm:-translate-x-1/2 z-[70] bg-white dark:bg-surface-page-dark border border-[var(--border)] flex flex-col overflow-hidden"
+              className="fixed inset-x-4 top-[5%] bottom-[5%] sm:inset-x-auto sm:left-1/2 sm:top-[8%] sm:bottom-[8%] sm:w-[560px] sm:-translate-x-1/2 z-[70] bg-[var(--bg-card)] border border-[var(--border)] rounded-xl flex flex-col overflow-hidden"
               role="dialog"
               aria-modal="true"
               aria-label="Notifications"
             >
               {/* Modal header */}
-              <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100 dark:border-white/[0.08] flex-shrink-0">
+              <div className="flex items-center justify-between px-5 py-4 border-b border-[var(--border)] flex-shrink-0">
                 <div>
                   <h2 className="text-[17px] font-semibold text-[var(--text-primary)]">
                     Notifications
                   </h2>
-                  <p className="text-[12px] text-slate-400 dark:text-slate-500 mt-0.5">
-                    {unreadCount > 0
-                      ? `${unreadCount} unread message${unreadCount === 1 ? '' : 's'}`
+                  <p className="text-[12px] text-[var(--text-tertiary)] mt-0.5">
+                    {totalUnread > 0
+                      ? `${totalUnread} unread${unreadMessageCount > 0 ? ` · ${unreadMessageCount} message${unreadMessageCount === 1 ? '' : 's'}` : ''}`
                       : 'Nothing new.'}
                   </p>
                 </div>
                 <div className="flex items-center gap-2">
                   {/* Filter toggle */}
-                  <div className="flex border border-slate-200 dark:border-white/[0.1] overflow-hidden">
+                  <div className="flex border border-[var(--border)] rounded-lg overflow-hidden">
                     <button
                       onClick={() => {
                         setFilter('all')
@@ -318,8 +350,8 @@ export default function NotificationsButton() {
                       }}
                       className={`px-3 py-1.5 text-[12px] font-medium transition-colors ${
                         filter === 'all'
-                          ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900'
-                          : 'bg-white text-slate-500 hover:bg-slate-50 dark:bg-slate-800 dark:text-slate-400 dark:hover:bg-white/[0.06]'
+                          ? 'bg-[var(--text-primary)] text-[var(--bg-card)]'
+                          : 'bg-transparent text-[var(--text-secondary)] hover:bg-[var(--bg-subtle)]'
                       }`}
                     >
                       All
@@ -331,17 +363,17 @@ export default function NotificationsButton() {
                       }}
                       className={`px-3 py-1.5 text-[12px] font-medium transition-colors ${
                         filter === 'unread'
-                          ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900'
-                          : 'bg-white text-slate-500 hover:bg-slate-50 dark:bg-slate-800 dark:text-slate-400 dark:hover:bg-white/[0.06]'
+                          ? 'bg-[var(--text-primary)] text-[var(--bg-card)]'
+                          : 'bg-transparent text-[var(--text-secondary)] hover:bg-[var(--bg-subtle)]'
                       }`}
                     >
-                      unread{unreadCount > 0 ? ` (${unreadCount})` : ''}
+                      Unread{unreadNotificationCount > 0 ? ` (${unreadNotificationCount})` : ''}
                     </button>
                   </div>
-                  {unreadCount > 0 && (
+                  {totalUnread > 0 && (
                     <button
                       onClick={handleMarkAllRead}
-                      className="flex items-center gap-1 px-2.5 py-1.5 text-[12px] font-medium text-brand-600 dark:text-brand-400 hover:bg-slate-100 dark:hover:bg-white/[0.06] transition-colors"
+                      className="flex items-center gap-1 px-2.5 py-1.5 text-[12px] font-medium text-brand-600 dark:text-brand-400 hover:bg-[var(--bg-subtle)] rounded-md transition-colors"
                     >
                       <CheckCheck className="w-3.5 h-3.5" />
                       Clear all
@@ -350,9 +382,9 @@ export default function NotificationsButton() {
                   <button
                     onClick={() => setShowAll(false)}
                     aria-label="Close notifications"
-                    className="p-1.5 hover:bg-slate-100 dark:hover:bg-white/[0.06] transition-colors"
+                    className="p-1.5 rounded-md hover:bg-[var(--bg-subtle)] transition-colors"
                   >
-                    <X className="w-4 h-4 text-slate-400" />
+                    <X className="w-4 h-4 text-[var(--text-tertiary)]" />
                   </button>
                 </div>
               </div>
@@ -361,36 +393,36 @@ export default function NotificationsButton() {
               <div className="flex-1 overflow-y-auto">
                 {isLoading ? (
                   <div className="flex flex-col items-center justify-center py-16">
-                    <div className="inline-block animate-spin h-8 w-8 border-4 border-slate-200 dark:border-white/20 border-t-brand-600 dark:border-t-brand-400" />
-                    <p className="mt-3 text-[13px] text-slate-400 dark:text-slate-500">
+                    <div className="inline-block animate-spin h-8 w-8 border-4 border-[var(--border)] border-t-brand-600 rounded-full" />
+                    <p className="mt-3 text-[13px] text-[var(--text-tertiary)]">
                       Grabbing your notifications…
                     </p>
                   </div>
-                ) : filteredNotifications.length === 0 ? (
+                ) : displayNotifications.length === 0 ? (
                   <div className="flex flex-col items-center justify-center py-16">
-                    <div className="w-14 h-14 bg-slate-100 dark:bg-white/[0.06] flex items-center justify-center mb-4">
-                      <Bell className="w-7 h-7 text-slate-300 dark:text-slate-600" />
+                    <div className="w-14 h-14 rounded-full bg-[var(--bg-subtle)] flex items-center justify-center mb-4">
+                      <Bell className="w-7 h-7 text-[var(--text-tertiary)]" />
                     </div>
                     <p className="text-[14px] font-medium text-[var(--text-secondary)]">
                       You&apos;re all caught up!
                     </p>
-                    <p className="text-[12px] text-slate-400 dark:text-slate-500 mt-1">
+                    <p className="text-[12px] text-[var(--text-tertiary)] mt-1">
                       {filter === 'unread'
                         ? 'Nothing new — you\u2019re up to date.'
                         : 'All clear. Nothing new.'}
                     </p>
                   </div>
                 ) : (
-                  <div className="divide-y divide-slate-100 dark:divide-white/[0.05]">
-                    {filteredNotifications.map((notification) => {
+                  <div className="divide-y divide-[var(--border)]">
+                    {displayNotifications.map((notification) => {
                       const Icon = notificationIcons[notification.type] ?? Bell
                       const colorClass =
                         notificationColors[notification.type] ??
-                        'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-400'
+                        'bg-[var(--bg-subtle)] text-[var(--text-secondary)]'
                       const link = getNavigationLink(notification)
                       const content = (
-                        <div className="flex items-start gap-3.5 px-5 py-4 hover:bg-slate-50 dark:hover:bg-white/[0.03] transition-colors group">
-                          <div className={`p-2 flex-shrink-0 ${colorClass}`}>
+                        <div className="flex items-start gap-3.5 px-5 py-4 hover:bg-[var(--bg-subtle)] transition-colors group">
+                          <div className={`p-2 rounded-lg flex-shrink-0 ${colorClass}`}>
                             <Icon className="w-4 h-4" />
                           </div>
                           <div className="flex-1 min-w-0">
@@ -399,20 +431,25 @@ export default function NotificationsButton() {
                                 <p className="text-[13px] font-semibold text-[var(--text-primary)] truncate">
                                   {notification.title}
                                 </p>
-                                <p className="text-[12px] text-[var(--text-tertiary)] mt-0.5 line-clamp-2">
+                                <p className="text-[12px] text-[var(--text-secondary)] mt-0.5 line-clamp-2">
                                   {notification.body}
                                 </p>
                               </div>
                               {!notification.read && (
-                                <div className="w-2 h-2 bg-blue-500 mt-1.5 flex-shrink-0" />
+                                <div className="w-2 h-2 rounded-full bg-brand-500 mt-1.5 flex-shrink-0" />
                               )}
                             </div>
                             <div className="flex items-center gap-3 mt-2">
-                              <span className="text-[11px] text-slate-400 dark:text-slate-500">
-                                {humanDate(notification.sent_at)}
+                              {notification.from && (
+                                <span className="text-[11px] text-[var(--text-secondary)]">
+                                  From {notification.from}
+                                </span>
+                              )}
+                              <span className="text-[11px] text-[var(--text-tertiary)]">
+                                {formatWhen(notification.sent_at)}
                               </span>
                               {link && (
-                                <span className="text-[11px] font-medium text-brand-700 dark:text-brand-400">
+                                <span className="text-[11px] font-medium text-brand-600 dark:text-brand-400">
                                   See more
                                 </span>
                               )}
@@ -427,7 +464,7 @@ export default function NotificationsButton() {
                                   e.stopPropagation()
                                   handleMarkRead(notification.id)
                                 }}
-                                className="p-1.5 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 transition-colors"
+                                className="p-1.5 rounded-md text-[var(--text-tertiary)] hover:text-accent-600 hover:bg-accent-50 dark:hover:bg-accent-900/20 transition-colors"
                                 title="Mark read"
                               >
                                 <Check className="w-3.5 h-3.5" />
@@ -439,7 +476,7 @@ export default function NotificationsButton() {
                                 e.stopPropagation()
                                 handleDelete(notification.id)
                               }}
-                              className="p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                              className="p-1.5 rounded-md text-[var(--text-tertiary)] hover:text-danger hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
                               title="Remove"
                             >
                               <Trash2 className="w-3.5 h-3.5" />
@@ -470,15 +507,15 @@ export default function NotificationsButton() {
 
               {/* Pagination */}
               {pagination && pagination.total_pages > 1 && (
-                <div className="flex items-center justify-between gap-2 px-5 py-3 border-t border-slate-100 dark:border-white/[0.08] flex-shrink-0">
+                <div className="flex items-center justify-between gap-2 px-5 py-3 border-t border-[var(--border)] flex-shrink-0">
                   <button
                     onClick={() => setPage((current) => Math.max(1, current - 1))}
                     disabled={pagination.page <= 1}
-                    className="px-3 py-1.5 border border-slate-200 dark:border-white/[0.1] text-[12px] font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-white/[0.06] disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                    className="px-3 py-1.5 border border-[var(--border)] rounded-md text-[12px] font-medium text-[var(--text-secondary)] hover:bg-[var(--bg-subtle)] disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
                   >
                     Previous
                   </button>
-                  <span className="text-[12px] text-slate-400 dark:text-slate-500">
+                  <span className="text-[12px] text-[var(--text-tertiary)]">
                     Page {pagination.page} of {pagination.total_pages}
                   </span>
                   <button
@@ -486,7 +523,7 @@ export default function NotificationsButton() {
                       setPage((current) => Math.min(pagination.total_pages, current + 1))
                     }
                     disabled={pagination.page >= pagination.total_pages}
-                    className="px-3 py-1.5 border border-slate-200 dark:border-white/[0.1] text-[12px] font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-white/[0.06] disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                    className="px-3 py-1.5 border border-[var(--border)] rounded-md text-[12px] font-medium text-[var(--text-secondary)] hover:bg-[var(--bg-subtle)] disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
                   >
                     Next
                   </button>

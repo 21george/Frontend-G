@@ -20,7 +20,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 
 function Card({ children, className = '' }: { children: React.ReactNode; className?: string }) {
   return (
-    <div className={`bg-[var(--bg-card)]  overflow-hidden ${className}`}>
+    <div className={`bg-[var(--bg-card)] rounded-lg border border-[var(--border)] overflow-hidden ${className}`}>
       {children}
     </div>
   )
@@ -29,10 +29,10 @@ function Card({ children, className = '' }: { children: React.ReactNode; classNa
 function CardHeader({ icon, title }: { icon: React.ReactNode; title: string }) {
   return (
     <div className="flex items-center gap-3 px-6 py-4 bg-[var(--bg-subtle)] ">
-      <div className="w-9 h-9 bg-blue-600 flex items-center justify-center">
+      <div className="w-9 h-9 bg-brand-600 flex items-center justify-center rounded-md">
         {icon}
       </div>
-      <h2 className="text-base font-semibold text-slate-900 dark:text-white">{title}</h2>
+      <h2 className="text-base font-semibold text-[var(--text-primary)]">{title}</h2>
     </div>
   )
 }
@@ -56,7 +56,7 @@ function InputField({
 }) {
   return (
     <div className="space-y-1.5">
-      <label className="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wide">{label}</label>
+      <label className="text-xs font-medium text-[var(--text-secondary)] uppercase tracking-wide">{label}</label>
       <div className="relative">
         <input
           type={type}
@@ -64,13 +64,13 @@ function InputField({
           onChange={(e) => onChange(e.target.value)}
           disabled={disabled}
           placeholder={placeholder}
-          className={`w-full px-4 py-2.5 pr-10 text-sm transition-all focus:outline-none focus:ring-2 focus:ring-blue-500/20 ${
+          className={`w-full px-4 py-2.5 pr-10 text-sm border border-[var(--border)] rounded-md transition-all focus:outline-none focus:ring-2 focus:ring-brand-500/20 ${
             disabled
-              ? 'bg-[var(--bg-subtle)]  text-slate-400 cursor-not-allowed'
-              : 'bg-[var(--bg-subtle)]  text-slate-900 dark:text-white focus:border-blue-500'
+              ? 'bg-[var(--bg-subtle)]  text-[var(--text-tertiary)] cursor-not-allowed'
+              : 'bg-[var(--bg-subtle)] text-[var(--text-primary)] focus:border-brand-500'
           }`}
         />
-        {icon && <div className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400">{icon}</div>}
+        {icon && <div className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--text-tertiary)]">{icon}</div>}
       </div>
     </div>
   )
@@ -89,12 +89,12 @@ function SelectField({
 }) {
   return (
     <div className="space-y-1.5">
-      <label className="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wide">{label}</label>
+      <label className="text-xs font-medium text-[var(--text-secondary)] uppercase tracking-wide">{label}</label>
       <div className="relative">
         <select
           value={value}
           onChange={(e) => onChange(e.target.value)}
-          className="w-full px-4 py-2.5 pr-10 text-sm bg-[var(--bg-subtle)] text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 appearance-none cursor-pointer"
+          className="w-full px-4 py-2.5 pr-10 text-sm bg-[var(--bg-subtle)] border border-[var(--border)] rounded-md text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 appearance-none cursor-pointer"
         >
           {options.map((opt) => (
             <option key={opt.value} value={opt.value}>
@@ -102,7 +102,7 @@ function SelectField({
             </option>
           ))}
         </select>
-        <ChevronRight className="w-4 h-4 absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 rotate-90 pointer-events-none" />
+        <ChevronRight className="w-4 h-4 absolute right-3 top-1/2 -translate-y-1/2 text-[var(--text-tertiary)] rotate-90 pointer-events-none" />
       </div>
     </div>
   )
@@ -125,7 +125,7 @@ function Toggle({
       disabled={disabled}
       onClick={() => onChange(!checked)}
       className={`relative inline-flex h-5 w-9 flex-shrink-0 cursor-pointer border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed ${
-        checked ? 'bg-blue-600' : 'bg-slate-300 dark:bg-slate-600'
+        checked ? 'bg-brand-600' : 'bg-slate-300 dark:bg-slate-600'
       }`}
     >
       <span
@@ -152,12 +152,12 @@ function ToggleRow({
   onChange: (v: boolean) => void
 }) {
   return (
-    <div className="flex items-center justify-between py-3 px-4 hover:bg-slate-50 dark:hover:bg-[#1E293B] transition-colors">
+    <div className="flex items-center justify-between py-3 px-4 hover:bg-[var(--bg-subtle)] dark:hover:bg-[var(--bg-subtle)] transition-colors">
       <div className="flex items-center gap-3 flex-1">
-        {icon && <div className="text-slate-400">{icon}</div>}
+        {icon && <div className="text-[var(--text-tertiary)]">{icon}</div>}
         <div className="flex-1">
-          <p className="text-sm font-medium text-slate-900 dark:text-white">{label}</p>
-          {description && <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">{description}</p>}
+          <p className="text-sm font-medium text-[var(--text-primary)]">{label}</p>
+          {description && <p className="text-xs text-[var(--text-secondary)] mt-0.5">{description}</p>}
         </div>
       </div>
       <Toggle checked={checked} onChange={onChange} />
@@ -181,18 +181,18 @@ function ActionRow({
   return (
     <button
       onClick={onClick}
-      className="w-full flex items-center justify-between py-3 px-4 hover:bg-slate-50 dark:hover:bg-[#1E293B] transition-colors text-left"
+      className="w-full flex items-center justify-between py-3 px-4 hover:bg-[var(--bg-subtle)] dark:hover:bg-[var(--bg-subtle)] transition-colors text-left"
     >
       <div className="flex items-center gap-3 flex-1">
-        {icon && <div className="text-slate-400">{icon}</div>}
+        {icon && <div className="text-[var(--text-tertiary)]">{icon}</div>}
         <div className="flex-1 text-left">
-          <p className="text-sm font-medium text-slate-900 dark:text-white">{label}</p>
-          {description && <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">{description}</p>}
+          <p className="text-sm font-medium text-[var(--text-primary)]">{label}</p>
+          {description && <p className="text-xs text-[var(--text-secondary)] mt-0.5">{description}</p>}
         </div>
       </div>
       <div className="flex items-center gap-2">
-        {actionText && <span className="text-sm font-medium text-slate-600 dark:text-slate-300">{actionText}</span>}
-        <ChevronRight className="w-4 h-4 text-slate-400" />
+        {actionText && <span className="text-sm font-medium text-[var(--text-secondary)]">{actionText}</span>}
+        <ChevronRight className="w-4 h-4 text-[var(--text-tertiary)]" />
       </div>
     </button>
   )
@@ -386,10 +386,10 @@ export default function SettingsPage() {
             initial={{ opacity: 0, x: 20, y: -10 }}
             animate={{ opacity: 1, x: 0, y: 0 }}
             exit={{ opacity: 0, x: 20, y: -10 }}
-            className={`fixed top-4 right-4 z-50 text-white text-sm px-4 py-2.5 flex items-center gap-2 ${
+            className={`fixed top-4 right-4 z-50 text-white text-sm px-4 py-2.5 flex items-center gap-2 rounded-md ${
               toast.type === 'error'
-                ? 'bg-error-600'
-                : 'bg-blue-600'
+                ? 'bg-red-600'
+                : 'bg-brand-600'
             }`}
           >
             {toast.type === 'error' ? <X className="w-4 h-4" /> : <Check className="w-4 h-4" />}
@@ -409,8 +409,8 @@ export default function SettingsPage() {
           <Card>
             <div className="p-6 space-y-6 ">
               {/* Photo Section */}
-              <div className="flex items-center gap-4 rounded-10 p-4 bg-[var(--bg-subtle)]">
-                <div className="relative h-20 w-20 overflow-hidden rounded-10">
+              <div className="flex items-center gap-4 rounded-xl p-4 bg-[var(--bg-subtle)]">
+                <div className="relative h-20 w-20 overflow-hidden rounded-xl">
                   {coach?.profile_photo ? (
                     <>
                       {!imageErrored ? (
@@ -418,19 +418,19 @@ export default function SettingsPage() {
                           src={coach.profile_photo}
                           alt={coach.name ?? 'Coach'}
                           fill
-                          className="rounded-10 object-cover ring-2 ring-slate-200 dark:ring-white/[0.1]"
+                          className="rounded-xl object-cover ring-2 ring-[var(--border)]"
                           sizes="80px"
                           unoptimized
                           onError={() => setImageErrored(true)}
                         />
                       ) : (
-                        <div className="absolute inset-0 flex items-center justify-center rounded-10 bg-brand-600 text-white text-lg font-bold">
+                        <div className="absolute inset-0 flex items-center justify-center rounded-full bg-brand-600 text-white text-lg font-bold">
                           {coach.name?.[0]?.toUpperCase() ?? 'C'}
                         </div>
                       )}
                       <button
                         onClick={() => fileInputRef.current?.click()}
-                        className="absolute -bottom-1 -right-1 flex h-7 w-7 items-center justify-center rounded-10 bg-[var(--btn-bg)] text-white hover:bg-[var(--btn-hover)] z-10"
+                        className="absolute -bottom-1 -right-1 flex h-7 w-7 items-center justify-center rounded-full bg-[var(--btn-bg)] text-white hover:bg-[var(--btn-hover)] z-10"
                         aria-label="Change profile photo"
                       >
                         <Camera className="w-3.5 h-3.5" />
@@ -439,26 +439,26 @@ export default function SettingsPage() {
                   ) : (
                     <button
                       onClick={() => fileInputRef.current?.click()}
-                      className="flex h-full w-full items-center justify-center rounded-10 border-2 border-dashed border-slate-300 text-slate-400 transition-colors hover:border-[var(--btn-bg)] hover:text-[var(--btn-bg)] dark:border-slate-600"
+                      className="flex h-full w-full items-center justify-center rounded-full border-2 border-dashed border-[var(--border)] text-[var(--text-tertiary)] transition-colors hover:border-[var(--btn-bg)] hover:text-[var(--btn-bg)] dark:border-[var(--border)]"
                       aria-label="Upload profile photo"
                     >
                       <Camera className="w-8 h-8" />
                     </button>
                   )}
                   {photoUploading && (
-                    <div className="absolute inset-0 z-20 flex items-center justify-center rounded-10 bg-black/50">
+                    <div className="absolute inset-0 z-20 flex items-center justify-center rounded-xl bg-black/50">
                       <Loader2 className="w-6 h-6 text-white animate-spin" />
                     </div>
                   )}
                 </div>
                 <div className="flex-1">
-                  <h3 className="text-sm font-semibold text-slate-900 dark:text-white">Profile Photo</h3>
+                  <h3 className="text-sm font-semibold text-[var(--text-primary)]">Profile Photo</h3>
                   <div className="flex gap-3 mt-2">
-                    <button onClick={() => fileInputRef.current?.click()} disabled={photoUploading} className="text-xs font-medium text-blue-600 hover:text-blue-700 disabled:opacity-50">
+                    <button onClick={() => fileInputRef.current?.click()} disabled={photoUploading} className="text-xs font-medium text-brand-600 hover:text-brand-700 disabled:opacity-50">
                       {coach?.profile_photo ? 'Change' : 'Upload'}
                     </button>
                     {coach?.profile_photo && (
-                      <button onClick={handlePhotoDelete} disabled={photoUploading} className="text-xs font-medium text-red-600 hover:text-red-700 disabled:opacity-50">
+                      <button onClick={handlePhotoDelete} disabled={photoUploading} className="text-xs font-medium text-danger hover:text-red-700 disabled:opacity-50">
                         Remove
                       </button>
                     )}
@@ -492,9 +492,9 @@ export default function SettingsPage() {
 
               {/* Social Links */}
               <div className="pt-2">
-                <div className="flex items-center gap-2 pb-3 border-b border-slate-200 dark:border-slate-700 mb-4">
-                  <LinkIcon className="w-4 h-4 text-slate-400" />
-                  <span className="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wide">Social Links</span>
+                <div className="flex items-center gap-2 pb-3 border-b border-[var(--border)] mb-4">
+                  <LinkIcon className="w-4 h-4 text-[var(--text-tertiary)]" />
+                  <span className="text-xs font-medium text-[var(--text-secondary)] uppercase tracking-wide">Social Links</span>
                 </div>
                 <div className="space-y-4">
                   <InputField label="LinkedIn" value={linkedin} onChange={setLinkedin} placeholder="linkedin.com/in/yourname" icon={<Globe className="w-4 h-4" />} />
@@ -508,7 +508,7 @@ export default function SettingsPage() {
           {/* Account & Security Card */}
           <Card>
             <CardHeader icon={<Shield className="w-5 h-5 text-white" />} title="Account & Security" />
-            <div className="divide-y divide-slate-200 dark:divide-slate-700">
+            <div className="divide-y divide-slate-200 dark:divide-[var(--border)]">
               <ActionRow
                 icon={<Lock className="w-5 h-5" />}
                 label="Password"
@@ -525,12 +525,12 @@ export default function SettingsPage() {
               />
               <div className="flex items-center justify-between py-3 px-4">
                 <div className="flex items-center gap-3">
-                  <div className="w-5 h-5 text-slate-400">
+                  <div className="w-5 h-5 text-[var(--text-tertiary)]">
                     {theme === 'dark' ? <Moon className="w-5 h-5" /> : <Sun className="w-5 h-5" />}
                   </div>
                   <div>
-                    <p className="text-sm font-medium text-slate-900 dark:text-white">Theme</p>
-                    <p className="text-xs text-slate-500 dark:text-slate-400">Switch between light and dark mode</p>
+                    <p className="text-sm font-medium text-[var(--text-primary)]">Theme</p>
+                    <p className="text-xs text-[var(--text-secondary)]">Switch between light and dark mode</p>
                   </div>
                 </div>
                 <Toggle checked={theme === 'dark'} onChange={toggleTheme} />
@@ -550,7 +550,7 @@ export default function SettingsPage() {
         <div className="space-y-6">
           <Card>
             <CardHeader icon={<Bell className="w-5 h-5 text-white" />} title="Notifications" />
-            <div className="divide-y divide-slate-200 dark:divide-slate-700">
+            <div className="divide-y divide-slate-200 dark:divide-[var(--border)]">
               <ToggleRow
                 icon={<Mail className="w-5 h-5" />}
                 label="Email Notifications"
@@ -602,27 +602,27 @@ export default function SettingsPage() {
       </div>
 
       {/* Sticky Save Bar */}
-      <div className="fixed bottom-0 left-0 lg:left-64 right-0 z-30 bg-white/90 dark:bg-surface-card-dark/90 backdrop-blur-md border-t border-slate-200 dark:border-white/[0.08] px-6 py-4">
+      <div className="fixed bottom-0 left-0 lg:left-64 right-0 z-30 bg-[var(--bg-card)]/90 backdrop-blur-md border-t border-[var(--border)] px-6 py-4">
         <div className="max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3">
           <div className="text-sm">
             {dirty ? (
               <span className="text-amber-600 font-medium">Unsaved changes</span>
             ) : (
-              <span className="text-slate-500 dark:text-slate-400">All changes saved</span>
+              <span className="text-[var(--text-secondary)]">All changes saved</span>
             )}
           </div>
           <div className="flex items-center gap-3">
             <button
               onClick={handleCancel}
               disabled={!dirty || saving}
-              className="px-4 py-2 text-sm font-medium text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-[#1E293B] transition-colors disabled:opacity-50"
+              className="px-4 py-2 text-sm font-medium text-[var(--text-secondary)] border border-[var(--border)] hover:bg-[var(--bg-subtle)] dark:hover:bg-[var(--bg-subtle)] transition-colors disabled:opacity-50"
             >
               Cancel
             </button>
             <button
               onClick={handleSave}
               disabled={!dirty || saving}
-              className="px-4 py-2 bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 transition-colors disabled:opacity-50 flex items-center gap-2"
+              className="px-4 py-2 bg-brand-600 text-white text-sm font-medium hover:bg-brand-700 transition-colors disabled:opacity-50 flex items-center gap-2 rounded-md"
             >
               {saving && <Loader2 className="w-4 h-4 animate-spin" />}
               {saving ? 'Saving...' : 'Save Changes'}
@@ -652,15 +652,15 @@ export default function SettingsPage() {
               initial={{ scale: 0.95, opacity: 0, y: 20 }}
               animate={{ scale: 1, opacity: 1, y: 0 }}
               exit={{ scale: 0.95, opacity: 0, y: 20 }}
-              className="relative bg-[var(--bg-card)] border border-slate-200 dark:border-slate-700 w-full max-w-md p-6"
+              className="relative bg-[var(--bg-card)] border border-[var(--border)] w-full max-w-md p-6"
             >
               <div className="flex items-center gap-3 mb-5">
-                <div className="w-10 h-10 bg-blue-600 flex items-center justify-center">
+                <div className="w-10 h-10 bg-brand-600 flex items-center justify-center rounded-md">
                   <Lock className="w-5 h-5 text-white" />
                 </div>
                 <div>
-                  <h3 className="text-base font-semibold text-slate-900 dark:text-white">Change Password</h3>
-                  <p className="text-xs text-slate-500 dark:text-slate-400">Update your password securely</p>
+                  <h3 className="text-base font-semibold text-[var(--text-primary)]">Change Password</h3>
+                  <p className="text-xs text-[var(--text-secondary)]">Update your password securely</p>
                 </div>
               </div>
 
@@ -670,12 +670,12 @@ export default function SettingsPage() {
                 <InputField label="Confirm Password" value={pwConfirm} onChange={setPwConfirm} type="password" placeholder="Re-enter new password" />
 
                 {pwMessage && (
-                  <div className={`p-3 text-sm ${pwMessage.type === 'ok' ? 'bg-emerald-50 dark:bg-emerald-950/20 text-emerald-700 dark:text-emerald-400' : 'bg-red-50 dark:bg-red-950/20 text-red-700 dark:text-red-400'}`}>
+                  <div className={`p-3 text-sm rounded-md ${pwMessage.type === 'ok' ? 'bg-accent-50 dark:bg-accent-900/20 text-accent-700 dark:text-accent-400' : 'bg-red-50 dark:bg-red-950/20 text-danger dark:text-red-400'}`}>
                     {pwMessage.text}
                   </div>
                 )}
 
-                <div className="flex justify-end gap-3 pt-4 border-t border-slate-200 dark:border-slate-700">
+                <div className="flex justify-end gap-3 pt-4 border-t border-[var(--border)]">
                   <button
                     onClick={() => {
                       setShowPwModal(false)
@@ -684,14 +684,14 @@ export default function SettingsPage() {
                       setPwNew('')
                       setPwConfirm('')
                     }}
-                    className="px-4 py-2 text-sm font-medium text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-[#1E293B] transition-colors"
+                    className="px-4 py-2 text-sm font-medium text-[var(--text-secondary)] border border-[var(--border)] rounded-md hover:bg-[var(--bg-subtle)] dark:hover:bg-[var(--bg-subtle)] transition-colors"
                   >
                     Cancel
                   </button>
                   <button
                     onClick={handleChangePassword}
                     disabled={pwSaving}
-                    className="px-4 py-2 bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 transition-colors disabled:opacity-50"
+                    className="px-4 py-2 bg-brand-600 text-white text-sm font-medium hover:bg-brand-700 transition-colors disabled:opacity-50 rounded-md"
                   >
                     {pwSaving ? 'Saving...' : 'Update Password'}
                   </button>

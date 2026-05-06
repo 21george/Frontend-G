@@ -69,6 +69,10 @@ api.interceptors.request.use(
     if (token && config.headers && !isAuthPath) {
       config.headers.Authorization = `Bearer ${token}`
     }
+    // For multipart uploads (FormData), let the browser set the Content-Type with boundary
+    if (config.data instanceof FormData) {
+      delete config.headers['Content-Type']
+    }
     return config
   },
   (error) => Promise.reject(error)

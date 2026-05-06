@@ -80,7 +80,7 @@ export default function NewNutritionPlanPage() {
             <div key={di} className="card p-4">
               <h3 className="font-semibold text-slate-900 dark:text-white mb-4 capitalize">{day.day} (template for all days)</h3>
               {day.meals.map((meal, mi) => (
-                <div key={mi} className="bg-slate-50 dark:bg-surface-page-dark p-3 mb-3">
+                <div key={mi} className="bg-slate-50 dark:bg-[#121212] p-3 mb-3">
                   <div className="flex gap-2 mb-2">
                     <input value={meal.meal_name} className="input text-sm w-32" placeholder="Meal" readOnly />
                     <input value={meal.time} className="input text-sm w-28" type="time" readOnly />

@@ -355,7 +355,7 @@ function NutritionListCard({
                       handleCancelEdit()
                     }
                   }}
-                  className="w-full max-w-md border border-slate-300 dark:border-white/[0.12] bg-white dark:bg-surface-page-dark px-3 py-2 text-sm font-semibold text-slate-900 dark:text-white outline-none focus:border-[#4F46E5]"
+                  className="w-full max-w-md border border-slate-300 dark:border-white/[0.12] bg-white dark:bg-[#121212] px-3 py-2 text-sm font-semibold text-slate-900 dark:text-white outline-none focus:border-[#4F46E5]"
                 />
               ) : (
                 <h3 className="font-semibold text-base text-slate-900 dark:text-white mb-1 truncate">
@@ -438,7 +438,7 @@ function NutritionListCard({
       </div>
 
       {expanded && (
-        <div className="mt-4 border border-slate-200 dark:border-white/[0.1] bg-slate-50 dark:bg-surface-page-dark/50 overflow-hidden">
+        <div className="mt-4 border border-slate-200 dark:border-white/[0.1] bg-slate-50 dark:bg-[#121212]/50 overflow-hidden">
           <NutritionPlanCard planId={plan.id} />
         </div>
       )}
@@ -831,7 +831,7 @@ export default function ClientDetailPage() {
 
   if (isLoading) return (
     <DashboardLayout>
-      <div className="fixed top-16 lg:top-0 left-0 lg:left-64 right-0 bottom-0 flex flex-col bg-slate-50 dark:bg-surface-page-dark animate-pulse">
+      <div className="fixed top-16 lg:top-0 left-0 lg:left-64 right-0 bottom-0 flex flex-col bg-slate-50 dark:bg-[#121212] animate-pulse">
         <div className="h-11 bg-[var(--bg-card)] border-b border-slate-200 dark:border-white/[0.06]" />
         <div className="flex flex-1">
           <div className="hidden md:block w-[300px] border-r border-slate-200 dark:border-white/[0.06]" />
@@ -846,7 +846,7 @@ export default function ClientDetailPage() {
 
   if (!client) return (
     <DashboardLayout>
-      <div className="fixed top-16 lg:top-0 left-0 lg:left-64 right-0 bottom-0 flex items-center justify-center bg-slate-50 dark:bg-surface-page-dark">
+      <div className="fixed top-16 lg:top-0 left-0 lg:left-64 right-0 bottom-0 flex items-center justify-center bg-slate-50 dark:bg-[#121212]">
         <p className="text-slate-500 text-sm">Client not found.</p>
       </div>
     </DashboardLayout>
@@ -856,7 +856,7 @@ export default function ClientDetailPage() {
 
   return (
     <DashboardLayout>
-      <div className="fixed top-16 lg:top-0 left-0 lg:left-64 right-0 bottom-0 flex flex-col bg-slate-50 dark:bg-surface-page-dark overflow-hidden">
+      <div className="fixed top-16 lg:top-0 left-0 lg:left-64 right-0 bottom-0 flex flex-col bg-slate-50 dark:bg-[#121212] overflow-hidden">
 
         {/* ── Breadcrumb header ─────────────────────────────────────── */}
         <header className="flex items-center justify-between px-3 sm:px-5 h-11 border-b border-slate-200 dark:border-white/[0.06] bg-[var(--bg-card)] flex-shrink-0">
@@ -917,7 +917,7 @@ export default function ClientDetailPage() {
             fixed top-16 bottom-0 left-0 z-40 w-[20rem] sm:w-[300px] transform transition-transform duration-200 ease-out
             md:relative md:top-auto md:bottom-auto md:inset-auto md:z-auto md:translate-x-0 md:w-[300px]
             ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}
-            flex-shrink-0 border-r border-slate-200 dark:border-white/[0.06] overflow-y-auto bg-white dark:bg-surface-page-dark
+            flex-shrink-0 border-r border-slate-200 dark:border-white/[0.06] overflow-y-auto bg-white dark:bg-[#121212]
           `}>
             {/* Mobile close button */}
             <div className="md:hidden flex items-center justify-between px-4 py-3 border-b border-slate-200 dark:border-white/[0.06]">
@@ -1147,7 +1147,7 @@ export default function ClientDetailPage() {
           <main className="flex-1 flex flex-col overflow-hidden">
 
             {/* Tab navigation */}
-            <div className="flex items-center border-b border-slate-200 dark:border-white/[0.06] bg-white dark:bg-surface-page-dark px-2 sm:px-5 overflow-x-auto flex-shrink-0 scrollbar-hide">
+            <div className="flex items-center border-b border-slate-200 dark:border-white/[0.06] bg-white dark:bg-[#121212] px-2 sm:px-5 overflow-x-auto flex-shrink-0 scrollbar-hide">
               {TABS.map(({ key, label }) => (
                 <button
                   key={key}
@@ -1690,7 +1690,7 @@ export default function ClientDetailPage() {
                                     {(log.exercises ?? []).map((ex: any, ei: number) => {
                                       const planned = plannedExercises.find((pe: any) => pe.name === ex.name)
                                       return (
-                                        <div key={ei} className="border border-slate-100 dark:border-white/[0.05] bg-slate-50 dark:bg-surface-page-dark overflow-hidden">
+                                        <div key={ei} className="border border-slate-100 dark:border-white/[0.05] bg-slate-50 dark:bg-[#121212] overflow-hidden">
                                           {/* Exercise header */}
                                           <div className="flex items-center gap-3 p-3 border-b border-slate-100 dark:border-white/[0.04]">
                                             <div className="w-7 h-7 bg-blue-100 dark:bg-blue-900/25 flex items-center justify-center flex-shrink-0">
@@ -1767,7 +1767,7 @@ export default function ClientDetailPage() {
                                         <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
                                           {logMedia.map((m: any) => (
                                             <a key={m.id} href={m.url} target="_blank" rel="noopener noreferrer"
-                                              className="group relative aspect-square bg-slate-100 dark:bg-surface-page-dark border border-slate-200 dark:border-white/[0.06] flex items-center justify-center overflow-hidden hover:border-blue-300 dark:hover:border-blue-700/50 transition-colors">
+                                              className="group relative aspect-square bg-slate-100 dark:bg-[#121212] border border-slate-200 dark:border-white/[0.06] flex items-center justify-center overflow-hidden hover:border-blue-300 dark:hover:border-blue-700/50 transition-colors">
                                               {m.type === 'video' ? (
                                                 <>
                                                   <Video className="w-6 h-6 text-slate-400" />
@@ -1986,7 +1986,7 @@ export default function ClientDetailPage() {
                       <p className="text-[11px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-3">Progress Photos</p>
                       <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
                         {(Array.isArray(analytics?.photos) ? analytics.photos : []).map((p: any) => (
-                          <div key={p.id} className="aspect-square bg-slate-100 dark:bg-surface-page-dark border border-slate-200 dark:border-white/[0.06] overflow-hidden">
+                          <div key={p.id} className="aspect-square bg-slate-100 dark:bg-[#121212] border border-slate-200 dark:border-white/[0.06] overflow-hidden">
                             {p.url ? (
                               <img src={p.url} alt="" className="w-full h-full object-cover" />
                             ) : (
@@ -2027,7 +2027,7 @@ export default function ClientDetailPage() {
                     </div>
                   </div>
                   <div className="flex flex-col h-[420px] sm:h-[500px]">
-                    <div className="flex-1 p-4 overflow-y-auto space-y-3 bg-slate-50 dark:bg-surface-page-dark">
+                    <div className="flex-1 p-4 overflow-y-auto space-y-3 bg-slate-50 dark:bg-[#121212]">
                       {msgLoading && allMessages.length === 0 && (
                         <p className="text-center text-slate-600 text-[13px] mt-8">Loading messages…</p>
                       )}
@@ -2089,7 +2089,7 @@ export default function ClientDetailPage() {
                         {uploadMedia.isPending ? <Loader2 size={15} className="animate-spin" /> : <Paperclip size={15} />}
                       </button>
                       <input value={msg} onChange={e => setMsg(e.target.value)} onKeyDown={e => e.key === 'Enter' && handleSend()}
-                        className="flex-1 bg-slate-50 dark:bg-surface-page-dark border border-slate-200 dark:border-white/[0.07] px-4 py-2 text-[13px] text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-700 outline-none focus:border-slate-300 dark:focus:border-white/[0.15]"
+                        className="flex-1 bg-slate-50 dark:bg-[#121212] border border-slate-200 dark:border-white/[0.07] px-4 py-2 text-[13px] text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-700 outline-none focus:border-slate-300 dark:focus:border-white/[0.15]"
                         placeholder="Type a message…" />
                       <button onClick={handleSend} disabled={sendMsg.isPending || (!msg.trim() && !pendingFile)}
                         className="px-4 py-2 bg-brand-600 hover:bg-brand-700 text-white transition-colors disabled:opacity-40 disabled:cursor-not-allowed">
@@ -2404,12 +2404,12 @@ export default function ClientDetailPage() {
                                       {/* ── Inline chat panel ── */}
                                       {activeChatId === `chat-${c.id}` && (
                                         <div className="border-t border-slate-200 dark:border-white/[0.06] flex flex-col" style={{ height: 300 }}>
-                                          <div className="flex items-center gap-2 px-4 py-2 bg-slate-50 dark:bg-surface-page-dark border-b border-slate-200 dark:border-white/[0.05]">
+                                          <div className="flex items-center gap-2 px-4 py-2 bg-slate-50 dark:bg-[#121212] border-b border-slate-200 dark:border-white/[0.05]">
                                             {socketConnected
                                               ? <><Wifi size={10} className="text-emerald-400" /><span className="text-[10px] text-emerald-400">Connected · live chat</span></>
                                               : <><WifiOff size={10} className="text-slate-500" /><span className="text-[10px] text-slate-500">Offline — messages saved via REST</span></>}
                                           </div>
-                                          <div className="flex-1 overflow-y-auto p-3 space-y-2 bg-slate-50 dark:bg-surface-page-dark">
+                                          <div className="flex-1 overflow-y-auto p-3 space-y-2 bg-slate-50 dark:bg-[#121212]">
                                             {allMessages.filter((m: any) => {
                                               const checkinTime = new Date(c.scheduled_at).getTime()
                                               const msgTime = new Date(m.sent_at).getTime()
@@ -2441,7 +2441,7 @@ export default function ClientDetailPage() {
                                               onChange={e => setMsg(e.target.value)}
                                               onKeyDown={e => e.key === 'Enter' && handleSend()}
                                               placeholder="Send a message…"
-                                              className="flex-1 bg-slate-50 dark:bg-surface-page-dark border border-slate-200 dark:border-white/[0.07] px-3 py-2 text-[12px] text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-600 outline-none focus:border-blue-400 dark:focus:border-white/[0.18]"
+                                              className="flex-1 bg-slate-50 dark:bg-[#121212] border border-slate-200 dark:border-white/[0.07] px-3 py-2 text-[12px] text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-600 outline-none focus:border-blue-400 dark:focus:border-white/[0.18]"
                                             />
                                             <button onClick={handleSend} disabled={!msg.trim()}
                                               className="px-3 py-2 bg-brand-600 hover:bg-brand-700 text-white transition-colors disabled:opacity-40">
@@ -2503,7 +2503,7 @@ export default function ClientDetailPage() {
                     type="date"
                     value={scheduleForm.date}
                     onChange={e => setScheduleForm(f => ({ ...f, date: e.target.value }))}
-                    className="w-full bg-slate-50 dark:bg-surface-page-dark border border-slate-200 dark:border-white/[0.08] px-3 py-2.5 text-[13px] text-slate-900 dark:text-white outline-none focus:border-slate-300 dark:focus:border-white/[0.2] [color-scheme:light] dark:[color-scheme:dark]"
+                    className="w-full bg-slate-50 dark:bg-[#121212] border border-slate-200 dark:border-white/[0.08] px-3 py-2.5 text-[13px] text-slate-900 dark:text-white outline-none focus:border-slate-300 dark:focus:border-white/[0.2] [color-scheme:light] dark:[color-scheme:dark]"
                   />
                 </div>
                 <div>
@@ -2512,7 +2512,7 @@ export default function ClientDetailPage() {
                     type="time"
                     value={scheduleForm.time}
                     onChange={e => setScheduleForm(f => ({ ...f, time: e.target.value }))}
-                    className="w-full bg-slate-50 dark:bg-surface-page-dark border border-slate-200 dark:border-white/[0.08] px-3 py-2.5 text-[13px] text-slate-900 dark:text-white outline-none focus:border-slate-300 dark:focus:border-white/[0.2] [color-scheme:light] dark:[color-scheme:dark]"
+                    className="w-full bg-slate-50 dark:bg-[#121212] border border-slate-200 dark:border-white/[0.08] px-3 py-2.5 text-[13px] text-slate-900 dark:text-white outline-none focus:border-slate-300 dark:focus:border-white/[0.2] [color-scheme:light] dark:[color-scheme:dark]"
                   />
                 </div>
               </div>
@@ -2550,7 +2550,7 @@ export default function ClientDetailPage() {
                     value={scheduleForm.meeting_link}
                     onChange={e => setScheduleForm(f => ({ ...f, meeting_link: e.target.value }))}
                     placeholder="https://meet.example.com/room"
-                    className="w-full bg-slate-50 dark:bg-surface-page-dark border border-slate-200 dark:border-white/[0.08] px-3 py-2.5 text-[13px] text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-700 outline-none focus:border-slate-300 dark:focus:border-white/[0.2]"
+                    className="w-full bg-slate-50 dark:bg-[#121212] border border-slate-200 dark:border-white/[0.08] px-3 py-2.5 text-[13px] text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-700 outline-none focus:border-slate-300 dark:focus:border-white/[0.2]"
                   />
                 </div>
               )}
@@ -2563,7 +2563,7 @@ export default function ClientDetailPage() {
                   onChange={e => setScheduleForm(f => ({ ...f, notes: e.target.value }))}
                   rows={3}
                   placeholder="Agenda, topics to discuss…"
-                  className="w-full bg-slate-50 dark:bg-surface-page-dark border border-slate-200 dark:border-white/[0.08] px-3 py-2.5 text-[13px] text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-700 outline-none focus:border-slate-300 dark:focus:border-white/[0.2] resize-none"
+                  className="w-full bg-slate-50 dark:bg-[#121212] border border-slate-200 dark:border-white/[0.08] px-3 py-2.5 text-[13px] text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-700 outline-none focus:border-slate-300 dark:focus:border-white/[0.2] resize-none"
                 />
               </div>
             </div>

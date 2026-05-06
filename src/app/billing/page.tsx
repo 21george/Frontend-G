@@ -169,7 +169,7 @@ export default function BillingPage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0 }}
-            className="bg-white dark:bg-surface-card-dark p-4 lg:p-5 border border-slate-200/80 dark:border-white/[0.08] flex flex-col justify-between "
+            className="bg-white dark:bg-[#1A1A1A] p-4 lg:p-5 border border-slate-200/80 dark:border-white/[0.08] flex flex-col justify-between "
           >
             <span className="text-slate-500 dark:text-neutral-400 text-[10px] lg:text-xs font-semibold uppercase tracking-wider">Monthly Revenue</span>
             <div className="mt-3 lg:mt-4 flex items-baseline gap-2">
@@ -182,7 +182,7 @@ export default function BillingPage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.05 }}
-            className="bg-white dark:bg-surface-card-dark p-4 lg:p-5 border border-slate-200/80 dark:border-white/[0.08] flex flex-col justify-between "
+            className="bg-white dark:bg-[#1A1A1A] p-4 lg:p-5 border border-slate-200/80 dark:border-white/[0.08] flex flex-col justify-between "
           >
             <span className="text-slate-500 dark:text-neutral-400 text-[10px] lg:text-xs font-semibold uppercase tracking-wider">Active Subs</span>
             <div className="mt-3 lg:mt-4 flex items-baseline gap-2">
@@ -195,7 +195,7 @@ export default function BillingPage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
-            className="bg-white dark:bg-surface-card-dark p-4 lg:p-5 border border-slate-200/80 dark:border-white/[0.08] flex flex-col justify-between "
+            className="bg-white dark:bg-[#1A1A1A] p-4 lg:p-5 border border-slate-200/80 dark:border-white/[0.08] flex flex-col justify-between "
           >
             <span className="text-slate-500 dark:text-neutral-400 text-[10px] lg:text-xs font-semibold uppercase tracking-wider">Outstanding</span>
             <div className="mt-3 lg:mt-4 flex items-baseline gap-2">
@@ -210,7 +210,7 @@ export default function BillingPage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.15 }}
-            className="bg-white dark:bg-surface-card-dark p-4 lg:p-5 border border-slate-200/80 dark:border-white/[0.08] flex flex-col justify-between "
+            className="bg-white dark:bg-[#1A1A1A] p-4 lg:p-5 border border-slate-200/80 dark:border-white/[0.08] flex flex-col justify-between "
           >
             <span className="text-slate-500 dark:text-neutral-400 text-[10px] lg:text-xs font-semibold uppercase tracking-wider">Plan Usage</span>
             <div className="mt-3 lg:mt-4 flex items-baseline gap-2">
@@ -221,7 +221,7 @@ export default function BillingPage() {
         </div>
 
         {/* ── USAGE CARD ── */}
-        <div className="bg-white dark:bg-surface-card-dark border border-slate-200/80 dark:border-white/[0.08] p-5 ">
+        <div className="bg-white dark:bg-[#1A1A1A] border border-slate-200/80 dark:border-white/[0.08] p-5 ">
           <div className="flex items-center justify-between mb-4">
             <div>
               <h3 className="text-sm font-semibold text-slate-900 dark:text-white">Current Usage</h3>
@@ -268,7 +268,7 @@ export default function BillingPage() {
                   isCurrent
                     ? 'border-brand-500 dark:border-brand-400 bg-brand-500/10'
                     : 'border-slate-200 dark:border-white/[0.08] hover:border-slate-300 dark:hover:border-white/20'
-                } bg-white dark:bg-surface-card-dark`}
+                } bg-white dark:bg-[#1A1A1A]`}
               >
                 {plan.popular && (
                   <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-0.5 bg-brand-600 text-white text-xs font-semibold ">
@@ -354,7 +354,7 @@ export default function BillingPage() {
 
         {/* ── MANAGE SECTION ── */}
         {(currentTier !== 'free' || subscription?.stripe_customer_id) && (
-          <div className="bg-white dark:bg-surface-card-dark border border-slate-200/80 dark:border-white/[0.08] p-5 ">
+          <div className="bg-white dark:bg-[#1A1A1A] border border-slate-200/80 dark:border-white/[0.08] p-5 ">
             <h3 className="text-sm font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-4">Manage Subscription</h3>
             <div className="flex flex-wrap gap-3">
               <button

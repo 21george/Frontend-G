@@ -403,7 +403,7 @@ export default function NutritionPlansPage() {
                   <select
                     value={sortBy}
                     onChange={e => setSortBy(e.target.value as typeof sortBy)}
-                    className="text-xs border border-slate-200 dark:border-white/[0.08] bg-white dark:bg-surface-page-dark text-slate-600 dark:text-slate-400 px-2 py-1.5 focus:outline-none cursor-pointer"
+                    className="text-xs border border-slate-200 dark:border-white/[0.08] bg-white dark:bg-[#121212] text-slate-600 dark:text-slate-400 px-2 py-1.5 focus:outline-none cursor-pointer"
                   >
                     <option value="calories">Calories</option>
                     <option value="score">Health Score</option>
