@@ -81,7 +81,10 @@ export function AuthFormSplitScreen({
     try {
       await onSubmit(data);
     } catch (error) {
-      console.error("Submission failed:", error);
+      if (process.env.NODE_ENV !== 'production') {
+        // eslint-disable-next-line no-console
+        console.error("Submission failed:", error);
+      }
       // Optionally handle and display submission errors here
     } finally {
       setIsLoading(false);

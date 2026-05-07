@@ -162,16 +162,20 @@ export default function MessagesPage() {
     if (!msg.trim() && !pendingFile) return
     if (!activeClientId) return
     const content = msg.trim() || (pendingFile ? `📎 ${pendingFile.media_filename}` : '')
-    setMsg('')
     const payload: Parameters<typeof sendMsg.mutateAsync>[0] = { client_id: activeClientId, content }
     if (pendingFile) {
       payload.media_url = pendingFile.media_url
       payload.media_type = pendingFile.media_type
       payload.media_filename = pendingFile.media_filename
-      setPendingFile(null)
     }
-    await sendMsg.mutateAsync(payload)
-    relayViaSocket(content)
+    try {
+      await sendMsg.mutateAsync(payload)
+      setMsg('')
+      setPendingFile(null)
+      relayViaSocket(content)
+    } catch {
+      // State remains intact so user can retry
+    }
   }
 
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {

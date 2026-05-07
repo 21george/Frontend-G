@@ -265,7 +265,7 @@ export default function WorkoutPlanDetailPage() {
                         <div key={`${day.key}-mobile-${exercise.name}-${index}`}>
                           <p className="text-sm font-medium text-slate-800 dark:text-slate-100">{exercise.name}</p>
                           <p className="mt-1 text-[11px] text-slate-400 dark:text-slate-500">
-                            {exercise.sets} sets • {exercise.reps} reps • {(exercise.rest_seconds ?? '—')}s rest
+                            {exercise.sets} sets • {exercise.reps} reps • {exercise.rest_seconds != null ? `${exercise.rest_seconds}s rest` : '— rest'}
                           </p>
                         </div>
                       ))}
@@ -385,7 +385,7 @@ export default function WorkoutPlanDetailPage() {
                                 <div key={`${day.key}-${exercise.name}-${index}`}>
                                   <p className="text-sm font-medium text-slate-800 dark:text-slate-100">{exercise.name}</p>
                                   <p className="mt-1 text-[11px] text-slate-400 dark:text-slate-500">
-                                    {exercise.sets} sets • {exercise.reps} reps • {(exercise.rest_seconds ?? '—')}s rest
+                                    {exercise.sets} sets • {exercise.reps} reps • {exercise.rest_seconds != null ? `${exercise.rest_seconds}s rest` : '— rest'}
                                   </p>
                                 </div>
                               ))}
@@ -459,7 +459,7 @@ export default function WorkoutPlanDetailPage() {
                       </div>
                       <div className="bg-white px-3 py-2 text-center dark:bg-white/[0.04]">
                         <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">Rest</p>
-                        <p className="mt-1 text-sm font-bold text-slate-900 dark:text-white">{exercise.rest_seconds}s</p>
+                        <p className="mt-1 text-sm font-bold text-slate-900 dark:text-white">{exercise.rest_seconds != null ? `${exercise.rest_seconds}s` : '—'}</p>
                       </div>
                     </div>
                   </div>

@@ -771,9 +771,8 @@ export default function ClientDetailPage() {
       if (activeChatId === `chat-${meeting.id}`) {
         setActiveChatId(null)
       }
-    } catch (err) {
+    } catch {
       alert('Failed to cancel check-in. Please try again.')
-      console.error(err)
     }
   }, [activeChatId, deleteCheckin])
 

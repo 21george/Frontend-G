@@ -90,7 +90,7 @@ export function WeatherBadge() {
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.3 }}
-        className="relative overflow-hidden h-22 group cursor-pointer"
+        className="relative overflow-hidden h-[5.5rem] group cursor-pointer"
         aria-label={`${weather.condition}, ${weather.temp} degrees in ${weather.city}`}
       >
         {/* Light-mode gradient */}

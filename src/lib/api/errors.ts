@@ -59,7 +59,7 @@ const INTERNAL_PATTERNS = [
   /jwt/i,                      // token internals
   /bcrypt/i,                   // hashing internals
   /ECONNREFUSED|ETIMEDOUT/i,  // raw network errors
-  /inactive/i,                 // backend internal state details
+  /\bstate:\s*inactive\b/i,   // backend internal state details
 ]
 
 function isInternalMessage(msg: string): boolean {

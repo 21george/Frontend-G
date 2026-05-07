@@ -88,7 +88,8 @@ api.interceptors.response.use(
     // Log structured error info for debugging (skip 401/403 — handled below)
     if (status && status >= 400 && status !== 401 && status !== 403) {
       const parsed = parseApiError(error)
-      console.error(`[API] ${parsed.status} ${parsed.title}: ${parsed.message}`)
+      // Intentionally not using console.error here to avoid cluttering logs in production.
+      // The caller receives the full error object and can choose to log or display it.
     }
 
     // Handle 403 Forbidden - session expired or invalid, redirect to login
@@ -132,7 +133,6 @@ api.interceptors.response.use(
         } else {
           // No token callback registered — surface misconfiguration and abort
           const misconfig = new Error('[API] Token refresh succeeded but no token callback is registered. Retried requests will use the old token.')
-          console.error(misconfig.message)
           processQueue(misconfig)
           onAuthInvalidated?.()
           return Promise.reject(misconfig)
@@ -140,7 +140,6 @@ api.interceptors.response.use(
       } else {
         // Refresh response didn't include a new token — treat as refresh failure
         const refreshError = new Error('[API] Token refresh did not return a new access token')
-        console.error(refreshError.message)
         processQueue(refreshError)
         onAuthInvalidated?.()
         if (typeof window !== 'undefined' && !window.location.pathname.startsWith('/auth')) {

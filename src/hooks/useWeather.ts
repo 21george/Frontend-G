@@ -32,7 +32,7 @@ function decodeWMO(code: number): { condition: string; icon: string } {
 function getDayName(dateStr: string): string {
   const date = new Date(dateStr)
   const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
-  return days[date.getDay()]
+  return days[date.getUTCDay()]
 }
 
 export function useWeather() {
