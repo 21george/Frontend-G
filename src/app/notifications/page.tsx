@@ -153,10 +153,10 @@ export default function NotificationsPage() {
             <ArrowLeft className="w-5 h-5 text-slate-600 dark:text-slate-300" />
           </Link>
           <div>
-            <h1 className="text-2xl font-semibold text-slate-900 dark:text-white">
+            <h1 className="text-2xl font-semibold text-[var(--text-primary)] dark:text-[var(--text-primary)]">
               Notifications
             </h1>
-            <p className="text-sm text-slate-500 dark:text-slate-400">
+            <p className="text-sm text-[var(--text-secondary)] dark:text-[var(--text-secondary)]">
               {totalUnread > 0
                 ? `${totalUnread} unread${unreadMessageCount > 0 ? ` · ${unreadMessageCount} message${unreadMessageCount === 1 ? '' : 's'}` : ''}`
                 : 'Nothing new.'}
@@ -166,7 +166,7 @@ export default function NotificationsPage() {
 
         <div className="flex items-center gap-2">
           {/* Filter */}
-          <div className="flex border border-slate-200 dark:border-white/[0.08] overflow-hidden rounded-lg">
+          <div className="flex border border-[var(--border)] dark:border-white/[0.08] overflow-hidden rounded-lg">
             <button
               onClick={() => setFilter('all')}
               className={`px-3 py-1.5 text-sm font-medium transition-colors ${
@@ -205,15 +205,15 @@ export default function NotificationsPage() {
       {isLoading ? (
         <div className="text-center py-16">
           <div className="inline-block animate-spin h-8 w-8 border-4 border-slate-200 dark:border-white/20 border-t-slate-900 dark:border-t-white rounded-full" />
-          <p className="mt-3 text-slate-500 dark:text-slate-400">Loading…</p>
+          <p className="mt-3 text-[var(--text-secondary)] dark:text-[var(--text-secondary)]">Loading…</p>
         </div>
       ) : !hasAny ? (
-        <div className="text-center py-16 bg-white dark:bg-[#1A1A1A] border border-slate-200 dark:border-white/[0.06] rounded-xl">
+        <div className="text-center py-16 bg-white dark:bg-[#1A1A1A] border border-[var(--border)] dark:border-white/[0.06] rounded-xl">
           <Bell className="w-12 h-12 text-slate-300 dark:text-slate-600 mx-auto mb-4" />
-          <h3 className="text-lg font-medium text-slate-900 dark:text-white">
+          <h3 className="text-lg font-medium text-[var(--text-primary)] dark:text-[var(--text-primary)]">
             You&apos;re all caught up!
           </h3>
-          <p className="text-slate-500 dark:text-slate-400 mt-1">
+          <p className="text-[var(--text-secondary)] dark:text-[var(--text-secondary)] mt-1">
             {filter === 'unread'
               ? 'No unread notifications or messages.'
               : 'All clear. Nothing new.'}
@@ -226,7 +226,7 @@ export default function NotificationsPage() {
             <section>
               <div className="flex items-center gap-2 mb-2 px-1">
                 <MessageSquare className="w-4 h-4 text-blue-500" />
-                <h2 className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                <h2 className="text-xs font-semibold uppercase tracking-wider text-[var(--text-secondary)] dark:text-[var(--text-secondary)]">
                   New Messages from Clients
                 </h2>
                 <span className="text-xs font-bold text-white bg-blue-500 px-1.5 py-0.5 rounded-full">
@@ -244,7 +244,7 @@ export default function NotificationsPage() {
                   >
                     <Link
                       href={`/clients/${msg.client_id}`}
-                      className="group flex items-start gap-3.5 p-4 bg-white dark:bg-[#1A1A1A] border border-slate-200 dark:border-white/[0.06] rounded-xl hover:border-blue-300 dark:hover:border-blue-800/50 transition-all hover:shadow-sm"
+                      className="group flex items-start gap-3.5 p-4 bg-white dark:bg-[#1A1A1A] border border-[var(--border)] dark:border-white/[0.06] rounded-xl hover:border-blue-300 dark:hover:border-blue-800/50 transition-all hover:shadow-sm"
                     >
                       {/* Avatar placeholder */}
                       <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center flex-shrink-0 text-white text-sm font-bold">
@@ -253,7 +253,7 @@ export default function NotificationsPage() {
 
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center justify-between gap-2">
-                          <p className="font-semibold text-slate-900 dark:text-white text-sm">
+                          <p className="font-semibold text-[var(--text-primary)] dark:text-[var(--text-primary)] text-sm">
                             {msg.client_name}
                           </p>
                           <span className="text-[11px] text-slate-400 dark:text-slate-500 flex items-center gap-1 flex-shrink-0">
@@ -287,7 +287,7 @@ export default function NotificationsPage() {
             <section>
               <div className="flex items-center gap-2 mb-2 px-1">
                 <Bell className="w-4 h-4 text-brand-600 dark:text-brand-400" />
-                <h2 className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                <h2 className="text-xs font-semibold uppercase tracking-wider text-[var(--text-secondary)] dark:text-[var(--text-secondary)]">
                   Notifications
                 </h2>
                 <span className="text-xs font-bold text-white bg-brand-600 px-1.5 py-0.5 rounded-full">
@@ -312,7 +312,7 @@ export default function NotificationsPage() {
                     <div
                       className={`group flex items-start gap-4 p-4 border rounded-xl transition-all ${
                         notification.read
-                          ? 'bg-white dark:bg-[#1A1A1A] border-slate-200 dark:border-white/[0.06]'
+                          ? 'bg-white dark:bg-[#1A1A1A] border-[var(--border)] dark:border-white/[0.06]'
                           : 'bg-blue-50/50 dark:bg-blue-900/10 border-blue-200 dark:border-blue-800/50'
                       } hover:shadow-sm`}
                     >
@@ -324,7 +324,7 @@ export default function NotificationsPage() {
                         <div className="flex items-start justify-between gap-2">
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2 mb-0.5">
-                              <h3 className="font-medium text-slate-900 dark:text-white text-sm">
+                              <h3 className="font-medium text-[var(--text-primary)] dark:text-[var(--text-primary)] text-sm">
                                 {notification.title}
                               </h3>
                               {!notification.read && (
@@ -338,7 +338,7 @@ export default function NotificationsPage() {
                             {/* From + When */}
                             <div className="flex items-center gap-3 mt-2">
                               {senderName && (
-                                <span className="inline-flex items-center gap-1 text-xs text-slate-500 dark:text-slate-400">
+                                <span className="inline-flex items-center gap-1 text-xs text-[var(--text-secondary)] dark:text-[var(--text-secondary)]">
                                   <UserCircle className="w-3 h-3" />
                                   From {senderName}
                                 </span>
@@ -408,7 +408,7 @@ export default function NotificationsPage() {
       {/* Pagination */}
       {pagination && pagination.total_pages > 1 && (
         <div className="flex items-center justify-center gap-2 mt-6">
-          <span className="text-sm text-slate-500 dark:text-slate-400">
+          <span className="text-sm text-[var(--text-secondary)] dark:text-[var(--text-secondary)]">
             Page {pagination.page} of {pagination.total_pages}
           </span>
         </div>

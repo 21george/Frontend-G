@@ -74,8 +74,8 @@ export default function NewTeamWorkoutPlanPage() {
             <Shield className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
           </div>
           <div>
-            <h1 className="text-2xl font-semibold text-slate-900 dark:text-white">New Team Workout Plan</h1>
-            <p className="text-sm text-slate-500 dark:text-slate-400">Create a plan for a named team — assign now or use as a template</p>
+            <h1 className="text-2xl font-semibold text-[var(--text-primary)] dark:text-[var(--text-primary)]">New Team Workout Plan</h1>
+            <p className="text-sm text-[var(--text-secondary)] dark:text-[var(--text-secondary)]">Create a plan for a named team — assign now or use as a template</p>
           </div>
         </div>
 
@@ -111,8 +111,8 @@ export default function NewTeamWorkoutPlanPage() {
           <div className="card">
             <div className="flex items-center justify-between mb-4">
               <div>
-                <h2 className="font-semibold text-slate-900 dark:text-white">Team Members</h2>
-                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                <h2 className="font-semibold text-[var(--text-primary)] dark:text-[var(--text-primary)]">Team Members</h2>
+                <p className="text-xs text-[var(--text-secondary)] dark:text-[var(--text-secondary)] mt-0.5">
                   Select clients for this team — or leave empty to save as a reusable template
                 </p>
               </div>
@@ -137,14 +137,14 @@ export default function NewTeamWorkoutPlanPage() {
                       className={`flex items-center gap-3 p-3 border transition-all text-left ${
                         selected
                           ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20 dark:border-emerald-500/60'
-                          : 'border-slate-200 dark:border-white/[0.07] hover:border-slate-300 dark:hover:border-white/[0.12]'
+                          : 'border-[var(--border)] dark:border-white/[0.07] hover:border-slate-300 dark:hover:border-white/[0.12]'
                       }`}
                     >
                       <div className="w-8 h-8 bg-gradient-to-br from-emerald-500 to-emerald-700 flex items-center justify-center text-white text-xs font-semibold flex-shrink-0">
                         {client.name[0]?.toUpperCase()}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-slate-900 dark:text-white truncate">{client.name}</p>
+                        <p className="text-sm font-medium text-[var(--text-primary)] dark:text-[var(--text-primary)] truncate">{client.name}</p>
                         <p className="text-xs text-slate-400 truncate">{client.email || 'No email'}</p>
                       </div>
                       <div className={`w-5 h-5 border-2 flex items-center justify-center flex-shrink-0 transition-colors ${
@@ -173,7 +173,7 @@ export default function NewTeamWorkoutPlanPage() {
                 </div>
                 <div className="space-y-3">
                   {day.exercises.map((ex, ei) => (
-                    <div key={ei} className="bg-slate-50 dark:bg-white/[0.03] p-3 grid grid-cols-12 gap-2 items-start">
+                    <div key={ei} className="bg-[var(--bg-subtle)] dark:bg-white/[0.03] p-3 grid grid-cols-12 gap-2 items-start">
                       <div className="col-span-4">
                         <input value={ex.name} onChange={e => updateExercise(di, ei, 'name', e.target.value)}
                           className="input text-sm" placeholder="Exercise name" />

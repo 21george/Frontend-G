@@ -49,7 +49,7 @@ export default function AssignWorkoutPlanPage() {
       <DashboardLayout>
         <div className="max-w-4xl space-y-4">
           <div className="h-8 w-48 bg-slate-100 dark:bg-white/[0.04] animate-pulse" />
-          <div className="bg-slate-50 dark:bg-white/[0.03] p-6 space-y-3 animate-pulse">
+          <div className="bg-[var(--bg-subtle)] dark:bg-white/[0.03] p-6 space-y-3 animate-pulse">
             <div className="h-6 w-64 bg-slate-200 dark:bg-white/[0.06]" />
             <div className="h-4 w-32 bg-slate-100 dark:bg-white/[0.04]" />
           </div>
@@ -97,7 +97,7 @@ export default function AssignWorkoutPlanPage() {
               <ChevronRight className="w-3 h-3" />
               <span className="text-brand-600 dark:text-brand-300">Assign</span>
             </nav>
-            <h1 className="text-3xl lg:text-4xl font-bold text-slate-900 dark:text-white tracking-tight">
+            <h1 className="text-3xl lg:text-4xl font-bold text-[var(--text-primary)] dark:text-[var(--text-primary)] tracking-tight">
               Assign Workout Plan
             </h1>
             <p className="text-slate-500 dark:text-neutral-400 mt-2 max-w-lg text-sm">
@@ -117,8 +117,8 @@ export default function AssignWorkoutPlanPage() {
               <Dumbbell className="w-6 h-6 text-white" />
             </div>
             <div className="flex-1">
-              <h2 className="text-lg font-bold text-slate-900 dark:text-white">{plan.title}</h2>
-              <div className="flex items-center gap-4 mt-2 text-sm text-slate-500 dark:text-slate-400">
+              <h2 className="text-lg font-bold text-[var(--text-primary)] dark:text-[var(--text-primary)]">{plan.title}</h2>
+              <div className="flex items-center gap-4 mt-2 text-sm text-[var(--text-secondary)] dark:text-[var(--text-secondary)]">
                 <span className="flex items-center gap-1">
                   <Calendar size={14} />
                   Week of {plan.week_start}
@@ -154,7 +154,7 @@ export default function AssignWorkoutPlanPage() {
                     <div className="w-8 h-8 bg-gradient-to-br from-purple-500 to-pink-600 flex items-center justify-center">
                       <Users className="w-4 h-4 text-white" />
                     </div>
-                    <h3 className="text-base font-bold text-slate-900 dark:text-white">Select Clients</h3>
+                    <h3 className="text-base font-bold text-[var(--text-primary)] dark:text-[var(--text-primary)]">Select Clients</h3>
                   </div>
                   <div className="relative">
                     <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
@@ -163,7 +163,7 @@ export default function AssignWorkoutPlanPage() {
                       placeholder="Search clients..."
                       value={searchQuery}
                       onChange={e => setSearchQuery(e.target.value)}
-                      className="w-48 pl-9 pr-3 py-1.5 text-sm bg-slate-50 dark:bg-white/[0.04] border border-slate-200 dark:border-white/[0.08] focus:outline-none focus:ring-2 focus:ring-brand-600/20 dark:focus:ring-brand-400/20"
+                      className="w-48 pl-9 pr-3 py-1.5 text-sm bg-[var(--bg-subtle)] dark:bg-white/[0.04] border border-[var(--border)] dark:border-white/[0.08] focus:outline-none focus:ring-2 focus:ring-brand-600/20 dark:focus:ring-brand-400/20"
                     />
                   </div>
                 </div>
@@ -182,7 +182,7 @@ export default function AssignWorkoutPlanPage() {
                       className={`relative p-4 border text-left transition-all ${
                         isSelected
                           ? 'bg-brand-600/5 dark:bg-brand-600/20 border-brand-500/50 ring-1 ring-brand-500/10'
-                          : 'bg-slate-50 dark:bg-white/[0.02] border-slate-200/80 dark:border-white/[0.08] hover:border-slate-300 dark:hover:border-white/[0.15]'
+                          : 'bg-[var(--bg-subtle)] dark:bg-white/[0.02] border-slate-200/80 dark:border-white/[0.08] hover:border-slate-300 dark:hover:border-white/[0.15]'
                       }`}
                     >
                       <div className="flex items-start gap-3">
@@ -190,10 +190,10 @@ export default function AssignWorkoutPlanPage() {
                           {client.name?.[0]?.toUpperCase() ?? 'C'}
                         </div>
                         <div className="flex-1 min-w-0">
-                          <div className="text-sm font-semibold text-slate-900 dark:text-white truncate">
+                          <div className="text-sm font-semibold text-[var(--text-primary)] dark:text-[var(--text-primary)] truncate">
                             {client.name}
                           </div>
-                          <div className="text-xs text-slate-500 dark:text-slate-400 truncate">
+                          <div className="text-xs text-[var(--text-secondary)] dark:text-[var(--text-secondary)] truncate">
                             {client.email}
                           </div>
                         </div>
@@ -209,7 +209,7 @@ export default function AssignWorkoutPlanPage() {
                   )
                 })}
                 {filteredClients.length === 0 && (
-                  <div className="col-span-full py-8 text-center text-slate-500 dark:text-slate-400">
+                  <div className="col-span-full py-8 text-center text-[var(--text-secondary)] dark:text-[var(--text-secondary)]">
                     <Users className="w-8 h-8 mx-auto mb-2 opacity-40" />
                     <p className="text-sm">No clients found</p>
                   </div>
@@ -230,12 +230,12 @@ export default function AssignWorkoutPlanPage() {
                 <div className="w-8 h-8 bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center">
                   <UserPlus className="w-4 h-4 text-white" />
                 </div>
-                <h3 className="text-base font-bold text-slate-900 dark:text-white">Selection Summary</h3>
+                <h3 className="text-base font-bold text-[var(--text-primary)] dark:text-[var(--text-primary)]">Selection Summary</h3>
               </div>
 
               <div className="mb-4">
-                <div className="text-3xl font-bold text-slate-900 dark:text-white">{selectedClients.length}</div>
-                <div className="text-xs text-slate-500 dark:text-slate-400">clients selected</div>
+                <div className="text-3xl font-bold text-[var(--text-primary)] dark:text-[var(--text-primary)]">{selectedClients.length}</div>
+                <div className="text-xs text-[var(--text-secondary)] dark:text-[var(--text-secondary)]">clients selected</div>
               </div>
 
               {/* Selected clients list */}
@@ -250,7 +250,7 @@ export default function AssignWorkoutPlanPage() {
                         initial={{ opacity: 0, x: -10 }}
                         animate={{ opacity: 1, x: 0 }}
                         exit={{ opacity: 0, x: 10 }}
-                        className="flex items-center justify-between gap-2 p-2 bg-slate-50 dark:bg-white/[0.04] "
+                        className="flex items-center justify-between gap-2 p-2 bg-[var(--bg-subtle)] dark:bg-white/[0.04] "
                       >
                         <div className="flex items-center gap-2 min-w-0">
                           <div className="w-6 h-6 bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white text-[10px] font-semibold flex-shrink-0">

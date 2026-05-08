@@ -1,4 +1,4 @@
-'use client'
+"use client"
 import DashboardLayout from '@/components/layout/DashboardLayout'
 import {
   useClient, useClientAnalytics, useMessages, useSendMessage,
@@ -8,6 +8,7 @@ import {
   useUploadMessageMedia, useBlockClient, useUnblockClient, useWorkoutProgress,
 } from '@/lib/hooks'
 import { useState, useMemo, useCallback, useRef, useEffect } from 'react'
+import DashboardHeader from '@/components/layout/DashboardHeader'
 import {
   ArrowLeft,
   Copy,
@@ -20,7 +21,6 @@ import {
   Salad,
   BarChart2,
   MessageCircle,
-  Calendar as CalendarIcon,
   Phone,
   FileText,
   ExternalLink,
@@ -67,11 +67,7 @@ const goBack = (router: ReturnType<typeof useRouter>) => {
 const DAYS   = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
 const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December']
 
-interface CalendarEvent {
-  id: string; title: string; date: Date
-  type: 'checkin' | 'workout'; color: string
-  details?: string; planId?: string
-}
+
 
 const DAY_MAP: Record<string, number> = {
   monday: 0, tuesday: 1, wednesday: 2, thursday: 3,
@@ -89,10 +85,9 @@ function getDateForDay(weekStart: string, dayName: string): Date {
 interface DayData {
   date: number | null; currentMonth: boolean
   isToday: boolean; isWeekend: boolean
-  events: CalendarEvent[]; fullDate: Date | null
 }
 
-function generateCalendarDays(year: number, month: number, events: CalendarEvent[]): DayData[][] {
+{/*function generateCalendarDays(year: number, month: number, events: CalendarEvent[]): DayData[][] {
   const firstDay        = new Date(year, month, 1)
   const today           = new Date()
   let startDay          = firstDay.getDay() - 1
@@ -122,12 +117,11 @@ function generateCalendarDays(year: number, month: number, events: CalendarEvent
     week.push({ date: nextDay, currentMonth: false, isToday: false, isWeekend: false, events: [], fullDate: new Date(year, month+1, nextDay++) })
   if (week.length > 0) weeks.push(week)
   return weeks
-}
+}*/}
 
-type TabKey = 'calendar' | 'workouts' | 'nutrition' | 'analytics' | 'messages' | 'checkins'
+type TabKey = 'workouts' | 'nutrition' | 'analytics' | 'messages' | 'checkins'
 
 const TABS: { key: TabKey; label: string }[] = [
-  { key: 'calendar',  label: 'Calendar'   },
   { key: 'workouts',  label: 'Workouts'   },
   { key: 'nutrition', label: 'Nutrition'  },
   { key: 'analytics', label: 'Analytics'  },
@@ -196,7 +190,7 @@ function NutritionPlanCard({ planId }: { planId: string }) {
         return (
           <div key={di}>
             {/* Day header */}
-            <div className="flex items-center justify-between px-4 py-2.5 bg-slate-50 dark:bg-white/[0.02]">
+            <div className="flex items-center justify-between px-4 py-2.5 bg-[var(--bg-subtle)] dark:bg-white/[0.02]">
               <p className="text-[12px] font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wide">{day.day}</p>
               <div className="flex gap-3 text-[10px] text-slate-600">
                 <span>{dayTotals.cal} kcal</span>
@@ -219,7 +213,7 @@ function NutritionPlanCard({ planId }: { planId: string }) {
                     {/* Meal name + time */}
                     <div className="flex items-center justify-between mb-1.5">
                       <div className="flex items-center gap-2">
-                        <span className="text-[11px] font-semibold text-slate-900 dark:text-white">{meal.meal_name}</span>
+                        <span className="text-[11px] font-semibold text-[var(--text-primary)] dark:text-[var(--text-primary)]">{meal.meal_name}</span>
                         {meal.time && (
                           <span className="text-[10px] text-slate-500 dark:text-slate-600 bg-slate-100 dark:bg-white/[0.04] border border-slate-200 dark:border-white/[0.05] px-1.5 py-0.5 ">
                             {meal.time}
@@ -235,7 +229,7 @@ function NutritionPlanCard({ planId }: { planId: string }) {
                     <div className="border border-slate-200 dark:border-white/[0.05] overflow-x-auto">
                       <table className="w-full text-[11px]">
                         <thead>
-                          <tr className="bg-slate-50 dark:bg-white/[0.03] text-slate-500 dark:text-slate-600">
+                          <tr className="bg-[var(--bg-subtle)] dark:bg-white/[0.03] text-slate-500 dark:text-slate-600">
                             <th className="text-left px-3 py-1.5 font-semibold">Food</th>
                             <th className="text-left px-2 py-1.5 font-semibold">Qty</th>
                             <th className="text-right px-2 py-1.5 font-semibold">Cal</th>
@@ -248,7 +242,7 @@ function NutritionPlanCard({ planId }: { planId: string }) {
                           {meal.foods.map((food, fi) => (
                             <tr key={fi} className="hover:bg-slate-50 dark:hover:bg-white/[0.02] transition-colors">
                               <td className="px-3 py-1.5 text-slate-700 dark:text-slate-300 font-medium">{food.name}</td>
-                              <td className="px-2 py-1.5 text-slate-500 dark:text-slate-400">{food.quantity}</td>
+                              <td className="px-2 py-1.5 text-[var(--text-secondary)] dark:text-[var(--text-secondary)]">{food.quantity}</td>
                               <td className="px-2 py-1.5 text-right text-amber-400/80">{food.calories}</td>
                               <td className="px-2 py-1.5 text-right text-blue-400/70">{food.protein_g}g</td>
                               <td className="px-2 py-1.5 text-right text-green-400/70">{food.carbs_g}g</td>
@@ -316,7 +310,7 @@ function NutritionListCard({
   }
 
   return (
-    <div className=" border border-slate-200 dark:border-white/[0.1] bg-white dark:bg-slate-800/30 p-3 sm:p-4 hover:border-[#4F46E5]/50 transition-colors dark:">
+    <div className=" border border-slate-200 dark:border-white/[0.1] bg-[var(--bg-card)] dark:bg-[var(--bg-card)] p-3 sm:p-4 hover:border-[#4F46E5]/50 transition-colors dark:">
       <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
         <button
           onClick={onToggle}
@@ -355,14 +349,14 @@ function NutritionListCard({
                       handleCancelEdit()
                     }
                   }}
-                  className="w-full max-w-md border border-slate-300 dark:border-white/[0.12] bg-white dark:bg-[#121212] px-3 py-2 text-sm font-semibold text-slate-900 dark:text-white outline-none focus:border-[#4F46E5]"
+                  className="w-full max-w-md border border-slate-300 dark:border-white/[0.12] bg-white dark:bg-[#121212] px-3 py-2 text-sm font-semibold text-[var(--text-primary)] dark:text-[var(--text-primary)] outline-none focus:border-[#4F46E5]"
                 />
               ) : (
-                <h3 className="font-semibold text-base text-slate-900 dark:text-white mb-1 truncate">
+                <h3 className="font-semibold text-base text-[var(--text-primary)] dark:text-[var(--text-primary)] mb-1 truncate">
                   {plan.title}
                 </h3>
               )}
-              <p className="text-xs text-slate-500 dark:text-slate-400 line-clamp-2">
+              <p className="text-xs text-[var(--text-secondary)] dark:text-[var(--text-secondary)] line-clamp-2">
                 {plan.notes?.trim() || 'Daily nutrition plan with full meal and macro breakdown.'}
               </p>
             </button>
@@ -376,7 +370,7 @@ function NutritionListCard({
                 <>
                   <button
                     onClick={handleCancelEdit}
-                    className="p-1.5 text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-white/[0.05] transition-colors"
+                    className="p-1.5 text-[var(--text-secondary)] dark:text-[var(--text-secondary)] hover:bg-slate-100 dark:hover:bg-white/[0.05] transition-colors"
                     aria-label="Cancel title edit"
                   >
                     <X size={14} />
@@ -393,7 +387,7 @@ function NutritionListCard({
               ) : (
                 <button
                   onClick={() => setIsEditingTitle(true)}
-                  className="p-1.5 text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-white/[0.05] transition-colors"
+                  className="p-1.5 text-[var(--text-secondary)] dark:text-[var(--text-secondary)] hover:bg-slate-100 dark:hover:bg-white/[0.05] transition-colors"
                   aria-label="Edit nutrition plan title"
                 >
                   <Pencil size={14} />
@@ -401,7 +395,7 @@ function NutritionListCard({
               )}
               <button
                 onClick={onToggle}
-                className="p-1.5 text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-white/[0.05] transition-colors"
+                className="p-1.5 text-[var(--text-secondary)] dark:text-[var(--text-secondary)] hover:bg-slate-100 dark:hover:bg-white/[0.05] transition-colors"
                 aria-label="Toggle nutrition plan details"
               >
                 <ChevronDown size={14} className={`transition-transform ${expanded ? 'rotate-180' : ''}`} />
@@ -410,7 +404,7 @@ function NutritionListCard({
           </div>
 
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-3">
-            <div className="flex items-center gap-3 sm:gap-4 text-slate-500 dark:text-slate-400 flex-wrap">
+            <div className="flex items-center gap-3 sm:gap-4 text-[var(--text-secondary)] dark:text-[var(--text-secondary)] flex-wrap">
               <div className="flex items-center gap-1">
                 <span className="text-[11px] sm:text-xs">{plan.daily_totals.calories} kcal</span>
               </div>
@@ -438,7 +432,7 @@ function NutritionListCard({
       </div>
 
       {expanded && (
-        <div className="mt-4 border border-slate-200 dark:border-white/[0.1] bg-slate-50 dark:bg-[#121212]/50 overflow-hidden">
+        <div className="mt-4 border border-slate-200 dark:border-white/[0.1] bg-[var(--bg-page)] dark:bg-[var(--bg-page)]/50 overflow-hidden">
           <NutritionPlanCard planId={plan.id} />
         </div>
       )}
@@ -477,10 +471,10 @@ function DailyProtocol({
   const rings = [{ r: 54, w: 10 }, { r: 40, w: 10 }, { r: 26, w: 10 }]
 
   return (
-    <div className="border border-slate-200 dark:border-white/[0.07] bg-[var(--bg-card)] p-5">
+    <div className="border border-[var(--border)] dark:border-white/[0.07] bg-[var(--bg-card)] p-5">
       <div className="flex items-center justify-between mb-4">
         <div>
-          <h3 className="text-[15px] font-semibold text-slate-900 dark:text-white">Progress</h3>
+          <h3 className="text-[15px] font-semibold text-[var(--text-primary)] dark:text-[var(--text-primary)]">Progress</h3>
           <p className="text-[11px] text-slate-400 dark:text-slate-500 mt-0.5">Goal Completion</p>
         </div>
         <span className="text-[11px] font-semibold px-2.5 py-1 bg-slate-100 dark:bg-white/[0.06] text-slate-600 dark:text-slate-300">This Week</span>
@@ -505,7 +499,7 @@ function DailyProtocol({
             })}
           </svg>
           <div className="absolute inset-0 flex flex-col items-center justify-center">
-            <span className="text-[22px] font-bold text-slate-900 dark:text-white leading-none">{progressPct}%</span>
+            <span className="text-[22px] font-bold text-[var(--text-primary)] dark:text-[var(--text-primary)] leading-none">{progressPct}%</span>
             <span className="text-[10px] text-slate-400 dark:text-slate-500 mt-0.5 text-center leading-tight">Goal<br/>Completion</span>
           </div>
         </div>
@@ -521,7 +515,7 @@ function DailyProtocol({
                 </div>
                 <span className="text-[12px] font-semibold ml-2 flex-shrink-0" style={{ color: cat.cfg.color }}>{cat.pct}%</span>
               </div>
-              <div className="h-1.5 overflow-hidden bg-slate-100 dark:bg-white/[0.05]">
+              <div className="h-1.5 overflow-hidden bg-[var(--bg-subtle)] dark:bg-white/[0.05]">
                 <div className="h-full transition-all duration-700" style={{ width: `${cat.pct}%`, backgroundColor: cat.cfg.color }} />
               </div>
               <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-0.5">
@@ -545,8 +539,8 @@ function DailyProtocol({
                 {cfg.icon}
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-[13px] font-semibold text-slate-900 dark:text-white truncate">{todayWorkout.day} — {activePlan.title}</p>
-                <p className="text-[11px] text-slate-500 dark:text-slate-400">{todayWorkout.exercises?.length ?? 0} exercises · {cfg.label}</p>
+                <p className="text-[13px] font-semibold text-[var(--text-primary)] dark:text-[var(--text-primary)] truncate">{todayWorkout.day} — {activePlan.title}</p>
+                <p className="text-[11px] text-[var(--text-secondary)] dark:text-[var(--text-secondary)]">{todayWorkout.exercises?.length ?? 0} exercises · {cfg.label}</p>
               </div>
               <span className={`text-[11px] font-semibold px-2.5 py-1 flex-shrink-0 ${
                 isDone ? 'bg-emerald-50 dark:bg-emerald-500/15 text-emerald-600 dark:text-emerald-400'
@@ -578,13 +572,11 @@ const DEFAULT_SCHEDULE_MODAL: ScheduleModalState = { open: false, date: null, ch
 export default function ClientDetailPage() {
   const { id } = useParams<{ id: string }>()
   const router = useRouter()
-  const [tab, setTab]               = useState<TabKey>('calendar')
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [msg, setMsg]               = useState('')
   const [copied, setCopied]         = useState(false)
   const [newCode, setNewCode]       = useState<string | null>(null)
-  const [calendarDate, setCalDate]  = useState(new Date())
-  // Schedule modal
+  const [tab, setTab] = useState<TabKey>('workouts')
   const [scheduleModal, setScheduleModal] = useState<ScheduleModalState>(DEFAULT_SCHEDULE_MODAL)
   const [scheduleForm, setScheduleForm]   = useState<ScheduleForm>(DEFAULT_FORM)
   const [scheduling, setScheduling]       = useState(false)
@@ -592,6 +584,9 @@ export default function ClientDetailPage() {
   const [activeChatId, setActiveChatId]   = useState<string | null>(null)
   const [expandedPlan, setExpandedPlan]   = useState<string | null>(null)
   const [scheduleFilter, setScheduleFilter] = useState<'Upcoming' | 'Ongoing' | 'Rescheduled' | 'Cancelled'>('Upcoming')
+  // Delete confirmation modal
+  const [deleteModal, setDeleteModal] = useState<{ open: boolean; type: 'client' | 'workout'; item?: any }>({ open: false, type: 'client' })
+  const [deleteError, setDeleteError] = useState<string | null>(null)
   const chatEndRef      = useRef<HTMLDivElement>(null)
   const messagesEndRef  = useRef<HTMLDivElement>(null)
 
@@ -620,8 +615,8 @@ export default function ClientDetailPage() {
   const unblockClient               = useUnblockClient(id)
   const { connected: socketConnected, incomingMessages, relayViaSocket, clearIncoming } = useSocketChat(id)
 
-  const calendarEvents = useMemo<CalendarEvent[]>(() => {
-    const ev: CalendarEvent[] = []
+  const calendarEvents = useMemo(() => {
+    const ev: { id: string; title: string; date: Date; type: string; color: string; details?: string; planId?: string }[] = []
     ;(checkins ?? []).forEach(c => ev.push({
       id: `ci-${c.id}`,
       title: c.type === 'video' ? 'Video Call' : c.type === 'call' ? 'Phone Call' : 'Check-in',
@@ -645,14 +640,6 @@ export default function ClientDetailPage() {
     return ev
   }, [checkins, plans])
 
-  const calendarWeeks = useMemo(
-    () => generateCalendarDays(calendarDate.getFullYear(), calendarDate.getMonth(), calendarEvents),
-    [calendarDate, calendarEvents]
-  )
-
-  const prevMonth = () => setCalDate(new Date(calendarDate.getFullYear(), calendarDate.getMonth() - 1))
-  const nextMonth = () => setCalDate(new Date(calendarDate.getFullYear(), calendarDate.getMonth() + 1))
-  const goToToday = () => setCalDate(new Date())
   const closeScheduleModal = useCallback(() => {
     setScheduleModal(DEFAULT_SCHEDULE_MODAL)
     setScheduleForm(DEFAULT_FORM)
@@ -700,25 +687,38 @@ export default function ClientDetailPage() {
     setNewCode(res.data.login_code)
   }
 
-  const handleDeleteWorkout = async (plan: WorkoutPlan) => {
-    if (!confirm(`Delete workout plan "${plan.title}"? This cannot be undone.`)) return
+  const handleDeleteClient = async () => {
+    setDeleteError(null)
+    setDeleteModal({ open: true, type: 'client' })
+  }
 
+  const handleConfirmDeleteClient = async () => {
     try {
-      if (expandedPlan === plan.id) setExpandedPlan(null)
-      await deleteWorkoutPlan.mutateAsync(plan.id)
-    } catch {
-      window.alert('Failed to delete workout plan.')
+      await deleteClient.mutateAsync(id)
+      setDeleteError(null)
+      setDeleteModal({ open: false, type: 'client' })
+      router.push('/clients')
+    } catch (err: any) {
+      console.error('Delete client error:', err)
+      const message = err?.response?.data?.message || err?.message || 'Unknown error'
+      setDeleteError(message)
     }
   }
 
-  const handleDeleteClient = async () => {
-    if (!confirm(`Permanently delete client "${client?.name}"? This action cannot be undone.`)) return
+  const handleDeleteWorkout = async (plan: WorkoutPlan) => {
+    setDeleteError(null)
+    setDeleteModal({ open: true, type: 'workout', item: plan })
+  }
 
+  const handleConfirmDeleteWorkout = async () => {
+    if (!deleteModal.item) return
     try {
-      await deleteClient.mutateAsync(id)
-      router.push('/clients')
+      if (expandedPlan === deleteModal.item.id) setExpandedPlan(null)
+      await deleteWorkoutPlan.mutateAsync(deleteModal.item.id)
+      setDeleteError(null)
+      setDeleteModal({ open: false, type: 'client' })
     } catch {
-      window.alert('Failed to delete client.')
+      setDeleteError('Failed to delete workout plan.')
     }
   }
 
@@ -830,13 +830,13 @@ export default function ClientDetailPage() {
 
   if (isLoading) return (
     <DashboardLayout>
-      <div className="fixed top-16 lg:top-0 left-0 lg:left-64 right-0 bottom-0 flex flex-col bg-slate-50 dark:bg-[#121212] animate-pulse">
-        <div className="h-11 bg-[var(--bg-card)] border-b border-slate-200 dark:border-white/[0.06]" />
+      <div className="flex flex-col bg-[var(--bg-page)] dark:bg-[var(--bg-page)] animate-pulse min-h-[calc(100vh-4rem)]">
+        <div className="h-11 bg-[var(--bg-card)] border-b border-[var(--border)] dark:border-white/[0.06]" />
         <div className="flex flex-1">
-          <div className="hidden md:block w-[300px] border-r border-slate-200 dark:border-white/[0.06]" />
+          <div className="hidden md:block w-[300px] border-r border-[var(--border)] dark:border-white/[0.06]" />
           <div className="flex-1 p-4 sm:p-6 space-y-4">
             <div className="h-7 w-52 bg-slate-200 dark:bg-white/[0.06] " />
-            <div className="h-72 bg-white dark:bg-white/[0.04] border border-slate-200 dark:border-white/[0.06] " />
+            <div className="h-72 bg-white dark:bg-white/[0.04] border border-[var(--border)] dark:border-white/[0.06] " />
           </div>
         </div>
       </div>
@@ -845,7 +845,7 @@ export default function ClientDetailPage() {
 
   if (!client) return (
     <DashboardLayout>
-      <div className="fixed top-16 lg:top-0 left-0 lg:left-64 right-0 bottom-0 flex items-center justify-center bg-slate-50 dark:bg-[#121212]">
+      <div className="flex items-center justify-center bg-[var(--bg-page)] dark:bg-[var(--bg-page)] min-h-[calc(100vh-4rem)]">
         <p className="text-slate-500 text-sm">Client not found.</p>
       </div>
     </DashboardLayout>
@@ -855,12 +855,31 @@ export default function ClientDetailPage() {
 
   return (
     <DashboardLayout>
-      <div className="fixed top-16 lg:top-0 left-0 lg:left-64 right-0 bottom-0 flex flex-col bg-slate-50 dark:bg-[#121212] overflow-hidden">
+      <div className="flex flex-col bg-[var(--bg-page)] dark:bg-[var(--bg-page)] min-h-[calc(100vh-4rem)]">
 
-        {/* ── Breadcrumb header ─────────────────────────────────────── */}
-        <header className="flex items-center justify-between px-3 sm:px-5 h-11 border-b border-slate-200 dark:border-white/[0.06] bg-[var(--bg-card)] flex-shrink-0">
+        {/* ── Dashboard Header ─────────────────────────────────────── */}
+        <DashboardHeader
+          title={client.name}
+          subtitle={`${client.active ? 'Active' : 'Inactive'} client · ${client.email || 'No email'} · Joined ${formatDate(client.created_at, 'MMM d, yyyy')}`}
+          quickActions={[
+            {
+              href: `/messages?client=${id}`,
+              label: 'Message',
+              icon: MessageCircle,
+              color: 'bg-blue-50 text-blue-700 hover:bg-blue-100 dark:bg-blue-900/30 dark:text-blue-400 dark:hover:bg-blue-900/50',
+            },
+            {
+              href: `/clients/${id}/analytics`,
+              label: 'Analytics',
+              icon: BarChart2,
+              color: 'bg-purple-50 text-purple-700 hover:bg-purple-100 dark:bg-purple-900/30 dark:text-purple-400 dark:hover:bg-purple-900/50',
+            },
+          ]}
+        />
+
+        {/* ── Breadcrumb bar ─────────────────────────────────────── */}
+        <div className="flex items-center justify-between px-3 sm:px-5 h-11 border-b border-[var(--border)] dark:border-white/[0.06] bg-[var(--bg-card)] flex-shrink-0">
           <div className="flex items-center gap-2 text-[11px] font-semibold tracking-widest uppercase min-w-0">
-            {/* Mobile sidebar toggle */}
             <button onClick={() => setSidebarOpen(true)} className="md:hidden p-1 -ml-1 text-slate-500 hover:text-slate-800 dark:hover:text-white">
               <Menu size={16} />
             </button>
@@ -893,16 +912,16 @@ export default function ClientDetailPage() {
               {deleteClient.isPending ? <Loader2 size={13} className="animate-spin" /> : <Trash2 size={13} />}
               Delete Permanently
             </button>
-            <div className="hidden lg:flex items-center gap-2 bg-[var(--bg-subtle)] border border-slate-200 dark:border-white/[0.07] px-3 py-1.5">
+            <div className="hidden lg:flex items-center gap-2 bg-[var(--bg-subtle)] border border-[var(--border)] dark:border-white/[0.07] px-3 py-1.5">
               <Search size={13} className="text-slate-500 dark:text-slate-600" />
               <input placeholder="Search" className="bg-transparent text-xs text-slate-700 dark:text-slate-300 placeholder:text-slate-400 dark:placeholder:text-slate-600 outline-none w-28" />
-              <kbd className="text-[10px] text-slate-500 dark:text-slate-700 bg-white dark:bg-white/[0.04] border border-slate-200 dark:border-white/[0.06] px-1.5 py-0.5 font-mono">⌘F</kbd>
+              <kbd className="text-[10px] text-slate-500 dark:text-slate-700 bg-white dark:bg-white/[0.04] border border-[var(--border)] dark:border-white/[0.06] px-1.5 py-0.5 font-mono">⌘F</kbd>
             </div>
             <button className="text-slate-500 dark:text-slate-600 hover:text-slate-700 dark:hover:text-slate-300 p-1.5 hover:bg-slate-100 dark:hover:bg-white/[0.05] transition-colors">
               <MoreVertical size={15} />
             </button>
           </div>
-        </header>
+        </div>
 
         {/* ── Body ────────────────────────────────────────────────────── */}
         <div className="flex flex-1 overflow-hidden">
@@ -913,13 +932,13 @@ export default function ClientDetailPage() {
             <div className="fixed inset-0 z-30 bg-black/50 md:hidden" onClick={() => setSidebarOpen(false)} />
           )}
           <aside className={`
-            fixed top-16 bottom-0 left-0 z-40 w-[20rem] sm:w-[300px] transform transition-transform duration-200 ease-out
+            fixed top-16 bottom-0 left-0 z-40 w-[23rem] sm:w-[300px] transform transition-transform duration-200 ease-out
             md:relative md:top-auto md:bottom-auto md:inset-auto md:z-auto md:translate-x-0 md:w-[300px]
             ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}
-            flex-shrink-0 border-r border-slate-200 dark:border-white/[0.06] overflow-y-auto bg-white dark:bg-[#121212]
+            flex-shrink-0 border-r border-[var(--border)] dark:border-white/[0.06] overflow-y-auto bg-white dark:bg-[#121212]
           `}>
             {/* Mobile close button */}
-            <div className="md:hidden flex items-center justify-between px-4 py-3 border-b border-slate-200 dark:border-white/[0.06]">
+            <div className="md:hidden flex items-center justify-between px-4 py-3 border-b border-[var(--border)] dark:border-white/[0.06]">
               <span className="text-[12px] font-semibold text-slate-700 dark:text-slate-300">Client Info</span>
               <button onClick={() => setSidebarOpen(false)} className="p-1 text-slate-500 hover:text-slate-800 dark:hover:text-white">
                 <X size={16} />
@@ -951,18 +970,18 @@ export default function ClientDetailPage() {
                 <div className="w-[72px] h-[72px] bg-[var(--bg-subtle)] border border-slate-200 dark:border-white/[0.1] flex items-center justify-center overflow-hidden flex-shrink-0">
                   {client.profile_photo_url
                     ? <img src={client.profile_photo_url} alt={client.name} className="w-full h-full object-cover" />
-                    : <span className="text-2xl font-semibold text-slate-900 dark:text-white">{client.name[0].toUpperCase()}</span>
+                    : <span className="text-2xl font-semibold text-[var(--text-primary)] dark:text-[var(--text-primary)]">{client.name[0].toUpperCase()}</span>
                   }
                 </div>
                 <div className="flex-1 min-w-0">
-                  <h2 className="text-[15px] font-semibold text-slate-900 dark:text-white leading-snug truncate">{client.name}</h2>
+                  <h2 className="text-[15px] font-semibold text-[var(--text-primary)] dark:text-[var(--text-primary)] leading-snug truncate">{client.name}</h2>
                   <span className={`inline-flex items-center gap-1 text-[11px] font-medium mt-0.5 mb-2.5 ${client.is_blocked ? 'text-red-400' : client.active ? 'text-emerald-400' : 'text-amber-400'}`}>
                     <span className={`w-1.5 h-1.5 ${client.is_blocked ? 'bg-red-400' : client.active ? 'bg-emerald-400' : 'bg-amber-400'}`} />
                     {client.is_blocked ? 'Blocked' : client.active ? 'Active' : 'Inactive'}
                   </span>
                   <div className="flex gap-1.5 flex-wrap">
                     <button onClick={handleRegenerate} title="Reset login code"
-                      className="inline-flex items-center gap-1 text-[11px] text-slate-500 hover:text-slate-900 dark:hover:text-white bg-slate-50 dark:bg-white/[0.04] border border-slate-200 dark:border-white/[0.08] px-2 py-1.5 transition-colors">
+                      className="inline-flex items-center gap-1 text-[11px] text-slate-500 hover:text-slate-900 dark:hover:text-white bg-[var(--bg-subtle)] dark:bg-white/[0.04] border border-[var(--border)] dark:border-white/[0.08] px-2 py-1.5 transition-colors">
                       <RefreshCw size={10} className={regenerateCode.isPending ? 'animate-spin' : ''} />
                     </button>
                   </div>
@@ -973,7 +992,7 @@ export default function ClientDetailPage() {
               {newCode && (
                 <div className="p-3.5 bg-blue-50 dark:bg-blue-950/30 border border-[#2563eb]/25 ">
                   <p className="text-[10px] font-semibold uppercase tracking-widest text-blue-400 mb-1">New Login Code</p>
-                  <p className="text-2xl font-semibold font-mono tracking-widest text-slate-900 dark:text-white mb-2.5">{newCode}</p>
+                  <p className="text-2xl font-semibold font-mono tracking-widest text-[var(--text-primary)] dark:text-[var(--text-primary)] mb-2.5">{newCode}</p>
                   <button
                     onClick={() => { navigator.clipboard.writeText(newCode); setCopied(true); setTimeout(() => setCopied(false), 2000) }}
                     className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-white bg-brand-600 hover:bg-brand-700 px-3 py-1.5 transition-colors">
@@ -992,7 +1011,7 @@ export default function ClientDetailPage() {
                   <span className="text-[10px] font-semibold uppercase tracking-widest text-slate-600">Specializations</span>
                 </div>
                 <div className="flex flex-wrap gap-1.5">
-                  <span className="px-2.5 py-1 border border-slate-200 dark:border-white/[0.09] text-[11px] text-slate-700 dark:text-slate-300 bg-slate-50 dark:bg-white/[0.03]">
+                  <span className="px-2.5 py-1 border border-slate-200 dark:border-white/[0.09] text-[11px] text-slate-700 dark:text-slate-300 bg-[var(--bg-subtle)] dark:bg-white/[0.03]">
                     {client.language === 'en' ? 'English' : 'German'}
                   </span>
                   <span className={`px-2.5 py-1 border text-[11px] font-medium ${
@@ -1005,12 +1024,12 @@ export default function ClientDetailPage() {
                     {client.is_blocked ? 'Blocked' : client.active ? 'Active Client' : 'Inactive'}
                   </span>
                   {(plans?.data?.length ?? 0) > 0 && (
-                    <span className="px-2.5 py-1 border border-slate-200 dark:border-white/[0.09] text-[11px] text-slate-700 dark:text-slate-300 bg-slate-50 dark:bg-white/[0.03]">
+                    <span className="px-2.5 py-1 border border-slate-200 dark:border-white/[0.09] text-[11px] text-slate-700 dark:text-slate-300 bg-[var(--bg-subtle)] dark:bg-white/[0.03]">
                       Has Workout Plans
                     </span>
                   )}
                   {(nutrition?.length ?? 0) > 0 && (
-                    <span className="px-2.5 py-1 border border-slate-200 dark:border-white/[0.09] text-[11px] text-slate-700 dark:text-slate-300 bg-slate-50 dark:bg-white/[0.03]">
+                    <span className="px-2.5 py-1 border border-slate-200 dark:border-white/[0.09] text-[11px] text-slate-700 dark:text-slate-300 bg-[var(--bg-subtle)] dark:bg-white/[0.03]">
                       On Nutrition Plan
                     </span>
                   )}
@@ -1028,8 +1047,8 @@ export default function ClientDetailPage() {
                 <div className="space-y-1.5">
                   {(media ?? []).slice(0, 5).map(m => (
                     <a key={m.id} href={m.url} target="_blank" rel="noopener noreferrer"
-                      className="flex items-center gap-2.5 p-2 bg-slate-50 dark:bg-white/[0.02] border border-slate-200 dark:border-white/[0.06] hover:border-slate-300 dark:hover:border-white/[0.14] hover:bg-slate-100 dark:hover:bg-white/[0.04] transition-all group">
-                      <div className="w-6 h-6 bg-white dark:bg-white/[0.05] border border-slate-200 dark:border-white/[0.08] flex items-center justify-center flex-shrink-0">
+                      className="flex items-center gap-2.5 p-2 bg-[var(--bg-subtle)] dark:bg-white/[0.02] border border-[var(--border)] dark:border-white/[0.06] hover:border-slate-300 dark:hover:border-white/[0.14] hover:bg-slate-100 dark:hover:bg-white/[0.04] transition-all group">
+                      <div className="w-6 h-6 bg-white dark:bg-white/[0.05] border border-[var(--border)] dark:border-white/[0.08] flex items-center justify-center flex-shrink-0">
                         {m.type === 'video' ? <Video size={11} className="text-blue-400" /> : <ImageIcon size={11} className="text-slate-400" />}
                       </div>
                       <span className="text-[11px] text-slate-500 group-hover:text-slate-700 dark:group-hover:text-slate-300 transition-colors truncate flex-1">
@@ -1078,23 +1097,23 @@ export default function ClientDetailPage() {
                 </div>
                 <div className="flex gap-2.5">
                   {/* Check-ins bar */}
-                  <div className="flex-1 border border-slate-200 dark:border-white/[0.06] bg-slate-50 dark:bg-white/[0.02] p-3">
+                  <div className="flex-1 border border-[var(--border)] dark:border-white/[0.06] bg-[var(--bg-subtle)] dark:bg-white/[0.02] p-3">
                     <div className="flex items-center gap-2 mb-2">
                       <div className="w-[3px] h-5 bg-[#f97316] " />
                       <span className="text-[11px] text-slate-500">Check-ins</span>
                     </div>
-                    <p className="text-base font-semibold text-slate-900 dark:text-white leading-none">
+                    <p className="text-base font-semibold text-[var(--text-primary)] dark:text-[var(--text-primary)] leading-none">
                       {completedCheckins}
                       <span className="text-slate-600 font-normal text-[12px]"> / {checkins?.length ?? 0}</span>
                     </p>
                   </div>
                   {/* Plans bar */}
-                  <div className="flex-1 border border-slate-200 dark:border-white/[0.06] bg-slate-50 dark:bg-white/[0.02] p-3">
+                  <div className="flex-1 border border-[var(--border)] dark:border-white/[0.06] bg-[var(--bg-subtle)] dark:bg-white/[0.02] p-3">
                     <div className="flex items-center gap-2 mb-2">
                       <div className="w-[3px] h-5 bg-brand-600 " />
                       <span className="text-[11px] text-slate-500">Plans</span>
                     </div>
-                    <p className="text-base font-semibold text-slate-900 dark:text-white leading-none">
+                    <p className="text-base font-semibold text-[var(--text-primary)] dark:text-[var(--text-primary)] leading-none">
                       {analytics?.plans_count ?? plans?.data?.length ?? 0}
                       <span className="text-slate-600 font-normal text-[12px]"> active</span>
                     </p>
@@ -1146,14 +1165,14 @@ export default function ClientDetailPage() {
           <main className="flex-1 flex flex-col overflow-hidden">
 
             {/* Tab navigation */}
-            <div className="flex items-center border-b border-slate-200 dark:border-white/[0.06] bg-white dark:bg-[#121212] px-2 sm:px-5 overflow-x-auto flex-shrink-0 scrollbar-hide">
+            <div className="flex items-center border-b border-[var(--border)] dark:border-white/[0.06] bg-white dark:bg-[#121212] px-2 sm:px-5 overflow-x-auto flex-shrink-0 scrollbar-hide">
               {TABS.map(({ key, label }) => (
                 <button
                   key={key}
                   onClick={() => setTab(key)}
                   className={`px-2.5 sm:px-4 py-2.5 sm:py-3 text-[11px] sm:text-[12px] font-semibold whitespace-nowrap border-b-2 transition-all -mb-px ${
                     tab === key
-                      ? 'border-[#f97316] text-slate-900 dark:text-white'
+                      ? 'border-[#f97316] text-[var(--text-primary)] dark:text-[var(--text-primary)]'
                       : 'border-transparent text-slate-500 dark:text-slate-600 hover:text-slate-700 dark:hover:text-slate-400 hover:border-slate-300 dark:hover:border-white/[0.15]'
                   }`}
                 >
@@ -1166,183 +1185,7 @@ export default function ClientDetailPage() {
             <div className="flex-1 overflow-y-auto p-3 sm:p-6">
 
               {/* ─── Calendar tab ─────────────────────────────── */}
-              {tab === 'calendar' && (
-                <div className="space-y-6">
-
-                  {/* Calendar header */}
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                    <div className="flex items-center gap-2.5">
-                      <button onClick={prevMonth}
-                        className="w-7 h-7 border border-slate-200 dark:border-white/[0.08] bg-white dark:bg-white/[0.03] flex items-center justify-center text-slate-500 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/[0.08] transition-colors">
-                        <ChevronLeft size={14} />
-                      </button>
-                      <h2 className="text-[17px] sm:text-[20px] font-semibold text-slate-900 dark:text-white tracking-tight min-w-[180px] sm:min-w-[200px] text-center">
-                        {MONTHS[calendarDate.getMonth()]}, {calendarDate.getFullYear()}
-                      </h2>
-                      <button onClick={nextMonth}
-                        className="w-7 h-7 border border-slate-200 dark:border-white/[0.08] bg-white dark:bg-white/[0.03] flex items-center justify-center text-slate-500 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/[0.08] transition-colors">
-                        <ChevronRight size={14} />
-                      </button>
-                    </div>
-
-                    <div className="flex items-center gap-2 flex-wrap">
-                      {/* View toggle */}
-                      <div className="flex bg-slate-100 dark:bg-slate-900/70 border border-slate-200 dark:border-white/[0.06] p-0.5">
-                        {['Week', 'Month', 'Year'].map((v, i) => (
-                          <button key={v} className={`px-2.5 sm:px-3.5 py-1.5 text-[11px] sm:text-[12px] font-medium transition-colors ${
-                            i === 1 ? 'bg-brand-600 text-white' : 'text-slate-500 dark:text-slate-600 hover:text-slate-700 dark:hover:text-slate-300'
-                          }`}>
-                            {v}
-                          </button>
-                        ))}
-                      </div>
-                      <button onClick={goToToday}
-                        className="px-2.5 sm:px-3.5 py-1.5 text-[11px] sm:text-[12px] font-medium text-slate-500 border border-slate-200 dark:border-white/[0.08] hover:text-slate-900 dark:hover:text-white hover:border-slate-300 dark:hover:border-white/[0.18] transition-colors">
-                        Today
-                      </button>
-                      <button
-                        onClick={() => openScheduleModal(new Date())}
-                        className="flex items-center gap-1.5 px-2.5 sm:px-3.5 py-1.5 bg-brand-600 hover:bg-brand-700 text-white text-[11px] sm:text-[12px] font-semibold transition-colors">
-                        <Plus size={13} /> <span className="hidden xs:inline">New </span><span className="xs:hidden">New</span>
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Calendar grid */}
-                  <div className="overflow-hidden border border-slate-200 dark:border-white/[0.07] bg-white dark:bg-transparent overflow-x-auto">
-                    {/* Day headers */}
-                    <div className="grid grid-cols-7 min-w-[500px]">
-                      {DAYS.map(d => (
-                        <div key={d} className="py-2 sm:py-2.5 border-b border-slate-200 dark:border-white/[0.06] bg-[var(--bg-card)] text-center text-[10px] sm:text-[11px] font-semibold text-slate-500 uppercase tracking-wider">
-                          {d}
-                        </div>
-                      ))}
-                    </div>
-                    {/* Weeks */}
-                    {calendarWeeks.map((week, wi) => (
-                      <div key={wi} className="grid grid-cols-7 min-w-[500px]">
-                        {week.map((day, di) => (
-                          <div
-                            key={`${wi}-${di}`}
-                            onClick={() => day.currentMonth && day.fullDate && openScheduleModal(day.fullDate)}
-                            className={[
-                              'group relative min-h-[60px] sm:min-h-[88px] border-b border-r border-slate-200 dark:border-white/[0.05] p-1 sm:p-1.5',
-                              day.currentMonth ? 'cursor-pointer' : 'cursor-default',
-                              day.isToday ? 'ring-1 ring-inset ring-[#2563eb]/50 bg-blue-50 dark:bg-blue-950/30' : '',
-                              day.isWeekend && day.currentMonth ? 'bg-slate-50 dark:bg-slate-950/60' : '',
-                              !day.currentMonth ? 'opacity-20' : '',
-                              day.currentMonth && !day.isToday ? 'hover:bg-slate-50 dark:hover:bg-white/[0.03]' : '',
-                            ].filter(Boolean).join(' ')}
-                          >
-                            <div className={`text-[10px] sm:text-[11px] mb-1 text-right pr-0.5 font-medium ${
-                              day.isToday ? 'text-[#2563eb]' : day.currentMonth ? 'text-slate-500' : 'text-slate-300 dark:text-slate-700'
-                            }`}>
-                              {day.date}
-                            </div>
-                            {day.events.slice(0, 2).map(ev =>
-                              ev.type === 'workout' && ev.planId ? (
-                                <Link key={ev.id} href={`/workout-plans/${ev.planId}`}
-                                  className="flex items-center gap-1 mb-0.5 group" title={ev.details}>
-                                  <div className="w-[3px] h-3 flex-shrink-0" style={{ background: ev.color }} />
-                                  <span className="text-[9px] sm:text-[10px] text-slate-500 group-hover:text-slate-700 dark:group-hover:text-slate-200 truncate transition-colors">{ev.title}</span>
-                                </Link>
-                              ) : (
-                                <div key={ev.id} className="flex items-center gap-1 mb-0.5" title={ev.details}>
-                                  <div className="w-[3px] h-3 flex-shrink-0" style={{ background: ev.color }} />
-                                  <span className="text-[9px] sm:text-[10px] text-slate-500 truncate">{ev.title}</span>
-                                </div>
-                              )
-                            )}
-                            {day.events.length > 2 && (
-                              <div className="flex items-center gap-1">
-                                <div className="w-[3px] h-3 bg-slate-400 dark:bg-slate-700" />
-                                <span className="text-[10px] text-slate-500 dark:text-slate-700">+{day.events.length - 2}</span>
-                              </div>
-                            )}
-                            {/* + icon on hover for schedule */}
-                            {day.currentMonth && (
-                              <div
-                                onClick={e => { e.stopPropagation(); day.fullDate && openScheduleModal(day.fullDate) }}
-                                className="absolute bottom-1 right-1 w-5 h-5 border border-slate-200 dark:border-white/[0.08] bg-[var(--bg-card)] flex items-center justify-center text-slate-500 dark:text-slate-700 hover:text-slate-900 dark:hover:text-white hover:border-slate-300 dark:hover:border-white/[0.25] hover:bg-slate-100 dark:hover:bg-[#312e81] transition-colors opacity-0 group-hover:opacity-100">
-                                <Plus size={10} />
-                              </div>
-                            )}
-                          </div>
-                        ))}
-                      </div>
-                    ))}
-                  </div>
-
-                  {/* ── Notes / Messages ── */}
-                  <div>
-                    <div className="flex items-center gap-2.5 mb-4">
-                      <MessageCircle size={15} className="text-slate-500" />
-                      <span className="text-[14px] font-semibold text-slate-900 dark:text-white">Notes</span>
-                      <span className="min-w-[20px] h-5 px-1.5 bg-slate-100 dark:bg-white/[0.06] flex items-center justify-center text-[10px] font-medium text-slate-500">
-                        {messagesData?.data?.length ?? 0}
-                      </span>
-                    </div>
-
-                    {/* Composer */}
-                    <div className="border border-slate-200 dark:border-white/[0.07] overflow-hidden mb-5 bg-white dark:bg-transparent">
-                      <div className="flex items-center gap-2 sm:gap-3 px-3 sm:px-4 py-3 sm:py-3.5">
-                        <div className="w-8 h-8 bg-[#f97316] flex items-center justify-center text-white text-sm font-semibold flex-shrink-0">
-                          C
-                        </div>
-                        <input
-                          value={msg}
-                          onChange={e => setMsg(e.target.value)}
-                          onKeyDown={e => e.key === 'Enter' && !e.shiftKey && handleSend()}
-                          placeholder="Type your comment here or @ to mention and notify someone"
-                          className="flex-1 bg-transparent text-sm text-slate-700 dark:text-slate-300 placeholder:text-slate-400 dark:placeholder:text-slate-700 outline-none"
-                        />
-                      </div>
-                      <div className="flex items-center justify-between px-4 py-2.5 border-t border-slate-200 dark:border-white/[0.06] bg-[var(--bg-card)] ">
-                        <div className="flex items-center gap-0.5">
-                          {['B', 'I', 'U'].map(t => (
-                            <button key={t} className="w-7 h-7 text-[12px] font-semibold text-slate-500 dark:text-slate-600 hover:text-slate-700 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/[0.05] transition-colors">{t}</button>
-                          ))}
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <button onClick={() => setMsg('')}
-                            className="px-3.5 py-1.5 text-[12px] font-semibold text-slate-500 hover:text-slate-900 dark:hover:text-white border border-slate-200 dark:border-white/[0.07] transition-colors">
-                            Cancel
-                          </button>
-                          <button onClick={handleSend} disabled={sendMsg.isPending || !msg.trim()}
-                            className="px-3.5 py-1.5 text-[12px] font-semibold text-white bg-brand-600 hover:bg-brand-700 transition-colors disabled:opacity-40 disabled:cursor-not-allowed">
-                            Save
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Message list */}
-                    <div className="space-y-5">
-                      {allMessages.map((m: any) => (
-                        <div key={m.id} className="flex gap-3">
-                          <div className={`w-8 h-8 flex items-center justify-center text-sm font-semibold flex-shrink-0 ${
-                            m.sender_role === 'coach' ? 'bg-[#f97316]' : 'bg-brand-600'
-                          } text-white`}>
-                            {m.sender_role === 'coach' ? 'C' : client.name[0].toUpperCase()}
-                          </div>
-                          <div className="flex-1">
-                            <div className="flex items-baseline gap-2 mb-1">
-                              <span className="text-[13px] font-semibold text-slate-900 dark:text-white">
-                                {m.sender_role === 'coach' ? 'You (Coach)' : client.name}
-                              </span>
-                              <span className="text-[11px] text-slate-700">{timeAgo(m.sent_at)}</span>
-                            </div>
-                            <p className="text-[13px] text-slate-400 leading-relaxed">{m.content}</p>
-                          </div>
-                        </div>
-                      ))}
-                      {allMessages.length === 0 && (
-                        <p className="text-center text-[12px] text-slate-700 py-4">No notes yet.</p>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              )}
+              
 
               {/* ─── Workouts tab ─────────────────────────────── */}
               {tab === 'workouts' && (
@@ -1352,8 +1195,8 @@ export default function ClientDetailPage() {
                   {/* ── Header ── */}
                   <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                     <div>
-                      <h3 className="text-[16px] font-semibold text-slate-900 dark:text-white">Workout Plans</h3>
-                      <p className="text-[12px] text-slate-500 dark:text-slate-400 mt-0.5">
+                      <h3 className="text-[16px] font-semibold text-[var(--text-primary)] dark:text-[var(--text-primary)]">Workout Plans</h3>
+                      <p className="text-[12px] text-[var(--text-secondary)] dark:text-[var(--text-secondary)] mt-0.5">
                         {workoutProgress ? `${workoutProgress.stats.in_progress_count} in progress · ${workoutProgress.stats.completed_count} completed` : `${(plans?.data ?? []).length} plans assigned to this client`}
                       </p>
                     </div>
@@ -1365,9 +1208,9 @@ export default function ClientDetailPage() {
 
                   {/* ── Empty state ── */}
                   {(plans?.data ?? []).length === 0 ? (
-                    <div className="border-2 border-dashed border-slate-200 dark:border-white/[0.08] bg-white dark:bg-transparent p-12 text-center">
+                    <div className="border-2 border-dashed border-[var(--border)] dark:border-white/[0.08] bg-white dark:bg-transparent p-12 text-center">
                       <Dumbbell className="w-10 h-10 mx-auto mb-3 text-slate-300 dark:text-slate-600" />
-                      <p className="text-[14px] font-medium text-slate-500 dark:text-slate-400 mb-1">No workout plans yet</p>
+                      <p className="text-[14px] font-medium text-[var(--text-secondary)] dark:text-[var(--text-secondary)] mb-1">No workout plans yet</p>
                       <p className="text-[12px] text-slate-400 dark:text-slate-500 mb-5">Create a new plan to get started</p>
                       <Link href={`/workout-plans/new?client=${id}`}
                         className="inline-flex items-center gap-1.5 px-5 py-2.5 text-[12px] font-semibold bg-brand-600 hover:bg-brand-700 text-white transition-colors ">
@@ -1391,7 +1234,7 @@ export default function ClientDetailPage() {
                             className={`border transition-all overflow-hidden ${
                               isExpanded
                                 ? 'border-blue-300 dark:border-blue-700/50 bg-[var(--bg-card)] '
-                                : 'border-slate-200 dark:border-white/[0.07] bg-[var(--bg-card)]  hover:'
+                                : 'border-[var(--border)] dark:border-white/[0.07] bg-[var(--bg-card)]  hover:'
                             }`}
                           >
                             {/* ── Card header row ── */}
@@ -1406,13 +1249,13 @@ export default function ClientDetailPage() {
                                 {/* Title + description */}
                                 <div className="flex-1 min-w-0">
                                   <div className="flex items-center gap-2 flex-wrap">
-                                    <p className="text-[14px] font-semibold text-slate-900 dark:text-white leading-snug">{plan.title}</p>
+                                    <p className="text-[14px] font-semibold text-[var(--text-primary)] dark:text-[var(--text-primary)] leading-snug">{plan.title}</p>
                                     <span className="text-[10px] font-semibold px-1.5 py-0.5 "
                                       style={{ color: catCfg.color, background: catCfg.bg }}>
                                       {catCfg.label}
                                     </span>
                                   </div>
-                                  <p className="text-[12px] text-slate-500 dark:text-slate-400 mt-0.5 line-clamp-1">
+                                  <p className="text-[12px] text-[var(--text-secondary)] dark:text-[var(--text-secondary)] mt-0.5 line-clamp-1">
                                     Week of {formatDate(plan.week_start, 'MMM d, yyyy')} · {totalDays} days · {totalExercises} exercises
                                     {completedDays > 0 && ` · ${completedDays}/${totalDays} completed`}
                                   </p>
@@ -1437,7 +1280,7 @@ export default function ClientDetailPage() {
                                   {/* View Details toggle */}
                                   <button
                                     onClick={() => setExpandedPlan(isExpanded ? null : plan.id)}
-                                    className="hidden sm:flex items-center gap-1 px-3 py-1.5 border border-slate-200 dark:border-white/[0.08] bg-white dark:bg-white/[0.03] text-[11px] font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-white/[0.06] transition-colors">
+                                    className="hidden sm:flex items-center gap-1 px-3 py-1.5 border border-[var(--border)] dark:border-white/[0.08] bg-white dark:bg-white/[0.03] text-[11px] font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-white/[0.06] transition-colors">
                                     View Details
                                     <ChevronDown size={12} className={`transition-transform ${isExpanded ? 'rotate-180' : ''}`} />
                                   </button>
@@ -1446,7 +1289,7 @@ export default function ClientDetailPage() {
                                   <button
                                     onClick={() => handleDeleteWorkout(plan)}
                                     disabled={deleteWorkoutPlan.isPending}
-                                    className="w-8 h-8 border border-slate-200 dark:border-white/[0.08] flex items-center justify-center text-slate-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors disabled:opacity-50">
+                                    className="w-8 h-8 border border-[var(--border)] dark:border-white/[0.08] flex items-center justify-center text-slate-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors disabled:opacity-50">
                                     {deleteWorkoutPlan.isPending ? <Loader2 size={14} className="animate-spin" /> : <Trash2 size={14} />}
                                   </button>
                                 </div>
@@ -1455,7 +1298,7 @@ export default function ClientDetailPage() {
                               {/* Mobile View Details */}
                               <button
                                 onClick={() => setExpandedPlan(isExpanded ? null : plan.id)}
-                                className="sm:hidden flex items-center justify-center gap-1 px-3 py-1.5 border border-slate-200 dark:border-white/[0.08] bg-white dark:bg-white/[0.03] text-[11px] font-semibold text-slate-600 dark:text-slate-300">
+                                className="sm:hidden flex items-center justify-center gap-1 px-3 py-1.5 border border-[var(--border)] dark:border-white/[0.08] bg-white dark:bg-white/[0.03] text-[11px] font-semibold text-slate-600 dark:text-slate-300">
                                 {isExpanded ? 'Hide Details' : 'View Details'}
                                 <ChevronDown size={12} className={`transition-transform ${isExpanded ? 'rotate-180' : ''}`} />
                               </button>
@@ -1506,7 +1349,7 @@ export default function ClientDetailPage() {
                                             </div>
                                             <div className="flex-1">
                                               <div className="flex items-center gap-2">
-                                                <p className="text-[13px] font-medium text-slate-900 dark:text-white">{day.day}</p>
+                                                <p className="text-[13px] font-medium text-[var(--text-primary)] dark:text-[var(--text-primary)]">{day.day}</p>
                                                 <span className="text-[10px] font-medium px-1.5 py-0.5 "
                                                   style={{ color: dayCfg.color, background: dayCfg.bg }}>
                                                   {dayCfg.label}
@@ -1517,7 +1360,7 @@ export default function ClientDetailPage() {
                                                   </span>
                                                 )}
                                               </div>
-                                              <p className="text-[11px] text-slate-500 dark:text-slate-400">{day.exercises?.length ?? 0} exercises</p>
+                                              <p className="text-[11px] text-[var(--text-secondary)] dark:text-[var(--text-secondary)]">{day.exercises?.length ?? 0} exercises</p>
                                             </div>
                                             <div className={`w-5 h-5 border-2 flex items-center justify-center flex-shrink-0 ${
                                               isCompleted ? 'border-emerald-400 bg-emerald-400/10' : 'border-slate-200 dark:border-white/10'
@@ -1528,11 +1371,11 @@ export default function ClientDetailPage() {
                                           {day.exercises?.length ? (
                                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 ml-12">
                                               {day.exercises.map((ex, ei) => (
-                                                <div key={ei} className="flex items-center gap-2 p-2 bg-slate-50 dark:bg-white/[0.02] border border-slate-200 dark:border-white/[0.05]">
+                                                <div key={ei} className="flex items-center gap-2 p-2 bg-[var(--bg-subtle)] dark:bg-white/[0.02] border border-slate-200 dark:border-white/[0.05]">
                                                   <div className="w-1.5 h-1.5 flex-shrink-0" style={{ background: dayCfg.color }} />
                                                   <div className="min-w-0 flex-1">
                                                     <p className="text-[12px] text-slate-700 dark:text-slate-300 truncate">{ex.name}</p>
-                                                    <p className="text-[10px] text-slate-500 dark:text-slate-400">{ex.sets}×{ex.reps}{ex.rest_seconds ? ` · ${ex.rest_seconds}s` : ''}</p>
+                                                    <p className="text-[10px] text-[var(--text-secondary)] dark:text-[var(--text-secondary)]">{ex.sets}×{ex.reps}{ex.rest_seconds ? ` · ${ex.rest_seconds}s` : ''}</p>
                                                   </div>
                                                   {ex.demo_video_url && (
                                                     <a href={ex.demo_video_url} target="_blank" rel="noopener noreferrer"
@@ -1550,7 +1393,7 @@ export default function ClientDetailPage() {
                                   </div>
                                 ) : (
                                   <div className="p-6 text-center bg-[var(--bg-card)] ">
-                                    <p className="text-[12px] text-slate-500 dark:text-slate-400">No workout days defined</p>
+                                    <p className="text-[12px] text-[var(--text-secondary)] dark:text-[var(--text-secondary)]">No workout days defined</p>
                                   </div>
                                 )}
 
@@ -1574,8 +1417,8 @@ export default function ClientDetailPage() {
                     <div className="mt-6">
                       <div className="flex items-center gap-2 mb-3">
                         <div className="w-2 h-2 bg-amber-400" />
-                        <h3 className="text-[14px] font-semibold text-slate-900 dark:text-white">In Progress</h3>
-                        <span className="text-[11px] text-slate-500 dark:text-slate-400">({workoutProgress.in_progress.length})</span>
+                        <h3 className="text-[14px] font-semibold text-[var(--text-primary)] dark:text-[var(--text-primary)]">In Progress</h3>
+                        <span className="text-[11px] text-[var(--text-secondary)] dark:text-[var(--text-secondary)]">({workoutProgress.in_progress.length})</span>
                       </div>
                       <div className="space-y-2">
                         {workoutProgress.in_progress.map((plan: WorkoutProgressPlan) => (
@@ -1584,8 +1427,8 @@ export default function ClientDetailPage() {
                               <Dumbbell size={14} className="text-amber-600 dark:text-amber-400" />
                             </div>
                             <div className="flex-1 min-w-0">
-                              <p className="text-[13px] font-semibold text-slate-900 dark:text-white truncate">{plan.title}</p>
-                              <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                              <p className="text-[13px] font-semibold text-[var(--text-primary)] dark:text-[var(--text-primary)] truncate">{plan.title}</p>
+                              <p className="text-[11px] text-[var(--text-secondary)] dark:text-[var(--text-secondary)]">
                                 {plan.completed_days}/{plan.total_days} days · {plan.progress_pct}% complete
                               </p>
                             </div>
@@ -1608,8 +1451,8 @@ export default function ClientDetailPage() {
                     <div className="mt-6">
                       <div className="flex items-center gap-2 mb-3">
                         <div className="w-2 h-2 bg-emerald-400" />
-                        <h3 className="text-[14px] font-semibold text-slate-900 dark:text-white">Completed</h3>
-                        <span className="text-[11px] text-slate-500 dark:text-slate-400">({workoutProgress.completed.length})</span>
+                        <h3 className="text-[14px] font-semibold text-[var(--text-primary)] dark:text-[var(--text-primary)]">Completed</h3>
+                        <span className="text-[11px] text-[var(--text-secondary)] dark:text-[var(--text-secondary)]">({workoutProgress.completed.length})</span>
                       </div>
                       <div className="space-y-2">
                         {workoutProgress.completed.map((plan: WorkoutProgressPlan) => (
@@ -1618,8 +1461,8 @@ export default function ClientDetailPage() {
                               <CheckCircle2 size={14} className="text-emerald-600 dark:text-emerald-400" />
                             </div>
                             <div className="flex-1 min-w-0">
-                              <p className="text-[13px] font-semibold text-slate-900 dark:text-white truncate">{plan.title}</p>
-                              <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                              <p className="text-[13px] font-semibold text-[var(--text-primary)] dark:text-[var(--text-primary)] truncate">{plan.title}</p>
+                              <p className="text-[11px] text-[var(--text-secondary)] dark:text-[var(--text-secondary)]">
                                 {plan.total_days} days · 100% complete
                               </p>
                             </div>
@@ -1637,7 +1480,7 @@ export default function ClientDetailPage() {
 
                   {/* ── Workout History (completed logs) — planned vs actual + media ── */}
                   <div className="mt-8">
-                    <h3 className="text-[14px] font-semibold text-slate-900 dark:text-white mb-4">Workout History</h3>
+                    <h3 className="text-[14px] font-semibold text-[var(--text-primary)] dark:text-[var(--text-primary)] mb-4">Workout History</h3>
                     {(workoutLogs ?? []).length === 0 ? (
                       <div className=" dark:bg-transparent p-8 text-center">
                         <Clock className="w-8 h-8 mx-auto mb-2 text-slate-600" />
@@ -1656,7 +1499,7 @@ export default function ClientDetailPage() {
                             <div key={log.id} className={`border overflow-hidden transition-all ${
                               isExpanded
                                 ? 'border-blue-300 dark:border-blue-700/50 bg-[var(--bg-card)] '
-                                : 'border-slate-200 dark:border-white/[0.07] bg-[var(--bg-card)]  hover:'
+                                : 'border-[var(--border)] dark:border-white/[0.07] bg-[var(--bg-card)]  hover:'
                             }`}>
                               <button onClick={() => setExpandedLog(isExpanded ? null : log.id)}
                                 className="w-full flex items-center gap-4 p-4 hover:bg-slate-50 dark:hover:bg-white/[0.02] transition-colors text-left">
@@ -1664,7 +1507,7 @@ export default function ClientDetailPage() {
                                   <CheckCircle2 size={16} className="text-emerald-400" />
                                 </div>
                                 <div className="flex-1 min-w-0">
-                                  <p className="text-[13px] font-semibold text-slate-900 dark:text-white truncate">
+                                  <p className="text-[13px] font-semibold text-[var(--text-primary)] dark:text-[var(--text-primary)] truncate">
                                     {log.plan_title ?? 'Workout'} — {log.day}
                                   </p>
                                   <div className="flex items-center gap-3 mt-0.5 flex-wrap">
@@ -1689,7 +1532,7 @@ export default function ClientDetailPage() {
                                     {(log.exercises ?? []).map((ex: any, ei: number) => {
                                       const planned = plannedExercises.find((pe: any) => pe.name === ex.name)
                                       return (
-                                        <div key={ei} className="border border-slate-100 dark:border-white/[0.05] bg-slate-50 dark:bg-[#121212] overflow-hidden">
+                                        <div key={ei} className="border border-slate-100 dark:border-white/[0.05] bg-[var(--bg-page)] dark:bg-[var(--bg-page)] overflow-hidden">
                                           {/* Exercise header */}
                                           <div className="flex items-center gap-3 p-3 border-b border-slate-100 dark:border-white/[0.04]">
                                             <div className="w-7 h-7 bg-blue-100 dark:bg-blue-900/25 flex items-center justify-center flex-shrink-0">
@@ -1766,7 +1609,7 @@ export default function ClientDetailPage() {
                                         <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
                                           {logMedia.map((m: any) => (
                                             <a key={m.id} href={m.url} target="_blank" rel="noopener noreferrer"
-                                              className="group relative aspect-square bg-slate-100 dark:bg-[#121212] border border-slate-200 dark:border-white/[0.06] flex items-center justify-center overflow-hidden hover:border-blue-300 dark:hover:border-blue-700/50 transition-colors">
+                                              className="group relative aspect-square bg-[var(--bg-subtle)] dark:bg-[var(--bg-subtle)] border border-[var(--border)] dark:border-white/[0.06] flex items-center justify-center overflow-hidden hover:border-blue-300 dark:hover:border-blue-700/50 transition-colors">
                                               {m.type === 'video' ? (
                                                 <>
                                                   <Video className="w-6 h-6 text-slate-400" />
@@ -1803,7 +1646,7 @@ export default function ClientDetailPage() {
               {tab === 'nutrition' && (
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
-                    <h3 className="text-[14px] font-semibold text-slate-900 dark:text-white">Nutrition Plans</h3>
+                    <h3 className="text-[14px] font-semibold text-[var(--text-primary)] dark:text-[var(--text-primary)]">Nutrition Plans</h3>
                     <Link href={`/nutrition-plans/new?client=${id}`}
                       className="flex items-center gap-1.5 px-3 py-1.5 text-[12px] font-semibold bg-brand-600 text-white transition-colors">
                       <Plus size={13} /> New Plan
@@ -1828,30 +1671,30 @@ export default function ClientDetailPage() {
               {/* ─── Analytics tab ──────────────────────────────── */}
               {tab === 'analytics' && (
                 <div className="space-y-5">
-                  <h3 className="text-[14px] font-semibold text-slate-900 dark:text-white">Real-Time Progress & Analytics</h3>
+                  <h3 className="text-[14px] font-semibold text-[var(--text-primary)] dark:text-[var(--text-primary)]">Real-Time Progress & Analytics</h3>
 
                   {/* ── Summary cards ── */}
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                    <div className="border border-slate-200 dark:border-white/[0.07] bg-[var(--bg-card)] p-4">
+                    <div className="border border-[var(--border)] dark:border-white/[0.07] bg-[var(--bg-card)] p-4">
                       <p className="text-[10px] font-semibold text-slate-500 dark:text-slate-500 uppercase tracking-widest mb-1">Streak</p>
                       <p className="text-3xl font-semibold text-orange-500">{analytics?.current_streak ?? 0}<span className="text-[12px] font-normal text-slate-500 ml-1">days</span></p>
                     </div>
-                    <div className="border border-slate-200 dark:border-white/[0.07] bg-[var(--bg-card)] p-4">
+                    <div className="border border-[var(--border)] dark:border-white/[0.07] bg-[var(--bg-card)] p-4">
                       <p className="text-[10px] font-semibold text-slate-500 dark:text-slate-500 uppercase tracking-widest mb-1">Workouts</p>
                       <p className="text-3xl font-semibold text-blue-500">{analytics?.total_workouts ?? 0}</p>
                     </div>
-                    <div className="border border-slate-200 dark:border-white/[0.07] bg-[var(--bg-card)] p-4">
+                    <div className="border border-[var(--border)] dark:border-white/[0.07] bg-[var(--bg-card)] p-4">
                       <p className="text-[10px] font-semibold text-slate-500 dark:text-slate-500 uppercase tracking-widest mb-1">Total Volume</p>
                       <p className="text-3xl font-semibold text-purple-500">{((analytics?.total_volume ?? 0) / 1000).toFixed(1)}<span className="text-[12px] font-normal text-slate-500 ml-1">t</span></p>
                     </div>
-                    <div className="border border-slate-200 dark:border-white/[0.07] bg-[var(--bg-card)] p-4">
+                    <div className="border border-[var(--border)] dark:border-white/[0.07] bg-[var(--bg-card)] p-4">
                       <p className="text-[10px] font-semibold text-slate-500 dark:text-slate-500 uppercase tracking-widest mb-1">Total Sets</p>
                       <p className="text-3xl font-semibold text-emerald-500">{analytics?.total_sets ?? 0}</p>
                     </div>
                   </div>
 
                   {/* ── Weekly completion chart ── */}
-                  <div className="border border-slate-200 dark:border-white/[0.07] bg-[var(--bg-card)] p-5">
+                  <div className="border border-[var(--border)] dark:border-white/[0.07] bg-[var(--bg-card)] p-5">
                     <p className="text-[11px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-4">Weekly Completion Rate</p>
                     {(Array.isArray(analytics?.completion_rate) ? analytics.completion_rate : []).length === 0 ? (
                       <p className="text-[13px] text-slate-500 py-4 text-center">No completion data yet</p>
@@ -1873,7 +1716,7 @@ export default function ClientDetailPage() {
 
                   {/* ── Weekly volume trend ── */}
                   {(Array.isArray(analytics?.weekly_volume) ? analytics.weekly_volume : []).length > 0 && (
-                    <div className="border border-slate-200 dark:border-white/[0.07] bg-[var(--bg-card)] p-5">
+                    <div className="border border-[var(--border)] dark:border-white/[0.07] bg-[var(--bg-card)] p-5">
                       <p className="text-[11px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-4">Weekly Volume Trend</p>
                       <div className="flex items-end gap-2 h-28">
                         {(Array.isArray(analytics?.weekly_volume) ? analytics.weekly_volume : []).map((w: any, i: number) => {
@@ -1893,11 +1736,11 @@ export default function ClientDetailPage() {
 
                   {/* ── Personal Records ── */}
                   {(Array.isArray(analytics?.personal_records) ? analytics.personal_records : []).length > 0 && (
-                    <div className="border border-slate-200 dark:border-white/[0.07] bg-[var(--bg-card)] p-5">
+                    <div className="border border-[var(--border)] dark:border-white/[0.07] bg-[var(--bg-card)] p-5">
                       <p className="text-[11px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-3">Personal Records</p>
                       <div className="space-y-2">
                         {(Array.isArray(analytics?.personal_records) ? analytics.personal_records : []).map((pr: any, i: number) => (
-                          <div key={i} className="flex items-center gap-3 p-2.5 bg-slate-50 dark:bg-white/[0.02] border border-slate-100 dark:border-white/[0.04]">
+                          <div key={i} className="flex items-center gap-3 p-2.5 bg-[var(--bg-subtle)] dark:bg-white/[0.02] border border-slate-100 dark:border-white/[0.04]">
                             <div className="w-7 h-7 bg-amber-100 dark:bg-amber-900/25 flex items-center justify-center flex-shrink-0">
                               <span className="text-[11px] font-semibold text-amber-600">#{i + 1}</span>
                             </div>
@@ -1905,7 +1748,7 @@ export default function ClientDetailPage() {
                               <p className="text-[12px] font-medium text-slate-800 dark:text-slate-200 truncate">{pr.exercise}</p>
                               {pr.date && <p className="text-[10px] text-slate-400">{pr.date}</p>}
                             </div>
-                            <span className="text-[14px] font-semibold text-slate-900 dark:text-white">{pr.max_kg} <span className="text-[10px] font-normal text-slate-500">kg</span></span>
+                            <span className="text-[14px] font-semibold text-[var(--text-primary)] dark:text-[var(--text-primary)]">{pr.max_kg} <span className="text-[10px] font-normal text-slate-500">kg</span></span>
                           </div>
                         ))}
                       </div>
@@ -1914,7 +1757,7 @@ export default function ClientDetailPage() {
 
                   {/* ── Exercise Progress (top 5) ── */}
                   {Object.keys(analytics?.exercise_progress ?? {}).length > 0 && (
-                    <div className="border border-slate-200 dark:border-white/[0.07] bg-[var(--bg-card)] p-5">
+                    <div className="border border-[var(--border)] dark:border-white/[0.07] bg-[var(--bg-card)] p-5">
                       <p className="text-[11px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-3">Exercise Progress (Max Weight Over Time)</p>
                       <div className="space-y-4">
                         {Object.entries(analytics?.exercise_progress ?? {}).slice(0, 5).map(([name, data]: [string, any]) => {
@@ -1945,7 +1788,7 @@ export default function ClientDetailPage() {
                   )}
 
                   {/* ── Body Measurements ── */}
-                  <div className="border border-slate-200 dark:border-white/[0.07] bg-[var(--bg-card)] p-5">
+                  <div className="border border-[var(--border)] dark:border-white/[0.07] bg-[var(--bg-card)] p-5">
                     <p className="text-[11px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-3">Body Measurements</p>
                     {(Array.isArray(analytics?.measurements) ? analytics.measurements : []).length === 0 ? (
                       <p className="text-[13px] text-slate-500 py-4 text-center">No measurements recorded yet</p>
@@ -1981,11 +1824,11 @@ export default function ClientDetailPage() {
 
                   {/* ── Progress Photos ── */}
                   {(Array.isArray(analytics?.photos) ? analytics.photos : []).length > 0 && (
-                    <div className="border border-slate-200 dark:border-white/[0.07] bg-[var(--bg-card)] p-5">
+                    <div className="border border-[var(--border)] dark:border-white/[0.07] bg-[var(--bg-card)] p-5">
                       <p className="text-[11px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-3">Progress Photos</p>
                       <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
                         {(Array.isArray(analytics?.photos) ? analytics.photos : []).map((p: any) => (
-                          <div key={p.id} className="aspect-square bg-slate-100 dark:bg-[#121212] border border-slate-200 dark:border-white/[0.06] overflow-hidden">
+                          <div key={p.id} className="aspect-square bg-[var(--bg-subtle)] dark:bg-[var(--bg-subtle)] border border-[var(--border)] dark:border-white/[0.06] overflow-hidden">
                             {p.url ? (
                               <img src={p.url} alt="" className="w-full h-full object-cover" />
                             ) : (
@@ -2003,17 +1846,18 @@ export default function ClientDetailPage() {
 
               {/* ─── Messages tab ───────────────────────────────── */}
               {tab === 'messages' && (
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
+                <div className="space-y-4 flex flex-col h-[calc(100vh-12rem)] sm:h-[calc(100vh-8rem)]">
+                  {/* Header */}
+                  <div className="flex items-center justify-between px-2 sm:px-0">
                     <div className="flex items-center gap-3">
                       {/* Client avatar + name in header */}
                       <div className="w-8 h-8 bg-[var(--bg-subtle)] border border-slate-200 dark:border-white/[0.1] flex items-center justify-center overflow-hidden flex-shrink-0">
                         {client.profile_photo_url
                           ? <img src={client.profile_photo_url} alt="" className="w-full h-full object-cover" />
-                          : <span className="text-xs font-semibold text-slate-900 dark:text-white">{client.name[0].toUpperCase()}</span>}
+                          : <span className="text-xs font-semibold text-[var(--text-primary)] dark:text-[var(--text-primary)]">{client.name[0].toUpperCase()}</span>}
                       </div>
                       <div>
-                        <h3 className="text-[14px] font-semibold text-slate-900 dark:text-white">{client.name}</h3>
+                        <h3 className="text-[14px] font-semibold text-[var(--text-primary)] dark:text-[var(--text-primary)]">{client.name}</h3>
                         <span className={`text-[11px] ${client.active ? 'text-emerald-400' : 'text-slate-500'}`}>
                           {client.active ? 'Active' : 'Offline'}
                         </span>
@@ -2025,40 +1869,43 @@ export default function ClientDetailPage() {
                         : <><WifiOff size={11} className="text-slate-600" /><span className="text-slate-600">Polling</span></>}
                     </div>
                   </div>
-                  <div className="flex flex-col h-[420px] sm:h-[500px]">
-                    <div className="flex-1 p-4 overflow-y-auto space-y-3 bg-slate-50 dark:bg-[#121212]">
+
+                  {/* Chat container */}
+                  <div className="flex-1 flex flex-col min-h-0 border border-[var(--border)] dark:border-white/[0.07] overflow-hidden">
+                    {/* Messages area */}
+                    <div className="flex-1 overflow-y-auto p-3 sm:p-4 space-y-3 bg-[var(--bg-page)] dark:bg-[var(--bg-page)] min-h-0">
                       {msgLoading && allMessages.length === 0 && (
                         <p className="text-center text-slate-600 text-[13px] mt-8">Loading messages…</p>
                       )}
                       {allMessages.map((m: any) => (
-                        <div key={m.id} className={`flex ${m.sender_role === 'coach' ? 'justify-end' : 'justify-start'}`}>
+                        <div key={m.id} className={`flex ${m.sender_role === 'coach' ? 'justify-end' : 'justify-start'} gap-2`}>
                           {m.sender_role === 'client' && (
-                            <div className="w-7 h-7 bg-[var(--bg-subtle)] flex items-center justify-center mr-2 flex-shrink-0 mt-1">
+                            <div className="w-7 h-7 bg-[var(--bg-subtle)] flex items-center justify-center flex-shrink-0 mt-1">
                               {client.profile_photo_url
                                 ? <img src={client.profile_photo_url} alt="" className="w-full h-full object-cover" />
                                 : <span className="text-[10px] font-semibold text-slate-700 dark:text-slate-300">{client.name[0].toUpperCase()}</span>}
                             </div>
                           )}
-                          <div className={`max-w-[85%] sm:max-w-xs px-4 py-2.5 text-[13px] ${
-                            m.sender_role === 'coach' ? 'bg-brand-600 text-white' : 'bg-[var(--bg-subtle)]  border border-slate-200 dark:border-white/[0.07] text-slate-700 dark:text-slate-300'
+                          <div className={`max-w-[80%] sm:max-w-md px-3 sm:px-4 py-2 sm:py-2.5 text-[13px] break-words ${
+                            m.sender_role === 'coach' ? 'bg-brand-600 text-white' : 'bg-[var(--bg-subtle)] border border-[var(--border)] dark:border-white/[0.07] text-slate-700 dark:text-slate-300'
                           }`}>
                             {/* Media attachment */}
                             {m.media_url && m.media_type === 'image' && (
                               <a href={m.media_url} target="_blank" rel="noopener noreferrer" className="block mb-2">
-                                <img src={m.media_url} alt="" className="max-w-full max-h-48 object-cover" />
+                                <img src={m.media_url} alt="" className="max-w-full max-h-48 object-cover rounded" />
                               </a>
                             )}
                             {m.media_url && m.media_type === 'file' && (
                               <a href={m.media_url} target="_blank" rel="noopener noreferrer"
                                 className={`flex items-center gap-2 mb-2 px-3 py-2 ${
-                                  m.sender_role === 'coach' ? 'bg-blue-700/40' : 'bg-slate-100 dark:bg-white/[0.05]'
+                                  m.sender_role === 'coach' ? 'bg-blue-700/40' : 'bg-[var(--bg-subtle)] dark:bg-white/[0.05]'
                                 }`}>
                                 <FileText size={14} />
                                 <span className="text-[12px] truncate flex-1">{m.media_filename || 'File'}</span>
                                 <Download size={12} />
                               </a>
                             )}
-                            {m.content && <p>{m.content}</p>}
+                            {m.content && <p className="leading-relaxed">{m.content}</p>}
                             <p className={`text-[11px] mt-1 ${m.sender_role === 'coach' ? 'text-blue-200' : 'text-slate-600'}`}>{timeAgo(m.sent_at)}</p>
                           </div>
                         </div>
@@ -2068,9 +1915,10 @@ export default function ClientDetailPage() {
                       )}
                       <div ref={messagesEndRef} />
                     </div>
+
                     {/* Pending file preview */}
                     {pendingFile && (
-                      <div className="px-4 py-2 border-t border-slate-200 dark:border-white/[0.06] bg-[var(--bg-page)] flex items-center gap-2">
+                      <div className="px-4 py-2 border-t border-[var(--border)] dark:border-white/[0.06] bg-[var(--bg-page)] flex items-center gap-2 flex-shrink-0">
                         {pendingFile.media_type === 'image'
                           ? <img src={pendingFile.media_url} alt="" className="w-10 h-10 object-cover" />
                           : <FileText size={16} className="text-slate-500" />}
@@ -2080,18 +1928,20 @@ export default function ClientDetailPage() {
                         </button>
                       </div>
                     )}
-                    <div className="p-4 border-t border-slate-200 dark:border-white/[0.06] bg-[var(--bg-card)] flex gap-2">
+
+                    {/* Input area */}
+                    <div className="p-3 sm:p-4 border-t border-[var(--border)] dark:border-white/[0.06] bg-[var(--bg-card)] flex gap-2 flex-shrink-0">
                       <input type="file" ref={fileInputRef} onChange={handleFileSelect} className="hidden"
                         accept="image/jpeg,image/png,image/gif,image/webp,.pdf,.doc,.docx,.xls,.xlsx,.csv,.txt,.zip" />
                       <button onClick={() => fileInputRef.current?.click()} disabled={uploadMedia.isPending}
-                        className="px-3 py-2 border border-slate-200 dark:border-white/[0.07] text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 hover:bg-slate-50 dark:hover:bg-white/[0.05] transition-colors disabled:opacity-40">
+                        className="px-2 sm:px-3 py-2 border border-[var(--border)] dark:border-white/[0.07] text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 hover:bg-slate-50 dark:hover:bg-white/[0.05] transition-colors disabled:opacity-40 flex-shrink-0">
                         {uploadMedia.isPending ? <Loader2 size={15} className="animate-spin" /> : <Paperclip size={15} />}
                       </button>
-                      <input value={msg} onChange={e => setMsg(e.target.value)} onKeyDown={e => e.key === 'Enter' && handleSend()}
-                        className="flex-1 bg-slate-50 dark:bg-[#121212] border border-slate-200 dark:border-white/[0.07] px-4 py-2 text-[13px] text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-700 outline-none focus:border-slate-300 dark:focus:border-white/[0.15]"
+                      <input value={msg} onChange={e => setMsg(e.target.value)} onKeyDown={e => e.key === 'Enter' && !e.shiftKey && handleSend()}
+                        className="flex-1 bg-[var(--bg-page)] dark:bg-[var(--bg-page)] border border-[var(--border)] dark:border-white/[0.07] px-3 sm:px-4 py-2 text-[13px] text-[var(--text-primary)] dark:text-[var(--text-primary)] placeholder:text-slate-400 dark:placeholder:text-slate-700 outline-none focus:border-slate-300 dark:focus:border-white/[0.15] min-w-0"
                         placeholder="Type a message…" />
                       <button onClick={handleSend} disabled={sendMsg.isPending || (!msg.trim() && !pendingFile)}
-                        className="px-4 py-2 bg-brand-600 hover:bg-brand-700 text-white transition-colors disabled:opacity-40 disabled:cursor-not-allowed">
+                        className="px-3 sm:px-4 py-2 bg-brand-600 hover:bg-brand-700 text-white transition-colors disabled:opacity-40 disabled:cursor-not-allowed flex-shrink-0">
                         <Send size={15} />
                       </button>
                     </div>
@@ -2135,8 +1985,8 @@ export default function ClientDetailPage() {
                   {/* ── Header ── */}
                   <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                     <div>
-                      <h3 className="text-[16px] font-semibold text-slate-900 dark:text-white">Schedule</h3>
-                      <p className="text-[12px] text-slate-500 dark:text-slate-400 mt-0.5">Manage all sessions and meetings for this client</p>
+                      <h3 className="text-[16px] font-semibold text-[var(--text-primary)] dark:text-[var(--text-primary)]">Schedule</h3>
+                      <p className="text-[12px] text-[var(--text-secondary)] dark:text-[var(--text-secondary)] mt-0.5">Manage all sessions and meetings for this client</p>
                     </div>
                     <button
                       onClick={() => openScheduleModal(new Date())}
@@ -2155,13 +2005,13 @@ export default function ClientDetailPage() {
                           className={`px-3 py-1.5 text-[12px] font-medium whitespace-nowrap transition-colors ${
                             activeFilter === f
                               ? 'text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 font-semibold'
-                              : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-white/[0.04]'
+                              : 'text-[var(--text-secondary)] dark:text-[var(--text-secondary)] hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-white/[0.04]'
                           }`}
                         >{f}</button>
                       ))}
                     </div>
                     <div className="flex items-center gap-2">
-                      <div className="flex items-center gap-1 text-[11px] text-slate-500 dark:text-slate-400">
+                      <div className="flex items-center gap-1 text-[11px] text-[var(--text-secondary)] dark:text-[var(--text-secondary)]">
                         {socketConnected
                           ? <><Wifi size={10} className="text-emerald-400" /><span className="text-emerald-400">Live</span></>
                           : <><WifiOff size={10} className="text-slate-500" /><span>Offline</span></>}
@@ -2172,8 +2022,7 @@ export default function ClientDetailPage() {
                   {/* ── Empty state ── */}
                   {filtered.length === 0 ? (
                     <div className="mt-[12rem] dark:border-white/[0.08] p-12 text-center">
-                      <CalendarIcon className="w-10 h-10 mx-auto mb-3 text-slate-300 dark:text-slate-600" />
-                      <p className="text-[14px] font-medium text-slate-500 dark:text-slate-400 mb-1">No {(activeFilter as string).toLowerCase()} meetings</p>
+                      <p className="text-[14px] font-medium text-[var(--text-secondary)] dark:text-[var(--text-secondary)] mb-1">No {(activeFilter as string).toLowerCase()} meetings</p>
                       <p className="text-[12px] text-slate-400 dark:text-slate-500 mb-5">Schedule a new meeting to get started</p>
                       <button
                         onClick={() => openScheduleModal(new Date())}
@@ -2186,7 +2035,7 @@ export default function ClientDetailPage() {
                       {sortedGroups.map(([dateLabel, events]) => (
                         <div key={dateLabel}>
                           {/* ── Date group header ── */}
-                          <p className="text-[13px] font-semibold text-slate-500 dark:text-slate-400 mb-3 pl-1">{dateLabel}</p>
+                          <p className="text-[13px] font-semibold text-[var(--text-secondary)] dark:text-[var(--text-secondary)] mb-3 pl-1">{dateLabel}</p>
 
                           <div className="space-y-3">
                             {events.map(c => {
@@ -2214,7 +2063,7 @@ export default function ClientDetailPage() {
                                   className={` border transition-all overflow-hidden ${
                                     isExpanded
                                       ? 'border-blue-300 dark:border-blue-700/50 bg-[var(--bg-card)] '
-                                      : 'border-slate-200 dark:border-white/[0.07] bg-[var(--bg-card)]  hover:'
+                                      : 'border-[var(--border)] dark:border-white/[0.07] bg-[var(--bg-card)]  hover:'
                                   }`}
                                 >
                                   {/* ── Card header row ── */}
@@ -2233,8 +2082,8 @@ export default function ClientDetailPage() {
 
                                       {/* Title + description */}
                                       <div className="flex-1 min-w-0">
-                                        <p className="text-[14px] font-semibold text-slate-900 dark:text-white leading-snug">{typeLabel}</p>
-                                        <p className="text-[12px] text-slate-500 dark:text-slate-400 mt-0.5 line-clamp-1">
+                                        <p className="text-[14px] font-semibold text-[var(--text-primary)] dark:text-[var(--text-primary)] leading-snug">{typeLabel}</p>
+                                        <p className="text-[12px] text-[var(--text-secondary)] dark:text-[var(--text-secondary)] mt-0.5 line-clamp-1">
                                           {c.notes || `Session with ${client?.name ?? 'client'}`}
                                         </p>
                                       </div>
@@ -2253,14 +2102,14 @@ export default function ClientDetailPage() {
                                         {/* View Details toggle */}
                                         <button
                                           onClick={() => setActiveChatId(isExpanded ? null : c.id)}
-                                          className="hidden sm:flex items-center gap-1 px-3 py-1.5 border border-slate-200 dark:border-white/[0.08] bg-white dark:bg-white/[0.03] text-[11px] font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-white/[0.06] transition-colors">
+                                          className="hidden sm:flex items-center gap-1 px-3 py-1.5 border border-[var(--border)] dark:border-white/[0.08] bg-white dark:bg-white/[0.03] text-[11px] font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-white/[0.06] transition-colors">
                                           View Details
                                           <ChevronDown size={12} className={`transition-transform ${isExpanded ? 'rotate-180' : ''}`} />
                                         </button>
 
                                         {/* More menu dot */}
                                         <button
-                                          className="w-8 h-8 border border-slate-200 dark:border-white/[0.08] flex items-center justify-center text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-white/[0.06] transition-colors"
+                                          className="w-8 h-8 border border-[var(--border)] dark:border-white/[0.08] flex items-center justify-center text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-white/[0.06] transition-colors"
                                           aria-label="More options"
                                           title="More options"
                                         >
@@ -2272,7 +2121,7 @@ export default function ClientDetailPage() {
                                     {/* Mobile View Details */}
                                     <button
                                       onClick={() => setActiveChatId(isExpanded ? null : c.id)}
-                                      className="sm:hidden flex items-center justify-center gap-1 px-3 py-1.5 border border-slate-200 dark:border-white/[0.08] bg-white dark:bg-white/[0.03] text-[11px] font-semibold text-slate-600 dark:text-slate-300">
+                                      className="sm:hidden flex items-center justify-center gap-1 px-3 py-1.5 border border-[var(--border)] dark:border-white/[0.08] bg-white dark:bg-white/[0.03] text-[11px] font-semibold text-slate-600 dark:text-slate-300">
                                       {isExpanded ? 'Hide Details' : 'View Details'}
                                       <ChevronDown size={12} className={`transition-transform ${isExpanded ? 'rotate-180' : ''}`} />
                                     </button>
@@ -2347,7 +2196,7 @@ export default function ClientDetailPage() {
                                       {(c.notes || c.client_response_note) && (
                                         <div className="px-4 sm:px-5 pb-4">
                                           <p className="text-[11px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-1.5">Meeting Notes</p>
-                                          <p className="text-[12px] text-slate-600 dark:text-slate-400 leading-relaxed bg-slate-50 dark:bg-white/[0.02] p-3 border border-slate-100 dark:border-white/[0.04]">
+                                          <p className="text-[12px] text-slate-600 dark:text-slate-400 leading-relaxed bg-[var(--bg-subtle)] dark:bg-white/[0.02] p-3 border border-slate-100 dark:border-white/[0.04]">
                                             {c.notes}
                                             {c.client_response_note && (
                                               <span className="block mt-2 text-slate-500 italic">Client: {c.client_response_note}</span>
@@ -2393,7 +2242,7 @@ export default function ClientDetailPage() {
                                           className={`flex items-center gap-1.5 px-3 py-2 text-[12px] font-medium transition-colors ml-auto ${
                                             activeChatId === `chat-${c.id}`
                                               ? 'bg-purple-600 text-white'
-                                              : 'text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-white/[0.08] hover:bg-slate-50 dark:hover:bg-white/[0.04]'
+                                              : 'text-[var(--text-secondary)] dark:text-[var(--text-secondary)] border border-[var(--border)] dark:border-white/[0.08] hover:bg-slate-50 dark:hover:bg-white/[0.04]'
                                           }`}>
                                           <MessageCircle size={13} />
                                           {activeChatId === `chat-${c.id}` ? 'Close Chat' : 'Open Chat'}
@@ -2402,13 +2251,13 @@ export default function ClientDetailPage() {
 
                                       {/* ── Inline chat panel ── */}
                                       {activeChatId === `chat-${c.id}` && (
-                                        <div className="border-t border-slate-200 dark:border-white/[0.06] flex flex-col" style={{ height: 300 }}>
-                                          <div className="flex items-center gap-2 px-4 py-2 bg-slate-50 dark:bg-[#121212] border-b border-slate-200 dark:border-white/[0.05]">
+                                        <div className="border-t border-[var(--border)] dark:border-white/[0.06] flex flex-col" style={{ height: 300 }}>
+                                          <div className="flex items-center gap-2 px-4 py-2 bg-[var(--bg-page)] dark:bg-[var(--bg-page)] border-b border-slate-200 dark:border-white/[0.05]">
                                             {socketConnected
                                               ? <><Wifi size={10} className="text-emerald-400" /><span className="text-[10px] text-emerald-400">Connected · live chat</span></>
                                               : <><WifiOff size={10} className="text-slate-500" /><span className="text-[10px] text-slate-500">Offline — messages saved via REST</span></>}
                                           </div>
-                                          <div className="flex-1 overflow-y-auto p-3 space-y-2 bg-slate-50 dark:bg-[#121212]">
+                                          <div className="flex-1 overflow-y-auto p-3 space-y-2 bg-[var(--bg-page)] dark:bg-[var(--bg-page)]">
                                             {allMessages.filter((m: any) => {
                                               const checkinTime = new Date(c.scheduled_at).getTime()
                                               const msgTime = new Date(m.sent_at).getTime()
@@ -2422,7 +2271,7 @@ export default function ClientDetailPage() {
                                                 <div className={`max-w-[80%] px-3 py-2 text-[12px] ${
                                                   m.sender_role === 'coach'
                                                     ? 'bg-brand-600 text-white'
-                                                    : 'bg-[var(--bg-subtle)]  border border-slate-200 dark:border-white/[0.07] text-slate-700 dark:text-slate-300'
+                                                    : 'bg-[var(--bg-subtle)]  border border-[var(--border)] dark:border-white/[0.07] text-slate-700 dark:text-slate-300'
                                                 }`}>
                                                   <p>{m.content}</p>
                                                   <p className={`text-[10px] mt-0.5 ${m.sender_role === 'coach' ? 'text-blue-200' : 'text-slate-500'}`}>{timeAgo(m.sent_at)}</p>
@@ -2440,7 +2289,7 @@ export default function ClientDetailPage() {
                                               onChange={e => setMsg(e.target.value)}
                                               onKeyDown={e => e.key === 'Enter' && handleSend()}
                                               placeholder="Send a message…"
-                                              className="flex-1 bg-slate-50 dark:bg-[#121212] border border-slate-200 dark:border-white/[0.07] px-3 py-2 text-[12px] text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-600 outline-none focus:border-blue-400 dark:focus:border-white/[0.18]"
+                                              className="flex-1 bg-[var(--bg-page)] dark:bg-[var(--bg-page)] border border-[var(--border)] dark:border-white/[0.07] px-3 py-2 text-[12px] text-[var(--text-primary)] dark:text-[var(--text-primary)] placeholder:text-slate-400 dark:placeholder:text-slate-600 outline-none focus:border-blue-400 dark:focus:border-white/[0.18]"
                                             />
                                             <button onClick={handleSend} disabled={!msg.trim()}
                                               className="px-3 py-2 bg-brand-600 hover:bg-brand-700 text-white transition-colors disabled:opacity-40">
@@ -2471,12 +2320,12 @@ export default function ClientDetailPage() {
 
       {/* ══════════ SCHEDULE MODAL ══════════ */}
       {scheduleModal.open && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-sm p-4">
-          <div className="bg-[var(--bg-card)] border border-slate-200 dark:border-white/[0.1] w-full max-w-[440px] ">
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/75 backdrop-blur-sm p-0 sm:p-4">
+          <div className="bg-[var(--bg-card)] border border-slate-200 dark:border-white/[0.1] w-full sm:max-w-[440px] sm: max-h-[90vh] overflow-y-auto">
             {/* Header */}
-            <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200 dark:border-white/[0.07]">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-[var(--border)] dark:border-white/[0.07]">
               <div>
-                <h3 className="text-[15px] font-semibold text-slate-900 dark:text-white">
+                <h3 className="text-[15px] font-semibold text-[var(--text-primary)] dark:text-[var(--text-primary)]">
                   {scheduleModal.checkinId ? 'Reschedule Event' : 'Schedule Event'}
                 </h3>
                 <p className="text-[11px] text-slate-600 mt-0.5">
@@ -2502,7 +2351,7 @@ export default function ClientDetailPage() {
                     type="date"
                     value={scheduleForm.date}
                     onChange={e => setScheduleForm(f => ({ ...f, date: e.target.value }))}
-                    className="w-full bg-slate-50 dark:bg-[#121212] border border-slate-200 dark:border-white/[0.08] px-3 py-2.5 text-[13px] text-slate-900 dark:text-white outline-none focus:border-slate-300 dark:focus:border-white/[0.2] [color-scheme:light] dark:[color-scheme:dark]"
+                    className="w-full bg-[var(--bg-page)] dark:bg-[var(--bg-page)] border border-[var(--border)] dark:border-white/[0.08] px-3 py-2.5 text-[13px] text-[var(--text-primary)] dark:text-[var(--text-primary)] outline-none focus:border-slate-300 dark:focus:border-white/[0.2] [color-scheme:light] dark:[color-scheme:dark]"
                   />
                 </div>
                 <div>
@@ -2511,7 +2360,7 @@ export default function ClientDetailPage() {
                     type="time"
                     value={scheduleForm.time}
                     onChange={e => setScheduleForm(f => ({ ...f, time: e.target.value }))}
-                    className="w-full bg-slate-50 dark:bg-[#121212] border border-slate-200 dark:border-white/[0.08] px-3 py-2.5 text-[13px] text-slate-900 dark:text-white outline-none focus:border-slate-300 dark:focus:border-white/[0.2] [color-scheme:light] dark:[color-scheme:dark]"
+                    className="w-full bg-[var(--bg-page)] dark:bg-[var(--bg-page)] border border-[var(--border)] dark:border-white/[0.08] px-3 py-2.5 text-[13px] text-[var(--text-primary)] dark:text-[var(--text-primary)] outline-none focus:border-slate-300 dark:focus:border-white/[0.2] [color-scheme:light] dark:[color-scheme:dark]"
                   />
                 </div>
               </div>
@@ -2529,7 +2378,7 @@ export default function ClientDetailPage() {
                           ? t === 'video' ? 'border-blue-500/50 bg-blue-500/10 text-blue-400'
                             : t === 'call' ? 'border-emerald-500/50 bg-emerald-500/10 text-emerald-400'
                             : 'border-purple-500/50 bg-purple-500/10 text-purple-400'
-                          : 'border-slate-200 dark:border-white/[0.07] bg-slate-50 dark:bg-white/[0.02] text-slate-500 dark:text-slate-600 hover:text-slate-700 dark:hover:text-slate-300 hover:border-slate-300 dark:hover:border-white/[0.14]'
+                          : 'border-[var(--border)] dark:border-white/[0.07] bg-[var(--bg-subtle)] dark:bg-white/[0.02] text-slate-500 dark:text-slate-600 hover:text-slate-700 dark:hover:text-slate-300 hover:border-slate-300 dark:hover:border-white/[0.14]'
                       }`}>
                       {t === 'video' ? <Video size={12} />
                         : t === 'call' ? <PhoneCall size={12} />
@@ -2549,7 +2398,7 @@ export default function ClientDetailPage() {
                     value={scheduleForm.meeting_link}
                     onChange={e => setScheduleForm(f => ({ ...f, meeting_link: e.target.value }))}
                     placeholder="https://meet.example.com/room"
-                    className="w-full bg-slate-50 dark:bg-[#121212] border border-slate-200 dark:border-white/[0.08] px-3 py-2.5 text-[13px] text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-700 outline-none focus:border-slate-300 dark:focus:border-white/[0.2]"
+                    className="w-full bg-[var(--bg-page)] dark:bg-[var(--bg-page)] border border-[var(--border)] dark:border-white/[0.08] px-3 py-2.5 text-[13px] text-[var(--text-primary)] dark:text-[var(--text-primary)] placeholder:text-slate-400 dark:placeholder:text-slate-700 outline-none focus:border-slate-300 dark:focus:border-white/[0.2]"
                   />
                 </div>
               )}
@@ -2562,16 +2411,16 @@ export default function ClientDetailPage() {
                   onChange={e => setScheduleForm(f => ({ ...f, notes: e.target.value }))}
                   rows={3}
                   placeholder="Agenda, topics to discuss…"
-                  className="w-full bg-slate-50 dark:bg-[#121212] border border-slate-200 dark:border-white/[0.08] px-3 py-2.5 text-[13px] text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-700 outline-none focus:border-slate-300 dark:focus:border-white/[0.2] resize-none"
+                  className="w-full bg-[var(--bg-page)] dark:bg-[var(--bg-page)] border border-[var(--border)] dark:border-white/[0.08] px-3 py-2.5 text-[13px] text-[var(--text-primary)] dark:text-[var(--text-primary)] placeholder:text-slate-400 dark:placeholder:text-slate-700 outline-none focus:border-slate-300 dark:focus:border-white/[0.2] resize-none"
                 />
               </div>
             </div>
 
             {/* Footer */}
-            <div className="flex items-center justify-end gap-2 px-6 py-4 border-t border-slate-200 dark:border-white/[0.07]">
+            <div className="flex items-center justify-end gap-2 px-6 py-4 border-t border-[var(--border)] dark:border-white/[0.07]">
               <button
                 onClick={closeScheduleModal}
-                className="px-4 py-2 text-[13px] font-semibold text-slate-500 hover:text-slate-900 dark:hover:text-white border border-slate-200 dark:border-white/[0.07] hover:border-slate-300 dark:hover:border-white/[0.15] transition-colors">
+                className="px-4 py-2 text-[13px] font-semibold text-slate-500 hover:text-slate-900 dark:hover:text-white border border-[var(--border)] dark:border-white/[0.07] hover:border-slate-300 dark:hover:border-white/[0.15] transition-colors">
                 Cancel
               </button>
               <button
@@ -2580,6 +2429,81 @@ export default function ClientDetailPage() {
                 className="px-5 py-2 text-[13px] font-semibold text-white bg-brand-600 hover:bg-brand-700 transition-colors disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-2">
                 {scheduling && <RefreshCw size={12} className="animate-spin" />}
                 {scheduling ? (scheduleModal.checkinId ? 'Saving…' : 'Scheduling…') : (scheduleModal.checkinId ? 'Save Changes' : 'Schedule')}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ══════════ DELETE CONFIRMATION MODAL ══════════ */}
+      {deleteModal.open && (
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/75 backdrop-blur-sm p-0 sm:p-4">
+          <div className="bg-[var(--bg-card)] border border-slate-200 dark:border-white/[0.1] w-full sm:max-w-[400px] sm: max-h-[90vh] overflow-y-auto">
+            {/* Header */}
+            <div className="flex items-center justify-between px-6 py-4 border-b border-[var(--border)] dark:border-white/[0.07]">
+              <div>
+                <h3 className="text-[15px] font-semibold text-[var(--text-primary)] dark:text-[var(--text-primary)]">
+                  {deleteModal.type === 'client' ? 'Delete Client' : 'Delete Workout Plan'}
+                </h3>
+                <p className="text-[11px] text-red-500 mt-0.5">
+                  This action cannot be undone
+                </p>
+              </div>
+              <button
+                onClick={() => { setDeleteError(null); setDeleteModal({ open: false, type: 'client' }) }}
+                className="w-7 h-7 flex items-center justify-center text-slate-500 dark:text-slate-600 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/[0.06] transition-colors">
+                <X size={14} />
+              </button>
+            </div>
+
+            {/* Content */}
+            <div className="p-6 space-y-4">
+              <div className="flex items-start gap-3 p-3 bg-red-50 dark:bg-red-900/10 border border-red-200 dark:border-red-900/30">
+                <Trash2 size={18} className="text-red-500 flex-shrink-0 mt-0.5" />
+                <div>
+                  <p className="text-[13px] font-medium text-red-700 dark:text-red-300">
+                    {deleteModal.type === 'client'
+                      ? `Permanently delete "${client?.name}"?`
+                      : `Delete workout plan "${deleteModal.item?.title}"?`}
+                  </p>
+                  <p className="text-[12px] text-red-600/80 dark:text-red-400/60 mt-1">
+                    {deleteModal.type === 'client'
+                      ? 'All client data, workout plans, nutrition plans, and messages will be permanently removed.'
+                      : 'All workout data and progress associated with this plan will be permanently removed.'}
+                  </p>
+                </div>
+              </div>
+              {deleteError && (
+                <div className="p-3 bg-red-50 dark:bg-red-900/10 border border-red-200 dark:border-red-900/30 text-[13px] text-red-700 dark:text-red-300">
+                  {deleteError}
+                </div>
+              )}
+            </div>
+
+            {/* Footer */}
+            <div className="flex items-center justify-end gap-2 px-6 py-4 border-t border-[var(--border)] dark:border-white/[0.07]">
+              <button
+                onClick={() => { setDeleteError(null); setDeleteModal({ open: false, type: 'client' }) }}
+                className="px-4 py-2 text-[13px] font-semibold text-slate-500 hover:text-slate-900 dark:hover:text-white border border-[var(--border)] dark:border-white/[0.07] hover:border-slate-300 dark:hover:border-white/[0.15] transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={deleteModal.type === 'client' ? handleConfirmDeleteClient : handleConfirmDeleteWorkout}
+                disabled={deleteClient.isPending || deleteWorkoutPlan.isPending}
+                className="px-5 py-2 text-[13px] font-semibold text-white bg-red-600 hover:bg-red-700 transition-colors disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-2"
+              >
+                {deleteClient.isPending || deleteWorkoutPlan.isPending ? (
+                  <>
+                    <Loader2 size={12} className="animate-spin" />
+                    Deleting…
+                  </>
+                ) : (
+                  <>
+                    <Trash2 size={12} />
+                    Delete Permanently
+                  </>
+                )}
               </button>
             </div>
           </div>

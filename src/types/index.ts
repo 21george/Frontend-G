@@ -16,6 +16,7 @@ export interface Coach {
   subscription_status?: SubscriptionStatus
   trial_ends_at?: string | null
   max_clients?: number
+  client_count?: number
 }
 
 export interface Client {
@@ -43,6 +44,7 @@ export interface Exercise {
   rest_seconds: number
   notes?: string
   demo_video_url?: string
+  video_url?: string
 }
 
 export interface WorkoutDay {

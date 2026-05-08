@@ -74,8 +74,8 @@ export default function NewGroupWorkoutPlanPage() {
             <Users className="w-5 h-5 text-purple-600 dark:text-purple-400" />
           </div>
           <div>
-            <h1 className="text-2xl font-semibold text-slate-900 dark:text-white">New Group Workout Plan</h1>
-            <p className="text-sm text-slate-500 dark:text-slate-400">Create a shared plan — assign to multiple clients at once</p>
+            <h1 className="text-2xl font-semibold text-[var(--text-primary)] dark:text-[var(--text-primary)]">New Group Workout Plan</h1>
+            <p className="text-sm text-[var(--text-secondary)] dark:text-[var(--text-secondary)]">Create a shared plan — assign to multiple clients at once</p>
           </div>
         </div>
 
@@ -111,8 +111,8 @@ export default function NewGroupWorkoutPlanPage() {
           <div className="card">
             <div className="flex items-center justify-between mb-4">
               <div>
-                <h2 className="font-semibold text-slate-900 dark:text-white">Assign to Clients</h2>
-                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                <h2 className="font-semibold text-[var(--text-primary)] dark:text-[var(--text-primary)]">Assign to Clients</h2>
+                <p className="text-xs text-[var(--text-secondary)] dark:text-[var(--text-secondary)] mt-0.5">
                   Select one or more clients — or leave empty to save as a template
                 </p>
               </div>
@@ -135,14 +135,14 @@ export default function NewGroupWorkoutPlanPage() {
                       className={`flex items-center gap-3 p-3 border transition-all text-left ${
                         selected
                           ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20 dark:border-blue-500/60'
-                          : 'border-slate-200 dark:border-white/[0.07] hover:border-slate-300 dark:hover:border-white/[0.12]'
+                          : 'border-[var(--border)] dark:border-white/[0.07] hover:border-slate-300 dark:hover:border-white/[0.12]'
                       }`}
                     >
                       <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center text-white text-xs font-semibold flex-shrink-0">
                         {client.name[0]?.toUpperCase()}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-slate-900 dark:text-white truncate">{client.name}</p>
+                        <p className="text-sm font-medium text-[var(--text-primary)] dark:text-[var(--text-primary)] truncate">{client.name}</p>
                         <p className="text-xs text-slate-400 truncate">{client.email || 'No email'}</p>
                       </div>
                       <div className={`w-5 h-5 border-2 flex items-center justify-center flex-shrink-0 transition-colors ${
@@ -171,7 +171,7 @@ export default function NewGroupWorkoutPlanPage() {
                 </div>
                 <div className="space-y-3">
                   {day.exercises.map((ex, ei) => (
-                    <div key={ei} className="bg-slate-50 dark:bg-white/[0.03] p-3 grid grid-cols-12 gap-2 items-start">
+                    <div key={ei} className="bg-[var(--bg-subtle)] dark:bg-white/[0.03] p-3 grid grid-cols-12 gap-2 items-start">
                       <div className="col-span-4">
                         <input value={ex.name} onChange={e => updateExercise(di, ei, 'name', e.target.value)}
                           className="input text-sm" placeholder="Exercise name" />

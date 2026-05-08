@@ -126,10 +126,10 @@ function FeaturedPlanCard({ plan, clientName }: { plan: NutritionPlan; clientNam
             <p className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1">
               Featured Plan
             </p>
-            <h3 className="text-lg font-semibold text-slate-900 dark:text-white leading-snug line-clamp-2 mb-2">
+            <h3 className="text-lg font-semibold text-[var(--text-primary)] dark:text-[var(--text-primary)] leading-snug line-clamp-2 mb-2">
               {plan.title}
             </h3>
-            <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-slate-500 dark:text-slate-400">
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-[var(--text-secondary)] dark:text-[var(--text-secondary)]">
               <span className="flex items-center gap-1.5"><Clock size={11} />{plan.days?.length ?? 7} days</span>
               <span className="flex items-center gap-1.5"><UtensilsCrossed size={11} />{totalMeals} meals</span>
               {clientName && <span className="flex items-center gap-1.5"><Users size={11} />{clientName}</span>}
@@ -197,7 +197,7 @@ function PlanRow({ plan, clientName }: { plan: NutritionPlan; clientName?: strin
       {/* Main info */}
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 mb-0.5 flex-wrap">
-          <p className="text-sm font-semibold text-slate-900 dark:text-white truncate">{plan.title}</p>
+          <p className="text-sm font-semibold text-[var(--text-primary)] dark:text-[var(--text-primary)] truncate">{plan.title}</p>
           {types.slice(0, 2).map(t => <MealBadge key={t} type={t} />)}
         </div>
         <div className="flex items-center gap-3 text-xs text-slate-400 dark:text-slate-500 flex-wrap">
@@ -242,12 +242,12 @@ function MiniPlanCard({ plan, rank }: { plan: NutritionPlan; rank?: number }) {
         <Salad size={16} className="text-green-600 dark:text-green-400" />
       </div>
       <div className="flex-1 min-w-0">
-        <p className="text-sm font-semibold text-slate-900 dark:text-white truncate group-hover:text-green-600 dark:group-hover:text-green-400 transition-colors">
+        <p className="text-sm font-semibold text-[var(--text-primary)] dark:text-[var(--text-primary)] truncate group-hover:text-green-600 dark:group-hover:text-green-400 transition-colors">
           {plan.title}
         </p>
         <div className="flex items-center gap-1 mt-0.5">
           <Star size={10} className="text-amber-400 fill-amber-400" />
-          <span className="text-xs text-slate-500 dark:text-slate-400">{score}/10 · {calories} kcal</span>
+          <span className="text-xs text-[var(--text-secondary)] dark:text-[var(--text-secondary)]">{score}/10 · {calories} kcal</span>
         </div>
       </div>
       {rank !== undefined && rank < 3 && (
@@ -340,12 +340,12 @@ export default function NutritionPlansPage() {
                 value={search}
                 onChange={e => setSearch(e.target.value)}
                 placeholder="Search menu…"
-                className="pl-9 pr-3 py-2 w-44 border border-slate-200 dark:border-white/[0.08] bg-[var(--bg-card)] text-sm text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-600/20 focus:border-brand-600 transition-colors"
+                className="pl-9 pr-3 py-2 w-44 border border-[var(--border)] dark:border-white/[0.08] bg-[var(--bg-card)] text-sm text-[var(--text-primary)] dark:text-[var(--text-primary)] placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-600/20 focus:border-brand-600 transition-colors"
               />
             </div>
             {/* Filter icon */}
             <button
-              className="w-9 h-9 border border-slate-200 dark:border-white/[0.08] flex items-center justify-center text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-white/[0.05] transition-colors bg-[var(--bg-card)] "
+              className="w-9 h-9 border border-[var(--border)] dark:border-white/[0.08] flex items-center justify-center text-[var(--text-secondary)] dark:text-[var(--text-secondary)] hover:bg-slate-50 dark:hover:bg-white/[0.05] transition-colors bg-[var(--bg-card)] "
               title="Filter"
             >
               <SlidersHorizontal size={14} />
@@ -389,7 +389,7 @@ export default function NutritionPlansPage() {
                         className={`px-3 py-1 text-xs font-semibold transition-all ${
                           active
                             ? activeCls
-                            : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/[0.04]'
+                            : 'text-[var(--text-secondary)] dark:text-[var(--text-secondary)] hover:text-slate-700 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/[0.04]'
                         }`}
                       >
                         {tab}
@@ -398,12 +398,12 @@ export default function NutritionPlansPage() {
                   })}
                 </div>
                 {/* Sort */}
-                <div className="flex items-center gap-1.5 text-slate-500 dark:text-slate-400">
+                <div className="flex items-center gap-1.5 text-[var(--text-secondary)] dark:text-[var(--text-secondary)]">
                   <span className="text-xs hidden sm:inline">Sort by:</span>
                   <select
                     value={sortBy}
                     onChange={e => setSortBy(e.target.value as typeof sortBy)}
-                    className="text-xs border border-slate-200 dark:border-white/[0.08] bg-white dark:bg-[#121212] text-slate-600 dark:text-slate-400 px-2 py-1.5 focus:outline-none cursor-pointer"
+                    className="text-xs border border-[var(--border)] dark:border-white/[0.08] bg-white dark:bg-[#121212] text-slate-600 dark:text-slate-400 px-2 py-1.5 focus:outline-none cursor-pointer"
                   >
                     <option value="calories">Calories</option>
                     <option value="score">Health Score</option>
@@ -419,7 +419,7 @@ export default function NutritionPlansPage() {
                 ) : filtered.length === 0 ? (
                   <div className="flex flex-col items-center justify-center py-12 text-center">
                     <Salad className="w-10 h-10 text-slate-300 dark:text-slate-700 mb-3" />
-                    <p className="text-sm font-medium text-slate-500 dark:text-slate-400">
+                    <p className="text-sm font-medium text-[var(--text-secondary)] dark:text-[var(--text-secondary)]">
                       {search ? 'No plans match your search' : activeTab !== 'All' ? `No ${activeTab} plans yet` : 'No nutrition plans yet'}
                     </p>
                     <Link href="/nutrition-plans/new" className="mt-3 text-xs text-brand-600 dark:text-brand-400 font-semibold hover:underline">
@@ -439,7 +439,7 @@ export default function NutritionPlansPage() {
             {/* Popular */}
             <div className="p-4 ">
               <div className="flex items-center justify-between mb-3">
-                <h3 className="text-sm font-semibold text-slate-900 dark:text-white">Popular Menu</h3>
+                <h3 className="text-sm font-semibold text-[var(--text-primary)] dark:text-[var(--text-primary)]">Popular Menu</h3>
                 <button className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors"><MoreHorizontal size={16} /></button>
               </div>
               {isLoading ? (
@@ -462,7 +462,7 @@ export default function NutritionPlansPage() {
             {/* Recommended */}
             <div className="p-4 ">
               <div className="flex items-center justify-between mb-3">
-                <h3 className="text-sm font-semibold text-slate-900 dark:text-white">Recommended Menu</h3>
+                <h3 className="text-sm font-semibold text-[var(--text-primary)] dark:text-[var(--text-primary)]">Recommended Menu</h3>
                 <button className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors"><MoreHorizontal size={16} /></button>
               </div>
               {isLoading ? (
@@ -485,7 +485,7 @@ export default function NutritionPlansPage() {
             {/* Averages overview */}
             {!isLoading && plans.length > 0 && (
               <div className="p-4 ">
-                <h3 className="text-sm font-semibold text-slate-900 dark:text-white mb-3">Plan Overview</h3>
+                <h3 className="text-sm font-semibold text-[var(--text-primary)] dark:text-[var(--text-primary)] mb-3">Plan Overview</h3>
                 <div className="grid grid-cols-2 gap-2">
                   {[
                     { icon: <Flame size={18} />, value: avgCalories, unit: 'kcal', label: 'Avg Calories', iconCls: 'text-orange-500', bg: 'bg-orange-50 dark:bg-orange-900/20' },
@@ -496,7 +496,7 @@ export default function NutritionPlansPage() {
                     <div key={label} className={`flex flex-col items-center py-3 ${bg}`}>
                       <span className={iconCls}>{icon}</span>
                       <p className={`text-base font-semibold mt-1 ${iconCls}`}>{value}<span className="text-[10px] font-normal ml-0.5">{unit}</span></p>
-                      <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">{label}</p>
+                      <p className="text-[10px] text-[var(--text-secondary)] dark:text-[var(--text-secondary)] mt-0.5">{label}</p>
                     </div>
                   ))}
                 </div>

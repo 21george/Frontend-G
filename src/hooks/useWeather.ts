@@ -72,16 +72,18 @@ export function useWeather() {
           const cw     = wtJson.current_weather
           const { condition, icon } = decodeWMO(cw.weathercode)
 
-          // Build forecast (next 5 days)
-          const forecast = wtJson.daily?.time?.slice(1, 6).map((date: string, i: number) => {
-            const wmo = wtJson.daily.weather_code[i + 1]
+          // Build forecast (next 5 days) — skip any day missing wmo or tempMax
+          const forecast = wtJson.daily?.time?.slice(1, 6).flatMap((date: string, i: number) => {
+            const wmo = wtJson.daily?.weather_code?.[i + 1]
+            const tempMax = wtJson.daily?.temperature_2m_max?.[i + 1]
+            if (wmo === undefined || wmo === null || tempMax === undefined || tempMax === null) return []
             const decoded = decodeWMO(wmo)
-            return {
+            return [{
               day: getDayName(date),
-              temp: Math.round(wtJson.daily.temperature_2m_max[i + 1]),
+              temp: Math.round(tempMax),
               icon: decoded.icon,
               condition: decoded.condition,
-            }
+            }]
           }) ?? []
 
           setWeather({
@@ -115,15 +117,18 @@ export function useWeather() {
       const cw = wtJson.current_weather
       const { condition, icon } = decodeWMO(cw.weathercode)
 
-      const forecast = wtJson.daily?.time?.slice(1, 6).map((date: string, i: number) => {
-        const wmo = wtJson.daily.weather_code[i + 1]
+      // Skip any day missing wmo or tempMax
+      const forecast = wtJson.daily?.time?.slice(1, 6).flatMap((date: string, i: number) => {
+        const wmo = wtJson.daily?.weather_code?.[i + 1]
+        const tempMax = wtJson.daily?.temperature_2m_max?.[i + 1]
+        if (wmo === undefined || wmo === null || tempMax === undefined || tempMax === null) return []
         const decoded = decodeWMO(wmo)
-        return {
+        return [{
           day: getDayName(date),
-          temp: Math.round(wtJson.daily.temperature_2m_max[i + 1]),
+          temp: Math.round(tempMax),
           icon: decoded.icon,
           condition: decoded.condition,
-        }
+        }]
       }) ?? []
 
       setWeather({

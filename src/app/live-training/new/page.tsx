@@ -62,12 +62,12 @@ export default function NewLiveTrainingPage() {
   }
 
   const inputCls = 'w-full px-4 py-3 border border-slate-200 dark:border-white/[0.1] bg-white dark:bg-white/[0.04] text-[13px] text-slate-700 dark:text-slate-300 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-brand-600/20 dark:focus:ring-brand-400/20 transition-colors'
-  const labelCls = 'block text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2'
+  const labelCls = 'block text-[11px] font-semibold text-[var(--text-secondary)] dark:text-[var(--text-secondary)] uppercase tracking-wider mb-2'
 
   return (
     <DashboardLayout>
       <div className="max-w-2xl mx-auto">
-        <Link href="/live-training" className="inline-flex items-center gap-1.5 text-[13px] text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-white mb-6 transition-colors">
+        <Link href="/live-training" className="inline-flex items-center gap-1.5 text-[13px] text-[var(--text-secondary)] dark:text-[var(--text-secondary)] hover:text-slate-700 dark:hover:text-white mb-6 transition-colors">
           <ArrowLeft size={14} /> Back to Live Training
         </Link>
 
@@ -76,14 +76,14 @@ export default function NewLiveTrainingPage() {
             <Signal size={22} className="text-white" />
           </div>
           <div>
-            <h1 className="text-xl font-semibold text-slate-900 dark:text-white">New Live Session</h1>
-            <p className="text-[13px] text-slate-500 dark:text-slate-400">Set up a live training class for your clients</p>
+            <h1 className="text-xl font-semibold text-[var(--text-primary)] dark:text-[var(--text-primary)]">New Live Session</h1>
+            <p className="text-[13px] text-[var(--text-secondary)] dark:text-[var(--text-secondary)]">Set up a live training class for your clients</p>
           </div>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Session Info Card */}
-          <div className="bg-white dark:bg-white/[0.03] border border-slate-200 dark:border-white/[0.08] p-6 space-y-5">
+          <div className="bg-white dark:bg-white/[0.03] border border-[var(--border)] dark:border-white/[0.08] p-6 space-y-5">
             <div className="flex items-center gap-2 mb-1">
               <Sparkles size={14} className="text-brand-600 dark:text-brand-400" />
               <h2 className="text-[13px] font-semibold text-slate-700 dark:text-slate-300">Session Details</h2>
@@ -136,7 +136,7 @@ export default function NewLiveTrainingPage() {
           </div>
 
           {/* Schedule Card */}
-          <div className="bg-white dark:bg-white/[0.03] border border-slate-200 dark:border-white/[0.08] p-6 space-y-5">
+          <div className="bg-white dark:bg-white/[0.03] border border-[var(--border)] dark:border-white/[0.08] p-6 space-y-5">
             <div className="flex items-center gap-2 mb-1">
               <Calendar size={14} className="text-brand-600 dark:text-brand-400" />
               <h2 className="text-[13px] font-semibold text-slate-700 dark:text-slate-300">Schedule</h2>
@@ -193,7 +193,7 @@ export default function NewLiveTrainingPage() {
           </div>
 
           {/* Settings Card */}
-          <div className="bg-white dark:bg-white/[0.03] border border-slate-200 dark:border-white/[0.08] p-6 space-y-5">
+          <div className="bg-white dark:bg-white/[0.03] border border-[var(--border)] dark:border-white/[0.08] p-6 space-y-5">
             <div className="flex items-center gap-2 mb-1">
               <FileText size={14} className="text-brand-600 dark:text-brand-400" />
               <h2 className="text-[13px] font-semibold text-slate-700 dark:text-slate-300">Settings</h2>
@@ -213,7 +213,7 @@ export default function NewLiveTrainingPage() {
               </div>
             </div>
 
-            <div className="flex items-center justify-between p-4 bg-slate-50 dark:bg-white/[0.03] border border-slate-200 dark:border-white/[0.06]">
+            <div className="flex items-center justify-between p-4 bg-[var(--bg-subtle)] dark:bg-white/[0.03] border border-[var(--border)] dark:border-white/[0.06]">
               <div>
                 <p className="text-[13px] font-semibold text-slate-700 dark:text-slate-300">Require Approval</p>
                 <p className="text-[11px] text-slate-400 dark:text-slate-500 mt-0.5">Clients must request to join and you approve them</p>

@@ -85,7 +85,7 @@ export default function MediaPage() {
               <ChevronRight className="w-3 h-3" />
               <span className="text-brand-600 dark:text-brand-300">Client Media</span>
             </nav>
-            <h1 className="text-3xl lg:text-4xl font-bold text-slate-900 dark:text-white tracking-tight">
+            <h1 className="text-3xl lg:text-4xl font-bold text-[var(--text-primary)] dark:text-[var(--text-primary)] tracking-tight">
               Client Media
             </h1>
             <p className="text-slate-500 dark:text-neutral-400 mt-2 max-w-lg text-sm">
@@ -106,7 +106,7 @@ export default function MediaPage() {
               <div className="w-16 h-16 bg-gradient-to-br from-brand-500 to-blue-600 flex items-center justify-center mx-auto mb-4">
                 <ImageIcon className="w-8 h-8 text-white" />
               </div>
-              <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-2">
+              <h3 className="text-lg font-bold text-[var(--text-primary)] dark:text-[var(--text-primary)] mb-2">
                 Select a Client
               </h3>
               <p className="text-slate-500 dark:text-neutral-400 mb-6">
@@ -116,7 +116,7 @@ export default function MediaPage() {
                 <select
                   value={selectedClient}
                   onChange={e => setSelectedClient(e.target.value)}
-                  className="w-full px-4 py-3 bg-slate-50 dark:bg-white/[0.04] border border-slate-200 dark:border-white/[0.08] text-sm text-slate-700 dark:text-slate-300 focus:outline-none focus:ring-2 focus:ring-brand-600/20 dark:focus:ring-brand-400/20 appearance-none cursor-pointer"
+                  className="w-full px-4 py-3 bg-[var(--bg-subtle)] dark:bg-white/[0.04] border border-[var(--border)] dark:border-white/[0.08] text-sm text-slate-700 dark:text-slate-300 focus:outline-none focus:ring-2 focus:ring-brand-600/20 dark:focus:ring-brand-400/20 appearance-none cursor-pointer"
                 >
                   <option value="">Select a client...</option>
                   {clients.map(c => (
@@ -139,7 +139,7 @@ export default function MediaPage() {
               >
                 <span className="text-slate-500 dark:text-neutral-400 text-[10px] lg:text-xs font-semibold uppercase tracking-wider">Total Media</span>
                 <div className="mt-3 lg:mt-4 flex items-baseline gap-2">
-                  <span className="text-2xl lg:text-3xl font-bold text-slate-900 dark:text-white">{stats.total}</span>
+                  <span className="text-2xl lg:text-3xl font-bold text-[var(--text-primary)] dark:text-[var(--text-primary)]">{stats.total}</span>
                   <span className="text-slate-500 dark:text-neutral-500 text-xs">files</span>
                 </div>
               </motion.div>
@@ -178,7 +178,7 @@ export default function MediaPage() {
               >
                 <span className="text-slate-500 dark:text-neutral-400 text-[10px] lg:text-xs font-semibold uppercase tracking-wider">Storage Used</span>
                 <div className="mt-3 lg:mt-4 flex items-baseline gap-2">
-                  <span className="text-2xl lg:text-3xl font-bold text-slate-900 dark:text-white">{formatFileSize(stats.storage)}</span>
+                  <span className="text-2xl lg:text-3xl font-bold text-[var(--text-primary)] dark:text-[var(--text-primary)]">{formatFileSize(stats.storage)}</span>
                   <HardDrive className="w-4 h-4 text-slate-400" />
                 </div>
               </motion.div>
@@ -219,7 +219,7 @@ export default function MediaPage() {
             {/* ── MEDIA GRID ── */}
             {isLoading ? (
               <div className="flex items-center justify-center py-20">
-                <div className="text-sm text-slate-500 dark:text-slate-400">Loading media...</div>
+                <div className="text-sm text-[var(--text-secondary)] dark:text-[var(--text-secondary)]">Loading media...</div>
               </div>
             ) : filtered.length === 0 ? (
               <div className="bg-[var(--bg-card)] border border-slate-200/80 dark:border-white/[0.08] p-12 text-center">
@@ -245,7 +245,7 @@ export default function MediaPage() {
                       initial={{ opacity: 0, scale: 0.9 }}
                       animate={{ opacity: 1, scale: 1 }}
                       transition={{ delay: index * 0.03 }}
-                      className="group relative aspect-square overflow-hidden bg-slate-100 dark:bg-white/[0.04] border border-slate-200 dark:border-white/[0.08] hover:transition-all"
+                      className="group relative aspect-square overflow-hidden bg-slate-100 dark:bg-white/[0.04] border border-[var(--border)] dark:border-white/[0.08] hover:transition-all"
                     >
                       {m.type === 'video' ? (
                         <div className="absolute inset-0 flex flex-col items-center justify-center gap-2">
@@ -307,7 +307,7 @@ export default function MediaPage() {
                   <Calendar className="w-5 h-5 text-white" />
                 </div>
                 <div className="flex-1">
-                  <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-2">
+                  <h3 className="text-lg font-bold text-[var(--text-primary)] dark:text-[var(--text-primary)] mb-2">
                     {clients.find(c => c.id === selectedClient)?.name}
                   </h3>
                   <p className="text-sm text-slate-600 dark:text-neutral-300 leading-relaxed">

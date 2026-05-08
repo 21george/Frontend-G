@@ -49,9 +49,9 @@ function scoreColor(s: number) {
 
 const inputCls = `
   bg-white dark:bg-[#121212]
-  border border-slate-200 dark:border-white/[0.07]
+  border border-[var(--border)] dark:border-white/[0.07]
   px-3 py-2 text-[13px]
-  text-slate-900 dark:text-white
+  text-[var(--text-primary)] dark:text-[var(--text-primary)]
   placeholder:text-slate-400 dark:placeholder:text-slate-700
   outline-none focus:border-green-400 dark:focus:border-green-500/60
   transition-colors w-full
@@ -68,7 +68,7 @@ function MacroPill({
       <p className={`text-lg font-semibold mt-1 ${iconCls}`}>
         {value}<span className="text-xs font-normal ml-0.5">{unit}</span>
       </p>
-      <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5 uppercase tracking-wide">{label}</p>
+      <p className="text-[10px] text-[var(--text-secondary)] dark:text-[var(--text-secondary)] mt-0.5 uppercase tracking-wide">{label}</p>
     </div>
   )
 }
@@ -79,7 +79,7 @@ function NutrFact({ label, value, unit, bold }: { label: string; value: number; 
   return (
     <div className={`flex items-center justify-between py-1.5 border-b border-slate-100 dark:border-white/[0.04] last:border-0 ${bold ? 'font-semibold' : ''}`}>
       <span className={`text-sm ${bold ? 'text-slate-800 dark:text-white' : 'text-slate-600 dark:text-slate-400'}`}>{label}</span>
-      <span className={`text-sm ${bold ? 'text-slate-900 dark:text-white font-semibold' : 'text-slate-700 dark:text-slate-300'}`}>
+      <span className={`text-sm ${bold ? 'text-[var(--text-primary)] dark:text-[var(--text-primary)] font-semibold' : 'text-slate-700 dark:text-slate-300'}`}>
         {value} {unit ?? 'g'}
       </span>
     </div>
@@ -197,7 +197,7 @@ export default function NutritionPlanDetailPage() {
     <DashboardLayout>
       <div className="flex flex-col items-center justify-center py-24">
         <Salad className="w-12 h-12 text-slate-300 dark:text-slate-700 mb-3" />
-        <p className="text-slate-500 dark:text-slate-400 text-sm mb-4">Nutrition plan not found.</p>
+        <p className="text-[var(--text-secondary)] dark:text-[var(--text-secondary)] text-sm mb-4">Nutrition plan not found.</p>
         <Link href="/nutrition-plans" className="text-sm text-green-600 dark:text-green-400 font-semibold hover:underline">← Back to plans</Link>
       </div>
     </DashboardLayout>
@@ -223,7 +223,7 @@ export default function NutritionPlanDetailPage() {
         {/* ── Breadcrumb + actions ── */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div className="flex items-center gap-2 text-sm">
-            <Link href="/nutrition-plans" className="flex items-center gap-1.5 text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition-colors font-medium">
+            <Link href="/nutrition-plans" className="flex items-center gap-1.5 text-[var(--text-secondary)] dark:text-[var(--text-secondary)] hover:text-slate-700 dark:hover:text-slate-200 transition-colors font-medium">
               <ArrowLeft size={14} /> Back to Menu
             </Link>
             <span className="text-slate-300 dark:text-slate-700">/</span>
@@ -281,7 +281,7 @@ export default function NutritionPlanDetailPage() {
             {/* Info */}
             <div className="flex-1 p-5 flex flex-col justify-between gap-4">
               <div>
-                <h1 className="text-xl font-semibold text-slate-900 dark:text-white mb-1">
+                <h1 className="text-xl font-semibold text-[var(--text-primary)] dark:text-[var(--text-primary)] mb-1">
                   {titleEdit ? (
                     <input
                       autoFocus
@@ -289,7 +289,7 @@ export default function NutritionPlanDetailPage() {
                       onChange={e => setTitle(e.target.value)}
                       onBlur={() => setTitleEdit(false)}
                       onKeyDown={e => e.key === 'Enter' && setTitleEdit(false)}
-                      className="bg-transparent border-b-2 border-green-500 text-slate-900 dark:text-white outline-none w-full pb-0.5 text-xl font-semibold"
+                      className="bg-transparent border-b-2 border-green-500 text-[var(--text-primary)] dark:text-[var(--text-primary)] outline-none w-full pb-0.5 text-xl font-semibold"
                     />
                   ) : (
                     <button onClick={() => setTitleEdit(true)} className="flex items-center gap-2 text-left group">
@@ -298,7 +298,7 @@ export default function NutritionPlanDetailPage() {
                     </button>
                   )}
                 </h1>
-                <div className="flex flex-wrap gap-x-5 gap-y-1.5 text-xs text-slate-500 dark:text-slate-400 mt-2">
+                <div className="flex flex-wrap gap-x-5 gap-y-1.5 text-xs text-[var(--text-secondary)] dark:text-[var(--text-secondary)] mt-2">
                   <span className="flex items-center gap-1.5"><Calendar size={12} />Week of {formatDate(plan.week_start)}</span>
                   <span className="flex items-center gap-1.5"><Clock size={12} />{days.length} days</span>
                   <span className="flex items-center gap-1.5"><UtensilsCrossed size={12} />{totalMeals} total meals</span>
@@ -459,7 +459,7 @@ export default function NutritionPlanDetailPage() {
 
             {/* Macro summary tiles */}
             <div className="p-4 ">
-              <h3 className="text-sm font-semibold text-slate-900 dark:text-white mb-3">Daily Averages</h3>
+              <h3 className="text-sm font-semibold text-[var(--text-primary)] dark:text-[var(--text-primary)] mb-3">Daily Averages</h3>
               <div className="grid grid-cols-2 gap-2">
                 <MacroPill icon={<Flame size={18} />}    label="Calories" value={weeklyAvg.calories}  unit="kcal" iconCls="text-orange-500" bg="bg-orange-50 dark:bg-orange-900/20" />
                 <MacroPill icon={<Zap size={18} />}      label="Protein"  value={weeklyAvg.protein_g} unit="g"    iconCls="text-green-600"  bg="bg-green-50 dark:bg-green-900/20"  />
@@ -471,7 +471,7 @@ export default function NutritionPlanDetailPage() {
             {/* Nutrition Facts */}
             <div className="p-4 ">
               <div className="flex items-center justify-between mb-3">
-                <h3 className="text-sm font-semibold text-slate-900 dark:text-white">Nutrition Facts</h3>
+                <h3 className="text-sm font-semibold text-[var(--text-primary)] dark:text-[var(--text-primary)]">Nutrition Facts</h3>
                 <span className="text-[10px] text-slate-400 dark:text-slate-500 font-medium">Per Day (avg)</span>
               </div>
               <div className="space-y-0">
@@ -487,7 +487,7 @@ export default function NutritionPlanDetailPage() {
 
             {/* Plan details */}
             <div className="p-4 ">
-              <h3 className="text-sm font-semibold text-slate-900 dark:text-white">Plan Details</h3>
+              <h3 className="text-sm font-semibold text-[var(--text-primary)] dark:text-[var(--text-primary)]">Plan Details</h3>
               <div className="space-y-2 text-sm">
                 {[
                   { icon: <Calendar size={14} />, label: 'Week Start', value: formatDate(plan.week_start) },
@@ -497,7 +497,7 @@ export default function NutritionPlanDetailPage() {
                   { icon: <Star size={14} />,     label: 'Health Score', value: `${score}/10` },
                 ].map(({ icon, label, value }) => (
                   <div key={label} className="flex items-center justify-between py-1 border-b border-slate-100 dark:border-white/[0.04] last:border-0">
-                    <span className="flex items-center gap-2 text-slate-500 dark:text-slate-400">{icon}{label}</span>
+                    <span className="flex items-center gap-2 text-[var(--text-secondary)] dark:text-[var(--text-secondary)]">{icon}{label}</span>
                     <span className="font-semibold text-slate-800 dark:text-white text-xs">{value}</span>
                   </div>
                 ))}
@@ -515,7 +515,7 @@ export default function NutritionPlanDetailPage() {
             {/* Notes */}
             {plan.notes && (
               <div className="border border-slate-200/80 dark:border-white/[0.07] bg-[var(--bg-card)] p-4 ">
-                <h3 className="text-sm font-semibold text-slate-900 dark:text-white mb-2">Notes</h3>
+                <h3 className="text-sm font-semibold text-[var(--text-primary)] dark:text-[var(--text-primary)] mb-2">Notes</h3>
                 <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">{plan.notes}</p>
               </div>
             )}

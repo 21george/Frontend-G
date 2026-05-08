@@ -56,10 +56,10 @@ export default function NewNutritionPlanPage() {
   return (
     <DashboardLayout>
       <div >
-        <Link href="/nutrition-plans" className="flex items-center gap-1 text-sm text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 mb-6">
+        <Link href="/nutrition-plans" className="flex items-center gap-1 text-sm text-[var(--text-secondary)] dark:text-[var(--text-secondary)] hover:text-slate-700 dark:hover:text-slate-200 mb-6">
           <ArrowLeft className="w-3 h-3" /> Back
         </Link>
-        <h1 className="text-2xl font-semibold text-slate-900 dark:text-white mb-6">New Nutrition Plan</h1>
+        <h1 className="text-2xl font-semibold text-[var(--text-primary)] dark:text-[var(--text-primary)] mb-6">New Nutrition Plan</h1>
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="card p-6 grid grid-cols-3 gap-4">
             <div><label className="label">Title *</label>
@@ -78,9 +78,9 @@ export default function NewNutritionPlanPage() {
 
           {days.slice(0, 1).map((day, di) => (
             <div key={di} className="card p-4">
-              <h3 className="font-semibold text-slate-900 dark:text-white mb-4 capitalize">{day.day} (template for all days)</h3>
+              <h3 className="font-semibold text-[var(--text-primary)] dark:text-[var(--text-primary)] mb-4 capitalize">{day.day} (template for all days)</h3>
               {day.meals.map((meal, mi) => (
-                <div key={mi} className="bg-slate-50 dark:bg-[#121212] p-3 mb-3">
+                <div key={mi} className="bg-[var(--bg-page)] dark:bg-[var(--bg-page)] p-3 mb-3">
                   <div className="flex gap-2 mb-2">
                     <input value={meal.meal_name} className="input text-sm w-32" placeholder="Meal" readOnly />
                     <input value={meal.time} className="input text-sm w-28" type="time" readOnly />

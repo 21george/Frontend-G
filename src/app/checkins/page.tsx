@@ -117,7 +117,7 @@ export default function SchedulePage() {
               <motion.p
                 initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400"
+                className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--text-secondary)] dark:text-[var(--text-secondary)]"
               >
                 {format(selectedDate, 'EEEE')}
               </motion.p>
@@ -155,7 +155,7 @@ export default function SchedulePage() {
                   placeholder="Search..."
                   value={searchQuery}
                   onChange={e => setSearchQuery(e.target.value)}
-                  className="w-44 pl-9 pr-3 py-2 bg-transparent border border-slate-200 dark:border-white/[0.08] text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 transition-colors rounded-lg"
+                  className="w-44 pl-9 pr-3 py-2 bg-transparent border border-[var(--border)] dark:border-white/[0.08] text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 transition-colors rounded-lg"
                 />
               </div>
 

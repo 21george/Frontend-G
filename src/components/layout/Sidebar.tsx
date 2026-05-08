@@ -7,15 +7,14 @@ import { useAuthStore } from '@/store/auth'
 import { useThemeStore } from '@/store/theme'
 import {
   LayoutDashboard, Users, Dumbbell, Salad, Calendar, Radio,
-  Image, Settings, LogOut, Zap, Menu, X, Sun, Moon, CreditCard,
-  ChevronLeft, ChevronRight, MessageSquare,
+   Settings, LogOut, Zap, Menu, 
+  ChevronLeft, ChevronRight,
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 
 const NAV = [
   { href: '/dashboard',         label: 'Dashboard',        icon: LayoutDashboard },
   { href: '/clients',           label: 'Clients',          icon: Users },
-  { href: '/messages',           label: 'Messages',         icon: MessageSquare },
   { href: '/workout-plans',     label: 'Workout Plans',    icon: Dumbbell },
   { href: '/nutrition-plans',   label: 'Nutrition',        icon: Salad },
   { href: '/checkins',          label: 'Schedule',         icon: Calendar },
@@ -55,25 +54,7 @@ function SidebarContent({ onClose, collapsed = false }: SidebarContentProps) {
         )}
         {collapsed && brandIcon}
 
-        <div className={cn("flex items-center gap-1.5", collapsed && "hidden")}>
-          <button
-            onClick={toggle}
-            title={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
-            className="inline-flex items-center justify-center w-9 h-9 border border-white/20 dark:border-white/[0.1] bg-white/10 dark:bg-white/[0.06] text-white/70 dark:text-neutral-400 hover:text-white dark:hover:text-white hover:bg-white/20 dark:hover:bg-white/[0.1] transition-colors"
-            aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
-          >
-            {isDark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
-          </button>
-          {onClose && (
-            <button
-              onClick={onClose}
-              className="lg:hidden text-white/60 dark:text-neutral-400 hover:text-white dark:hover:text-white transition-colors p-1 hover:bg-white/10 dark:hover:bg-white/10"
-              aria-label="Close menu"
-            >
-              <X className="w-5 h-5" />
-            </button>
-          )}
-        </div>
+        
       </div>
 
       {/* ── Navigation ── */}

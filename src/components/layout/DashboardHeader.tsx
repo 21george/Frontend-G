@@ -55,16 +55,16 @@ function ThemeToggle() {
         relative w-14 h-7 border transition-all duration-300 ease-in-out
         focus:outline-none focus:ring-2 focus:ring-brand-700/40
         ${isDark
-          ? 'bg-slate-800 border-white/[0.12]'
-          : 'bg-slate-200 border-slate-300'}
+          ? 'bg-slate-800 border-white/[0.12] rounded-xl'
+          : 'bg-slate-200 border-slate-300 rounded-xl'}
       `}
     >
-      <Sun  size={12} className={`absolute left-1.5 top-1/2 -translate-y-1/2 transition-opacity duration-200 ${isDark ? 'opacity-30 text-neutral-400' : 'opacity-100 text-amber-500'}`} />
+      <Sun  size={12} className={`absolute left-1.5 top-1/2 -translate-y-1/2  transition-opacity duration-200 ${isDark ? 'opacity-30 text-neutral-400' : 'opacity-100 text-amber-500'}`} />
       <Moon size={12} className={`absolute right-1.5 top-1/2 -translate-y-1/2 transition-opacity duration-200 ${isDark ? 'opacity-100 text-blue-300' : 'opacity-30 text-slate-400'}`} />
       <span
         className={`
           absolute top-0.5 w-6 h-6 flex items-center justify-center
-          transition-all duration-300 ease-in-out
+          transition-all duration-300 ease-in-out rounded-xl
           ${isDark
             ? 'translate-x-7 bg-btn'
             : 'translate-x-0.5 bg-white'}
@@ -196,21 +196,23 @@ export default function DashboardHeader({
       </div>
 
       <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0 flex-wrap">
-        <NotificationsButton />
         <WeatherForecast />
+        <NotificationsButton />
         <NearbyGymsButton />
         {defaultQuickActions.length > 0 && defaultQuickActions.map(({ href, label, icon: Icon, color }) => (
           <Link
             key={href}
             href={href}
-            className={`inline-flex items-center gap-1.5 px-2.5 sm:px-3.5 py-1.5 sm:py-2 text-xs sm:text-sm font-medium transition-colors ${color}`}
+            className={`inline-flex items-center gap-1.5 px-2.5 sm:px-3.5 py-1.5 sm:py-2 text-xs rounded-xl sm:text-sm font-medium transition-colors ${color}`}
           >
             <Icon className="w-4 h-4" />
             <span className="hidden sm:inline">{label}</span>
           </Link>
         ))}
+        <div className='rounded-sm'>
         <ThemeToggle />
-        <div className="flex items-center gap-2.5 pl-1 border-l border-slate-200 dark:border-white/[0.1]">
+        </div>
+        <div className="flex items-center gap-2.5 pl-1 border-l border-slate-200 rounded-sm dark:border-white/[0.1]">
           <CoachAvatar name={coach?.name} surname={coach?.surname} photo={coach?.profile_photo} />
           {fullName && (
             <div className="hidden sm:flex flex-col">

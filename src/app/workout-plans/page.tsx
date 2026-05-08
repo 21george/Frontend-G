@@ -5,207 +5,203 @@ import { QueryWrapper } from '@/components/ui/QueryWrapper'
 import { Button } from '@/components/ui/button'
 import Link from 'next/link'
 import { useState, useMemo } from 'react'
-import {
-  Plus, Upload, Dumbbell, Users, Shield, Search, Filter,
-  ChevronRight, Activity, Calendar, AlertCircle, BarChart3,
-  Target, Zap, TrendingUp, Award, CheckCircle2
-} from 'lucide-react'
 import { motion } from 'framer-motion'
 import type { WorkoutPlanType, WorkoutPlan } from '@/types'
 
-const TYPE_CONFIG: Record<NonNullable<WorkoutPlanType>, { label: string; icon: typeof Dumbbell; gradient: string; glow: string }> = {
-  individual: { label: 'Individual', icon: Dumbbell, gradient: 'from-blue-500 to-blue-600', glow: 'shadow-lg shadow-blue-500/20' },
-  group:      { label: 'Group',      icon: Users,    gradient: 'from-amber-500 to-amber-600', glow: 'shadow-lg shadow-amber-500/20' },
-  team:       { label: 'Team',       icon: Shield,   gradient: 'from-emerald-500 to-emerald-600', glow: 'shadow-lg shadow-emerald-500/20' },
+// MUI Icons
+import AddIcon from '@mui/icons-material/Add'
+import UploadFileIcon from '@mui/icons-material/UploadFile'
+import FitnessCenterIcon from '@mui/icons-material/FitnessCenter'
+import GroupIcon from '@mui/icons-material/Group'
+import SecurityIcon from '@mui/icons-material/Security'
+import SearchIcon from '@mui/icons-material/Search'
+import FilterListIcon from '@mui/icons-material/FilterList'
+import ChevronRightIcon from '@mui/icons-material/ChevronRight'
+import TrendingUpIcon from '@mui/icons-material/TrendingUp'
+import CalendarMonthIcon from '@mui/icons-material/CalendarMonth'
+import WarningAmberIcon from '@mui/icons-material/WarningAmber'
+import BarChartIcon from '@mui/icons-material/BarChart'
+import TrackChangesIcon from '@mui/icons-material/TrackChanges'
+import FlashOnIcon from '@mui/icons-material/FlashOn'
+import EmojiEventsIcon from '@mui/icons-material/EmojiEvents'
+import CheckCircleIcon from '@mui/icons-material/CheckCircle'
+import InsertDriveFileIcon from '@mui/icons-material/InsertDriveFile'
+import NavigateNextIcon from '@mui/icons-material/NavigateNext'
+
+const TYPE_CONFIG: Record<NonNullable<WorkoutPlanType>, { label: string; icon: any; color: string }> = {
+  individual: { label: 'Individual', icon: FitnessCenterIcon, color: 'text-blue-600 dark:text-blue-400' },
+  group:      { label: 'Group',      icon: GroupIcon,    color: 'text-amber-600 dark:text-amber-400' },
+  team:       { label: 'Team',       icon: SecurityIcon,   color: 'text-emerald-600 dark:text-emerald-400' },
 }
 
 const STATUS_CONFIG: Record<string, { label: string; dot: string; badge: string }> = {
-  active:     { label: 'Active',     dot: 'bg-emerald-400', badge: 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/20' },
-  draft:      { label: 'Draft',      dot: 'bg-slate-400', badge: 'bg-slate-500/15 text-slate-600 dark:text-slate-400 border-slate-500/20' },
-  completed:  { label: 'Completed',  dot: 'bg-blue-400', badge: 'bg-blue-500/15 text-blue-600 dark:text-blue-400 border-blue-500/20' },
-  archived:   { label: 'Archived',   dot: 'bg-slate-400', badge: 'bg-slate-500/15 text-slate-600 dark:text-slate-400 border-slate-500/20' },
+  active:     { label: 'Active',     dot: 'bg-emerald-400', badge: 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20' },
+  draft:      { label: 'Draft',      dot: 'bg-slate-400', badge: 'bg-slate-500/15 text-slate-600 dark:text-slate-400 border border-slate-500/20' },
+  completed:  { label: 'Completed',  dot: 'bg-blue-400', badge: 'bg-blue-500/15 text-blue-600 dark:text-blue-400 border border-blue-500/20' },
+  archived:   { label: 'Archived',   dot: 'bg-slate-400', badge: 'bg-slate-500/15 text-slate-600 dark:text-slate-400 border border-slate-500/20' },
 }
 
 /* ── Unassigned Plans Card ────────────────────────────────────────────────── */
-function UnassignedPlansCard({ plans, clients }: { plans: WorkoutPlan[]; clients: any[] }) {
+function UnassignedPlansCard({ plans }: { plans: WorkoutPlan[]; clients: any[] }) {
   const unassignedPlans = useMemo(() => {
     return plans.filter(plan => !plan.client_ids || plan.client_ids.length === 0)
   }, [plans])
 
-  const clientMap = useMemo(() => new Map(clients.map(c => [c.id, c])), [clients])
-
-  // Calculate workout stats from unassigned plans
   const workoutStats = useMemo(() => {
     let totalExercises = 0
-    let totalSets = 0
     let totalDays = 0
-    const muscleGroups = new Set<string>()
-
     unassignedPlans.forEach(plan => {
       plan.days?.forEach(day => {
         totalDays++
-        day.exercises?.forEach(ex => {
-          totalExercises++
-          totalSets += ex.sets || 0
-          // Extract muscle group from exercise name or notes
-          if (ex.name) {
-            const muscles = ['Chest', 'Back', 'Leg', 'Shoulder', 'Arm', 'Core', 'Glute', 'Hamstring', 'Quad', 'Bicep', 'Tricep']
-            muscles.forEach(m => {
-              if (ex.name.toLowerCase().includes(m.toLowerCase())) {
-                muscleGroups.add(m)
-              }
-            })
-          }
-        })
+        day.exercises?.forEach(() => { totalExercises++ })
       })
     })
-
-    return { totalExercises, totalSets, totalDays, muscleGroups: muscleGroups.size }
+    return { totalExercises, totalDays }
   }, [unassignedPlans])
 
+  const getPlanMeta = (type: WorkoutPlanType | null | undefined) => {
+    return {
+      label: type === 'team' ? 'Team' : type === 'group' ? 'Group' : 'Individual',
+      Icon: type === 'team' ? SecurityIcon : type === 'group' ? GroupIcon : FitnessCenterIcon,
+      color: type === 'team' ? 'text-emerald-600 dark:text-emerald-400' :
+             type === 'group' ? 'text-amber-600 dark:text-amber-400' :
+             'text-blue-600 dark:text-blue-400',
+    }
+  }
+
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-    >
+    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
       {/* Header */}
-      <div className="px-6 py-5 border-b border-slate-100 dark:border-white/[0.06] bg-gradient-to-r from-amber-50/50 to-orange-50/50 dark:from-amber-950/10 dark:to-orange-950/10">
-        <div className="flex items-center gap-3">
+      <div className="px-6 py-5 border-b border-slate-100 dark:border-white/[0.06]">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <WarningAmberIcon className="w-8 h-8 text-amber-500" />
+            <div>
+              <h2 className="text-base font-bold text-slate-900 dark:text-white">
+                Workout Plans Not Assigned
+              </h2>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                {unassignedPlans.length} plans waiting to be assigned
+              </p>
+            </div>
           </div>
-          <div>
-            <h2 className="text-base font-bold text-slate-900 dark:text-white">
-              Workout Plans Not Assigned to Clients
-            </h2>
-            <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-              {unassignedPlans.length} plans ready for assignment
-            </p>
+          <div className="hidden sm:flex items-center gap-6">
+            <div className="text-right">
+              <div className="text-xl font-bold text-slate-900 dark:text-white">{workoutStats.totalDays}</div>
+              <div className="text-[10px] text-slate-500 uppercase tracking-wider font-semibold">Workout Days</div>
+            </div>
+            <div className="text-right">
+              <div className="text-xl font-bold text-blue-600 dark:text-blue-400">{workoutStats.totalExercises}</div>
+              <div className="text-[10px] text-slate-500 uppercase tracking-wider font-semibold">Exercises</div>
+            </div>
           </div>
         </div>
+      </div>
 
       {unassignedPlans.length === 0 ? (
         <div className="p-8 text-center">
-          <div className="w-16 h-16 bg-emerald-50 dark:bg-emerald-950/20 flex items-center justify-center mx-auto mb-4">
-            <CheckCircle2 className="w-8 h-8 text-emerald-500" />
-          </div>
+          <CheckCircleIcon className="w-12 h-12 text-emerald-500 mx-auto mb-3" />
           <p className="text-sm font-medium text-slate-900 dark:text-white">All plans are assigned!</p>
           <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">No unassigned workout plans</p>
         </div>
       ) : (
         <>
-          {/* Stats Grid */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 p-5 border-b border-slate-100 dark:border-white/[0.06]">
-            <div className="text-center p-3 bg-slate-50 dark:bg-white/[0.04]">
-              <div className="text-2xl font-bold text-slate-900 dark:text-white">{unassignedPlans.length}</div>
-              <div className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5 uppercase tracking-wider font-semibold">Plans</div>
-            </div>
-            <div className="text-center p-3 bg-slate-50 dark:bg-white/[0.04]">
-              <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">{workoutStats.totalDays}</div>
-              <div className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5 uppercase tracking-wider font-semibold">Workout Days</div>
-            </div>
-            <div className="text-center p-3 bg-slate-50 dark:bg-white/[0.04]">
-              <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">{workoutStats.totalExercises}</div>
-              <div className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5 uppercase tracking-wider font-semibold">Exercises</div>
-            </div>
-            <div className="text-center p-3 bg-slate-50 dark:bg-white/[0.04]">
-              <div className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">{workoutStats.muscleGroups}</div>
-              <div className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5 uppercase tracking-wider font-semibold">Muscle Groups</div>
-            </div>
-          </div>
-
-          {/* Plans List */}
-          <div className="divide-y divide-slate-100 dark:divide-white/[0.05]">
-            {unassignedPlans.slice(0, 5).map((plan, index) => {
-              const typeConf = TYPE_CONFIG[plan.plan_type ?? 'individual']
-              const TypeIcon = typeConf.icon
+          <div className="p-5 grid grid-cols-1 lg:grid-cols-2 gap-4">
+            {unassignedPlans.slice(0, 6).map((plan, index) => {
+              const meta = getPlanMeta(plan.plan_type)
+              const MetaIcon = meta.Icon
               const totalExercises = plan.days?.reduce((sum, day) => sum + (day.exercises?.length || 0), 0) || 0
 
               return (
                 <motion.div
                   key={plan.id}
-                  initial={{ opacity: 0, x: -10 }}
-                  animate={{ opacity: 1, x: 0 }}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: index * 0.05 }}
-                  className="p-4 hover:bg-slate-50/50 dark:hover:bg-white/[0.02] transition-colors"
+                  className="group relative bg-white dark:bg-[#171717] hover:shadow-lg transition-all duration-300 overflow-hidden"
                 >
-                  <div className="flex items-start justify-between gap-4">
-                    <div className="flex items-start gap-3 flex-1">
-                      <div className={`w-10 h-10 bg-gradient-to-br ${typeConf.gradient} flex items-center justify-center ${typeConf.glow} flex-shrink-0`}>
-                        <TypeIcon size={18} className="text-white" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-1">
-                          <h3 className="text-sm font-semibold text-slate-900 dark:text-white truncate">{plan.title}</h3>
-                          <span className={`inline-flex items-center px-2 py-0.5 text-[10px] font-bold uppercase tracking-tight border ${ plan.status === 'active' ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/20' :
-                            plan.status === 'draft' ? 'bg-slate-500/15 text-slate-600 dark:text-slate-400 border-slate-500/20' :
-                            'bg-blue-500/15 text-blue-600 dark:text-blue-400 border-blue-500/20'
-                          }`}>
-                            {plan.status}
-                          </span>
-                        </div>
-                        <div className="flex items-center gap-4 text-xs text-slate-500 dark:text-slate-400">
-                          <span className="flex items-center gap-1">
-                            <Calendar size={12} />
-                            {plan.week_start}
-                          </span>
-                          <span className="flex items-center gap-1">
-                            <Dumbbell size={12} />
-                            {plan.days?.length || 0} days
-                          </span>
-                          <span className="flex items-center gap-1">
-                            <Target size={12} />
-                            {totalExercises} exercises
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Link
-                        href={`/workout-plans/${plan.id}/assign`}
-                        className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-cyan-950 hover:bg-cyan-900 text-white text-xs font-medium transition-colors"
-                      >
-                        <Users size={12} />
-                        Assign
-                      </Link>
-                      <Link
-                        href={`/workout-plans/${plan.id}`}
-                        className="p-1.5 hover:bg-slate-100 dark:hover:bg-white/[0.06] transition-colors"
-                      >
-                        <ChevronRight size={16} className="text-slate-400" />
-                      </Link>
-                    </div>
+                  <div className="absolute top-3 right-3">
+                    <span className={`inline-flex items-center gap-1 px-2 py-1 text-[10px] font-bold uppercase tracking-tight ${meta.color}`}>
+                      <MetaIcon className="w-3 h-3" />
+                      {meta.label}
+                    </span>
                   </div>
 
-                  {/* Exercise Preview */}
-                  {plan.days && plan.days.length > 0 && (
-                    <div className="mt-3 ml-13 pl-3 border-l-2 border-slate-200 dark:border-white/[0.08]">
-                      <div className="text-[10px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">Workout Breakdown</div>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
-                        {plan.days.slice(0, 3).map((day, di) => (
-                          <div key={di} className="bg-slate-50 dark:bg-white/[0.04] p-2">
-                            <div className="text-xs font-semibold text-slate-900 dark:text-white capitalize mb-1">{day.day}</div>
-                            <div className="text-[10px] text-slate-500 dark:text-slate-400">
-                              {day.exercises?.length || 0} exercises
-                            </div>
-                            {day.exercises?.slice(0, 2).map((ex, ei) => (
-                              <div key={ei} className="text-[10px] text-slate-600 dark:text-slate-300 truncate mt-0.5">
-                                • {ex.name}
-                              </div>
-                            ))}
-                          </div>
-                        ))}
+                  <div className="p-4">
+                    <div className="flex items-start gap-3 mb-3 pr-20">
+                      <InsertDriveFileIcon className={`w-5 h-5 ${meta.color} mt-0.5`} />
+                      <div className="flex-1 min-w-0">
+                        <h3 className="text-sm font-semibold text-slate-900 dark:text-white truncate leading-tight">
+                          {plan.title}
+                        </h3>
+                        {plan.group_name && (
+                          <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                            {plan.group_name}
+                          </p>
+                        )}
                       </div>
                     </div>
-                  )}
+
+                    <div className="flex items-center gap-3 text-xs text-slate-500 dark:text-slate-400 mb-3">
+                      <span className="flex items-center gap-1">
+                        <CalendarMonthIcon className="w-3 h-3" />
+                        {plan.week_start}
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <TrendingUpIcon className="w-3 h-3" />
+                        {plan.days?.length || 0} days
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <TrackChangesIcon className="w-3 h-3" />
+                        {totalExercises} exercises
+                      </span>
+                    </div>
+
+                    <div className="flex items-center justify-between pt-3 border-t border-slate-100 dark:border-white/[0.06]">
+                      <span className={`inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-bold uppercase tracking-tight ${
+                        plan.status === 'active'
+                          ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20'
+                          : plan.status === 'draft'
+                          ? 'bg-slate-500/15 text-slate-600 dark:text-slate-400 border border-slate-500/20'
+                          : 'bg-blue-500/15 text-blue-600 dark:text-blue-400 border border-blue-500/20'
+                      }`}>
+                        <span className={`w-1.5 h-1.5 rounded-full ${
+                          plan.status === 'active' ? 'bg-emerald-400' :
+                          plan.status === 'draft' ? 'bg-slate-400' : 'bg-blue-400'
+                        }`} />
+                        {plan.status}
+                      </span>
+
+                      <div className="flex items-center gap-2">
+                        <Link
+                          href={`/workout-plans/${plan.id}/assign`}
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-cyan-950 hover:bg-cyan-900 text-white text-xs font-medium transition-colors"
+                        >
+                          <GroupIcon className="w-3 h-3" />
+                          Assign
+                        </Link>
+                        <Link
+                          href={`/workout-plans/${plan.id}`}
+                          className="p-1.5 hover:bg-slate-100 dark:hover:bg-white/[0.06] transition-colors"
+                        >
+                          <NavigateNextIcon className="w-4 h-4 text-slate-400" />
+                        </Link>
+                      </div>
+                    </div>
+                  </div>
                 </motion.div>
               )
             })}
           </div>
 
-          {unassignedPlans.length > 5 && (
+          {unassignedPlans.length > 6 && (
             <div className="px-6 py-4 bg-slate-50 dark:bg-white/[0.02] border-t border-slate-100 dark:border-white/[0.06]">
-              <Link href="/workout-plans?filter=unassigned" className="text-sm font-medium text-cyan-950 dark:text-[#b3d2ef] hover:underline flex items-center gap-1">
+              <Link
+                href="/workout-plans?filter=unassigned"
+                className="text-sm font-medium text-cyan-950 dark:text-[#b3d2ef] hover:underline flex items-center gap-1"
+              >
                 View all {unassignedPlans.length} unassigned plans
-                <ChevronRight size={14} />
+                <ChevronRightIcon className="w-3.5 h-3.5" />
               </Link>
             </div>
           )}
@@ -217,9 +213,6 @@ function UnassignedPlansCard({ plans, clients }: { plans: WorkoutPlan[]; clients
 
 /* ── Professional Workout Details Table ──────────────────────────────────── */
 function WorkoutDetailsTable({ plans }: { plans: WorkoutPlan[] }) {
-  const [expandedPlan, setExpandedPlan] = useState<string | null>(null)
-
-  // Flatten all exercises from all plans
   const allExercises = useMemo(() => {
     const exercises: Array<{
       planId: string
@@ -259,15 +252,13 @@ function WorkoutDetailsTable({ plans }: { plans: WorkoutPlan[] }) {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: 0.1 }}
-      className="bg-white dark:bg-[#171717] border border-slate-200/80 dark:border-white/[0.08] overflow-hidden"
+      className="bg-white dark:bg-[#171717] overflow-hidden"
     >
       {/* Header */}
       <div className="px-6 py-5 border-b border-slate-100 dark:border-white/[0.06]">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-pink-600 flex items-center justify-center">
-              <BarChart3 className="w-5 h-5 text-white" />
-            </div>
+            <BarChartIcon className="w-6 h-6 text-purple-500" />
             <div>
               <h2 className="text-base font-bold text-slate-900 dark:text-white">
                 Professional Fitness Details
@@ -278,8 +269,8 @@ function WorkoutDetailsTable({ plans }: { plans: WorkoutPlan[] }) {
             </div>
           </div>
           <div className="flex items-center gap-2 text-xs">
-            <div className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 dark:bg-white/[0.04]">
-              <Dumbbell size={12} className="text-slate-400" />
+            <div className="flex items-center gap-1.5 px-3 py-1.5">
+              <FitnessCenterIcon className="w-3 h-3 text-slate-400" />
               <span className="font-semibold text-slate-700 dark:text-slate-300">{allExercises.length} Total Exercises</span>
             </div>
           </div>
@@ -310,9 +301,7 @@ function WorkoutDetailsTable({ plans }: { plans: WorkoutPlan[] }) {
               >
                 <td className="px-5 py-4">
                   <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center text-white text-xs font-bold">
-                      {ex.order + 1}
-                    </div>
+                    <span className="text-xs font-bold text-slate-400 w-5">{ex.order + 1}</span>
                     <div>
                       <div className="text-sm font-semibold text-slate-900 dark:text-white">{ex.exerciseName}</div>
                       <div className="text-xs text-slate-500 dark:text-slate-400">{ex.planTitle}</div>
@@ -320,32 +309,16 @@ function WorkoutDetailsTable({ plans }: { plans: WorkoutPlan[] }) {
                   </div>
                 </td>
                 <td className="px-5 py-4">
-                  <div className="flex items-center gap-2">
-                    <div className="px-2.5 py-1 bg-slate-100 dark:bg-white/[0.04]">
-                      <span className="text-xs font-medium text-slate-700 dark:text-slate-300 capitalize">{ex.dayName}</span>
-                    </div>
-                  </div>
+                  <span className="text-xs font-medium text-slate-700 dark:text-slate-300 capitalize">{ex.dayName}</span>
                 </td>
                 <td className="px-5 py-4">
-                  <div className="text-center">
-                    <div className="inline-flex items-center justify-center w-10 h-8 bg-slate-100 dark:bg-white/[0.04]">
-                      <span className="text-sm font-bold text-slate-900 dark:text-white">{ex.sets}</span>
-                    </div>
-                  </div>
+                  <span className="text-sm font-bold text-slate-900 dark:text-white">{ex.sets}</span>
                 </td>
                 <td className="px-5 py-4">
-                  <div className="text-center">
-                    <div className="inline-flex items-center justify-center w-10 h-8 bg-slate-100 dark:bg-white/[0.04]">
-                      <span className="text-sm font-bold text-slate-900 dark:text-white">{ex.reps}</span>
-                    </div>
-                  </div>
+                  <span className="text-sm font-bold text-slate-900 dark:text-white">{ex.reps}</span>
                 </td>
                 <td className="px-5 py-4">
-                  <div className="text-center">
-                    <div className="inline-flex items-center justify-center w-10 h-8 bg-slate-100 dark:bg-white/[0.04]">
-                      <span className="text-sm font-bold text-slate-900 dark:text-white">{ex.restSeconds}s</span>
-                    </div>
-                  </div>
+                  <span className="text-sm font-bold text-slate-900 dark:text-white">{ex.restSeconds}s</span>
                 </td>
                 <td className="px-5 py-4">
                   {ex.notes ? (
@@ -364,9 +337,7 @@ function WorkoutDetailsTable({ plans }: { plans: WorkoutPlan[] }) {
 
       {allExercises.length === 0 && (
         <div className="p-12 text-center">
-          <div className="w-16 h-16 bg-slate-100 dark:bg-white/[0.04] flex items-center justify-center mx-auto mb-4">
-            <Dumbbell className="w-8 h-8 text-slate-300 dark:text-slate-600" />
-          </div>
+          <FitnessCenterIcon className="w-12 h-12 text-slate-300 dark:text-slate-600 mx-auto mb-3" />
           <p className="text-sm font-medium text-slate-600 dark:text-slate-400">No exercises configured</p>
           <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">Add exercises to your workout plans to see them here</p>
         </div>
@@ -392,7 +363,6 @@ export default function WorkoutPlansPage() {
   const [filter, setFilter] = useState<'all' | 'active' | 'draft' | 'completed' | 'archived'>('all')
   const [typeFilter, setTypeFilter] = useState<'all' | 'individual' | 'group' | 'team'>('all')
 
-  // Filter plans
   const filtered = useMemo(() => {
     let list = plans
     if (filter !== 'all') list = list.filter(p => p.status === filter)
@@ -417,7 +387,7 @@ export default function WorkoutPlansPage() {
         {/* ── FILTERS ── */}
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-2 flex-wrap">
-            <Filter size={14} className="text-slate-400" />
+            <FilterListIcon className="w-3.5 h-3.5 text-slate-400" />
             {(['all', 'active', 'draft', 'completed', 'archived'] as const).map((s) => (
               <button
                 key={s}
@@ -432,7 +402,7 @@ export default function WorkoutPlansPage() {
             ))}
           </div>
           <div className="relative">
-            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+            <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" />
             <input
               type="text"
               placeholder="Search plans..."
@@ -446,7 +416,7 @@ export default function WorkoutPlansPage() {
         {/* ── PLANS LIST ── */}
         <QueryWrapper
           query={query}
-          emptyIcon={Dumbbell}
+          emptyIcon={FitnessCenterIcon}
           emptyTitle="You haven't created any plans yet."
           emptyDescription="Create your first workout plan to get started."
           emptyAction={
@@ -462,7 +432,7 @@ export default function WorkoutPlansPage() {
           isEmpty={(data) => (data?.data ?? []).length === 0}
         >
           {() => (
-            <div className="bg-white dark:bg-[#171717] border border-slate-200/80 dark:border-white/[0.08] overflow-hidden">
+            <div className="bg-white dark:bg-[#171717] overflow-hidden">
               <div className="overflow-x-auto">
                 <table className="w-full text-left">
                   <thead>
@@ -490,9 +460,7 @@ export default function WorkoutPlansPage() {
                         >
                           <td className="px-4 lg:px-6 py-4">
                             <div className="flex items-center gap-3">
-                              <div className={`w-10 h-10 bg-gradient-to-br ${typeConf.gradient} flex items-center justify-center ${typeConf.glow} flex-shrink-0`}>
-                                <TypeIcon size={18} className="text-white" />
-                              </div>
+                              <TypeIcon className={`w-5 h-5 ${typeConf.color}`} />
                               <div>
                                 <div className="text-sm font-semibold text-slate-900 dark:text-white">
                                   {plan.group_name ? `${plan.group_name} — ` : ''}{plan.title}
@@ -510,14 +478,14 @@ export default function WorkoutPlansPage() {
                               plan.plan_type === 'group' ? 'bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/20' :
                                                            'bg-blue-500/15 text-blue-600 dark:text-blue-400 border-blue-500/20'
                             }`}>
-                              <TypeIcon size={12} />
+                              <TypeIcon className="w-3 h-3" />
                               {typeConf.label}
                             </span>
                           </td>
 
                           <td className="px-4 lg:px-6 py-4 hidden md:table-cell">
                             <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400">
-                              <Calendar size={14} className="text-slate-400" />
+                              <CalendarMonthIcon className="w-3.5 h-3.5 text-slate-400" />
                               <span>{plan.week_start}</span>
                             </div>
                           </td>
@@ -535,7 +503,7 @@ export default function WorkoutPlansPage() {
                               className="inline-flex items-center gap-1 text-xs font-medium text-cyan-950 dark:text-[#b3d2ef] hover:underline"
                             >
                               View Details
-                              <ChevronRight size={14} />
+                              <ChevronRightIcon className="w-3.5 h-3.5" />
                             </Link>
                           </td>
                         </motion.tr>

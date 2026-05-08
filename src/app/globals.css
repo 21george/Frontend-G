@@ -53,6 +53,12 @@
     --btn-active:    #0b171c;
   }
 
+  /* ── Light mode specific overrides ────────────────────────────────────── */
+  html:not(.dark) body {
+    background-color: var(--bg-page);
+    color: var(--text-primary);
+  }
+
   *, *::before, *::after { box-sizing: border-box; }
   html { scroll-behavior: smooth; }
 

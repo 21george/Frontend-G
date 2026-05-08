@@ -50,8 +50,8 @@ export default function NewClientPage() {
   if (generatedCode) {
     return (
       <DashboardLayout>
-        <div >
-          <div className="card p-8 text-center">
+        <div className=" mx-auto p-4 sm:p-6 lg:p-8">
+          <div className="card p-6 sm:p-8 text-center">
             <div className="w-16 h-16 bg-green-100 flex items-center justify-center mx-auto mb-4">
               <Check className="w-8 h-8 text-green-600" />
             </div>
@@ -84,12 +84,12 @@ export default function NewClientPage() {
 
   return (
     <DashboardLayout>
-      <div >
-        <Link href="/clients" className="flex items-center gap-1 text-sm text-gray-100 hover:text-gray-700 mb-6">
-          <ArrowLeft className="w-3 h-3 text-gray-50" /> Back
+      <div className=" mx-auto p-4 sm:p-6 lg:p-8">
+        <Link href="/clients" className="flex items-center gap-1 text-sm text-gray-100 hover:text-gray-900 mb-6">
+          <ArrowLeft className="w-3 h-3" /> Back
         </Link>
-        <h1 className="text-2xl font-semibold text-gray-200 mb-6">Add New Client</h1>
-        <div className="card p-6 ">
+        <h1 className="text-2xl font-semibold text-gray-100 mb-6">Add New Client</h1>
+        <div className="card p-4 sm:p-6">
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
             <div>
               <label className="label">Full Name *</label>

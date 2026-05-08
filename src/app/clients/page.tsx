@@ -17,28 +17,28 @@ import { motion } from 'framer-motion'
 const statusConfig: Record<string, { label: string; lightClass: string; darkClass: string }> = {
   'blocked': {
     label: 'Blocked',
-    lightClass: 'bg-orange-50 text-orange-700 border border-orange-200/60',
-    darkClass: 'dark:bg-orange-900/30 dark:text-orange-400 dark:border-orange-800'
+    lightClass: 'bg-orange-50 text-orange-700 border border-orange-200/60 rounded-2xl',
+    darkClass: 'dark:bg-orange-900/30 dark:text-orange-400 dark:border-orange-800 rounded-2xl'
   },
   'on-track': {
     label: 'On Track',
-    lightClass: 'bg-emerald-50 text-emerald-700 border border-emerald-200/60',
-    darkClass: 'dark:bg-emerald-900/30 dark:text-emerald-400 dark:border-emerald-800'
+    lightClass: 'bg-emerald-50 text-emerald-700 border border-emerald-200/60 rounded-2xl',
+    darkClass: 'dark:bg-emerald-900/30 dark:text-emerald-400 dark:border-emerald-800 rounded-2xl'
   },
   'new-client': {
     label: 'New Client',
-    lightClass: 'bg-blue-50 text-blue-700 border border-blue-200/60',
-    darkClass: 'dark:bg-blue-900/30 dark:text-blue-400 dark:border-blue-800'
+    lightClass: 'bg-blue-50 text-blue-700 border border-blue-200/60 rounded-2xl',
+    darkClass: 'dark:bg-blue-900/30 dark:text-blue-400 dark:border-blue-800 rounded-2xl'
   },
   'attention': {
     label: 'Attention Required',
-    lightClass: 'bg-red-50 text-red-700 border border-red-200/60',
-    darkClass: 'dark:bg-red-900/30 dark:text-red-400 dark:border-red-800'
+    lightClass: 'bg-red-50 text-red-700 border border-red-200/60 rounded-2xl',
+    darkClass: 'dark:bg-red-900/30 dark:text-red-400 dark:border-red-800 rounded-2xl'
   },
   'completed': {
     label: 'Completed',
-    lightClass: 'bg-slate-100 text-slate-600 border border-slate-200',
-    darkClass: 'dark:bg-slate-800/30 dark:text-slate-400 dark:border-slate-700'
+    lightClass: 'bg-slate-100 text-slate-600 border border-slate-200 rounded-2xl',
+    darkClass: 'dark:bg-slate-800/30 dark:text-slate-400 dark:border-slate-700 rounded-2xl'
   },
 }
 
@@ -111,32 +111,32 @@ export default function ClientsPage() {
             value={search}
             onChange={e => setSearch(e.target.value)}
             placeholder="Search clients"
-            className="w-full bg-white dark:bg-[#121212] border border-slate-200 dark:border-white/[0.1] py-3 pl-11 pr-4 text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder:text-neutral-500 focus:outline-none focus:border-brand-700/30 focus:ring-2 focus:ring-brand-700/20 transition-colors"
+            className="w-full bg-white dark:bg-[#121212] border border-slate-200 dark:border-white/[0.1] py-3 pl-11 pr-4 text-sm text-[var(--text-primary)] dark:text-[var(--text-primary)] placeholder-slate-400 dark:placeholder:text-neutral-500 focus:outline-none focus:border-brand-700/30 focus:ring-2 focus:ring-brand-700/20 transition-colors"
           />
         </div>
 
          {/* Daily Protocol Adherence Chart */}
-        <div className="mt-8 grid grid-cols-1 mb-5 lg:grid-cols-3 gap-6 bt-5">
-          <div className='p-6'> 
-            <div className="flex justify-between items-center mb-6">
-              <h3 className="text-lg font-bold text-slate-900 dark:text-white tracking-tight flex items-center gap-2">
+        <div className="mt-8 mb-5">
+          <div className="p-4 sm:p-6 bg-[var(--bg-card)] border border-[var(--border)] dark:border-white/[0.08]"> 
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+              <h3 className="text-base sm:text-lg font-bold text-[var(--text-primary)] dark:text-[var(--text-primary)] tracking-tight flex items-center gap-2">
                 <Activity className="w-5 h-5 text-brand-600 dark:text-brand-300" />
                 Daily Protocol Adherence
               </h3>
               <div className="flex items-center gap-4 text-xs">
                 <div className="flex items-center gap-1.5">
-                  <div className="h-2 w-2 bg-emerald-500"></div>
-                  <span className="text-slate-500 dark:text-neutral-400">Completed</span>
+                  <div className="h-2 w-2 bg-emerald-500 rounded-full"></div>
+                  <span className="text-slate-500 rounded-xl dark:text-neutral-400">Completed</span>
                 </div>
                 <div className="flex items-center gap-1.5">
-                  <div className="h-2 w-2 bg-slate-300 dark:bg-slate-700"></div>
-                  <span className="text-slate-500 dark:text-neutral-400">Missed</span>
+                  <div className="h-2 w-2 bg-slate-300 dark:bg-slate-700 rounded-full"></div>
+                  <span className="text-slate-500 rounded-xl dark:text-neutral-400">Missed</span>
                 </div>
               </div>
             </div>
 
             {/* Bar Chart */}
-            <div className="h-48 flex items-end justify-between gap-2">
+            <div className="h-32 sm:h-48 flex items-end justify-between gap-1 sm:gap-2">
               {[
                 { day: 'M', completed: 75, total: 100 },
                 { day: 'T', completed: 68, total: 100 },
@@ -146,8 +146,8 @@ export default function ClientsPage() {
                 { day: 'S', completed: 45, total: 100 },
                 { day: 'S', completed: 30, total: 100 },
               ].map((d, i) => (
-                <div key={i} className="flex flex-col items-center gap-2 w-full">
-                  <div className="w-full bg-slate-100 dark:bg-slate-800 h-40 relative overflow-hidden">
+                <div key={i} className="flex flex-col items-center gap-1 sm:gap-2 flex-1">
+                  <div className="w-full bg-slate-100 dark:bg-slate-800 h-24 sm:h-40 relative overflow-hidden">
                     <div
                       className="absolute bottom-0 w-full bg-gradient-to-t from-emerald-600 to-emerald-400 opacity-80 transition-all duration-500"
                       style={{ height: `${(d.completed / d.total) * 100}%` }}
@@ -158,9 +158,6 @@ export default function ClientsPage() {
               ))}
             </div>
           </div>
-
-          {/* Protocol Insight Card */}
-         
         </div>
 
         
@@ -181,7 +178,7 @@ export default function ClientsPage() {
           isEmpty={(data) => (data?.data ?? []).length === 0}
         >
           {(data) => (
-            <div className="bg-[var(--bg-card)] border border-slate-200/80 dark:border-white/[0.08] overflow-hidden ">
+            <div className="bg-[var(--bg-card)] border rounded-xl border-slate-200/80 dark:border-white/[0.08] overflow-hidden ">
               <div className="overflow-x-auto">
                 <table className="w-full text-left">
                   <thead>
@@ -207,7 +204,7 @@ export default function ClientsPage() {
                           initial={{ opacity: 0, x: -20 }}
                           animate={{ opacity: 1, x: 0 }}
                           transition={{ delay: index * 0.03 }}
-                          className="hover:bg-slate-50/50 dark:hover:bg-white/[0.03] transition-colors group"
+                          className="hover:bg-slate-50/50 dark:hover:bg-white/[0.03]  rounded-xl transition-colors group"
                         >
                           <td className="px-4 lg:px-6 py-4">
                             <div className="flex items-center gap-3">
@@ -215,15 +212,15 @@ export default function ClientsPage() {
                                 <img
                                   src={client.profile_photo_url}
                                   alt={client.name}
-                                  className="h-10 w-10 object-cover bg-slate-100 dark:bg-slate-800"
+                                  className="h-10 w-10 object-cover rounded-xl bg-slate-100 dark:bg-slate-800"
                                 />
                               ) : (
-                                <div className="h-10 w-10 bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white text-sm font-semibold flex-shrink-0">
+                                <div className="h-10 w-10 bg-gradient-to-br from-[#132e35] to-[#0b1e22] rounded-xl flex items-center justify-center text-white text-sm font-semibold flex-shrink-0">
                                   {client.name?.[0]?.toUpperCase() ?? 'C'}
                                 </div>
                               )}
                               <div>
-                                <div className="text-sm font-semibold text-slate-900 dark:text-white">{client.name}</div>
+                                <div className="text-sm font-semibold text-[var(--text-primary)] dark:text-[var(--text-primary)]">{client.name}</div>
                                 <div className="text-xs text-slate-500 dark:text-neutral-400">
                                   {client.created_at
                                     ? `Joined ${daysSinceCreated} ${daysSinceCreated === 1 ? 'day' : 'days'} ago`
@@ -236,7 +233,7 @@ export default function ClientsPage() {
                           <td className="px-4 lg:px-6 py-4 hidden sm:table-cell">
                             <div className="w-full max-w-[180px]">
                               <div className="flex justify-between items-center mb-1 text-xs">
-                                <span className="text-slate-900 dark:text-white font-medium">{progress}%</span>
+                                <span className="text-[var(--text-primary)] dark:text-[var(--text-primary)] font-medium">{progress}%</span>
                                 <span className="text-slate-500 dark:text-neutral-400">Week {Math.ceil(progress / 16)}/6</span>
                               </div>
                               <div className="h-1.5 w-full bg-slate-100 dark:bg-slate-800 overflow-hidden">
@@ -251,7 +248,7 @@ export default function ClientsPage() {
                           </td>
 
                           <td className="px-4 lg:px-6 py-4 hidden md:table-cell">
-                            <div className="text-sm text-slate-900 dark:text-white">
+                            <div className="text-sm text-[var(--text-primary)] dark:text-[var(--text-primary)]">
                               {client.created_at
                                 ? (() => {
                                     const date = new Date(client.created_at)
@@ -303,10 +300,10 @@ export default function ClientsPage() {
                   Showing 1-{Math.min(10, total)} of {total} clients
                 </span>
                 <div className="flex gap-2">
-                  <button className="p-1.5 border border-slate-200 dark:border-white/[0.1] text-slate-400 hover:bg-slate-100 dark:hover:bg-white/[0.08] transition-colors disabled:opacity-50" disabled>
+                  <button className="p-1.5 border rounded-xl border-slate-200 dark:border-white/[0.1] text-slate-400 hover:bg-slate-100 dark:hover:bg-white/[0.08] transition-colors disabled:opacity-50" disabled>
                     <ChevronLeft className="w-4 h-4" />
                   </button>
-                  <button className="p-1.5 border border-slate-200 dark:border-white/[0.1] text-slate-400 hover:bg-slate-100 dark:hover:bg-white/[0.08] transition-colors disabled:opacity-50" disabled={total <= 10}>
+                  <button className="p-1.5 border rounded-xl border-slate-200 dark:border-white/[0.1] text-slate-400 hover:bg-slate-100 dark:hover:bg-white/[0.08] transition-colors disabled:opacity-50" disabled={total <= 10}>
                     <ChevronRight className="w-4 h-4" />
                   </button>
                 </div>

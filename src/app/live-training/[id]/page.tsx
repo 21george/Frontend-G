@@ -36,7 +36,7 @@ const REQ_BADGE: Record<string, string> = {
   rejected: 'bg-red-100 dark:bg-red-400/10 text-red-500 dark:text-red-400',
 }
 
-const PANEL = 'bg-white dark:bg-white/[0.03] border border-slate-200 dark:border-white/[0.08]'
+const PANEL = 'bg-white dark:bg-white/[0.03] border border-[var(--border)] dark:border-white/[0.08]'
 const EMPTY = 'text-center text-[12px] text-slate-400 dark:text-slate-500 mt-10'
 
 /* ── Shared Components ── */
@@ -52,7 +52,7 @@ function Avatar({ src, name }: { src?: string; name?: string }) {
 
 function InfoCard({ icon: Icon, label, value }: { icon: any; label: string; value: string }) {
   return (
-    <div className="p-3 bg-slate-50 dark:bg-white/[0.03] border border-slate-100 dark:border-white/[0.06]">
+    <div className="p-3 bg-[var(--bg-subtle)] dark:bg-white/[0.03] border border-slate-100 dark:border-white/[0.06]">
       <Icon size={14} className="text-slate-400 dark:text-slate-500 mb-1.5" />
       <p className="text-[10px] text-slate-400 dark:text-slate-500 font-semibold uppercase tracking-wider">{label}</p>
       <p className="text-[13px] font-semibold text-slate-700 dark:text-slate-200 mt-0.5">{value}</p>
@@ -101,7 +101,7 @@ export default function LiveTrainingDetailPage() {
   if (!session) {
     return (
       <DashboardLayout>
-        <div className="text-center py-20 text-slate-500 dark:text-slate-400 text-[13px]">Session not found.</div>
+        <div className="text-center py-20 text-[var(--text-secondary)] dark:text-[var(--text-secondary)] text-[13px]">Session not found.</div>
       </DashboardLayout>
     )
   }
@@ -130,20 +130,20 @@ export default function LiveTrainingDetailPage() {
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-4">
             <Link href="/live-training" className="p-2 hover:bg-slate-100 dark:hover:bg-white/[0.06] transition-colors">
-              <ArrowLeft size={18} className="text-slate-500 dark:text-slate-400" />
+              <ArrowLeft size={18} className="text-[var(--text-secondary)] dark:text-[var(--text-secondary)]" />
             </Link>
             <div className={`w-10 h-10 bg-gradient-to-br ${CAT_GRADIENT[session.category] ?? CAT_GRADIENT.other} flex items-center justify-center`}>
               <Signal size={18} className="text-white" />
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h1 className="text-lg font-semibold text-slate-900 dark:text-white">{session.title}</h1>
+                <h1 className="text-lg font-semibold text-[var(--text-primary)] dark:text-[var(--text-primary)]">{session.title}</h1>
                 <span className={`text-[10px] font-semibold px-2 py-0.5 border ${st.badge}`}>
                   <span className={`inline-block w-1.5 h-1.5 mr-1 ${st.dot}`} />
                   {st.label}
                 </span>
               </div>
-              <p className="text-[12px] text-slate-500 dark:text-slate-400 mt-0.5 capitalize">
+              <p className="text-[12px] text-[var(--text-secondary)] dark:text-[var(--text-secondary)] mt-0.5 capitalize">
                 {session.category} · {session.level} · {session.duration_min} min
               </p>
             </div>
@@ -206,7 +206,7 @@ export default function LiveTrainingDetailPage() {
                 {infoCards.map(c => <InfoCard key={c.label} {...c} />)}
               </div>
               {session.description && (
-                <p className="mt-4 text-[12px] text-slate-500 dark:text-slate-400 leading-relaxed">{session.description}</p>
+                <p className="mt-4 text-[12px] text-[var(--text-secondary)] dark:text-[var(--text-secondary)] leading-relaxed">{session.description}</p>
               )}
             </div>
           </div>
@@ -256,7 +256,7 @@ export default function LiveTrainingDetailPage() {
                   </div>
 
                   {isLive && (
-                    <div className="p-3 border-t border-slate-200 dark:border-white/[0.08]">
+                    <div className="p-3 border-t border-[var(--border)] dark:border-white/[0.08]">
                       <div className="flex gap-2">
                         <input type="text" value={msg} onChange={e => setMsg(e.target.value)} onKeyDown={onKey} placeholder="Type a message…"
                           className="flex-1 px-3 py-2 text-[12px] border border-slate-200 dark:border-white/[0.1] bg-white dark:bg-white/[0.04] text-slate-700 dark:text-slate-300 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-600/20 dark:focus:ring-brand-400/20" />
@@ -288,7 +288,7 @@ export default function LiveTrainingDetailPage() {
                 <div className="p-4 space-y-2 overflow-y-auto max-h-[460px]">
                   {requests.length === 0 && <p className={EMPTY}>No join requests</p>}
                   {requests.map((r: any) => (
-                    <div key={r.id} className="flex items-center justify-between p-3 bg-slate-50 dark:bg-white/[0.03] border border-slate-200 dark:border-white/[0.06]">
+                    <div key={r.id} className="flex items-center justify-between p-3 bg-[var(--bg-subtle)] dark:bg-white/[0.03] border border-[var(--border)] dark:border-white/[0.06]">
                       <div className="flex items-center gap-2.5">
                         <Avatar src={r.client_photo} name={r.client_name} />
                         <div>

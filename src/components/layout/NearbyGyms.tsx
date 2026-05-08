@@ -25,7 +25,7 @@ function GymMap({ gyms, userLocation }: { gyms: Gym[]; userLocation: { lat: numb
 
   if (!userLocation) {
     return (
-      <div className="absolute inset-0 bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
+      <div className="absolute inset-0 bg-slate-100 dark:bg-slate-800 rounded-xl flex items-center justify-center">
         <div className="text-center text-slate-400">
           <MapPin className="w-8 h-8 mx-auto mb-2 opacity-50" />
           <p className="text-xs">Location not available</p>
@@ -66,7 +66,7 @@ function GymMap({ gyms, userLocation }: { gyms: Gym[]; userLocation: { lat: numb
   const center = projectToMap(userLocation.lat, userLocation.lon)
 
   return (
-    <div ref={mapRef} className="absolute inset-0 bg-slate-100 dark:bg-slate-800 overflow-hidden">
+    <div ref={mapRef} className="absolute inset-0 bg-slate-100 dark:bg-slate-800 rounded-xl overflow-hidden">
       {/* OSM Tile Layer */}
       <div
         className="absolute inset-0 opacity-60 dark:opacity-40"
@@ -102,10 +102,10 @@ function GymMap({ gyms, userLocation }: { gyms: Gym[]; userLocation: { lat: numb
               style={{ left: pos.x - 12, top: pos.y - 24 }}
             >
               <div className="relative group cursor-pointer">
-                <div className="w-6 h-6 bg-emerald-500 flex items-center justify-center ring-2 ring-white dark:ring-slate-700">
+                <div className="w-6 h-6 bg-emerald-500 flex items-center justify-center ring-2 ring-white dark:ring-slate-700 rounded-full">
                   <Dumbbell className="w-3 h-3 text-white" />
                 </div>
-                <div className="absolute -bottom-6 left-1/2 -translate-x-1/2 whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity bg-slate-900 text-white text-[10px] px-2 py-0.5 pointer-events-none z-10">
+                <div className="absolute -bottom-6 left-1/2 -translate-x-1/2 whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity bg-slate-900 text-white text-[10px] px-2 py-0.5 pointer-events-none z-10 rounded-md">
                   {gym.name}
                 </div>
               </div>
@@ -122,7 +122,7 @@ function GymMap({ gyms, userLocation }: { gyms: Gym[]; userLocation: { lat: numb
         className="absolute"
         style={{ left: center.x - 8, top: center.y - 8 }}
       >
-        <div className="w-4 h-4 bg-blue-500 ring-4 ring-blue-500/30 animate-pulse" />
+        <div className="w-4 h-4 bg-blue-500 ring-4 ring-blue-500/30 animate-pulse rounded-full" />
       </motion.div>
     </div>
   )
@@ -148,7 +148,7 @@ export function NearbyGymsButton() {
         whileTap={{ scale: 0.95 }}
         onClick={() => setOpen(true)}
         title="Find fitness studios nearby"
-        className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200/60 dark:border-emerald-700/30 text-emerald-700 dark:text-emerald-300 text-xs font-medium hover:bg-emerald-100 dark:hover:bg-emerald-900/40 transition-colors "
+        className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 rounded-xl dark:bg-emerald-900/20 border border-emerald-200/60 dark:border-emerald-700/30 text-emerald-700 dark:text-emerald-300 text-xs font-medium hover:bg-emerald-100 dark:hover:bg-emerald-900/40 transition-colors "
       >
         <MapPin className="w-3.5 h-3.5 shrink-0" />
         <span className="hidden sm:inline">Nearby Gyms</span>
@@ -181,7 +181,7 @@ export function NearbyGymsButton() {
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
               transition={{ duration: 0.2, type: 'spring' }}
-              className="fixed inset-x-4 sm:inset-x-auto sm:left-1/2 sm:-translate-x-1/2 sm:top-20 sm:w-[600px] z-50 bg-white dark:bg-slate-800 sm:overflow-hidden max-h-[80vh] flex flex-col"
+              className="fixed inset-x-4 sm:inset-x-auto sm:left-1/2 sm:-translate-x-1/2 sm:top-20 sm:w-[600px] z-50 bg-white dark:bg-slate-800 rounded-xl sm:overflow-hidden max-h-[80vh] flex flex-col"
             >
               {/* Header */}
               <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100 dark:border-white/[0.08] shrink-0">

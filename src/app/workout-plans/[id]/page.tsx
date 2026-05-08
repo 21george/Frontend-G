@@ -5,7 +5,7 @@ import { useWorkoutPlan, useClient } from '@/lib/hooks'
 import Link from 'next/link'
 import { ClientAvatar } from '@/components/ui/ClientAvatar'
 import { useState } from 'react'
-import { ChevronRight, Edit, Dumbbell, Clock, Calendar, ArrowLeft, ChevronDown } from 'lucide-react'
+import { ChevronRight, Edit, Dumbbell, Clock, Calendar, ArrowLeft, ChevronDown, Video as VideoIcon, ExternalLink } from 'lucide-react'
 import { addDays, format, parseISO, startOfWeek } from 'date-fns'
 import { motion } from 'framer-motion'
 import type { Exercise } from '@/types'
@@ -56,6 +56,50 @@ function getSessionStyle(exercises: Exercise[]) {
   return SESSION_STYLES.general
 }
 
+/* ── Video helpers ──────────────────────────────────────────────── */
+function getYouTubeId(url: string): string | null {
+  const match = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([a-zA-Z0-9_-]{11})/)
+  return match?.[1] ?? null
+}
+
+function isValidVideoUrl(url: string): boolean {
+  if (!url) return false
+  return /youtube\.com|youtu\.be|vimeo\.com|dailymotion\.com/.test(url)
+}
+
+function VideoPreview({ url }: { url: string }) {
+  if (!isValidVideoUrl(url)) return null
+
+  const youtubeId = getYouTubeId(url)
+
+  if (youtubeId) {
+    return (
+      <div className="aspect-video w-full max-w-md overflow-hidden border border-[var(--border)] rounded-lg">
+        <iframe
+          src={`https://www.youtube.com/embed/${youtubeId}`}
+          title="Exercise video"
+          className="w-full h-full"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+          allowFullScreen
+        />
+      </div>
+    )
+  }
+
+  return (
+    <a
+      href={url}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="inline-flex items-center gap-2 px-3 py-2 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800/30 text-blue-600 dark:text-blue-400 text-xs rounded hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors"
+    >
+      <VideoIcon className="w-3.5 h-3.5" />
+      <span className="truncate max-w-[200px]">{url}</span>
+      <ExternalLink className="w-3 h-3 flex-shrink-0" />
+    </a>
+  )
+}
+
 function getWeekStartDate(value: string) {
   const parsed = parseISO(`${value}T00:00:00`)
   if (!Number.isNaN(parsed.getTime())) return startOfWeek(parsed, { weekStartsOn: 1 })
@@ -81,7 +125,7 @@ export default function WorkoutPlanDetailPage() {
       <DashboardLayout>
         <div className="max-w-4xl space-y-4">
           <div className="h-8 w-48 bg-slate-100 dark:bg-white/[0.04] animate-pulse" />
-          <div className="bg-slate-50 dark:bg-white/[0.03] p-6 space-y-3 animate-pulse">
+          <div className="bg-[var(--bg-subtle)] dark:bg-white/[0.03] p-6 space-y-3 animate-pulse">
             <div className="h-6 w-64 bg-slate-200 dark:bg-white/[0.06]" />
             <div className="h-4 w-32 bg-slate-100 dark:bg-white/[0.04]" />
           </div>
@@ -147,7 +191,7 @@ export default function WorkoutPlanDetailPage() {
       <div className="space-y-6">
 
         <section className="border border-slate-200/80 dark:border-white/[0.08] bg-[var(--bg-card)] overflow-hidden">
-          <div className="border-b border-slate-200 dark:border-white/[0.08] px-4 py-3 sm:px-6">
+          <div className="border-b border-[var(--border)] dark:border-white/[0.08] px-4 py-3 sm:px-6">
             <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
               <div>
                 <nav className="mb-3 flex items-center gap-2 text-[11px] uppercase tracking-[0.16em] text-slate-400 dark:text-slate-500">
@@ -161,10 +205,10 @@ export default function WorkoutPlanDetailPage() {
                   <ChevronRight className="h-3 w-3" />
                   <span className="truncate text-brand-600 dark:text-brand-300">{plan.title}</span>
                 </nav>
-                <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white sm:text-4xl">
+                <h1 className="text-2xl font-bold tracking-tight text-[var(--text-primary)] dark:text-[var(--text-primary)] sm:text-4xl">
                   Weekly Training Menu
                 </h1>
-                <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
+                <p className="mt-2 text-sm text-[var(--text-secondary)] dark:text-[var(--text-secondary)]">
                   {plan.title}{assignedClient ? ` for ${assignedClient.name}` : ' — Not assigned to any client'}
                 </p>
               </div>
@@ -198,10 +242,10 @@ export default function WorkoutPlanDetailPage() {
             <div className="flex items-start gap-3">
               <ClientAvatar name={assignedClient?.name} profile_photo_url={assignedClient?.profile_photo_url} initials={clientInitials} />
               <div className="min-w-0 flex-1">
-                <p className="truncate text-[15px] font-semibold text-slate-900 dark:text-white">
+                <p className="truncate text-[15px] font-semibold text-[var(--text-primary)] dark:text-[var(--text-primary)]">
                   {assignedClient?.name ?? 'Not assigned'}
                 </p>
-                <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
+                <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-[var(--text-secondary)] dark:text-[var(--text-secondary)]">
                   <span className="inline-flex items-center gap-1.5 bg-slate-100 px-2.5 py-1 font-semibold uppercase tracking-[0.14em] text-slate-700 dark:bg-white/[0.05] dark:text-slate-300">
                     <span className={`h-1.5 w-1.5 ${
                       plan.status === 'active'
@@ -248,7 +292,7 @@ export default function WorkoutPlanDetailPage() {
                       <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-400 dark:text-slate-500">
                         {day.shortLabel}
                       </p>
-                      <h3 className="mt-1 text-base font-semibold capitalize text-slate-900 dark:text-white">
+                      <h3 className="mt-1 text-base font-semibold capitalize text-[var(--text-primary)] dark:text-[var(--text-primary)]">
                         {day.dateLabel}
                       </h3>
                     </div>
@@ -285,7 +329,7 @@ export default function WorkoutPlanDetailPage() {
           <div className="hidden overflow-x-auto lg:block">
             <div className="min-w-[1160px]">
               <div
-                className="grid border-b border-slate-200 dark:border-white/[0.08] bg-slate-50/80 dark:bg-white/[0.02]"
+                className="grid border-b border-[var(--border)] dark:border-white/[0.08] bg-slate-50/80 dark:bg-white/[0.02]"
                 style={{ gridTemplateColumns: '230px repeat(7, minmax(132px, 1fr))' }}
               >
                 <div className="border-r border-slate-200 px-5 py-4 dark:border-white/[0.08]">
@@ -307,10 +351,10 @@ export default function WorkoutPlanDetailPage() {
                   <div className="flex items-start gap-3">
                     <ClientAvatar name={assignedClient?.name} profile_photo_url={assignedClient?.profile_photo_url} initials={clientInitials} />
                     <div className="min-w-0">
-                      <p className="truncate text-[15px] font-semibold text-slate-900 dark:text-white">
+                      <p className="truncate text-[15px] font-semibold text-[var(--text-primary)] dark:text-[var(--text-primary)]">
                         {assignedClient?.name ?? 'Not assigned'}
                       </p>
-                      <div className="mt-2 inline-flex items-center gap-1.5 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.14em] text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-white/[0.05]">
+                      <div className="mt-2 inline-flex items-center gap-1.5 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.14em] text-slate-700 dark:text-slate-300 bg-[var(--bg-subtle)] dark:bg-white/[0.05]">
                         <span className={`h-1.5 w-1.5 ${
                           plan.status === 'active'
                             ? 'bg-emerald-400'
@@ -323,7 +367,7 @@ export default function WorkoutPlanDetailPage() {
                     </div>
                   </div>
 
-                  <div className="mt-5 space-y-3 text-sm text-slate-500 dark:text-slate-400">
+                  <div className="mt-5 space-y-3 text-sm text-[var(--text-secondary)] dark:text-[var(--text-secondary)]">
                     <div>
                       <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">Week Summary</p>
                       <div className="mt-2 space-y-1.5">
@@ -352,7 +396,7 @@ export default function WorkoutPlanDetailPage() {
                       type="button"
                       onClick={() => setExpandedDay(day.key)}
                       className={`min-h-[260px] border-r border-slate-200 p-3 text-left align-top transition-colors last:border-r-0 dark:border-white/[0.08] ${
-                        isActive ? 'bg-slate-50 dark:bg-white/[0.03]' : 'bg-[var(--bg-card)] '
+                        isActive ? 'bg-[var(--bg-subtle)] dark:bg-white/[0.03]' : 'bg-[var(--bg-card)] '
                       }`}
                     >
                       {isRestDay ? (
@@ -372,7 +416,7 @@ export default function WorkoutPlanDetailPage() {
                               <span className={`inline-flex items-center px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] ${day.sessionStyle.badge}`}>
                                 {day.sessionStyle.label}
                               </span>
-                              <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">
+                              <p className="mt-2 text-xs text-[var(--text-secondary)] dark:text-[var(--text-secondary)]">
                                 {day.exercises.length} exercise{day.exercises.length === 1 ? '' : 's'}
                               </p>
                             </div>
@@ -418,7 +462,7 @@ export default function WorkoutPlanDetailPage() {
                 <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-400 dark:text-slate-500">
                   Selected Session
                 </p>
-                <h2 className="mt-2 text-xl font-bold text-slate-900 dark:text-white">
+                <h2 className="mt-2 text-xl font-bold text-[var(--text-primary)] dark:text-[var(--text-primary)]">
                   {activeDay.fullLabel}
                 </h2>
               </div>
@@ -436,30 +480,48 @@ export default function WorkoutPlanDetailPage() {
                   className="border border-slate-200 bg-slate-50/70 p-4 dark:border-white/[0.08] dark:bg-white/[0.03]"
                 >
                   <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                    <div>
+                    <div className="flex-1">
                       <div className="flex items-center gap-3">
                         <div className="flex h-7 w-7 items-center justify-center bg-brand-600 text-xs font-bold text-white dark:bg-brand-500">
                           {index + 1}
                         </div>
-                        <p className="text-base font-semibold text-slate-900 dark:text-white">{exercise.name}</p>
+                        <p className="text-base font-semibold text-[var(--text-primary)] dark:text-[var(--text-primary)]">{exercise.name}</p>
+                        {exercise.video_url && (
+                          <a
+                            href={exercise.video_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1 text-xs text-blue-500 hover:text-blue-600"
+                          >
+                            <VideoIcon className="w-3 h-3" />
+                            <span className="hidden sm:inline">Video</span>
+                          </a>
+                        )}
                       </div>
                       {exercise.notes && (
-                        <p className="mt-3 text-sm leading-relaxed text-slate-500 dark:text-slate-400 sm:ml-10">{exercise.notes}</p>
+                        <p className="mt-3 text-sm leading-relaxed text-[var(--text-secondary)] dark:text-[var(--text-secondary)] sm:ml-10">{exercise.notes}</p>
+                      )}
+
+                      {/* Video preview */}
+                      {exercise.video_url && (
+                        <div className="mt-3 sm:ml-10">
+                          <VideoPreview url={exercise.video_url} />
+                        </div>
                       )}
                     </div>
 
                     <div className="grid grid-cols-3 gap-2 sm:min-w-[250px]">
                       <div className="bg-white px-3 py-2 text-center dark:bg-white/[0.04]">
                         <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">Sets</p>
-                        <p className="mt-1 text-sm font-bold text-slate-900 dark:text-white">{exercise.sets}</p>
+                        <p className="mt-1 text-sm font-bold text-[var(--text-primary)] dark:text-[var(--text-primary)]">{exercise.sets}</p>
                       </div>
                       <div className="bg-white px-3 py-2 text-center dark:bg-white/[0.04]">
                         <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">Reps</p>
-                        <p className="mt-1 text-sm font-bold text-slate-900 dark:text-white">{exercise.reps}</p>
+                        <p className="mt-1 text-sm font-bold text-[var(--text-primary)] dark:text-[var(--text-primary)]">{exercise.reps}</p>
                       </div>
                       <div className="bg-white px-3 py-2 text-center dark:bg-white/[0.04]">
                         <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">Rest</p>
-                        <p className="mt-1 text-sm font-bold text-slate-900 dark:text-white">{exercise.rest_seconds != null ? `${exercise.rest_seconds}s` : '—'}</p>
+                        <p className="mt-1 text-sm font-bold text-[var(--text-primary)] dark:text-[var(--text-primary)]">{exercise.rest_seconds != null ? `${exercise.rest_seconds}s` : '—'}</p>
                       </div>
                     </div>
                   </div>
@@ -468,7 +530,7 @@ export default function WorkoutPlanDetailPage() {
                 <div className="flex min-h-[220px] flex-col items-center justify-center border border-dashed border-slate-200 bg-slate-50/60 px-6 text-center dark:border-white/[0.08] dark:bg-white/[0.02]">
                   <Dumbbell className="h-8 w-8 text-slate-300 dark:text-slate-600" />
                   <p className="mt-4 text-base font-semibold text-slate-700 dark:text-slate-200">Recovery day</p>
-                  <p className="mt-2 max-w-sm text-sm text-slate-500 dark:text-slate-400">
+                  <p className="mt-2 max-w-sm text-sm text-[var(--text-secondary)] dark:text-[var(--text-secondary)]">
                     This day has no assigned exercises. Use it for mobility, recovery, or leave it open between heavier sessions.
                   </p>
                 </div>
@@ -487,19 +549,19 @@ export default function WorkoutPlanDetailPage() {
               <div className="mt-5 grid grid-cols-2 gap-3">
                 <div className="bg-slate-50 p-4 dark:bg-white/[0.03]">
                   <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">Week Of</p>
-                  <p className="mt-2 text-sm font-semibold text-slate-900 dark:text-white">{format(weekStart, 'dd MMM yyyy')}</p>
+                  <p className="mt-2 text-sm font-semibold text-[var(--text-primary)] dark:text-[var(--text-primary)]">{format(weekStart, 'dd MMM yyyy')}</p>
                 </div>
                 <div className="bg-slate-50 p-4 dark:bg-white/[0.03]">
                   <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">Status</p>
-                  <p className="mt-2 text-sm font-semibold capitalize text-slate-900 dark:text-white">{plan.status}</p>
+                  <p className="mt-2 text-sm font-semibold capitalize text-[var(--text-primary)] dark:text-[var(--text-primary)]">{plan.status}</p>
                 </div>
                 <div className="bg-slate-50 p-4 dark:bg-white/[0.03]">
                   <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">Training Days</p>
-                  <p className="mt-2 text-sm font-semibold text-slate-900 dark:text-white">{activeDays}/7</p>
+                  <p className="mt-2 text-sm font-semibold text-[var(--text-primary)] dark:text-[var(--text-primary)]">{activeDays}/7</p>
                 </div>
                 <div className="bg-slate-50 p-4 dark:bg-white/[0.03]">
                   <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">Exercises</p>
-                  <p className="mt-2 text-sm font-semibold text-slate-900 dark:text-white">{totalExercises}</p>
+                  <p className="mt-2 text-sm font-semibold text-[var(--text-primary)] dark:text-[var(--text-primary)]">{totalExercises}</p>
                 </div>
               </div>
             </div>
@@ -519,8 +581,8 @@ export default function WorkoutPlanDetailPage() {
                     }`}
                   >
                     <div>
-                      <p className="text-sm font-semibold capitalize text-slate-900 dark:text-white">{day.key}</p>
-                      <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+                      <p className="text-sm font-semibold capitalize text-[var(--text-primary)] dark:text-[var(--text-primary)]">{day.key}</p>
+                      <p className="mt-1 text-xs text-[var(--text-secondary)] dark:text-[var(--text-secondary)]">
                         {day.exercises.length > 0 ? `${day.exercises.length} exercise${day.exercises.length === 1 ? '' : 's'}` : 'Rest day'}
                       </p>
                     </div>

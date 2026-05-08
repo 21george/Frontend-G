@@ -3,13 +3,13 @@
 import { type UseQueryResult } from '@tanstack/react-query'
 import { LoadingSpinner } from './LoadingSpinner'
 import { EmptyState } from './EmptyState'
-import { AlertCircle, type LucideIcon } from 'lucide-react'
+import { AlertCircle } from 'lucide-react'
 
 interface QueryWrapperProps<T> {
   query: UseQueryResult<T, Error>
   children: (data: T) => React.ReactNode
   loadingClassName?: string
-  emptyIcon?: LucideIcon
+  emptyIcon?: any
   emptyTitle?: string
   emptyDescription?: string
   emptyAction?: React.ReactNode

@@ -4,11 +4,61 @@ import { useCreateWorkoutPlan, useClients } from '@/lib/hooks'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useForm, useFieldArray } from 'react-hook-form'
 import { useState } from 'react'
-import { ArrowLeft, Plus, Trash2, Save, Send } from 'lucide-react'
+import { ArrowLeft, Plus, Trash2, Save, Send, Video as VideoIcon, ExternalLink } from 'lucide-react'
 import Link from 'next/link'
 import { DAYS } from '@/lib/utils'
 
-const emptyExercise = { name: '', sets: 3, reps: '10', rest_seconds: 60, notes: '' }
+/* ═══════════════════════════════════════════════════════════════════
+   VIDEO EMBED HELPERS
+   ═══════════════════════════════════════════════════════════════════ */
+
+function getYouTubeId(url: string): string | null {
+  const match = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([a-zA-Z0-9_-]{11})/)
+  return match?.[1] ?? null
+}
+
+function isValidVideoUrl(url: string): boolean {
+  if (!url) return false
+  return /youtube\.com|youtu\.be|vimeo\.com|dailymotion\.com/.test(url)
+}
+
+function VideoEmbed({ url }: { url: string }) {
+  const youtubeId = getYouTubeId(url)
+
+  if (youtubeId) {
+    return (
+      <div className="aspect-video w-full overflow-hidden border border-[var(--border)]">
+        <iframe
+          src={`https://www.youtube.com/embed/${youtubeId}`}
+          title="Exercise video"
+          className="w-full h-full"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+          allowFullScreen
+        />
+      </div>
+    )
+  }
+
+  // Generic video link fallback
+  return (
+    <a
+      href={url}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="flex items-center gap-2 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800/30 text-blue-600 dark:text-blue-400 text-xs hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors"
+    >
+      <VideoIcon className="w-4 h-4" />
+      <span className="truncate flex-1">{url}</span>
+      <ExternalLink className="w-3 h-3 flex-shrink-0" />
+    </a>
+  )
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   PAGE
+   ═══════════════════════════════════════════════════════════════════ */
+
+const emptyExercise = { name: '', sets: 3, reps: '10', rest_seconds: 60, notes: '', video_url: '' }
 
 export default function NewWorkoutPlanPage() {
   const router       = useRouter()
@@ -72,10 +122,10 @@ export default function NewWorkoutPlanPage() {
   return (
     <DashboardLayout>
       <div>
-        <Link href="/workout-plans" className="flex items-center gap-1 text-sm text-slate-500 hover:text-slate-700 dark:text-neutral-400 dark:hover:text-white mb-6">
-          <ArrowLeft className="w-3 h-3 text-gray-100 dark:text-neutral-400" /> Back
+        <Link href="/workout-plans" className="flex items-center gap-1 text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)] mb-6">
+          <ArrowLeft className="w-3 h-3" /> Back
         </Link>
-        <h1 className="text-2xl font-semibold text-slate-900 dark:text-white mb-6">New Workout Plan</h1>
+        <h1 className="text-2xl font-semibold text-[var(--text-primary)] dark:text-[var(--text-primary)] mb-6">New Workout Plan</h1>
 
         <form className="space-y-6">
           <div className="bg-[var(--bg-card)] p-4 sm:p-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -125,43 +175,73 @@ export default function NewWorkoutPlanPage() {
 
                 <div className="space-y-3">
                   {day.exercises.map((ex, ei) => (
-                    <div key={ei} className="bg-slate-50 dark:bg-gray-800 p-3 sm:p-4 grid grid-cols-2 sm:grid-cols-12 gap-2 items-start">
-                      <div className="col-span-2 sm:col-span-4">
-                        <label className="label text-xs">Exercise Name</label>
-                        <input value={ex.name} onChange={e => updateExercise(di, ei, 'name', e.target.value)}
-                               className="input text-sm" placeholder="Exercise name" />
+                    <div key={ei} className="bg-[var(--bg-subtle)] p-3 sm:p-4 rounded-lg border border-[var(--border)]">
+                      {/* Exercise header row */}
+                      <div className="grid grid-cols-2 sm:grid-cols-12 gap-2 items-start mb-3">
+                        <div className="col-span-2 sm:col-span-4">
+                          <label className="label text-xs">Exercise Name</label>
+                          <input value={ex.name} onChange={e => updateExercise(di, ei, 'name', e.target.value)}
+                                 className="input text-sm" placeholder="Exercise name" />
+                        </div>
+                        <div className="col-span-1 sm:col-span-1">
+                          <label className="label text-xs">Sets</label>
+                          <input type="number" value={ex.sets} onChange={e => updateExercise(di, ei, 'sets', +e.target.value)}
+                                 className="input text-sm" placeholder="Sets" min="1" />
+                        </div>
+                        <div className="col-span-1 sm:col-span-2">
+                          <label className="label text-xs">Reps</label>
+                          <input value={ex.reps} onChange={e => updateExercise(di, ei, 'reps', e.target.value)}
+                                 className="input text-sm" placeholder="Reps" />
+                        </div>
+                        <div className="col-span-1 sm:col-span-2">
+                          <label className="label text-xs">Rest (s)</label>
+                          <input type="number" value={ex.rest_seconds} onChange={e => updateExercise(di, ei, 'rest_seconds', +e.target.value)}
+                                 className="input text-sm" placeholder="Rest (s)" />
+                        </div>
+                        <div className="col-span-1 sm:col-span-2">
+                          <label className="label text-xs">Notes</label>
+                          <input value={ex.notes} onChange={e => updateExercise(di, ei, 'notes', e.target.value)}
+                                 className="input text-sm" placeholder="Notes" />
+                        </div>
+                        <div className="col-span-2 sm:col-span-1 flex sm:justify-end">
+                          <button type="button" onClick={() => removeExercise(di, ei)} className="text-red-400 hover:text-red-600 sm:mt-7 text-xs sm:text-base flex items-center gap-1">
+                            <Trash2 className="w-3.5 h-3.5" /> <span className="sm:hidden">Remove</span>
+                          </button>
+                        </div>
                       </div>
-                      <div className="col-span-1 sm:col-span-1">
-                        <label className="label text-xs">Sets</label>
-                        <input type="number" value={ex.sets} onChange={e => updateExercise(di, ei, 'sets', +e.target.value)}
-                               className="input text-sm" placeholder="Sets" min="1" />
+
+                      {/* Video URL */}
+                      <div className="flex items-center gap-2 pt-2 border-t border-[var(--border)]">
+                        <VideoIcon className="w-3 h-3 text-slate-400 flex-shrink-0" />
+                        <input
+                          value={ex.video_url || ''}
+                          onChange={e => updateExercise(di, ei, 'video_url', e.target.value)}
+                          className="flex-1 bg-transparent text-xs text-[var(--text-secondary)] placeholder:text-slate-400 outline-none"
+                          placeholder="Paste YouTube or video URL…"
+                        />
+                        {ex.video_url && (
+                          <button
+                            type="button"
+                            onClick={() => window.open(ex.video_url, '_blank')}
+                            className="text-xs text-blue-500 hover:text-blue-600 flex items-center gap-1"
+                          >
+                            <ExternalLink className="w-3 h-3" /> Preview
+                          </button>
+                        )}
                       </div>
-                      <div className="col-span-1 sm:col-span-2">
-                        <label className="label text-xs">Reps</label>
-                        <input value={ex.reps} onChange={e => updateExercise(di, ei, 'reps', e.target.value)}
-                               className="input text-sm" placeholder="Reps" />
-                      </div>
-                      <div className="col-span-1 sm:col-span-2">
-                        <label className="label text-xs">Rest (s)</label>
-                        <input type="number" value={ex.rest_seconds} onChange={e => updateExercise(di, ei, 'rest_seconds', +e.target.value)}
-                               className="input text-sm" placeholder="Rest (s)" />
-                      </div>
-                      <div className="col-span-1 sm:col-span-2">
-                        <label className="label text-xs">Notes</label>
-                        <input value={ex.notes} onChange={e => updateExercise(di, ei, 'notes', e.target.value)}
-                               className="input text-sm" placeholder="Notes" />
-                      </div>
-                      <div className="col-span-2 sm:col-span-1 flex sm:justify-end">
-                        <button type="button" onClick={() => removeExercise(di, ei)} className="text-red-400 hover:text-red-600 sm:mt-7 text-xs sm:text-base flex items-center gap-1">
-                          <Trash2 className="w-3.5 h-3.5" /> <span className="sm:hidden">Remove</span>
-                        </button>
-                      </div>
+
+                      {/* Video Preview */}
+                      {ex.video_url && isValidVideoUrl(ex.video_url) && (
+                        <div className="mt-2">
+                          <VideoEmbed url={ex.video_url} />
+                        </div>
+                      )}
                     </div>
                   ))}
                 </div>
 
                 <button type="button" onClick={() => addExercise(di)}
-                        className="mt-3 flex items-center gap-1 text-sm text-brand hover:text-brand-dark">
+                        className="mt-3 flex items-center gap-1 text-[var(--text-secondary)] text-sm hover:text-[var(--text-primary)]">
                   <Plus className="w-3.5 h-3.5" /> Add Exercise
                 </button>
               </div>

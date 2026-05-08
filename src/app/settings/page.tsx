@@ -124,13 +124,13 @@ function Toggle({
       aria-checked={checked}
       disabled={disabled}
       onClick={() => onChange(!checked)}
-      className={`relative inline-flex h-5 w-9 flex-shrink-0 cursor-pointer border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed ${
+      className={`relative inline-flex h-5 w-9 flex-shrink-0 rounded-full cursor-pointer border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed ${
         checked ? 'bg-brand-600' : 'bg-slate-300 dark:bg-slate-600'
       }`}
     >
       <span
         aria-hidden="true"
-        className={`pointer-events-none inline-block h-4 w-4 transform bg-white transition duration-200 ease-in-out ${
+        className={`pointer-events-none inline-block h-4 w-4 rounded-full transform bg-white transition duration-200 ease-in-out ${
           checked ? 'translate-x-4' : 'translate-x-0'
         }`}
       />
@@ -144,12 +144,14 @@ function ToggleRow({
   description,
   checked,
   onChange,
+  className,
 }: {
   icon?: React.ReactNode
   label: string
   description?: string
   checked: boolean
   onChange: (v: boolean) => void
+  className?: string
 }) {
   return (
     <div className="flex items-center justify-between py-3 px-4 hover:bg-[var(--bg-subtle)] dark:hover:bg-[var(--bg-subtle)] transition-colors">
@@ -206,6 +208,7 @@ export default function SettingsPage() {
   const { coach, updateCoach, logout } = useAuthStore()
   const { theme, toggle: toggleTheme } = useThemeStore()
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const toastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   // Profile state
   const [name, setName] = useState(coach?.name ?? '')
@@ -241,7 +244,21 @@ export default function SettingsPage() {
 
   const showToast = useCallback((msg: string, type: 'success' | 'error' = 'success') => {
     setToast({ type, message: msg })
-    setTimeout(() => setToast(null), 2500)
+    if (toastTimeoutRef.current) {
+      clearTimeout(toastTimeoutRef.current)
+    }
+    toastTimeoutRef.current = setTimeout(() => {
+      setToast(null)
+      toastTimeoutRef.current = null
+    }, 2500)
+  }, [])
+
+  useEffect(() => {
+    return () => {
+      if (toastTimeoutRef.current) {
+        clearTimeout(toastTimeoutRef.current)
+      }
+    }
   }, [])
 
   // Check for changes
@@ -399,7 +416,7 @@ export default function SettingsPage() {
       </AnimatePresence>
 
       {/* Header with dynamic page title and weather */}
-      
+     
 
       {/* Content */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 pb-24">
@@ -410,16 +427,16 @@ export default function SettingsPage() {
             <div className="p-6 space-y-6 ">
               {/* Photo Section */}
               <div className="flex items-center gap-4 rounded-xl p-4 bg-[var(--bg-subtle)]">
-                <div className="relative h-20 w-20 overflow-hidden rounded-xl">
+                <div className="relative h-20 w-20 rounded-full">
                   {coach?.profile_photo ? (
                     <>
                       {!imageErrored ? (
                         <Image
                           src={coach.profile_photo}
-                          alt={coach.name ?? 'Coach'}
+                          alt={coach.name ?? 'Profile'}
                           fill
-                          className="rounded-xl object-cover ring-2 ring-[var(--border)]"
-                          sizes="80px"
+                          className="rounded-full object-cover ring-2 ring-[var(--border)]"
+                          sizes="96px"
                           unoptimized
                           onError={() => setImageErrored(true)}
                         />
@@ -430,7 +447,7 @@ export default function SettingsPage() {
                       )}
                       <button
                         onClick={() => fileInputRef.current?.click()}
-                        className="absolute -bottom-1 -right-1 flex h-7 w-7 items-center justify-center rounded-full bg-[var(--btn-bg)] text-white hover:bg-[var(--btn-hover)] z-10"
+                        className="absolute -bottom-1 -right-1 flex h-7 w-7 items-center justify-center rounded-full bg-[var(--btn-bg)] text-white hover:bg-[var(--btn-hover)] z-10 shadow-md"
                         aria-label="Change profile photo"
                       >
                         <Camera className="w-3.5 h-3.5" />
@@ -439,7 +456,7 @@ export default function SettingsPage() {
                   ) : (
                     <button
                       onClick={() => fileInputRef.current?.click()}
-                      className="flex h-full w-full items-center justify-center rounded-full border-2 border-dashed border-[var(--border)] text-[var(--text-tertiary)] transition-colors hover:border-[var(--btn-bg)] hover:text-[var(--btn-bg)] dark:border-[var(--border)]"
+                      className="flex h-full w-full items-center justify-center rounded-xl border-2 border-dashed border-[var(--border)] text-[var(--text-tertiary)] transition-colors hover:border-[var(--btn-bg)] hover:text-[var(--btn-bg)] dark:border-[var(--border)]"
                       aria-label="Upload profile photo"
                     >
                       <Camera className="w-8 h-8" />
@@ -522,6 +539,7 @@ export default function SettingsPage() {
                 description="Get notified about new logins"
                 checked={loginAlerts}
                 onChange={setLoginAlerts}
+                className='rounded-full'
               />
               <div className="flex items-center justify-between py-3 px-4">
                 <div className="flex items-center gap-3">
@@ -551,7 +569,7 @@ export default function SettingsPage() {
           <Card>
             <CardHeader icon={<Bell className="w-5 h-5 text-white" />} title="Notifications" />
             <div className="divide-y divide-slate-200 dark:divide-[var(--border)]">
-              <ToggleRow
+              <ToggleRow 
                 icon={<Mail className="w-5 h-5" />}
                 label="Email Notifications"
                 description="Receive updates via email"
@@ -564,6 +582,7 @@ export default function SettingsPage() {
                 description="When a new client signs up"
                 checked={notifNewClient}
                 onChange={setNotifNewClient}
+                className='rounded-full'
               />
               <ToggleRow
                 icon={<MessageSquare className="w-5 h-5" />}
@@ -571,33 +590,20 @@ export default function SettingsPage() {
                 description="New message notifications"
                 checked={notifMessages}
                 onChange={setNotifMessages}
+                className='rounded-full'
               />
               <ToggleRow
                 icon={<Calendar className="w-5 h-5" />}
                 label="Schedule Reminders"
                 description="Check-in reminders"
-                checked={notifCheckins}
+                checked={notifCheckins} className="rounded-full"
                 onChange={setNotifCheckins}
               />
             </div>
           </Card>
 
           {/* Danger Zone */}
-          <Card>
-            <CardHeader icon={<LogOut className="w-5 h-5 text-white" />} title="Session" />
-            <div className="p-4">
-              <button
-                onClick={logout}
-                className="w-full flex items-center gap-3 py-3 px-4 bg-red-50 dark:bg-red-950/20 text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-950/30 transition-colors"
-              >
-                <LogOut className="w-5 h-5" />
-                <div className="text-left">
-                  <p className="text-sm font-medium">Sign Out</p>
-                  <p className="text-xs text-red-500 dark:text-red-400">End your current session</p>
-                </div>
-              </button>
-            </div>
-          </Card>
+         
         </div>
       </div>
 

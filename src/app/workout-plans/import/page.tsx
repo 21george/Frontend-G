@@ -9,6 +9,15 @@ import { ErrorModal } from '@/components/ui/ErrorModal'
 import { Upload, CheckCircle, AlertCircle, ArrowLeft, FileSpreadsheet, Download, FileWarning, Eye, X, CloudDownload, Link as LinkIcon } from 'lucide-react'
 import Link from 'next/link'
 
+// Dynamic import xlsx only when needed (reduces bundle size)
+let XLSX: any = null
+async function getXLSX() {
+  if (!XLSX) {
+    XLSX = await import('xlsx')
+  }
+  return XLSX
+}
+
 /* ── Types ────────────────────────────────────────────────────────────────── */
 interface ImportResult {
   imported: number
@@ -19,7 +28,7 @@ interface ImportResult {
   skipped_rows?: number
 }
 
-/* ── Client-side CSV preview parser ───────────────────────────────────────── */
+/* ── Client-side CSV/Excel preview parser ───────────────────────────────── */
 interface PreviewRow {
   client_name: string
   week_start: string
@@ -31,6 +40,13 @@ interface PreviewRow {
   notes: string
   _valid: boolean
   _errors: string[]
+}
+
+interface ExcelPreviewData {
+  sheet: string
+  rows: PreviewRow[]
+  columnMap: Record<string, number>
+  missingColumns: string[]
 }
 
 const REQUIRED_COLS = ['client_name', 'day', 'exercise']
@@ -93,35 +109,36 @@ function parseCsvText(text: string): string[][] {
   return lines
 }
 
-function buildPreview(text: string): { rows: PreviewRow[]; columnMap: Record<string, number>; missingColumns: string[] } {
-  const parsed = parseCsvText(text)
-  if (parsed.length < 2) return { rows: [], columnMap: {}, missingColumns: ALL_COLS }
+function validateRow(data: Record<string, string>): { _valid: boolean; _errors: string[] } {
+  const errors: string[] = []
+  if (!data.client_name) errors.push('Missing client name')
+  if (!data.day) errors.push('Missing day')
+  if (!data.exercise) errors.push('Missing exercise')
+  if (data.day && !VALID_DAYS.has(data.day.toLowerCase())) errors.push(`Invalid day "${data.day}"`)
+  if (data.week_start && isNaN(Date.parse(data.week_start)) && !/^\d{4}-\d{2}-\d{2}$/.test(data.week_start)) {
+    // Allow numeric Excel dates — they'll be parsed server-side
+    if (!/^\d+(\.\d+)?$/.test(data.week_start)) errors.push(`Invalid date "${data.week_start}"`)
+  }
+  return { _valid: errors.length === 0, _errors: errors }
+}
 
-  const headers = parsed[0]
+function buildPreview(headers: string[], rows: string[][]): { rows: PreviewRow[]; columnMap: Record<string, number>; missingColumns: string[] } {
   const columnMap = detectColumns(headers)
   const missingColumns = REQUIRED_COLS.filter(c => !(c in columnMap))
 
-  const rows: PreviewRow[] = []
-  for (let i = 1; i < parsed.length && i <= 50; i++) { // Preview max 50 rows
-    const cells = parsed[i]
-    if (!cells.some(c => c.trim())) continue
+  const previewRows: PreviewRow[] = []
+  for (let i = 0; i < rows.length && i < 50; i++) { // Preview max 50 rows
+    const cells = rows[i]
+    if (!cells.some(c => String(c ?? '').trim())) continue
 
     const data: Record<string, string> = {}
     for (const [field, idx] of Object.entries(columnMap)) {
-      data[field] = (cells[idx] ?? '').trim()
+      data[field] = String(cells[idx] ?? '').trim()
     }
 
-    const errors: string[] = []
-    if (!data.client_name) errors.push('Missing client name')
-    if (!data.day) errors.push('Missing day')
-    if (!data.exercise) errors.push('Missing exercise')
-    if (data.day && !VALID_DAYS.has(data.day.toLowerCase())) errors.push(`Invalid day "${data.day}"`)
-    if (data.week_start && isNaN(Date.parse(data.week_start)) && !/^\d{4}-\d{2}-\d{2}$/.test(data.week_start)) {
-      // Allow numeric Excel dates — they'll be parsed server-side
-      if (!/^\d+(\.\d+)?$/.test(data.week_start)) errors.push(`Invalid date "${data.week_start}"`)
-    }
+    const { _valid, _errors } = validateRow(data)
 
-    rows.push({
+    previewRows.push({
       client_name: data.client_name || '',
       week_start: data.week_start || '',
       day: data.day || '',
@@ -130,12 +147,56 @@ function buildPreview(text: string): { rows: PreviewRow[]; columnMap: Record<str
       reps: data.reps || '',
       rest_seconds: data.rest_seconds || '',
       notes: data.notes || '',
-      _valid: errors.length === 0,
-      _errors: errors,
+      _valid,
+      _errors,
     })
   }
 
-  return { rows, columnMap, missingColumns }
+  return { rows: previewRows, columnMap, missingColumns }
+}
+
+// Parse CSV text and build preview
+function buildPreviewFromCsv(text: string): { rows: PreviewRow[]; columnMap: Record<string, number>; missingColumns: string[] } {
+  const parsed = parseCsvText(text)
+  if (parsed.length < 2) return { rows: [], columnMap: {}, missingColumns: ALL_COLS }
+  return buildPreview(parsed[0], parsed.slice(1))
+}
+
+// Parse Excel file and build preview from first valid sheet
+async function buildPreviewFromExcel(buffer: ArrayBuffer): Promise<ExcelPreviewData | null> {
+  const xlsx = await getXLSX()
+  const workbook = xlsx.read(buffer, { type: 'array' })
+
+  // Try each sheet to find one with valid workout data
+  for (const sheetName of workbook.SheetNames) {
+    const sheet = workbook.Sheets[sheetName]
+    const json = xlsx.utils.sheet_to_json(sheet, { header: 1 }) as string[][]
+
+    if (json.length < 2) continue
+
+    // Skip header rows that contain titles (rows with merged cells or single value)
+    let headerIdx = 0
+    for (let i = 0; i < Math.min(json.length, 5); i++) {
+      const row = json[i]
+      // Check if this looks like a header row (has multiple string values)
+      const nonEmpty = row.filter(c => c !== undefined && c !== null && String(c).trim())
+      if (nonEmpty.length >= 3) {
+        headerIdx = i
+        break
+      }
+    }
+
+    const headers = (json[headerIdx] || []).map(h => String(h || ''))
+    const dataRows = json.slice(headerIdx + 1)
+
+    const preview = buildPreview(headers, dataRows)
+    // If we found a sheet with valid columns, use it
+    if (preview.missingColumns.length < REQUIRED_COLS.length) {
+      return { sheet: sheetName, ...preview }
+    }
+  }
+
+  return null
 }
 
 /* ── Component ─────────────────────────────────────────────────────────────── */
@@ -157,11 +218,11 @@ export default function ImportPage() {
     setFile(f)
     setResult(null)
     setError('')
-    // Only preview CSV files (XLSX requires server-side parsing)
+    // Preview CSV files
     if (f.name.endsWith('.csv')) {
       try {
         const text = await f.text()
-        setPreview(buildPreview(text))
+        setPreview(buildPreviewFromCsv(text))
         setShowPreview(true)
       } catch (err) {
         if (process.env.NODE_ENV !== 'production') {
@@ -170,10 +231,40 @@ export default function ImportPage() {
         setPreview(null)
         setShowPreview(false)
       }
-    } else {
-      setPreview(null)
-      setShowPreview(false)
+      return
     }
+
+    // Preview Excel files (.xlsx, .xls)
+    if (f.name.match(/\.(xlsx|xls)$/i)) {
+      try {
+        const buffer = await f.arrayBuffer()
+        const excelPreview = await buildPreviewFromExcel(buffer)
+        if (excelPreview) {
+          setPreview({
+            rows: excelPreview.rows,
+            columnMap: excelPreview.columnMap,
+            missingColumns: excelPreview.missingColumns,
+          })
+          setShowPreview(true)
+        } else {
+          setPreview(null)
+          setShowPreview(false)
+          setError('Could not find a valid workout sheet in the Excel file. Expected columns: client_name, day, exercise. Make sure the file has a sheet with these column headers.')
+        }
+      } catch (err) {
+        if (process.env.NODE_ENV !== 'production') {
+          console.error('[Import] Failed to preview Excel:', err)
+        }
+        setPreview(null)
+        setShowPreview(false)
+        setError('Failed to parse Excel file. Make sure it\'s a valid .xlsx or .xls file.')
+      }
+      return
+    }
+
+    // Other file types — no preview
+    setPreview(null)
+    setShowPreview(false)
   }, [])
 
   const onDrop = useCallback((files: File[]) => { if (files[0]) processFile(files[0]) }, [processFile])
@@ -301,8 +392,8 @@ export default function ImportPage() {
                 onClick={() => { setImportMode('file'); setError(''); setApiError(null); setDriveUrl(''); }}
                 className={`flex-1 flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium transition-colors ${
                   importMode === 'file'
-                    ? 'bg-white dark:bg-white/10 text-slate-900 dark:text-white '
-                    : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300'
+                    ? 'bg-white dark:bg-white/10 text-[var(--text-primary)] dark:text-[var(--text-primary)] '
+                    : 'text-[var(--text-secondary)] dark:text-[var(--text-secondary)] hover:text-slate-700 dark:hover:text-slate-300'
                 }`}
               >
                 <FileSpreadsheet className="w-4 h-4" />
@@ -312,8 +403,8 @@ export default function ImportPage() {
                 onClick={() => { setImportMode('drive'); setError(''); setApiError(null); setFile(null); setPreview(null); setShowPreview(false); }}
                 className={`flex-1 flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium transition-colors ${
                   importMode === 'drive'
-                    ? 'bg-white dark:bg-white/10 text-slate-900 dark:text-white '
-                    : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300'
+                    ? 'bg-white dark:bg-white/10 text-[var(--text-primary)] dark:text-[var(--text-primary)] '
+                    : 'text-[var(--text-secondary)] dark:text-[var(--text-secondary)] hover:text-slate-700 dark:hover:text-slate-300'
                 }`}
               >
                 <CloudDownload className="w-4 h-4" />
@@ -352,7 +443,7 @@ export default function ImportPage() {
               <div className="border border-slate-200 dark:border-white/10 overflow-hidden">
                 <button
                   onClick={() => setShowPreview(!showPreview)}
-                  className="w-full flex items-center justify-between px-4 py-3 bg-slate-50 dark:bg-white/[0.03] hover:bg-slate-100 dark:hover:bg-white/[0.06] transition-colors text-sm"
+                  className="w-full flex items-center justify-between px-4 py-3 bg-[var(--bg-subtle)] dark:bg-white/[0.03] hover:bg-slate-100 dark:hover:bg-white/[0.06] transition-colors text-sm"
                 >
                   <span className="flex items-center gap-2 font-medium text-[var(--text-primary)]">
                     <Eye className="w-4 h-4" />
@@ -373,7 +464,7 @@ export default function ImportPage() {
                 {showPreview && (
                   <div className="overflow-x-auto max-h-64 overflow-y-auto">
                     <table className="w-full text-xs">
-                      <thead className="bg-slate-100 dark:bg-white/[0.05] sticky top-0">
+                      <thead className="bg-[var(--bg-subtle)] dark:bg-white/[0.05] sticky top-0">
                         <tr>
                           {ALL_COLS.map(col => (
                             <th key={col} className={`px-2 py-1.5 text-left font-medium ${
@@ -412,7 +503,7 @@ export default function ImportPage() {
             )}
 
             {/* Column reference */}
-            <div className="bg-slate-50 dark:bg-white/[0.03] p-4 text-sm">
+            <div className="bg-[var(--bg-subtle)] dark:bg-white/[0.03] p-4 text-sm">
               <div className="flex items-center justify-between mb-2">
                 <p className="font-medium text-[var(--text-primary)]">Required columns:</p>
                 <button onClick={downloadTemplate} className="flex items-center gap-1 text-xs text-brand-600 hover:text-brand-700">

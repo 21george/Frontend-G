@@ -109,8 +109,8 @@ export default function LiveTrainingPage() {
  </div>
  {pulse && <div className="w-2 h-2 bg-green-400 animate-pulse rounded-full" />}
  </div>
- <p className="text-2xl font-semibold text-slate-900 dark:text-white">{value}</p>
- <p className="text-[12px] text-slate-500 dark:text-slate-400 mt-0.5">{label}</p>
+ <p className="text-2xl font-semibold text-[var(--text-primary)] dark:text-[var(--text-primary)]">{value}</p>
+ <p className="text-[12px] text-[var(--text-secondary)] dark:text-[var(--text-secondary)] mt-0.5">{label}</p>
  </div>
  ))}
  </div>
@@ -136,7 +136,7 @@ export default function LiveTrainingPage() {
  {/* ── SESSIONS TABLE ── */}
  {isLoading ? (
  <div className="flex items-center justify-center py-20">
- <div className="text-[13px] text-slate-500 dark:text-slate-400">Loading sessions…</div>
+ <div className="text-[13px] text-[var(--text-secondary)] dark:text-[var(--text-secondary)]">Loading sessions…</div>
  </div>
  ) : filtered.length === 0 ? (
  <div className="flex flex-col items-center justify-center py-20 text-center">
@@ -156,7 +156,7 @@ export default function LiveTrainingPage() {
  ) : (
  <div className="bg-white dark:bg-white/[0.02] dark:border-white/[0.08] overflow-hidden">
  {/* Table header */}
- <div className="hidden md:grid md:grid-cols-[2fr_1fr_1fr_1fr_1fr_1fr_140px] gap-4 px-5 py-3 bg-slate-50 dark:bg-white/[0.03] border-b border-slate-200 dark:border-white/[0.06]">
+ <div className="hidden md:grid md:grid-cols-[2fr_1fr_1fr_1fr_1fr_1fr_140px] gap-4 px-5 py-3 bg-[var(--bg-subtle)] dark:bg-white/[0.03] border-b border-[var(--border)] dark:border-white/[0.06]">
  {TABLE_HEADERS.map((h, i) => <span key={h} className={`${TH_CLS}${i === TABLE_HEADERS.length - 1 ? ' text-right' : ''}`}>{h}</span>)}
  </div>
 
@@ -177,7 +177,7 @@ export default function LiveTrainingPage() {
  </div>
  <div className="min-w-0">
  <div className="flex items-center gap-2">
- <p className="text-[13px] font-semibold text-slate-900 dark:text-white truncate">
+ <p className="text-[13px] font-semibold text-[var(--text-primary)] dark:text-[var(--text-primary)] truncate">
  {session.title}
  </p>
  <span className={`inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-semibold border ${statusConf.badge}`}>

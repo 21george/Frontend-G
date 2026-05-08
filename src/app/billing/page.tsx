@@ -93,7 +93,7 @@ export default function BillingPage() {
               <ChevronRight className="w-3 h-3" />
               <span className="text-brand-600 dark:text-brand-300">Billing</span>
             </nav>
-            <h1 className="text-3xl lg:text-4xl font-bold text-slate-900 dark:text-white tracking-tight">
+            <h1 className="text-3xl lg:text-4xl font-bold text-[var(--text-primary)] dark:text-[var(--text-primary)] tracking-tight">
               Billing & Plans
             </h1>
             <p className="text-slate-500 dark:text-neutral-400 mt-2 max-w-lg text-sm">
@@ -173,7 +173,7 @@ export default function BillingPage() {
           >
             <span className="text-slate-500 dark:text-neutral-400 text-[10px] lg:text-xs font-semibold uppercase tracking-wider">Monthly Revenue</span>
             <div className="mt-3 lg:mt-4 flex items-baseline gap-2">
-              <span className="text-2xl lg:text-3xl font-bold text-slate-900 dark:text-white">${stats.mrr}</span>
+              <span className="text-2xl lg:text-3xl font-bold text-[var(--text-primary)] dark:text-[var(--text-primary)]">${stats.mrr}</span>
               <span className="text-slate-500 dark:text-neutral-500 text-xs">MRR</span>
             </div>
           </motion.div>
@@ -199,7 +199,7 @@ export default function BillingPage() {
           >
             <span className="text-slate-500 dark:text-neutral-400 text-[10px] lg:text-xs font-semibold uppercase tracking-wider">Outstanding</span>
             <div className="mt-3 lg:mt-4 flex items-baseline gap-2">
-              <span className={`text-2xl lg:text-3xl font-bold ${stats.outstanding > 0 ? 'text-brand-600 dark:text-brand-400' : 'text-slate-900 dark:text-white'}`}>
+              <span className={`text-2xl lg:text-3xl font-bold ${stats.outstanding > 0 ? 'text-brand-600 dark:text-brand-400' : 'text-[var(--text-primary)] dark:text-[var(--text-primary)]'}`}>
                 ${stats.outstanding}
               </span>
               <DollarSign className={`w-4 h-4 ${stats.outstanding > 0 ? 'text-brand-500' : 'text-slate-400'}`} />
@@ -214,7 +214,7 @@ export default function BillingPage() {
           >
             <span className="text-slate-500 dark:text-neutral-400 text-[10px] lg:text-xs font-semibold uppercase tracking-wider">Plan Usage</span>
             <div className="mt-3 lg:mt-4 flex items-baseline gap-2">
-              <span className="text-2xl lg:text-3xl font-bold text-slate-900 dark:text-white">{stats.clientCount}</span>
+              <span className="text-2xl lg:text-3xl font-bold text-[var(--text-primary)] dark:text-[var(--text-primary)]">{stats.clientCount}</span>
               <span className="text-slate-500 dark:text-neutral-500 text-xs">/ {stats.clientLimit} clients</span>
             </div>
           </motion.div>
@@ -224,16 +224,16 @@ export default function BillingPage() {
         <div className="bg-white dark:bg-[#1A1A1A] border border-slate-200/80 dark:border-white/[0.08] p-5 ">
           <div className="flex items-center justify-between mb-4">
             <div>
-              <h3 className="text-sm font-semibold text-slate-900 dark:text-white">Current Usage</h3>
-              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+              <h3 className="text-sm font-semibold text-[var(--text-primary)] dark:text-[var(--text-primary)]">Current Usage</h3>
+              <p className="text-xs text-[var(--text-secondary)] dark:text-[var(--text-secondary)] mt-0.5">
                 {stats.clientLimit - stats.clientCount} clients remaining on your plan
               </p>
             </div>
             <Users className="w-5 h-5 text-slate-400" />
           </div>
           <div className="flex items-end gap-2 mb-3">
-            <span className="text-3xl font-bold text-slate-900 dark:text-white">{stats.clientCount}</span>
-            <span className="text-slate-500 dark:text-slate-400 pb-1">/ {stats.clientLimit} clients</span>
+            <span className="text-3xl font-bold text-[var(--text-primary)] dark:text-[var(--text-primary)]">{stats.clientCount}</span>
+            <span className="text-[var(--text-secondary)] dark:text-[var(--text-secondary)] pb-1">/ {stats.clientLimit} clients</span>
           </div>
           <div className="w-full h-2.5 bg-slate-100 dark:bg-white/10 overflow-hidden">
             <div
@@ -267,7 +267,7 @@ export default function BillingPage() {
                 className={`relative p-6 border transition-all ${
                   isCurrent
                     ? 'border-brand-500 dark:border-brand-400 bg-brand-500/10'
-                    : 'border-slate-200 dark:border-white/[0.08] hover:border-slate-300 dark:hover:border-white/20'
+                    : 'border-[var(--border)] dark:border-white/[0.08] hover:border-slate-300 dark:hover:border-white/20'
                 } bg-white dark:bg-[#1A1A1A]`}
               >
                 {plan.popular && (
@@ -280,10 +280,10 @@ export default function BillingPage() {
                   <plan.icon className="w-6 h-6 text-white" />
                 </div>
 
-                <h3 className="text-lg font-bold text-slate-900 dark:text-white">{plan.name}</h3>
+                <h3 className="text-lg font-bold text-[var(--text-primary)] dark:text-[var(--text-primary)]">{plan.name}</h3>
                 <div className="mt-1 mb-4">
-                  <span className="text-3xl font-bold text-slate-900 dark:text-white">{plan.price}</span>
-                  <span className="text-slate-500 dark:text-slate-400">{plan.period}</span>
+                  <span className="text-3xl font-bold text-[var(--text-primary)] dark:text-[var(--text-primary)]">{plan.price}</span>
+                  <span className="text-[var(--text-secondary)] dark:text-[var(--text-secondary)]">{plan.period}</span>
                 </div>
 
                 <ul className="space-y-2.5 mb-6">
@@ -329,7 +329,7 @@ export default function BillingPage() {
                 <Sparkles className="w-5 h-5 text-white" />
               </div>
               <div className="flex-1">
-                <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-2">
+                <h3 className="text-lg font-bold text-[var(--text-primary)] dark:text-[var(--text-primary)] mb-2">
                   Plan Benefits Active
                 </h3>
                 <p className="text-sm text-slate-600 dark:text-neutral-300 leading-relaxed">
@@ -355,7 +355,7 @@ export default function BillingPage() {
         {/* ── MANAGE SECTION ── */}
         {(currentTier !== 'free' || subscription?.stripe_customer_id) && (
           <div className="bg-white dark:bg-[#1A1A1A] border border-slate-200/80 dark:border-white/[0.08] p-5 ">
-            <h3 className="text-sm font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-4">Manage Subscription</h3>
+            <h3 className="text-sm font-semibold text-[var(--text-secondary)] dark:text-[var(--text-secondary)] uppercase tracking-wider mb-4">Manage Subscription</h3>
             <div className="flex flex-wrap gap-3">
               <button
                 onClick={() => manageBilling.mutate()}
