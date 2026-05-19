@@ -3,7 +3,11 @@ import DashboardLayout from '@/components/layout/DashboardLayout'
 import { useParams, useRouter } from 'next/navigation'
 import { useState, useRef, useEffect } from 'react'
 import Link from 'next/link'
-import { ArrowLeft, Signal, Play, Square, Users, MessageCircle, Send, Clock, CalendarDays, ExternalLink, ShieldCheck,CheckCircle2, XCircle,User,Video, } from 'lucide-react'
+import {
+  ArrowLeft, Play, Square, Users, Send, ExternalLink, ShieldCheck,
+  CheckCircle2, XCircle, Video, VideoOff, Mic, MicOff, PhoneOff,
+  Volume2, Maximize2, Settings, Sparkles, UserPlus, User,
+} from 'lucide-react'
 import {
   useLiveTrainingSession,
   useGoLive,
@@ -15,49 +19,26 @@ import {
   useSendLiveTrainingChat,
 } from '@/lib/hooks'
 
-const STATUS = {
-  upcoming: { label: 'Upcoming', dot: 'bg-amber-400',                 badge: 'bg-amber-400/10 text-amber-400 border-amber-400/20' },
-  live:     { label: 'Live Now', dot: 'bg-emerald-400 animate-pulse', badge: 'bg-emerald-400/10 text-emerald-400 border-emerald-400/20' },
-  ended:    { label: 'Ended',    dot: 'bg-slate-400',                 badge: 'bg-slate-400/10 text-slate-400 border-slate-400/20' },
-}
-
-const CAT_GRADIENT: Record<string, string> = {
-  strength: 'from-orange-500 to-red-500',   cardio:     'from-rose-500 to-pink-500',
-  hiit:     'from-amber-500 to-orange-500',  yoga:       'from-emerald-500 to-teal-500',
-  pilates:  'from-sky-500 to-blue-500',      stretching: 'from-violet-500 to-purple-500',
-  functional: 'from-brand-500 to-blue-500',   other:      'from-slate-500 to-slate-600',
-}
-
-type Tab = 'chat' | 'participants' | 'requests'
+type Tab = 'Messages' | 'Participants' | 'Requests'
 
 const REQ_BADGE: Record<string, string> = {
-  pending:  'bg-amber-100 dark:bg-amber-400/10 text-amber-600 dark:text-amber-400',
-  approved: 'bg-green-100 dark:bg-green-400/10 text-green-600 dark:text-green-400',
-  rejected: 'bg-red-100 dark:bg-red-400/10 text-red-500 dark:text-red-400',
+  pending:  'text-amber-600 dark:text-amber-400',
+  approved: 'text-green-600 dark:text-green-400',
+  rejected: 'text-red-500 dark:text-red-400',
 }
 
-const PANEL = 'bg-white dark:bg-white/[0.03] border border-[var(--border)] dark:border-white/[0.08]'
-const EMPTY = 'text-center text-[12px] text-slate-400 dark:text-slate-500 mt-10'
+const WAVE_HEIGHTS = [40, 70, 55, 90, 65, 45, 80, 60]
 
-/* ── Shared Components ── */
-
-function Avatar({ src, name }: { src?: string; name?: string }) {
-  if (src) return <img src={src} alt={name} className="w-8 h-8 object-cover" />
-  return (
-    <div className="w-8 h-8 bg-slate-200 dark:bg-white/[0.1] flex items-center justify-center">
-      <User size={14} className="text-slate-400" />
-    </div>
-  )
-}
-
-function InfoCard({ icon: Icon, label, value }: { icon: any; label: string; value: string }) {
-  return (
-    <div className="p-3 bg-[var(--bg-subtle)] dark:bg-white/[0.03] border border-slate-100 dark:border-white/[0.06]">
-      <Icon size={14} className="text-slate-400 dark:text-slate-500 mb-1.5" />
-      <p className="text-[10px] text-slate-400 dark:text-slate-500 font-semibold uppercase tracking-wider">{label}</p>
-      <p className="text-[13px] font-semibold text-slate-700 dark:text-slate-200 mt-0.5">{value}</p>
-    </div>
-  )
+function useSessionTimer(active: boolean) {
+  const [secs, setSecs] = useState(0)
+  useEffect(() => {
+    if (!active) { setSecs(0); return }
+    const t = setInterval(() => setSecs(s => s + 1), 1000)
+    return () => clearInterval(t)
+  }, [active])
+  const m = String(Math.floor(secs / 60)).padStart(2, '0')
+  const s = String(secs % 60).padStart(2, '0')
+  return `${m}:${s}`
 }
 
 /* ── Main Page ── */
@@ -79,9 +60,15 @@ export default function LiveTrainingDetailPage() {
 
   const pendingCount = requests.filter((r: any) => r.status === 'pending').length
 
-  const [activeTab, setActiveTab] = useState<Tab>('chat')
+  const [activeTab, setActiveTab] = useState<Tab>('Messages')
   const [msg, setMsg]             = useState('')
+  const [micOn, setMicOn]         = useState(true)
+  const [camOn, setCamOn]         = useState(true)
   const chatEndRef                = useRef<HTMLDivElement>(null)
+
+  const isLive     = session?.status === 'live'
+  const isUpcoming = session?.status === 'upcoming'
+  const timer      = useSessionTimer(!!isLive)
 
   useEffect(() => { chatEndRef.current?.scrollIntoView({ behavior: 'smooth' }) }, [messages])
 
@@ -92,7 +79,7 @@ export default function LiveTrainingDetailPage() {
     return (
       <DashboardLayout>
         <div className="flex items-center justify-center h-[60vh]">
-          <div className="w-8 h-8 border-2 border-brand-600 border-t-transparent animate-spin" />
+          <div className="w-8 h-8 border-2 border-brand-600 border-t-transparent rounded-full animate-spin" />
         </div>
       </DashboardLayout>
     )
@@ -101,225 +88,350 @@ export default function LiveTrainingDetailPage() {
   if (!session) {
     return (
       <DashboardLayout>
-        <div className="text-center py-20 text-[var(--text-secondary)] dark:text-[var(--text-secondary)] text-[13px]">Session not found.</div>
+        <div className="text-center py-20 text-[var(--text-secondary)] text-[13px]">Session not found.</div>
       </DashboardLayout>
     )
   }
 
-  const st         = STATUS[session.status as keyof typeof STATUS]
-  const isLive     = session.status === 'live'
-  const isUpcoming = session.status === 'upcoming'
+  const invitedCount = session.participant_count ?? participants.length
+  const absentCount  = session.max_participants ? Math.max(0, session.max_participants - participants.length) : 0
+  const lastMsg      = messages[messages.length - 1]
 
-  const infoCards = [
-    { icon: CalendarDays, label: 'Scheduled', value: session.scheduled_at ? new Date(session.scheduled_at).toLocaleDateString() : '—' },
-    { icon: Clock,        label: 'Duration',  value: `${session.duration_min} min` },
-    { icon: Users,        label: 'Participants', value: `${session.participant_count}${session.max_participants ? `/${session.max_participants}` : ''}` },
-    { icon: ShieldCheck,  label: 'Approval',  value: session.requires_approval ? 'Required' : 'Open' },
-  ]
-
-  const tabs: { key: Tab; icon: any; label: string }[] = [
-    { key: 'chat',         icon: MessageCircle, label: 'Chat' },
-    { key: 'participants', icon: Users,         label: `People (${participants.length})` },
-    { key: 'requests',     icon: ShieldCheck,   label: `Requests${pendingCount ? ` (${pendingCount})` : ''}` },
-  ]
+  const tabs: Tab[] = ['Messages', 'Participants', 'Requests']
 
   return (
     <DashboardLayout>
-      <div className="space-y-6">
-        {/* Top Bar */}
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex items-center gap-4">
-            <Link href="/live-training" className="p-2 hover:bg-slate-100 dark:hover:bg-white/[0.06] transition-colors">
-              <ArrowLeft size={18} className="text-[var(--text-secondary)] dark:text-[var(--text-secondary)]" />
+      <div className="flex flex-col gap-4" style={{ height: 'calc(100vh - 5rem)' }}>
+
+        {/* ── Header ── */}
+        <div className="flex items-center justify-between flex-shrink-0">
+          <div className="flex items-center gap-3">
+            <Link href="/live-training"
+              className="w-8 h-8 flex items-center justify-center rounded-full border border-[var(--border)] dark:border-white/[0.1] hover:bg-slate-100 dark:hover:bg-white/[0.06] transition-colors">
+              <ArrowLeft size={15} className="text-[var(--text-secondary)]" />
             </Link>
-            <div className={`w-10 h-10 bg-gradient-to-br ${CAT_GRADIENT[session.category] ?? CAT_GRADIENT.other} flex items-center justify-center`}>
-              <Signal size={18} className="text-white" />
-            </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <h1 className="text-lg font-semibold text-[var(--text-primary)] dark:text-[var(--text-primary)]">{session.title}</h1>
-                <span className={`text-[10px] font-semibold px-2 py-0.5 border ${st.badge}`}>
-                  <span className={`inline-block w-1.5 h-1.5 mr-1 ${st.dot}`} />
-                  {st.label}
-                </span>
-              </div>
-              <p className="text-[12px] text-[var(--text-secondary)] dark:text-[var(--text-secondary)] mt-0.5 capitalize">
-                {session.category} · {session.level} · {session.duration_min} min
-              </p>
-            </div>
+            <h1 className="text-[15px] font-semibold text-[var(--text-primary)] truncate max-w-xs">{session.title}</h1>
+            <span className="flex items-center gap-1.5 px-2.5 py-1 bg-slate-100 dark:bg-white/[0.06] rounded-full text-[11px] font-semibold text-slate-500 dark:text-slate-400">
+              <Users size={11} /> Team
+            </span>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-4">
+            <div className="hidden md:flex items-center gap-4 text-[12px] text-[var(--text-secondary)]">
+              <span className="flex items-center gap-1.5">
+                <Users size={13} className="text-slate-400" />
+                Invited to the call: <strong className="text-[var(--text-primary)] ml-1">{invitedCount}</strong>
+              </span>
+              {session.max_participants && (
+                <span className="flex items-center gap-1.5">
+                  <User size={13} className="text-slate-400" />
+                  Absent people: <strong className="text-[var(--text-primary)] ml-1">{absentCount}</strong>
+                </span>
+              )}
+            </div>
+
             {session.meeting_link && (
               <a href={session.meeting_link} target="_blank" rel="noopener noreferrer"
-                className="inline-flex items-center gap-1.5 px-4 py-2 text-[12px] font-semibold border border-slate-200 dark:border-white/[0.1] text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-white/[0.06] transition-colors">
+                className="hidden md:flex items-center gap-1.5 px-3 py-1.5 text-[12px] font-semibold border border-slate-200 dark:border-white/[0.1] rounded-lg text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-white/[0.06] transition-colors">
                 <ExternalLink size={13} /> Meeting Link
               </a>
             )}
-            {isUpcoming && (
-              <button onClick={() => goLive.mutateAsync(id).then(() => router.refresh())} disabled={goLive.isPending}
-                className="inline-flex items-center gap-1.5 px-5 py-2 bg-gradient-to-r from-brand-500 to-brand-700 hover:from-brand-400 hover:to-brand-500 text-white text-[12px] font-semibold shadow-lg shadow-brand-600/25 transition-all">
-                <Play size={13} /> Go Live
-              </button>
-            )}
-            {isLive && (
-              <button onClick={() => endSession.mutateAsync(id).then(() => router.refresh())} disabled={endSession.isPending}
-                className="inline-flex items-center gap-1.5 px-5 py-2 bg-gradient-to-r from-red-500 to-rose-600 hover:from-red-400 hover:to-rose-500 text-white text-[12px] font-semibold shadow-lg shadow-rose-600/25 transition-all">
-                <Square size={13} /> End Session
-              </button>
-            )}
+
+            <button className="flex items-center gap-1.5 px-3 py-1.5 bg-brand-600 hover:bg-brand-500 text-white text-[12px] font-semibold rounded-lg transition-colors">
+              <UserPlus size={13} /> Add user to the call
+            </button>
           </div>
         </div>
 
-        {/* Main Grid: Video + Sidebar */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Video / Main Area */}
-          <div className="lg:col-span-2 space-y-4">
-            <div className="relative overflow-hidden aspect-video flex items-center justify-center bg-[#1A1A1A]">
-              <div className="absolute inset-0 bg-[#1A1A1A]" />
-              <div className="relative text-center space-y-3">
-                <div className="w-16 h-16 mx-auto bg-white/[0.06] border border-white/[0.1] flex items-center justify-center">
-                  <Video size={28} className="text-slate-400" />
+        {/* ── Main Content ── */}
+        <div className="flex flex-1 gap-4 min-h-0">
+
+          {/* ── Video Panel ── */}
+          <div className="flex-1 flex flex-col rounded-2xl overflow-hidden bg-[#1c1f23] min-h-0 relative">
+
+            {/* Speaker label top-left */}
+            {participants.length > 0 && (
+              <div className="absolute top-4 left-4 z-10 flex items-center gap-2 bg-black/50 backdrop-blur-sm rounded-xl px-3 py-2">
+                <div className="w-7 h-7 rounded-full bg-brand-600 flex items-center justify-center text-[11px] font-bold text-white shrink-0">
+                  {(participants[0]?.name ?? 'C')[0]}
                 </div>
-                {isLive && session.meeting_link ? (
-                  <a href={session.meeting_link} target="_blank" rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1.5 px-5 py-2.5 bg-brand-600 text-white text-[13px] font-semibold ">
-                    <ExternalLink size={14} /> Open Meeting
-                  </a>
-                ) : (
-                  <p className={`text-[13px] ${isUpcoming || isLive ? 'text-slate-400' : 'text-slate-500'}`}>
-                    {isUpcoming ? 'Session starts when you go live' : isLive ? 'Live session in progress' : 'Session has ended'}
-                  </p>
-                )}
-              </div>
-              {isLive && (
-                <div className="absolute top-4 left-4 flex items-center gap-1.5 px-3 py-1 bg-red-500/90 backdrop-blur-sm">
-                  <span className="w-2 h-2 bg-white animate-pulse" />
-                  <span className="text-[11px] font-semibold text-white">LIVE</span>
+                <div className="leading-none">
+                  <p className="text-[9px] text-slate-400 uppercase tracking-widest mb-0.5">Coach</p>
+                  <p className="text-[12px] font-semibold text-white">{participants[0]?.name ?? 'Coach'}</p>
                 </div>
-              )}
-            </div>
-
-            <div className={`${PANEL} p-5`}>
-              <h3 className="text-[13px] font-semibold text-slate-700 dark:text-slate-300 mb-3">Session Info</h3>
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                {infoCards.map(c => <InfoCard key={c.label} {...c} />)}
               </div>
-              {session.description && (
-                <p className="mt-4 text-[12px] text-[var(--text-secondary)] dark:text-[var(--text-secondary)] leading-relaxed">{session.description}</p>
-              )}
-            </div>
-          </div>
+            )}
 
-          {/* ── Sidebar ── */}
-          <div className="space-y-0">
-            <div className={`flex ${PANEL} overflow-hidden`}>
-              {tabs.map(t => (
-                <button key={t.key} onClick={() => setActiveTab(t.key)}
-                  className={`flex-1 flex items-center justify-center gap-1.5 py-3 text-[11px] font-semibold transition-colors ${
-                    activeTab === t.key
-                      ? 'text-brand-600 dark:text-brand-400 border-b-2 border-brand-600 dark:border-brand-400'
-                      : 'text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300'
-                  }`}>
-                  <t.icon size={13} /> {t.label}
-                </button>
-              ))}
-            </div>
+            {/* Timer top-right (before thumbnails) */}
+            {isLive && (
+              <div className="absolute top-4 z-10 flex items-center gap-1.5 bg-black/50 backdrop-blur-sm rounded-xl px-3 py-2"
+                style={{ right: participants.length > 1 ? '148px' : '16px' }}>
+                <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
+                <span className="text-[13px] font-mono font-semibold text-white">{timer}</span>
+              </div>
+            )}
 
-            <div className={`${PANEL} border-t-0 min-h-[400px] flex flex-col`}>
+            {/* LIVE badge */}
+            {isLive && (
+              <div className="absolute top-4 left-1/2 -translate-x-1/2 z-10 flex items-center gap-1.5 bg-red-500 rounded px-2.5 py-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
+                <span className="text-[10px] font-bold text-white tracking-wider">LIVE</span>
+              </div>
+            )}
 
-              {/* Chat */}
-              {activeTab === 'chat' && (
-                <div className="flex flex-col flex-1">
-                  <div className="flex-1 overflow-y-auto max-h-[420px] p-4 space-y-3">
-                    {messages.length === 0 && <p className={EMPTY}>No messages yet</p>}
-                    {messages.map((m: any) => (
-                      <div key={m.id} className="flex gap-2.5">
-                        <div className="w-7 h-7 bg-brand-600 flex items-center justify-center shrink-0">
-                          <span className="text-[10px] font-semibold text-white">{m.sender_name?.[0] ?? '?'}</span>
-                        </div>
-                        <div>
-                          <div className="flex items-baseline gap-2">
-                            <span className="text-[11px] font-semibold text-slate-700 dark:text-slate-300">{m.sender_name}</span>
-                            <span className="text-[10px] text-slate-400 dark:text-slate-500">
-                              {m.sent_at ? new Date(m.sent_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ''}
-                            </span>
-                            {m.sender_role === 'coach' && (
-                              <span className="text-[9px] bg-brand-600/10 dark:bg-brand-400/10 text-brand-700 dark:text-brand-400 px-1.5 py-0.5 font-semibold">Coach</span>
-                            )}
-                          </div>
-                          <p className="text-[12px] text-slate-600 dark:text-slate-400 mt-0.5 leading-relaxed">{m.content}</p>
-                        </div>
-                      </div>
-                    ))}
-                    <div ref={chatEndRef} />
+            {/* Main video fill */}
+            <div className="flex-1 relative flex items-center justify-center overflow-hidden">
+              <div className="absolute inset-0 bg-gradient-to-br from-[#23272b] via-[#2a2d32] to-[#1c1f23]" />
+
+              {!isLive && (
+                <div className="relative z-10 text-center space-y-4">
+                  <div className="w-16 h-16 mx-auto bg-white/[0.06] border border-white/[0.1] rounded-2xl flex items-center justify-center">
+                    <Video size={28} className="text-slate-500" />
                   </div>
-
-                  {isLive && (
-                    <div className="p-3 border-t border-[var(--border)] dark:border-white/[0.08]">
-                      <div className="flex gap-2">
-                        <input type="text" value={msg} onChange={e => setMsg(e.target.value)} onKeyDown={onKey} placeholder="Type a message…"
-                          className="flex-1 px-3 py-2 text-[12px] border border-slate-200 dark:border-white/[0.1] bg-white dark:bg-white/[0.04] text-slate-700 dark:text-slate-300 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-600/20 dark:focus:ring-brand-400/20" />
-                        <button onClick={send} disabled={!msg.trim() || sendChat.isPending}
-                          className="p-2.5 bg-brand-600 text-white disabled:opacity-40 transition-opacity">
-                          <Send size={14} />
-                        </button>
-                      </div>
-                    </div>
+                  <p className="text-[13px] text-slate-400">
+                    {isUpcoming ? 'Session starts when you go live' : 'Session has ended'}
+                  </p>
+                  {isUpcoming && (
+                    <button onClick={() => goLive.mutateAsync(id).then(() => router.refresh())} disabled={goLive.isPending}
+                      className="inline-flex items-center gap-2 px-5 py-2.5 bg-emerald-500 hover:bg-emerald-400 text-white text-[13px] font-semibold rounded-xl shadow-lg shadow-emerald-500/30 transition-all">
+                      <Play size={14} /> Go Live
+                    </button>
                   )}
                 </div>
               )}
 
-              {/* Participants */}
-              {activeTab === 'participants' && (
-                <div className="p-4 space-y-2 overflow-y-auto max-h-[460px]">
-                  {participants.length === 0 && <p className={EMPTY}>No participants yet</p>}
-                  {participants.map((p: any) => (
-                    <div key={p.id} className="flex items-center gap-3 p-2.5 hover:bg-slate-50 dark:hover:bg-white/[0.04] transition-colors">
-                      <Avatar src={p.photo} name={p.name} />
-                      <span className="text-[12px] font-semibold text-slate-700 dark:text-slate-300">{p.name}</span>
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              {/* Requests */}
-              {activeTab === 'requests' && (
-                <div className="p-4 space-y-2 overflow-y-auto max-h-[460px]">
-                  {requests.length === 0 && <p className={EMPTY}>No join requests</p>}
-                  {requests.map((r: any) => (
-                    <div key={r.id} className="flex items-center justify-between p-3 bg-[var(--bg-subtle)] dark:bg-white/[0.03] border border-[var(--border)] dark:border-white/[0.06]">
-                      <div className="flex items-center gap-2.5">
-                        <Avatar src={r.client_photo} name={r.client_name} />
-                        <div>
-                          <span className="text-[12px] font-semibold text-slate-700 dark:text-slate-300">{r.client_name}</span>
-                          <span className={`ml-2 text-[10px] font-semibold px-1.5 py-0.5 ${REQ_BADGE[r.status] ?? ''}`}>{r.status}</span>
-                        </div>
+              {/* Participant thumbnails stacked on the right */}
+              {participants.length > 1 && (
+                <div className="absolute right-3 top-3 bottom-3 flex flex-col gap-2 z-10 justify-start">
+                  {participants.slice(1, 5).map((p: any) => (
+                    <div key={p.id}
+                      className="w-[128px] h-[84px] rounded-xl overflow-hidden bg-[#2a2d32] border border-white/[0.1] flex items-center justify-center relative">
+                      {p.photo
+                        ? <img src={p.photo} alt={p.name} className="w-full h-full object-cover" />
+                        : (
+                          <div className="w-10 h-10 rounded-full bg-slate-600 flex items-center justify-center">
+                            <span className="text-[14px] font-semibold text-white">{p.name?.[0] ?? '?'}</span>
+                          </div>
+                        )
+                      }
+                      <div className="absolute inset-x-0 bottom-0 px-2 py-1 bg-gradient-to-t from-black/70 to-transparent">
+                        <span className="text-[9px] text-white font-semibold">{p.name}</span>
                       </div>
-                      {r.status === 'pending' && (
-                        <div className="flex gap-1.5">
-                          <button
-                            onClick={() => handleReq.mutate({ requestId: r.id, action: 'approved' })}
-                            className="p-1.5 bg-green-100 dark:bg-green-400/10 text-green-600 dark:text-green-400 hover:bg-green-200 dark:hover:bg-green-400/20 transition-colors"
-                          >
-                            <CheckCircle2 size={14} />
-                          </button>
-                          <button
-                            onClick={() => handleReq.mutate({ requestId: r.id, action: 'rejected' })}
-                            className="p-1.5 bg-red-100 dark:bg-red-400/10 text-red-500 dark:text-red-400 hover:bg-red-200 dark:hover:bg-red-400/20 transition-colors"
-                          >
-                            <XCircle size={14} />
-                          </button>
-                        </div>
-                      )}
                     </div>
                   ))}
                 </div>
               )}
             </div>
+
+            {/* Transcription bar */}
+            {isLive && (
+              <div className="flex items-center gap-3 px-5 py-2.5 bg-black/40 border-t border-white/[0.06] flex-shrink-0">
+                <div className="flex items-end gap-[3px] h-4 shrink-0">
+                  {WAVE_HEIGHTS.map((h, i) => (
+                    <div key={i} className="w-[3px] rounded-full bg-brand-400 animate-pulse"
+                      style={{ height: `${h}%`, animationDelay: `${i * 120}ms` }} />
+                  ))}
+                </div>
+                <span className="text-[11px] text-slate-300 italic truncate">
+                  {lastMsg?.content ?? 'Listening…'}
+                </span>
+              </div>
+            )}
+
+            {/* Call controls */}
+            <div className="flex items-center justify-center gap-3 px-6 py-4 bg-[#1c1f23] flex-shrink-0">
+              <CtrlBtn onClick={() => {}}><Volume2 size={16} /></CtrlBtn>
+              <CtrlBtn onClick={() => {}}><Maximize2 size={16} /></CtrlBtn>
+
+              <CtrlBtn onClick={() => setMicOn(v => !v)} active={!micOn} danger={!micOn}>
+                {micOn ? <Mic size={16} /> : <MicOff size={16} />}
+              </CtrlBtn>
+
+              {/* Primary action — centre big button */}
+              {isLive ? (
+                <button onClick={() => endSession.mutateAsync(id).then(() => router.refresh())}
+                  disabled={endSession.isPending}
+                  className="w-14 h-14 rounded-full flex items-center justify-center bg-red-500 hover:bg-red-400 text-white shadow-xl shadow-red-500/40 transition-all">
+                  <PhoneOff size={20} />
+                </button>
+              ) : isUpcoming ? (
+                <button onClick={() => goLive.mutateAsync(id).then(() => router.refresh())}
+                  disabled={goLive.isPending}
+                  className="w-14 h-14 rounded-full flex items-center justify-center bg-emerald-500 hover:bg-emerald-400 text-white shadow-xl shadow-emerald-500/40 transition-all">
+                  <Play size={20} />
+                </button>
+              ) : (
+                <div className="w-14 h-14 rounded-full flex items-center justify-center bg-white/[0.06] text-slate-600">
+                  <Square size={18} />
+                </div>
+              )}
+
+              <CtrlBtn onClick={() => setCamOn(v => !v)} danger={!camOn}>
+                {camOn ? <Video size={16} /> : <VideoOff size={16} />}
+              </CtrlBtn>
+              <CtrlBtn onClick={() => {}}><Sparkles size={16} /></CtrlBtn>
+              <CtrlBtn onClick={() => {}}><Settings size={16} /></CtrlBtn>
+            </div>
+          </div>
+
+          {/* ── Chat / Participants Panel ── */}
+          <div className="w-[300px] xl:w-[320px] flex-shrink-0 flex flex-col bg-white dark:bg-white/[0.03] border border-[var(--border)] dark:border-white/[0.08] rounded-2xl overflow-hidden">
+
+            {/* Panel header + tabs */}
+            <div className="px-4 pt-4 flex-shrink-0">
+              <h2 className="text-[14px] font-semibold text-[var(--text-primary)] mb-3">Group Chat</h2>
+              <div className="flex border-b border-[var(--border)] dark:border-white/[0.08]">
+                {tabs.map(tab => (
+                  <button key={tab} onClick={() => setActiveTab(tab)}
+                    className={`px-3 pb-2 text-[11px] font-semibold transition-colors border-b-2 -mb-px ${
+                      activeTab === tab
+                        ? 'border-brand-600 dark:border-brand-400 text-brand-600 dark:text-brand-400'
+                        : 'border-transparent text-slate-400 hover:text-slate-600 dark:hover:text-slate-300'
+                    }`}>
+                    {tab === 'Requests' && pendingCount > 0 ? `Requests (${pendingCount})` : tab}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Messages */}
+            {activeTab === 'Messages' && (
+              <div className="flex flex-col flex-1 min-h-0">
+                <div className="flex-1 overflow-y-auto p-4 space-y-4">
+                  {messages.length === 0 && (
+                    <p className="text-center text-[12px] text-slate-400 mt-10">No messages yet</p>
+                  )}
+                  {messages.map((m: any, i: number) => {
+                    const isMe = m.sender_role === 'coach'
+                    return (
+                      <div key={m.id ?? i} className={`flex gap-2.5 ${isMe ? 'flex-row-reverse' : ''}`}>
+                        <div className="w-7 h-7 rounded-full bg-brand-600 flex items-center justify-center text-[10px] font-bold text-white shrink-0">
+                          {m.sender_name?.[0] ?? '?'}
+                        </div>
+                        <div className={`flex flex-col max-w-[72%] ${isMe ? 'items-end' : 'items-start'}`}>
+                          <span className="text-[10px] text-slate-400 mb-1">{isMe ? 'You' : m.sender_name}</span>
+                          <div className={`px-3 py-2 rounded-2xl text-[12px] leading-relaxed ${
+                            isMe
+                              ? 'bg-brand-600 text-white rounded-tr-sm'
+                              : 'bg-slate-100 dark:bg-white/[0.07] text-slate-700 dark:text-slate-300 rounded-tl-sm'
+                          }`}>
+                            {m.content}
+                          </div>
+                        </div>
+                      </div>
+                    )
+                  })}
+                  <div ref={chatEndRef} />
+                </div>
+
+                {/* Typing indicator — static, shows when session is live */}
+                {isLive && (
+                  <div className="px-4 py-1 flex items-center gap-2 flex-shrink-0">
+                    <div className="flex gap-1">
+                      {[0, 150, 300].map(d => (
+                        <span key={d} className="w-1.5 h-1.5 rounded-full bg-slate-400 animate-bounce"
+                          style={{ animationDelay: `${d}ms` }} />
+                      ))}
+                    </div>
+                    <span className="text-[10px] text-slate-400 italic">is typing</span>
+                  </div>
+                )}
+
+                {/* Input */}
+                <div className="p-3 border-t border-[var(--border)] dark:border-white/[0.08] flex-shrink-0">
+                  <div className="flex items-center gap-2 bg-slate-50 dark:bg-white/[0.04] border border-slate-200 dark:border-white/[0.08] rounded-xl px-3 py-2">
+                    <input
+                      type="text" value={msg}
+                      onChange={e => setMsg(e.target.value)} onKeyDown={onKey}
+                      placeholder="Write your message…" disabled={!isLive}
+                      className="flex-1 bg-transparent text-[12px] text-slate-700 dark:text-slate-300 placeholder:text-slate-400 focus:outline-none disabled:opacity-40"
+                    />
+                    <button onClick={send} disabled={!msg.trim() || sendChat.isPending || !isLive}
+                      className="w-7 h-7 rounded-lg bg-brand-600 flex items-center justify-center text-white disabled:opacity-40 transition-opacity hover:bg-brand-500">
+                      <Send size={12} />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Participants */}
+            {activeTab === 'Participants' && (
+              <div className="flex-1 overflow-y-auto p-4 space-y-1">
+                {participants.length === 0 && (
+                  <p className="text-center text-[12px] text-slate-400 mt-10">No participants yet</p>
+                )}
+                {participants.map((p: any) => (
+                  <div key={p.id} className="flex items-center gap-3 px-2.5 py-2 rounded-xl hover:bg-slate-50 dark:hover:bg-white/[0.04] transition-colors">
+                    <div className="w-8 h-8 rounded-full bg-brand-100 dark:bg-brand-600/20 flex items-center justify-center text-[12px] font-semibold text-brand-700 dark:text-brand-300">
+                      {p.name?.[0] ?? '?'}
+                    </div>
+                    <span className="text-[12px] font-medium text-[var(--text-primary)] flex-1">{p.name}</span>
+                    {isLive && <span className="w-2 h-2 rounded-full bg-emerald-400" />}
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Requests */}
+            {activeTab === 'Requests' && (
+              <div className="flex-1 overflow-y-auto p-4 space-y-2">
+                {requests.length === 0 && (
+                  <p className="text-center text-[12px] text-slate-400 mt-10">No join requests</p>
+                )}
+                {requests.map((r: any) => (
+                  <div key={r.id} className="p-3 rounded-xl bg-slate-50 dark:bg-white/[0.03] border border-[var(--border)] dark:border-white/[0.06]">
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <div className="w-7 h-7 rounded-full bg-brand-100 dark:bg-brand-600/20 flex items-center justify-center text-[11px] font-semibold text-brand-700 dark:text-brand-300 shrink-0">
+                          {r.client_name?.[0] ?? '?'}
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-[12px] font-medium text-[var(--text-primary)] truncate">{r.client_name}</p>
+                          <p className={`text-[10px] font-semibold capitalize ${REQ_BADGE[r.status] ?? 'text-slate-400'}`}>{r.status}</p>
+                        </div>
+                      </div>
+                      {r.status === 'pending' && (
+                        <div className="flex gap-1.5 shrink-0">
+                          <button onClick={() => handleReq.mutate({ requestId: r.id, action: 'approved' })}
+                            className="w-7 h-7 rounded-full bg-green-100 dark:bg-green-400/10 text-green-600 dark:text-green-400 flex items-center justify-center hover:bg-green-200 dark:hover:bg-green-400/20 transition-colors">
+                            <CheckCircle2 size={13} />
+                          </button>
+                          <button onClick={() => handleReq.mutate({ requestId: r.id, action: 'rejected' })}
+                            className="w-7 h-7 rounded-full bg-red-100 dark:bg-red-400/10 text-red-500 dark:text-red-400 flex items-center justify-center hover:bg-red-200 dark:hover:bg-red-400/20 transition-colors">
+                            <XCircle size={13} />
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       </div>
     </DashboardLayout>
+  )
+}
+
+/* ── Small helper: control button ── */
+function CtrlBtn({
+  children, onClick, danger = false, active = false,
+}: {
+  children: React.ReactNode
+  onClick: () => void
+  danger?: boolean
+  active?: boolean
+}) {
+  return (
+    <button onClick={onClick}
+      className={`w-10 h-10 rounded-full flex items-center justify-center transition-colors ${
+        danger || active
+          ? 'bg-red-500 text-white hover:bg-red-400'
+          : 'bg-white/[0.08] text-white hover:bg-white/[0.16]'
+      }`}>
+      {children}
+    </button>
   )
 }

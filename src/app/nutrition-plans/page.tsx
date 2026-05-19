@@ -104,7 +104,7 @@ function FeaturedPlanCard({ plan, clientName }: { plan: NutritionPlan; clientNam
     <div>
       <div className="flex flex-col sm:flex-row">
         {/* Visual gradient panel */}
-        <div className="sm:w-52 flex-shrink-0 bg-gradient-to-br from-green-400 via-emerald-500 to-teal-600 p-6 flex flex-col justify-between min-h-[180px]">
+        <div className="sm:w-52 flex-shrink-0 bg-gradient-to-br from-brand-600 via-brand-700 to-brand-800 p-6 flex flex-col justify-between min-h-[180px]">
           <div className="flex flex-wrap gap-1.5">
             {types.slice(0, 2).map(t => (
               <span key={t} className="text-[11px] bg-white/20 text-white px-2 py-0.5 font-semibold">{t}</span>
@@ -147,7 +147,7 @@ function FeaturedPlanCard({ plan, clientName }: { plan: NutritionPlan; clientNam
             <MacroPill icon={<Droplets size={14} />} value={fat_g}     unit="g F"  color="text-slate-500"  bg="bg-slate-100 dark:bg-slate-800/60"  />
             <Link
               href={`/nutrition-plans/${plan.id}`}
-              className="ml-auto flex items-center gap-1.5 px-4 py-2 bg-brand-600 hover:bg-brand-700 text-white text-sm font-semibold transition-colors"
+              className="ml-auto flex items-center  rounded-s-xl gap-1.5 px-4 py-2 bg-brand-600 hover:bg-brand-700 text-white text-sm font-semibold transition-colors"
             >
               View Plan <ChevronRight size={14} />
             </Link>

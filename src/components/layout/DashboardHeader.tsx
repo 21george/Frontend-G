@@ -212,7 +212,10 @@ export default function DashboardHeader({
         <div className='rounded-sm'>
         <ThemeToggle />
         </div>
-        <div className="flex items-center gap-2.5 pl-1 border-l border-slate-200 rounded-sm dark:border-white/[0.1]">
+        <Link
+          href="/settings/edit"
+          className="flex items-center gap-2.5 pl-1 border-l border-slate-200 rounded-sm dark:border-white/[0.1] hover:opacity-80 transition-opacity"
+        >
           <CoachAvatar name={coach?.name} surname={coach?.surname} photo={coach?.profile_photo} />
           {fullName && (
             <div className="hidden sm:flex flex-col">
@@ -220,7 +223,7 @@ export default function DashboardHeader({
               <span className="text-[11px] text-slate-500 dark:text-neutral-400 leading-tight">{coach?.email}</span>
             </div>
           )}
-        </div>
+        </Link>
       </div>
     </div>
   )

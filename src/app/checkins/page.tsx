@@ -160,14 +160,7 @@ export default function SchedulePage() {
               </div>
 
               {/* Create button */}
-              <button
-                onClick={() => setShowModal(true)}
-                className="flex items-center gap-2 px-5 py-2.5 text-sm font-semibold text-white transition-colors rounded-lg shadow-sm hover:shadow hover:bg-brand-700"
-                style={{ backgroundColor: ACCENT }}
-              >
-                <Plus size={16} />
-                <span className="hidden sm:inline">New Event</span>
-              </button>
+             
             </motion.div>
           </div>
         </header>

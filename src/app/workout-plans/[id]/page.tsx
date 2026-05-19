@@ -221,14 +221,14 @@ export default function WorkoutPlanDetailPage() {
                 <div className="flex items-center gap-2 self-start sm:self-auto">
                   <button
                     onClick={() => router.push('/workout-plans')}
-                    className="inline-flex items-center gap-2 border border-slate-200 px-4 py-2.5 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50 dark:border-white/[0.08] dark:text-slate-200 dark:hover:bg-white/[0.04]"
+                    className="inline-flex items-center rounded-s-xl gap-2 border border-slate-200 px-4 py-2.5 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50 dark:border-white/[0.08] dark:text-slate-200 dark:hover:bg-white/[0.04]"
                   >
                     <ArrowLeft className="h-4 w-4" />
                     Back
                   </button>
                   <Link
                     href={`/workout-plans/${id}/edit`}
-                    className="inline-flex items-center gap-2 bg-brand-600 px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-brand-700"
+                    className="inline-flex items-center rounded-s-xl gap-2 bg-brand-600 px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-brand-700"
                   >
                     <Edit className="h-4 w-4" />
                     Edit Plan

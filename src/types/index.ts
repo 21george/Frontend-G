@@ -14,6 +14,8 @@ export interface Coach {
   }
   subscription_tier?: SubscriptionTier
   subscription_status?: SubscriptionStatus
+  subscription_alert?: 'select_plan' | 'update_payment' | 'resubscribe' | 'renew_subscription' | null
+  cancel_at_period_end?: boolean
   trial_ends_at?: string | null
   max_clients?: number
   client_count?: number
@@ -319,7 +321,7 @@ export interface LiveTrainingChatMessage {
 
 // ── Subscription ──────────────────────────────────────────────────────────────
 export type SubscriptionTier = 'free' | 'pro' | 'business'
-export type SubscriptionStatus = 'none' | 'trialing' | 'active' | 'past_due' | 'cancelled'
+export type SubscriptionStatus = 'pending' | 'none' | 'trialing' | 'active' | 'past_due' | 'cancelled'
 
 export interface SubscriptionInfo {
   tier: SubscriptionTier

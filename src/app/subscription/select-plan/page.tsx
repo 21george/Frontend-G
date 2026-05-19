@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { Check, Loader2, ArrowRight } from 'lucide-react';
 import apiClient from '@/lib/api';
+import { useAuthStore } from '@/store/auth';
 import { useSubscriptionStore } from '@/store/subscription';
 import { Button } from '@/components/ui/button';
 
@@ -77,39 +78,42 @@ export default function SelectPlanPage() {
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
-  const { setupToken, coachId, setSetupToken, setError: setStoreError } = useSubscriptionStore();
+  const accessToken = useAuthStore((s) => s.accessToken);
+  const coach = useAuthStore((s) => s.coach);
+  const { setupToken, setSetupToken, setError: setStoreError } = useSubscriptionStore();
 
   useEffect(() => {
+    // Already subscribed — no need to be on this page
+    if (coach && coach.subscription_status && coach.subscription_status !== 'pending') {
+      router.replace('/dashboard');
+      return;
+    }
+
     // Get token from URL params
     const token = searchParams.get('token');
     const coachIdParam = searchParams.get('coach_id');
 
     if (token && coachIdParam) {
       setSetupToken(token, coachIdParam);
-    } else if (!setupToken) {
-      // No valid token, redirect to registration
-      router.push('/auth/register');
     }
-  }, [searchParams, setupToken, setSetupToken, router]);
+  }, [searchParams, setupToken, setSetupToken, router, coach]);
 
   const handleSelectPlan = async (planId: 'free' | 'pro' | 'business') => {
-    if (!setupToken) {
-      setError('Session expired. Please register again.');
-      return;
-    }
-
     setError(null);
     setIsLoading(true);
 
     try {
+      // Use setup token if available, otherwise fall back to regular auth token
+      const token = setupToken ?? accessToken;
+      const headers: Record<string, string> = {};
+      if (token) {
+        headers.Authorization = `Bearer ${token}`;
+      }
+
       const res = await apiClient.post(
         '/subscription/select-plan',
         { plan_tier: planId },
-        {
-          headers: {
-            Authorization: `Bearer ${setupToken}`,
-          },
-        }
+        { headers }
       );
 
       const { checkout_url, access_token, redirect } = res.data.data;
@@ -131,7 +135,15 @@ export default function SelectPlanPage() {
         }
       }
     } catch (e: any) {
+      const status = e?.response?.status;
       const msg = e?.response?.data?.message || 'Failed to select plan. Please try again.';
+
+      // Already configured — just go to dashboard
+      if (status === 409) {
+        router.replace('/dashboard');
+        return;
+      }
+
       setError(msg);
       setStoreError(msg);
     } finally {
@@ -139,7 +151,7 @@ export default function SelectPlanPage() {
     }
   };
 
-  if (!setupToken) {
+  if (!setupToken && !accessToken) {
     return (
       <div className="flex min-h-[100dvh] items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-blue-600" />

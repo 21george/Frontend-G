@@ -4,13 +4,17 @@ import React, { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import apiClient from '@/lib/api';
 import { useAuthStore } from '@/store/auth';
+import { useSubscriptionStore } from '@/store/subscription';
 import { AuthFormSplitScreen } from '@/components/ui/login';
+import { SubscriptionAlertModal } from '@/components/subscription/SubscriptionAlertModal';
 
 export default function LoginPage() {
   const router = useRouter();
   const setCoach = useAuthStore((s) => s.setCoach);
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   const [error, setError] = React.useState<string | null>(null);
+  const [pendingAlert, setPendingAlert] = React.useState<'update_payment' | 'resubscribe' | 'renew_subscription' | null>(null);
+  const setSetupToken = useSubscriptionStore((s) => s.setSetupToken);
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -25,11 +29,36 @@ export default function LoginPage() {
     setError(null);
     try {
       const res = await apiClient.post('/auth/coach/login', data);
-      const { coach, access_token } = res.data?.data || {};
+      const { coach, access_token, setup_token } = res.data?.data || {};
       if (!coach || !access_token) {
         throw new Error('Invalid response from server');
       }
       setCoach(coach, access_token);
+
+      // Pending coaches must complete subscription selection before using the app
+      if (coach.subscription_status === 'pending' && setup_token) {
+        setSetupToken(setup_token, coach.id);
+        router.push(`/subscription/select-plan?token=${encodeURIComponent(setup_token)}&coach_id=${coach.id}`);
+        return;
+      }
+
+      // Coaches without a selected plan (status 'none') also need to select a plan
+      if (coach.subscription_alert === 'select_plan') {
+        if (setup_token) {
+          setSetupToken(setup_token, coach.id);
+          router.push(`/subscription/select-plan?token=${encodeURIComponent(setup_token)}&coach_id=${coach.id}`);
+        } else {
+          router.push('/subscription/select-plan');
+        }
+        return;
+      }
+
+      // Other subscription alerts are shown as a popup before entering the app
+      if (coach.subscription_alert) {
+        setPendingAlert(coach.subscription_alert);
+        return;
+      }
+
       router.push('/dashboard');
     } catch (e: any) {
       let msg = 'Login failed. Please try again.';
@@ -51,6 +80,15 @@ export default function LoginPage() {
 
   return (
     <>
+      {pendingAlert && (
+        <SubscriptionAlertModal
+          alert={pendingAlert}
+          onClose={() => {
+            setPendingAlert(null);
+            router.push('/dashboard');
+          }}
+        />
+      )}
       <style jsx global>{`
         @keyframes fadeIn {
           from { opacity: 0; }

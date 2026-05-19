@@ -2,15 +2,17 @@
 
 import DashboardLayout from '@/components/layout/DashboardLayout'
 import DashboardHeader from '@/components/layout/DashboardHeader'
-import { useClients } from '@/lib/hooks'
+import { useClients, useWorkoutPlans } from '@/lib/hooks'
 import { useState, useMemo } from 'react'
 import Link from 'next/link'
 import {
   Users, Plus, Search, Filter, MessageSquare, MoreVertical,
-  TrendingUp, ChevronLeft, ChevronRight, Activity, CheckCircle2, XCircle
+  TrendingUp, ChevronLeft, ChevronRight, Activity, CheckCircle2, XCircle,
+  UsersRound, Dumbbell, AlertCircle, Clock
 } from 'lucide-react'
 import { QueryWrapper } from '@/components/ui/QueryWrapper'
 import { Button } from '@/components/ui/button'
+import { ClientsProgressChart } from '@/components/clients/ClientsProgressChart'
 import { motion } from 'framer-motion'
 
 // Status badge configuration - using your app's color scheme
@@ -45,9 +47,12 @@ const statusConfig: Record<string, { label: string; lightClass: string; darkClas
 function getStatusForClient(client: any): string {
   if (client.is_blocked) return 'blocked'
   if (!client.active) return 'completed'
-  const daysSinceCreated = client.created_at
-    ? Math.floor((Date.now() - new Date(client.created_at).getTime()) / (1000 * 60 * 60 * 24))
-    : 30
+  const daysSinceCreated = (() => {
+    if (!client.created_at) return 30
+    const createdDate = new Date(client.created_at)
+    if (isNaN(createdDate.getTime())) return 30
+    return Math.floor((Date.now() - createdDate.getTime()) / (1000 * 60 * 60 * 24))
+  })()
   if (daysSinceCreated <= 14) return 'new-client'
   if (client.notes?.toLowerCase().includes('urgent') || client.notes?.toLowerCase().includes('attention'))
     return 'attention'
@@ -64,6 +69,84 @@ export default function ClientsPage() {
   const query = useClients(search)
   const clients = query.data?.data ?? []
   const total = query.data?.pagination?.total ?? clients.length
+
+  // Fetch all workout plans to calculate real progress
+  const allPlansQuery = useWorkoutPlans()
+  const allPlans = allPlansQuery.data?.data ?? []
+
+  // Build client progress map from actual workout plans
+  const clientProgressMap = useMemo(() => {
+    const map = new Map<string, {
+      hasActivePlan: boolean
+      activePlanTitle?: string
+      progressPct: number
+      completedDays: number
+      totalDays: number
+      status: string
+    }>()
+
+    for (const plan of allPlans) {
+      // Get all client IDs for this plan
+      const planClientIds: string[] = []
+      if (plan.client_id) planClientIds.push(plan.client_id)
+      if (plan.client_ids) planClientIds.push(...plan.client_ids)
+
+      for (const cid of planClientIds) {
+        const existing = map.get(cid)
+        
+        // Only update if this plan is active and we don't have an active one yet
+        if (plan.status === 'active') {
+          const totalDays = plan.days?.length ?? 0
+          // Calculate completed days from plan data if available
+          const completedDays = plan.days?.filter((d: any) => d.is_completed).length ?? 0
+          const progressPct = totalDays > 0 ? Math.round((completedDays / totalDays) * 100) : 0
+          
+          map.set(cid, {
+            hasActivePlan: true,
+            activePlanTitle: plan.title,
+            progressPct,
+            completedDays,
+            totalDays,
+            status: plan.status
+          })
+        } else if (!existing?.hasActivePlan) {
+          // Only set non-active plan if no active plan exists
+          const totalDays = plan.days?.length ?? 0
+          const completedDays = plan.days?.filter((d: any) => d.is_completed).length ?? 0
+          const progressPct = totalDays > 0 ? Math.round((completedDays / totalDays) * 100) : 0
+          
+          map.set(cid, {
+            hasActivePlan: false,
+            activePlanTitle: plan.title,
+            progressPct,
+            completedDays,
+            totalDays,
+            status: plan.status
+          })
+        }
+      }
+    }
+
+    return map
+  }, [allPlans])
+
+  // Fetch group workout plans to determine which clients are in group programs
+  const groupPlansQuery = useWorkoutPlans(undefined, undefined, 'group')
+  const teamPlansQuery = useWorkoutPlans(undefined, undefined, 'team')
+  const groupPlans = [...(groupPlansQuery.data?.data ?? []), ...(teamPlansQuery.data?.data ?? [])]
+
+  // Build a set of client IDs that are in group programs
+  const groupClientIds = useMemo(() => {
+    const ids = new Set<string>()
+    for (const plan of groupPlans) {
+      if (plan.client_ids) {
+        for (const cid of plan.client_ids) {
+          ids.add(cid)
+        }
+      }
+    }
+    return ids
+  }, [groupPlans])
   const quickActions = useMemo(() => ([
     {
       href: '/clients/new',
@@ -77,9 +160,10 @@ export default function ClientsPage() {
   const stats = useMemo(() => {
     const activeClients = clients.filter(c => c.active)
     const newClients = clients.filter(c => {
-      const daysSinceCreated = c.created_at
-        ? Math.floor((Date.now() - new Date(c.created_at).getTime()) / (1000 * 60 * 60 * 24))
-        : 0
+      if (!c.created_at) return false
+      const createdDate = new Date(c.created_at)
+      if (isNaN(createdDate.getTime())) return false
+      const daysSinceCreated = Math.floor((Date.now() - createdDate.getTime()) / (1000 * 60 * 60 * 24))
       return daysSinceCreated <= 14
     })
     const attentionNeeded = clients.filter(c =>
@@ -87,13 +171,21 @@ export default function ClientsPage() {
       c.notes?.toLowerCase().includes('attention')
     )
 
+    const groupProgramCount = clients.filter(c => groupClientIds.has(c.id)).length
+    const needsPlanCount = clients.filter(c => {
+      const progress = clientProgressMap.get(c.id)
+      return !progress?.hasActivePlan
+    }).length
+
     return {
       total: total,
       active: activeClients.length,
       newClients: newClients.length,
       attention: attentionNeeded.length,
+      groupProgram: groupProgramCount,
+      needsPlan: needsPlanCount,
     }
-  }, [clients, total])
+  }, [clients, total, groupClientIds, clientProgressMap])
 
   return (
     <DashboardLayout>
@@ -111,54 +203,11 @@ export default function ClientsPage() {
             value={search}
             onChange={e => setSearch(e.target.value)}
             placeholder="Search clients"
-            className="w-full bg-white dark:bg-[#121212] border border-slate-200 dark:border-white/[0.1] py-3 pl-11 pr-4 text-sm text-[var(--text-primary)] dark:text-[var(--text-primary)] placeholder-slate-400 dark:placeholder:text-neutral-500 focus:outline-none focus:border-brand-700/30 focus:ring-2 focus:ring-brand-700/20 transition-colors"
+            className="w-[12rem]   py-3 pl-11 pr-4 text-sm text-[var(--text-primary)]  rounded-4 placeholder-slate-400 dark:placeholder:text-neutral-500 focus:outline-none focus:border-brand-700/30 focus:ring-2 focus:ring-brand-700/20 transition-colors"
           />
         </div>
 
-         {/* Daily Protocol Adherence Chart */}
-        <div className="mt-8 mb-5">
-          <div className="p-4 sm:p-6 bg-[var(--bg-card)] border border-[var(--border)] dark:border-white/[0.08]"> 
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-              <h3 className="text-base sm:text-lg font-bold text-[var(--text-primary)] dark:text-[var(--text-primary)] tracking-tight flex items-center gap-2">
-                <Activity className="w-5 h-5 text-brand-600 dark:text-brand-300" />
-                Daily Protocol Adherence
-              </h3>
-              <div className="flex items-center gap-4 text-xs">
-                <div className="flex items-center gap-1.5">
-                  <div className="h-2 w-2 bg-emerald-500 rounded-full"></div>
-                  <span className="text-slate-500 rounded-xl dark:text-neutral-400">Completed</span>
-                </div>
-                <div className="flex items-center gap-1.5">
-                  <div className="h-2 w-2 bg-slate-300 dark:bg-slate-700 rounded-full"></div>
-                  <span className="text-slate-500 rounded-xl dark:text-neutral-400">Missed</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Bar Chart */}
-            <div className="h-32 sm:h-48 flex items-end justify-between gap-1 sm:gap-2">
-              {[
-                { day: 'M', completed: 75, total: 100 },
-                { day: 'T', completed: 68, total: 100 },
-                { day: 'W', completed: 82, total: 100 },
-                { day: 'T', completed: 55, total: 100 },
-                { day: 'F', completed: 70, total: 100 },
-                { day: 'S', completed: 45, total: 100 },
-                { day: 'S', completed: 30, total: 100 },
-              ].map((d, i) => (
-                <div key={i} className="flex flex-col items-center gap-1 sm:gap-2 flex-1">
-                  <div className="w-full bg-slate-100 dark:bg-slate-800 h-24 sm:h-40 relative overflow-hidden">
-                    <div
-                      className="absolute bottom-0 w-full bg-gradient-to-t from-emerald-600 to-emerald-400 opacity-80 transition-all duration-500"
-                      style={{ height: `${(d.completed / d.total) * 100}%` }}
-                    />
-                  </div>
-                  <span className="text-[10px] text-slate-500 dark:text-neutral-400 font-medium">{d.day}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
+        
 
         
 
@@ -178,11 +227,11 @@ export default function ClientsPage() {
           isEmpty={(data) => (data?.data ?? []).length === 0}
         >
           {(data) => (
-            <div className="bg-[var(--bg-card)] border rounded-xl border-slate-200/80 dark:border-white/[0.08] overflow-hidden ">
+            <div className="rounded-xl border-slate-200/80 dark:border-white/[0.08] overflow-hidden ">
               <div className="overflow-x-auto">
                 <table className="w-full text-left">
                   <thead>
-                    <tr className="bg-slate-50/80 dark:bg-white/[0.04] border-b border-slate-200/80 dark:border-white/[0.08]">
+                    <tr className="border-b border-slate-200/80 dark:border-white/[0.08]">
                       <th className="px-4 lg:px-6 py-4 text-[10px] lg:text-xs font-bold text-slate-500 dark:text-neutral-400 uppercase tracking-wider">Client</th>
                       <th className="px-4 lg:px-6 py-4 text-[10px] lg:text-xs font-bold text-slate-500 dark:text-neutral-400 uppercase tracking-wider hidden sm:table-cell">Progress</th>
                       <th className="px-4 lg:px-6 py-4 text-[10px] lg:text-xs font-bold text-slate-500 dark:text-neutral-400 uppercase tracking-wider hidden md:table-cell">Last Active</th>
@@ -193,10 +242,11 @@ export default function ClientsPage() {
                   <tbody className="divide-y divide-slate-100 dark:divide-white/[0.05]">
                     {(data.data ?? []).map((client: any, index) => {
                       const status = getClientStatus(client)
-                      const daysSinceCreated = client.created_at
-                        ? Math.floor((Date.now() - new Date(client.created_at).getTime()) / (1000 * 60 * 60 * 24))
-                        : 30
-                      const progress = Math.min(100, Math.max(5, 100 - (daysSinceCreated * 2)))
+                      const progress = clientProgressMap.get(client.id)
+                      const hasActivePlan = progress?.hasActivePlan ?? false
+                      const progressPct = progress?.progressPct ?? 0
+                      const isInGroupProgram = groupClientIds.has(client.id)
+                      const needsNewPlan = !hasActivePlan
 
                       return (
                         <motion.tr
@@ -220,45 +270,83 @@ export default function ClientsPage() {
                                 </div>
                               )}
                               <div>
-                                <div className="text-sm font-semibold text-[var(--text-primary)] dark:text-[var(--text-primary)]">{client.name}</div>
+                                <div className="flex items-center gap-2">
+                                  <div className="text-sm font-semibold text-[var(--text-primary)] dark:text-[var(--text-primary)]">{client.name}</div>
+                                  {isInGroupProgram && (
+                                    <Link 
+                                      href={`/workout-plans/`}
+                                      onClick={(e) => e.stopPropagation()}
+                                      title="View group program"
+                                      className="inline-flex items-center gap-1 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-tight bg-indigo-50 text-indigo-700 border border-indigo-200/60 rounded-lg dark:bg-indigo-900/30 dark:text-indigo-400 dark:border-indigo-800 hover:bg-indigo-100 dark:hover:bg-indigo-900/50 transition-colors"
+                                    >
+                                      <UsersRound className="w-3 h-3" />
+                                      Group
+                                    </Link>
+                                  )}
+                                  {needsNewPlan && (
+                                    <span className="inline-flex items-center gap-1 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-tight bg-red-50 text-red-700 border border-red-200/60 rounded-lg dark:bg-red-900/30 dark:text-red-400 dark:border-red-800">
+                                      <AlertCircle className="w-3 h-3" />
+                                      Needs Plan
+                                    </span>
+                                  )}
+                                </div>
                                 <div className="text-xs text-slate-500 dark:text-neutral-400">
-                                  {client.created_at
-                                    ? `Joined ${daysSinceCreated} ${daysSinceCreated === 1 ? 'day' : 'days'} ago`
-                                    : 'Recently added'}
+                                  {(() => {
+                                    if (!client.created_at) return 'Recently added'
+                                    const createdDate = new Date(client.created_at)
+                                    if (isNaN(createdDate.getTime())) return 'Recently added'
+                                    const days = Math.floor((Date.now() - createdDate.getTime()) / (1000 * 60 * 60 * 24))
+                                    return `Joined ${days} ${days === 1 ? 'day' : 'days'} ago`
+                                  })()}
                                 </div>
                               </div>
                             </div>
                           </td>
 
                           <td className="px-4 lg:px-6 py-4 hidden sm:table-cell">
-                            <div className="w-full max-w-[180px]">
-                              <div className="flex justify-between items-center mb-1 text-xs">
-                                <span className="text-[var(--text-primary)] dark:text-[var(--text-primary)] font-medium">{progress}%</span>
-                                <span className="text-slate-500 dark:text-neutral-400">Week {Math.ceil(progress / 16)}/6</span>
-                              </div>
-                              <div className="h-1.5 w-full bg-slate-100 dark:bg-slate-800 overflow-hidden">
-                                <div
-                                  className={`h-full transition-all ${
-                                    progress < 30 ? 'bg-red-500' : progress < 60 ? 'bg-blue-500' : 'bg-emerald-500'
-                                  }`}
-                                  style={{ width: `${progress}%` }}
-                                />
-                              </div>
+                            <div className="w-full max-w-[200px]">
+                              {hasActivePlan ? (
+                                <>
+                                  <div className="flex justify-between items-center mb-1.5 text-xs">
+                                    <span className="text-[var(--text-primary)] dark:text-[var(--text-primary)] font-semibold">
+                                      {progressPct}%
+                                    </span>
+                                    <span className="text-slate-500 dark:text-neutral-400">
+                                      {progress?.completedDays ?? 0}/{progress?.totalDays ?? 0} days
+                                    </span>
+                                  </div>
+                                  <div className="h-2 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+                                    <div
+                                      className={`h-full rounded-full transition-all ${
+                                        progressPct >= 80 ? 'bg-emerald-500' : 
+                                        progressPct >= 50 ? 'bg-blue-500' : 
+                                        progressPct >= 25 ? 'bg-amber-500' : 'bg-slate-400'
+                                      }`}
+                                      style={{ width: `${Math.min(100, progressPct)}%` }}
+                                    />
+                                  </div>
+                                </>
+                              ) : (
+                                <div className="flex items-center gap-2 text-amber-600 dark:text-amber-400">
+                                  <AlertCircle className="w-4 h-4" />
+                                  <span className="text-xs font-medium">Needs Plan</span>
+                                </div>
+                              )}
                             </div>
                           </td>
 
                           <td className="px-4 lg:px-6 py-4 hidden md:table-cell">
                             <div className="text-sm text-[var(--text-primary)] dark:text-[var(--text-primary)]">
-                              {client.created_at
-                                ? (() => {
-                                    const date = new Date(client.created_at)
-                                    const now = Date.now()
-                                    const diff = now - date.getTime()
-                                    if (diff < 1000 * 60 * 60 * 24) return 'Today'
-                                    if (diff < 1000 * 60 * 60 * 48) return 'Yesterday'
-                                    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
-                                  })()
-                                : 'Recently'}
+                              {(() => {
+                                if (!client.created_at) return 'Recently'
+                                const date = new Date(client.created_at)
+                                if (isNaN(date.getTime())) return 'Recently'
+                                const now = Date.now()
+                                const diff = now - date.getTime()
+                                if (diff < 1000 * 60 * 60 * 24) return 'Today'
+                                if (diff < 1000 * 60 * 60 * 48) return 'Yesterday'
+                                return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+                              })()}
                             </div>
                             <div className="text-xs text-slate-500 dark:text-neutral-400">Program active</div>
                           </td>
@@ -312,7 +400,7 @@ export default function ClientsPage() {
           )}
         </QueryWrapper>
 
-       
+
       </div>
     </DashboardLayout>
   )

@@ -1,5 +1,4 @@
 "use client"
-import DashboardLayout from '@/components/layout/DashboardLayout'
 import {
   useClient, useClientAnalytics, useMessages, useSendMessage,
   useCheckins, useCreateCheckin, useUpdateCheckin, useDeleteCheckin, useWorkoutPlans, useNutritionPlans,
@@ -314,7 +313,7 @@ function NutritionListCard({
       <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
         <button
           onClick={onToggle}
-          className="w-16 h-16 sm:w-24 sm:h-24 overflow-hidden shrink-0 bg-gradient-to-br from-emerald-100 to-blue-100 dark:from-slate-800 dark:to-surface-page-dark border border-slate-200 dark:border-white/[0.1] flex items-center justify-center text-left self-start"
+          className="w-16 h-16 sm:w-24 sm:h-24 rounded-s-xl  overflow-hidden shrink-0 bg-gradient-to-br from-emerald-100 to-blue-100 dark:from-slate-800 dark:to-surface-page-dark border border-slate-200 dark:border-white/[0.1] flex items-center justify-center text-left self-start"
         >
           <Salad className="w-7 h-7 sm:w-9 sm:h-9 text-emerald-600 dark:text-white" />
         </button>
@@ -422,7 +421,7 @@ function NutritionListCard({
             <div className="flex items-center gap-2 shrink-0">
               <Link
                 href={`/nutrition-plans/${plan.id}`}
-                className="bg-brand-600 hover:bg-brand-700 px-4 py-2 font-semibold text-xs text-white transition-colors"
+                className="bg-brand-600 hover:bg-brand-700 px-4 rounded-s-xl  py-2 font-semibold text-xs text-white transition-colors"
               >
                 Open Plan
               </Link>
@@ -534,7 +533,7 @@ function DailyProtocol({
         return (
           <div className="mt-4 pt-4 border-t border-slate-100 dark:border-white/[0.05]">
             <p className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-2">Today&apos;s Focus</p>
-            <div className="flex items-center gap-3 p-3 " style={{ backgroundColor: `${cfg.color}0d`, border: `1px solid ${cfg.color}25` }}>
+            <div className="flex items-center gap-3 p-3 rounded-s-xl " style={{ backgroundColor: `${cfg.color}0d`, border: `1px solid ${cfg.color}25` }}>
               <div className="w-9 h-9 flex items-center justify-center text-xl flex-shrink-0" style={{ backgroundColor: `${cfg.color}20` }}>
                 {cfg.icon}
               </div>
@@ -542,7 +541,7 @@ function DailyProtocol({
                 <p className="text-[13px] font-semibold text-[var(--text-primary)] dark:text-[var(--text-primary)] truncate">{todayWorkout.day} — {activePlan.title}</p>
                 <p className="text-[11px] text-[var(--text-secondary)] dark:text-[var(--text-secondary)]">{todayWorkout.exercises?.length ?? 0} exercises · {cfg.label}</p>
               </div>
-              <span className={`text-[11px] font-semibold px-2.5 py-1 flex-shrink-0 ${
+              <span className={`text-[11px] rounded-s-xl  font-semibold px-2.5 py-1 flex-shrink-0 ${
                 isDone ? 'bg-emerald-50 dark:bg-emerald-500/15 text-emerald-600 dark:text-emerald-400'
                        : 'bg-orange-50 dark:bg-orange-500/15 text-orange-600 dark:text-orange-400'
               }`}>
@@ -829,32 +828,28 @@ export default function ClientDetailPage() {
   }, [workoutLogs])
 
   if (isLoading) return (
-    <DashboardLayout>
-      <div className="flex flex-col bg-[var(--bg-page)] dark:bg-[var(--bg-page)] animate-pulse min-h-[calc(100vh-4rem)]">
-        <div className="h-11 bg-[var(--bg-card)] border-b border-[var(--border)] dark:border-white/[0.06]" />
-        <div className="flex flex-1">
-          <div className="hidden md:block w-[300px] border-r border-[var(--border)] dark:border-white/[0.06]" />
-          <div className="flex-1 p-4 sm:p-6 space-y-4">
-            <div className="h-7 w-52 bg-slate-200 dark:bg-white/[0.06] " />
-            <div className="h-72 bg-white dark:bg-white/[0.04] border border-[var(--border)] dark:border-white/[0.06] " />
-          </div>
+    <div className="flex flex-col bg-[var(--bg-page)] dark:bg-[var(--bg-page)] animate-pulse min-h-[calc(100vh-4rem)]">
+      <div className="h-11 bg-[var(--bg-card)] border-b border-[var(--border)] dark:border-white/[0.06]" />
+      <div className="flex flex-1">
+        <div className="hidden md:block w-[300px] border-r border-[var(--border)] dark:border-white/[0.06]" />
+        <div className="flex-1 p-4 sm:p-6 space-y-4">
+          <div className="h-7 w-52 bg-slate-200 dark:bg-white/[0.06] " />
+          <div className="h-72 bg-white dark:bg-white/[0.04] border border-[var(--border)] dark:border-white/[0.06] " />
         </div>
       </div>
-    </DashboardLayout>
+    </div>
   )
 
   if (!client) return (
-    <DashboardLayout>
-      <div className="flex items-center justify-center bg-[var(--bg-page)] dark:bg-[var(--bg-page)] min-h-[calc(100vh-4rem)]">
-        <p className="text-slate-500 text-sm">Client not found.</p>
-      </div>
-    </DashboardLayout>
+    <div className="flex items-center justify-center bg-[var(--bg-page)] dark:bg-[var(--bg-page)] min-h-[calc(100vh-4rem)]">
+      <p className="text-slate-500 text-sm">Client not found.</p>
+    </div>
   )
 
   const completedCheckins = (checkins ?? []).filter((c: any) => c.status === 'completed').length
 
   return (
-    <DashboardLayout>
+    <>
       <div className="flex flex-col bg-[var(--bg-page)] dark:bg-[var(--bg-page)] min-h-[calc(100vh-4rem)]">
 
         {/* ── Dashboard Header ─────────────────────────────────────── */}
@@ -878,7 +873,7 @@ export default function ClientDetailPage() {
         />
 
         {/* ── Breadcrumb bar ─────────────────────────────────────── */}
-        <div className="flex items-center justify-between px-3 sm:px-5 h-11 border-b border-[var(--border)] dark:border-white/[0.06] bg-[var(--bg-card)] flex-shrink-0">
+        <div className="flex items-center justify-between px-3 sm:px-5 h-11 border-b border-[var(--border)] flex-shrink-0">
           <div className="flex items-center gap-2 text-[11px] font-semibold tracking-widest uppercase min-w-0">
             <button onClick={() => setSidebarOpen(true)} className="md:hidden p-1 -ml-1 text-slate-500 hover:text-slate-800 dark:hover:text-white">
               <Menu size={16} />
@@ -886,7 +881,7 @@ export default function ClientDetailPage() {
             <Link href="/clients" className="flex items-center gap-1.5 text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 transition-colors flex-shrink-0">
               <ArrowLeft size={13} /> <span className="hidden sm:inline">Clients</span>
             </Link>
-            <span className="text-slate-300 dark:text-slate-700 hidden sm:inline">/</span>
+            <span className="text-slate-300 dark:text-slate-700 hidden sm:inline"></span>
             <span className="text-slate-700 dark:text-slate-300 truncate">{client.name}</span>
           </div>
           <div className="flex items-center gap-1.5 sm:gap-2 flex-shrink-0">
@@ -907,7 +902,7 @@ export default function ClientDetailPage() {
               onClick={handleDeleteClient}
               disabled={deleteClient.isPending}
               title="Permanently delete this client (cannot be undone)"
-              className="hidden sm:inline-flex items-center gap-1.5 border border-red-200 dark:border-red-900/40 px-3 py-1.5 text-xs font-semibold text-red-600 dark:text-red-300 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors disabled:opacity-50"
+              className="hidden sm:inline-flex rounded-s-xl  items-center gap-1.5 border border-red-200 dark:border-red-900/40 px-3 py-1.5 text-xs font-semibold text-red-600 dark:text-red-300 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors disabled:opacity-50"
             >
               {deleteClient.isPending ? <Loader2 size={13} className="animate-spin" /> : <Trash2 size={13} />}
               Delete Permanently
@@ -917,9 +912,7 @@ export default function ClientDetailPage() {
               <input placeholder="Search" className="bg-transparent text-xs text-slate-700 dark:text-slate-300 placeholder:text-slate-400 dark:placeholder:text-slate-600 outline-none w-28" />
               <kbd className="text-[10px] text-slate-500 dark:text-slate-700 bg-white dark:bg-white/[0.04] border border-[var(--border)] dark:border-white/[0.06] px-1.5 py-0.5 font-mono">⌘F</kbd>
             </div>
-            <button className="text-slate-500 dark:text-slate-600 hover:text-slate-700 dark:hover:text-slate-300 p-1.5 hover:bg-slate-100 dark:hover:bg-white/[0.05] transition-colors">
-              <MoreVertical size={15} />
-            </button>
+            
           </div>
         </div>
 
@@ -948,7 +941,7 @@ export default function ClientDetailPage() {
             <div className="sm:hidden flex items-center gap-2 px-4 py-2.5 border-b border-slate-100 dark:border-white/[0.04]">
               <button onClick={handleToggleBlockClient} disabled={blockClient.isPending || unblockClient.isPending}
                 title={client.is_blocked ? 'Restore client access' : client.active ? 'Temporarily disable client access' : 'Restore client access'}
-                className={`flex-1 inline-flex items-center justify-center gap-1.5 border px-2 py-1.5 text-[11px] font-semibold transition-colors disabled:opacity-50 ${
+                className={`flex-1 inline-flex rounded-s-xl  items-center justify-center gap-1.5 border px-2 py-1.5 text-[11px] font-semibold transition-colors disabled:opacity-50 ${
                   client.is_blocked || !client.active
                     ? 'border-emerald-200 dark:border-emerald-900/40 text-emerald-700 dark:text-emerald-300'
                     : 'border-amber-200 dark:border-amber-900/40 text-amber-700 dark:text-amber-300'
@@ -958,7 +951,7 @@ export default function ClientDetailPage() {
               </button>
               <button onClick={handleDeleteClient} disabled={deleteClient.isPending}
                 title="Permanently delete this client (cannot be undone)"
-                className="flex-1 inline-flex items-center justify-center gap-1.5 border border-red-200 dark:border-red-900/40 px-2 py-1.5 text-[11px] font-semibold text-red-600 dark:text-red-300 transition-colors disabled:opacity-50">
+                className="flex-1 inline-flex rounded-s-xl  items-center justify-center gap-1.5 border border-red-200 dark:border-red-900/40 px-2 py-1.5 text-[11px] font-semibold text-red-600 dark:text-red-300 transition-colors disabled:opacity-50">
                 {deleteClient.isPending ? <Loader2 size={11} className="animate-spin" /> : <Trash2 size={11} />}
                 Delete
               </button>
@@ -1201,7 +1194,7 @@ export default function ClientDetailPage() {
                       </p>
                     </div>
                     <Link href={`/workout-plans/new?client=${id}`}
-                      className="flex items-center gap-1.5 px-4 py-2 text-[12px] font-semibold bg-brand-600 hover:bg-brand-700 text-white transition-colors self-start sm:self-auto ">
+                      className="flex items-center gap-1.5 px-4 py-2 rounded-s-xl  text-[12px] font-semibold bg-brand-600 hover:bg-brand-700 text-white transition-colors self-start sm:self-auto ">
                       <Plus size={14} /> New Plan
                     </Link>
                   </div>
@@ -1213,7 +1206,7 @@ export default function ClientDetailPage() {
                       <p className="text-[14px] font-medium text-[var(--text-secondary)] dark:text-[var(--text-secondary)] mb-1">No workout plans yet</p>
                       <p className="text-[12px] text-slate-400 dark:text-slate-500 mb-5">Create a new plan to get started</p>
                       <Link href={`/workout-plans/new?client=${id}`}
-                        className="inline-flex items-center gap-1.5 px-5 py-2.5 text-[12px] font-semibold bg-brand-600 hover:bg-brand-700 text-white transition-colors ">
+                        className="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-s-xl text-[12px] font-semibold bg-brand-600 hover:bg-brand-700 text-white transition-colors ">
                         <Plus size={14} /> Create First Plan
                       </Link>
                     </div>
@@ -1231,7 +1224,7 @@ export default function ClientDetailPage() {
                         return (
                           <div
                             key={plan.id}
-                            className={`border transition-all overflow-hidden ${
+                            className={`transition-all overflow-hidden ${
                               isExpanded
                                 ? 'border-blue-300 dark:border-blue-700/50 bg-[var(--bg-card)] '
                                 : 'border-[var(--border)] dark:border-white/[0.07] bg-[var(--bg-card)]  hover:'
@@ -1280,7 +1273,7 @@ export default function ClientDetailPage() {
                                   {/* View Details toggle */}
                                   <button
                                     onClick={() => setExpandedPlan(isExpanded ? null : plan.id)}
-                                    className="hidden sm:flex items-center gap-1 px-3 py-1.5 border border-[var(--border)] dark:border-white/[0.08] bg-white dark:bg-white/[0.03] text-[11px] font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-white/[0.06] transition-colors">
+                                    className="hidden sm:flex items-center rounded-s-xl  gap-1 px-3 py-1.5 border border-[var(--border)] dark:border-white/[0.08] bg-white dark:bg-white/[0.03] text-[11px] font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-white/[0.06] transition-colors">
                                     View Details
                                     <ChevronDown size={12} className={`transition-transform ${isExpanded ? 'rotate-180' : ''}`} />
                                   </button>
@@ -1298,7 +1291,7 @@ export default function ClientDetailPage() {
                               {/* Mobile View Details */}
                               <button
                                 onClick={() => setExpandedPlan(isExpanded ? null : plan.id)}
-                                className="sm:hidden flex items-center justify-center gap-1 px-3 py-1.5 border border-[var(--border)] dark:border-white/[0.08] bg-white dark:bg-white/[0.03] text-[11px] font-semibold text-slate-600 dark:text-slate-300">
+                                className="sm:hidden flex items-center justify-center gap-1 px-3 py-1.5 rounded-s-xl border border-[var(--border)] dark:border-white/[0.08] bg-white dark:bg-white/[0.03] text-[11px] font-semibold text-slate-600 dark:text-slate-300">
                                 {isExpanded ? 'Hide Details' : 'View Details'}
                                 <ChevronDown size={12} className={`transition-transform ${isExpanded ? 'rotate-180' : ''}`} />
                               </button>
@@ -1350,7 +1343,7 @@ export default function ClientDetailPage() {
                                             <div className="flex-1">
                                               <div className="flex items-center gap-2">
                                                 <p className="text-[13px] font-medium text-[var(--text-primary)] dark:text-[var(--text-primary)]">{day.day}</p>
-                                                <span className="text-[10px] font-medium px-1.5 py-0.5 "
+                                                <span className="text-[10px] font-medium px-1.5 py-0.5 rounded-s-xl"
                                                   style={{ color: dayCfg.color, background: dayCfg.bg }}>
                                                   {dayCfg.label}
                                                 </span>
@@ -1400,7 +1393,7 @@ export default function ClientDetailPage() {
                                 {/* Edit link */}
                                 <div className="border-t border-slate-100 dark:border-white/[0.06] p-4 sm:px-5 flex items-center justify-end gap-2 bg-[var(--bg-card)] ">
                                   <Link href={`/workout-plans/${plan.id}`}
-                                    className="inline-flex items-center gap-1.5 px-4 py-2 text-[12px] font-semibold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/15 hover:bg-blue-100 dark:hover:bg-blue-900/25 transition-colors">
+                                    className="inline-flex items-center gap-1.5 px-4 py-2 text-[12px] rounded-s-xl font-semibold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/15 hover:bg-blue-100 dark:hover:bg-blue-900/25 transition-colors">
                                     <ExternalLink size={12} /> Open Plan
                                   </Link>
                                 </div>
@@ -1648,7 +1641,7 @@ export default function ClientDetailPage() {
                   <div className="flex items-center justify-between">
                     <h3 className="text-[14px] font-semibold text-[var(--text-primary)] dark:text-[var(--text-primary)]">Nutrition Plans</h3>
                     <Link href={`/nutrition-plans/new?client=${id}`}
-                      className="flex items-center gap-1.5 px-3 py-1.5 text-[12px] font-semibold bg-brand-600 text-white transition-colors">
+                      className="flex items-center rounded-s-xl  gap-1.5 px-3 py-1.5 text-[12px] font-semibold bg-brand-600 text-white transition-colors">
                       <Plus size={13} /> New Plan
                     </Link>
                   </div>
@@ -1990,19 +1983,19 @@ export default function ClientDetailPage() {
                     </div>
                     <button
                       onClick={() => openScheduleModal(new Date())}
-                      className="flex items-center gap-1.5 px-4 py-2 text-[12px] font-semibold bg-brand-600 cursor-pointer hover:bg-brand-700 text-white transition-colors self-start sm:self-auto ">
+                      className="flex items-center gap-1.5 px-4 py-2 rounded-s-xl  text-[12px] font-semibold bg-brand-600 cursor-pointer hover:bg-brand-700 text-white transition-colors self-start sm:self-auto ">
                       <Plus size={14} /> Create Appointment
                     </button>
                   </div>
 
                   {/* ── Filter tabs + actions ── */}
-                  <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="flex flex-col gap-3 sm:flex-row rounded-s-xl  sm:items-center sm:justify-between">
                     <div className="flex items-center gap-0.5 overflow-x-auto pb-1 sm:pb-0">
                       {filterTabs.map(f => (
                         <button
                           key={f}
                           onClick={() => setActiveFilter(f)}
-                          className={`px-3 py-1.5 text-[12px] font-medium whitespace-nowrap transition-colors ${
+                          className={`px-3 py-1.5 text-[12px] rounded-s-xl  font-medium whitespace-nowrap transition-colors ${
                             activeFilter === f
                               ? 'text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 font-semibold'
                               : 'text-[var(--text-secondary)] dark:text-[var(--text-secondary)] hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-white/[0.04]'
@@ -2026,7 +2019,7 @@ export default function ClientDetailPage() {
                       <p className="text-[12px] text-slate-400 dark:text-slate-500 mb-5">Schedule a new meeting to get started</p>
                       <button
                         onClick={() => openScheduleModal(new Date())}
-                        className="inline-flex items-center gap-1.5 px-5 py-2.5 text-[12px] font-semibold bg-brand-600 hover:bg-brand-700 text-white transition-colors ">
+                        className="inline-flex items-center gap-1.5 px-5 py-2.5 text-[12px] rounded-s-xl font-semibold bg-brand-600 hover:bg-brand-700 text-white transition-colors ">
                         <Plus size={14} /> Schedule First Meeting
                       </button>
                     </div>
@@ -2060,9 +2053,9 @@ export default function ClientDetailPage() {
                               return (
                                 <div
                                   key={c.id}
-                                  className={` border transition-all overflow-hidden ${
+                                  className={` transition-all overflow-hidden ${
                                     isExpanded
-                                      ? 'border-blue-300 dark:border-blue-700/50 bg-[var(--bg-card)] '
+                                      ? ' bg-[var(--bg-card)] '
                                       : 'border-[var(--border)] dark:border-white/[0.07] bg-[var(--bg-card)]  hover:'
                                   }`}
                                 >
@@ -2102,19 +2095,13 @@ export default function ClientDetailPage() {
                                         {/* View Details toggle */}
                                         <button
                                           onClick={() => setActiveChatId(isExpanded ? null : c.id)}
-                                          className="hidden sm:flex items-center gap-1 px-3 py-1.5 border border-[var(--border)] dark:border-white/[0.08] bg-white dark:bg-white/[0.03] text-[11px] font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-white/[0.06] transition-colors">
+                                          className="hidden sm:flex items-center gap-1 px-3 py-1.5 rounded-s-xl  border border-[var(--border)] dark:border-white/[0.08] bg-white dark:bg-white/[0.03] text-[11px] font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-white/[0.06] transition-colors">
                                           View Details
                                           <ChevronDown size={12} className={`transition-transform ${isExpanded ? 'rotate-180' : ''}`} />
                                         </button>
 
                                         {/* More menu dot */}
-                                        <button
-                                          className="w-8 h-8 border border-[var(--border)] dark:border-white/[0.08] flex items-center justify-center text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-white/[0.06] transition-colors"
-                                          aria-label="More options"
-                                          title="More options"
-                                        >
-                                          <MoreVertical size={14} />
-                                        </button>
+                                       
                                       </div>
                                     </div>
 
@@ -2220,26 +2207,26 @@ export default function ClientDetailPage() {
                                             )}
                                             {c.type === 'call' && client?.phone && (
                                               <a href={`tel:${client.phone}`}
-                                                className="flex items-center gap-1.5 px-4 py-2 text-[12px] font-semibold bg-emerald-600 hover:bg-emerald-500 text-white transition-colors ">
+                                                className="flex items-center gap-1.5  rounded-s-xl  px-4 py-2 text-[12px] font-semibold bg-emerald-600 hover:bg-emerald-500 text-white transition-colors ">
                                                 <PhoneCall size={13} /> Call Now
                                               </a>
                                             )}
                                             <button
                                               onClick={() => handleRescheduleCheckin(c)}
-                                              className="flex items-center gap-1.5 px-4 py-2 text-[12px] font-semibold bg-brand-600 hover:bg-brand-700 text-white transition-colors ">
+                                              className="flex items-center gap-1.5 px-4 rounded-s-xl py-2 text-[12px] font-semibold bg-brand-600 hover:bg-brand-700 text-white transition-colors ">
                                               <RefreshCw size={13} /> Reschedule
                                             </button>
                                             <button
                                               onClick={() => handleCancelCheckin(c)}
                                               disabled={deleteCheckin.isPending}
-                                              className="flex items-center gap-1.5 px-3 py-2 text-[12px] font-medium text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/15 transition-colors border border-transparent hover:border-red-200 dark:hover:border-red-800/30 disabled:opacity-50 disabled:cursor-not-allowed">
+                                              className="flex items-center gap-1.5 px-3 py-2 text-[12px] rounded-s-xl  font-medium text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/15 transition-colors border border-transparent hover:border-red-200 dark:hover:border-red-800/30 disabled:opacity-50 disabled:cursor-not-allowed">
                                               {deleteCheckin.isPending ? 'Cancelling…' : 'Cancel'}
                                             </button>
                                           </>
                                         )}
                                         <button
                                           onClick={() => setActiveChatId(activeChatId === `chat-${c.id}` ? null : `chat-${c.id}`)}
-                                          className={`flex items-center gap-1.5 px-3 py-2 text-[12px] font-medium transition-colors ml-auto ${
+                                          className={`flex items-center gap-1.5 px-3 py-2  rounded-s-xl  text-[12px] font-medium transition-colors ml-auto ${
                                             activeChatId === `chat-${c.id}`
                                               ? 'bg-purple-600 text-white'
                                               : 'text-[var(--text-secondary)] dark:text-[var(--text-secondary)] border border-[var(--border)] dark:border-white/[0.08] hover:bg-slate-50 dark:hover:bg-white/[0.04]'
@@ -2292,7 +2279,7 @@ export default function ClientDetailPage() {
                                               className="flex-1 bg-[var(--bg-page)] dark:bg-[var(--bg-page)] border border-[var(--border)] dark:border-white/[0.07] px-3 py-2 text-[12px] text-[var(--text-primary)] dark:text-[var(--text-primary)] placeholder:text-slate-400 dark:placeholder:text-slate-600 outline-none focus:border-blue-400 dark:focus:border-white/[0.18]"
                                             />
                                             <button onClick={handleSend} disabled={!msg.trim()}
-                                              className="px-3 py-2 bg-brand-600 hover:bg-brand-700 text-white transition-colors disabled:opacity-40">
+                                              className="px-3 py-2 bg-brand-600 hover:bg-brand-700 rounded-s-xl  text-white transition-colors disabled:opacity-40">
                                               <Send size={13} />
                                             </button>
                                           </div>
@@ -2336,7 +2323,7 @@ export default function ClientDetailPage() {
               </div>
               <button
                 onClick={closeScheduleModal}
-                className="w-7 h-7 flex items-center justify-center text-slate-500 dark:text-slate-600 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/[0.06] transition-colors">
+                className="w-7 h-7 flex items-center justify-center text-slate-500 dark:text-slate-600 rounded-s-xl  hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/[0.06] transition-colors">
                 <X size={14} />
               </button>
             </div>
@@ -2373,7 +2360,7 @@ export default function ClientDetailPage() {
                     <button
                       key={t}
                       onClick={() => setScheduleForm(f => ({ ...f, type: t }))}
-                      className={`flex items-center justify-center gap-1.5 py-2.5 border text-[12px] font-semibold transition-colors capitalize ${
+                      className={`flex items-center justify-center gap-1.5 py-2.5 border rounded-s-xl  text-[12px] font-semibold transition-colors capitalize ${
                         scheduleForm.type === t
                           ? t === 'video' ? 'border-blue-500/50 bg-blue-500/10 text-blue-400'
                             : t === 'call' ? 'border-emerald-500/50 bg-emerald-500/10 text-emerald-400'
@@ -2420,13 +2407,13 @@ export default function ClientDetailPage() {
             <div className="flex items-center justify-end gap-2 px-6 py-4 border-t border-[var(--border)] dark:border-white/[0.07]">
               <button
                 onClick={closeScheduleModal}
-                className="px-4 py-2 text-[13px] font-semibold text-slate-500 hover:text-slate-900 dark:hover:text-white border border-[var(--border)] dark:border-white/[0.07] hover:border-slate-300 dark:hover:border-white/[0.15] transition-colors">
+                className="px-4 py-2 text-[13px] font-semibold text-slate-500 rounded-s-xl  hover:text-slate-900 dark:hover:text-white border border-[var(--border)] dark:border-white/[0.07] hover:border-slate-300 dark:hover:border-white/[0.15] transition-colors">
                 Cancel
               </button>
               <button
                 onClick={handleScheduleSubmit}
                 disabled={scheduling || !scheduleForm.date}
-                className="px-5 py-2 text-[13px] font-semibold text-white bg-brand-600 hover:bg-brand-700 transition-colors disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-2">
+                className="px-5 py-2 text-[13px] font-semibold text-white bg-brand-600 hover:bg-brand-700 rounded-s-xl  transition-colors disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-2">
                 {scheduling && <RefreshCw size={12} className="animate-spin" />}
                 {scheduling ? (scheduleModal.checkinId ? 'Saving…' : 'Scheduling…') : (scheduleModal.checkinId ? 'Save Changes' : 'Schedule')}
               </button>
@@ -2451,7 +2438,7 @@ export default function ClientDetailPage() {
               </div>
               <button
                 onClick={() => { setDeleteError(null); setDeleteModal({ open: false, type: 'client' }) }}
-                className="w-7 h-7 flex items-center justify-center text-slate-500 dark:text-slate-600 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/[0.06] transition-colors">
+                className="w-7 h-7 flex items-center justify-center text-slate-500 dark:text-slate-600 rounded-s-xl  hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/[0.06] transition-colors">
                 <X size={14} />
               </button>
             </div>
@@ -2484,14 +2471,14 @@ export default function ClientDetailPage() {
             <div className="flex items-center justify-end gap-2 px-6 py-4 border-t border-[var(--border)] dark:border-white/[0.07]">
               <button
                 onClick={() => { setDeleteError(null); setDeleteModal({ open: false, type: 'client' }) }}
-                className="px-4 py-2 text-[13px] font-semibold text-slate-500 hover:text-slate-900 dark:hover:text-white border border-[var(--border)] dark:border-white/[0.07] hover:border-slate-300 dark:hover:border-white/[0.15] transition-colors"
+                className="px-4 py-2 text-[13px] font-semibold text-slate-500 rounded-s-xl  hover:text-slate-900 dark:hover:text-white border border-[var(--border)] dark:border-white/[0.07] hover:border-slate-300 dark:hover:border-white/[0.15] transition-colors"
               >
                 Cancel
               </button>
               <button
                 onClick={deleteModal.type === 'client' ? handleConfirmDeleteClient : handleConfirmDeleteWorkout}
                 disabled={deleteClient.isPending || deleteWorkoutPlan.isPending}
-                className="px-5 py-2 text-[13px] font-semibold text-white bg-red-600 hover:bg-red-700 transition-colors disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-2"
+                className="px-5 py-2 text-[13px] font-semibold text-white bg-red-600 hover:bg-red-700 rounded-s-xl  transition-colors disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-2"
               >
                 {deleteClient.isPending || deleteWorkoutPlan.isPending ? (
                   <>
@@ -2509,7 +2496,7 @@ export default function ClientDetailPage() {
           </div>
         </div>
       )}
-    </DashboardLayout>
+    </>
   )
 }
 

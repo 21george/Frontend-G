@@ -110,10 +110,10 @@ export default function AssignWorkoutPlanPage() {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-[var(--bg-card)] border border-slate-200/80 dark:border-white/[0.08] p-5 "
+          className="p-5 "
         >
           <div className="flex items-start gap-4">
-            <div className="w-12 h-12 bg-gradient-to-br from-brand-500 to-blue-600 flex items-center justify-center flex-shrink-0">
+            <div className="w-12 h-12  flex items-center justify-center flex-shrink-0">
               <Dumbbell className="w-6 h-6 text-white" />
             </div>
             <div className="flex-1">
@@ -145,13 +145,13 @@ export default function AssignWorkoutPlanPage() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.1 }}
-              className="bg-[var(--bg-card)] border border-slate-200/80 dark:border-white/[0.08] overflow-hidden "
+              className=" overflow-hidden "
             >
               {/* Header */}
-              <div className="px-5 py-4 border-b border-slate-100 dark:border-white/[0.06]">
+              <div className="px-5 py-4  border-slate-100 dark:border-white/[0.06]">
                 <div className="flex items-center justify-between gap-3">
                   <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 bg-gradient-to-br from-purple-500 to-pink-600 flex items-center justify-center">
+                    <div className="w-8 h-8 flex items-center justify-center">
                       <Users className="w-4 h-4 text-white" />
                     </div>
                     <h3 className="text-base font-bold text-[var(--text-primary)] dark:text-[var(--text-primary)]">Select Clients</h3>
@@ -163,7 +163,7 @@ export default function AssignWorkoutPlanPage() {
                       placeholder="Search clients..."
                       value={searchQuery}
                       onChange={e => setSearchQuery(e.target.value)}
-                      className="w-48 pl-9 pr-3 py-1.5 text-sm bg-[var(--bg-subtle)] dark:bg-white/[0.04] border border-[var(--border)] dark:border-white/[0.08] focus:outline-none focus:ring-2 focus:ring-brand-600/20 dark:focus:ring-brand-400/20"
+                      className="w-48 pl-9 pr-3 py-1.5  rounded-4 text-sm bg-[var(--bg-subtle)] dark:bg-white/[0.04]  border-[var(--border)] dark:border-white/[0.08] focus:outline-none focus:ring-2 focus:ring-brand-600/20 dark:focus:ring-brand-400/20"
                     />
                   </div>
                 </div>
@@ -197,7 +197,7 @@ export default function AssignWorkoutPlanPage() {
                             {client.email}
                           </div>
                         </div>
-                        <div className={`w-5 h-5 border-2 flex items-center justify-center flex-shrink-0 transition-all ${
+                        <div className={`w-5 h-5 border-2 rounded-full flex items-center justify-center flex-shrink-0 transition-all ${
                           isSelected
                             ? 'bg-brand-500 border-brand-500'
                             : 'border-slate-300 dark:border-white/[0.2]'
@@ -224,10 +224,10 @@ export default function AssignWorkoutPlanPage() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2 }}
-              className="bg-[var(--bg-card)] border border-slate-200/80 dark:border-white/[0.08] p-5 sticky top-6"
+              className=" border-slate-200/80 dark:border-white/[0.08] p-5 sticky top-6"
             >
               <div className="flex items-center gap-3 mb-4">
-                <div className="w-8 h-8 bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center">
+                <div className="w-8 h-8 flex items-center justify-center">
                   <UserPlus className="w-4 h-4 text-white" />
                 </div>
                 <h3 className="text-base font-bold text-[var(--text-primary)] dark:text-[var(--text-primary)]">Selection Summary</h3>
@@ -278,11 +278,11 @@ export default function AssignWorkoutPlanPage() {
               </div>
 
               {/* Action buttons */}
-              <div className="space-y-2">
+              <div className="space-y-2 flex-1 flex flex-col-2 gap-2">
                 <button
                   onClick={handleAssign}
                   disabled={selectedClients.length === 0 || assignMutation.isPending}
-                  className="w-full py-2.5 bg-brand-600 hover:bg-brand-700 disabled:bg-slate-300 dark:disabled:bg-white/[0.1] text-white text-sm font-medium transition-colors flex items-center justify-center gap-2 disabled:cursor-not-allowed"
+                  className="w-full py-2 rounded-4 bg-brand-600 hover:bg-brand-700 disabled:bg-slate-300 dark:disabled:bg-white/[0.1] text-white text-sm font-medium transition-colors flex items-center justify-center gap-2 disabled:cursor-not-allowed"
                 >
                   {assignMutation.isPending ? (
                     <>

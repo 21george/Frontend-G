@@ -1,8 +1,9 @@
 'use client'
 
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuthStore } from '@/store/auth'
+import { useSubscriptionStore } from '@/store/subscription'
 import Sidebar from '@/components/layout/Sidebar'
 import DashboardHeader from '@/components/layout/DashboardHeader'
 import { motion } from 'framer-motion'
@@ -10,26 +11,42 @@ import { motion } from 'framer-motion'
 function AuthLayout({
   children,
   showHeader = true,
-  showGreeting = false
+  showGreeting = false,
 }: {
   children: React.ReactNode
   showHeader?: boolean
   showGreeting?: boolean
 }) {
-  const { isAuthenticated, accessToken, refreshAccessToken, clearAuth } = useAuthStore()
+  const { isAuthenticated, accessToken, refreshAccessToken, clearAuth, coach } = useAuthStore()
+  const { setupToken } = useSubscriptionStore()
   const router = useRouter()
   const refreshInProgressRef = useRef(false)
+  const [isLoading, setIsLoading] = useState(!accessToken && isAuthenticated)
 
   useEffect(() => {
     if (!isAuthenticated) {
       router.replace('/auth/login')
       return
     }
+
+    // Pending coaches must complete subscription selection before accessing the app
+    if (coach?.subscription_status === 'pending') {
+      const token = setupToken ?? '';
+      const coachId = coach.id ?? '';
+      if (token && coachId) {
+        router.replace(`/subscription/select-plan?token=${encodeURIComponent(token)}&coach_id=${coachId}`);
+      } else {
+        router.replace('/auth/login');
+      }
+      return
+    }
+
     // Silently obtain a new access token on app load when the in-memory
     // token is absent (e.g. after a page refresh rehydrated coach/isAuthenticated
     // from localStorage but accessToken was not persisted).
     if (!accessToken && !refreshInProgressRef.current) {
       refreshInProgressRef.current = true
+      setIsLoading(true)
       refreshAccessToken()
         .then((token) => {
           if (!token) {
@@ -45,11 +62,17 @@ function AuthLayout({
         })
         .finally(() => {
           refreshInProgressRef.current = false
+          setIsLoading(false)
         })
+    } else {
+      setIsLoading(false)
     }
-  }, [isAuthenticated, accessToken, refreshAccessToken, clearAuth, router])
+  }, [isAuthenticated, accessToken, refreshAccessToken, clearAuth, router, coach, setupToken])
 
-  if (!isAuthenticated) return null
+  if (!isAuthenticated || isLoading) return null
+
+  // Don't render dashboard content for pending coaches
+  if (coach?.subscription_status === 'pending') return null
 
   return (
     <motion.div

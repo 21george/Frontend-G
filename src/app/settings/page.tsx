@@ -1,122 +1,46 @@
 'use client'
 
-import DashboardLayout from '@/components/layout/DashboardLayout'
-import DashboardHeader from '@/components/layout/DashboardHeader'
+import { useState, useEffect } from 'react'
 import { useAuthStore } from '@/store/auth'
-import { useState, useRef, useCallback, useEffect } from 'react'
-import api from '@/lib/api'
 import { useThemeStore } from '@/store/theme'
+import { useSubscription, useManageBilling } from '@/lib/hooks'
 import Image from 'next/image'
+import Link from 'next/link'
+import { motion, AnimatePresence } from 'framer-motion'
 import {
   User, Mail, Phone, Globe, Link as LinkIcon, Lock, Bell, Shield,
-  CreditCard, ChevronRight, Loader2, Camera, Check, X,
-  Moon, Sun, LogOut, Key, MessageSquare, Calendar, UserCheck
+  ChevronRight, Moon, Sun, Key,
+  CreditCard, Crown, Zap, Building2, Pencil,
+  Loader2, AlertTriangle, Clock
 } from 'lucide-react'
-import { motion, AnimatePresence } from 'framer-motion'
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Reusable UI Components
-// ─────────────────────────────────────────────────────────────────────────────
+/* ═══════════════════════════════════════════════════════════════════════════
+   UI Primitives
+   ═══════════════════════════════════════════════════════════════════════════ */
 
 function Card({ children, className = '' }: { children: React.ReactNode; className?: string }) {
   return (
-    <div className={`bg-[var(--bg-card)] rounded-lg border border-[var(--border)] overflow-hidden ${className}`}>
+    <div className={`bg-[var(--bg-card)] rounded-xl border border-[var(--border)] overflow-hidden shadow-sm ${className}`}>
       {children}
     </div>
   )
 }
 
-function CardHeader({ icon, title }: { icon: React.ReactNode; title: string }) {
+function CardHeader({ icon, title, action }: { icon: React.ReactNode; title: string; action?: React.ReactNode }) {
   return (
-    <div className="flex items-center gap-3 px-6 py-4 bg-[var(--bg-subtle)] ">
-      <div className="w-9 h-9 bg-brand-600 flex items-center justify-center rounded-md">
-        {icon}
+    <div className="flex items-center justify-between px-6 py-4 border-b border-[var(--border)]">
+      <div className="flex items-center gap-3">
+        <div className="w-9 h-9 bg-[var(--btn-bg)] flex items-center justify-center rounded-lg">
+          {icon}
+        </div>
+        <h2 className="text-base font-semibold text-[var(--text-primary)]">{title}</h2>
       </div>
-      <h2 className="text-base font-semibold text-[var(--text-primary)]">{title}</h2>
+      {action && <div>{action}</div>}
     </div>
   )
 }
 
-function InputField({
-  label,
-  value,
-  onChange,
-  placeholder,
-  disabled,
-  type = 'text',
-  icon,
-}: {
-  label: string
-  value: string
-  onChange: (v: string) => void
-  placeholder?: string
-  disabled?: boolean
-  type?: string
-  icon?: React.ReactNode
-}) {
-  return (
-    <div className="space-y-1.5">
-      <label className="text-xs font-medium text-[var(--text-secondary)] uppercase tracking-wide">{label}</label>
-      <div className="relative">
-        <input
-          type={type}
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
-          disabled={disabled}
-          placeholder={placeholder}
-          className={`w-full px-4 py-2.5 pr-10 text-sm border border-[var(--border)] rounded-md transition-all focus:outline-none focus:ring-2 focus:ring-brand-500/20 ${
-            disabled
-              ? 'bg-[var(--bg-subtle)]  text-[var(--text-tertiary)] cursor-not-allowed'
-              : 'bg-[var(--bg-subtle)] text-[var(--text-primary)] focus:border-brand-500'
-          }`}
-        />
-        {icon && <div className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--text-tertiary)]">{icon}</div>}
-      </div>
-    </div>
-  )
-}
-
-function SelectField({
-  label,
-  value,
-  onChange,
-  options,
-}: {
-  label: string
-  value: string
-  onChange: (v: string) => void
-  options: { value: string; label: string }[]
-}) {
-  return (
-    <div className="space-y-1.5">
-      <label className="text-xs font-medium text-[var(--text-secondary)] uppercase tracking-wide">{label}</label>
-      <div className="relative">
-        <select
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
-          className="w-full px-4 py-2.5 pr-10 text-sm bg-[var(--bg-subtle)] border border-[var(--border)] rounded-md text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 appearance-none cursor-pointer"
-        >
-          {options.map((opt) => (
-            <option key={opt.value} value={opt.value}>
-              {opt.label}
-            </option>
-          ))}
-        </select>
-        <ChevronRight className="w-4 h-4 absolute right-3 top-1/2 -translate-y-1/2 text-[var(--text-tertiary)] rotate-90 pointer-events-none" />
-      </div>
-    </div>
-  )
-}
-
-function Toggle({
-  checked,
-  onChange,
-  disabled,
-}: {
-  checked: boolean
-  onChange: (v: boolean) => void
-  disabled?: boolean
-}) {
+function Toggle({ checked, onChange, disabled }: { checked: boolean; onChange: (v: boolean) => void; disabled?: boolean }) {
   return (
     <button
       type="button"
@@ -124,14 +48,14 @@ function Toggle({
       aria-checked={checked}
       disabled={disabled}
       onClick={() => onChange(!checked)}
-      className={`relative inline-flex h-5 w-9 flex-shrink-0 rounded-full cursor-pointer border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed ${
-        checked ? 'bg-brand-600' : 'bg-slate-300 dark:bg-slate-600'
+      className={`relative inline-flex h-6 w-11 flex-shrink-0 rounded-full cursor-pointer border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed ${
+        checked ? 'bg-[var(--accent)]' : 'bg-slate-300 dark:bg-slate-600'
       }`}
     >
       <span
         aria-hidden="true"
-        className={`pointer-events-none inline-block h-4 w-4 rounded-full transform bg-white transition duration-200 ease-in-out ${
-          checked ? 'translate-x-4' : 'translate-x-0'
+        className={`pointer-events-none inline-block h-5 w-5 rounded-full transform bg-white shadow-sm transition duration-200 ease-in-out ${
+          checked ? 'translate-x-5' : 'translate-x-0'
         }`}
       />
     </button>
@@ -144,17 +68,15 @@ function ToggleRow({
   description,
   checked,
   onChange,
-  className,
 }: {
   icon?: React.ReactNode
   label: string
   description?: string
   checked: boolean
   onChange: (v: boolean) => void
-  className?: string
 }) {
   return (
-    <div className="flex items-center justify-between py-3 px-4 hover:bg-[var(--bg-subtle)] dark:hover:bg-[var(--bg-subtle)] transition-colors">
+    <div className="flex items-center justify-between py-3.5 px-6 hover:bg-[var(--bg-subtle)] transition-colors">
       <div className="flex items-center gap-3 flex-1">
         {icon && <div className="text-[var(--text-tertiary)]">{icon}</div>}
         <div className="flex-1">
@@ -177,17 +99,14 @@ function ActionRow({
   icon?: React.ReactNode
   label: string
   description?: string
-  onClick: () => void
+  onClick?: () => void
   actionText?: string
 }) {
-  return (
-    <button
-      onClick={onClick}
-      className="w-full flex items-center justify-between py-3 px-4 hover:bg-[var(--bg-subtle)] dark:hover:bg-[var(--bg-subtle)] transition-colors text-left"
-    >
+  const content = (
+    <div className="flex items-center justify-between py-3.5 px-6 hover:bg-[var(--bg-subtle)] transition-colors w-full text-left">
       <div className="flex items-center gap-3 flex-1">
         {icon && <div className="text-[var(--text-tertiary)]">{icon}</div>}
-        <div className="flex-1 text-left">
+        <div className="flex-1">
           <p className="text-sm font-medium text-[var(--text-primary)]">{label}</p>
           {description && <p className="text-xs text-[var(--text-secondary)] mt-0.5">{description}</p>}
         </div>
@@ -196,238 +115,118 @@ function ActionRow({
         {actionText && <span className="text-sm font-medium text-[var(--text-secondary)]">{actionText}</span>}
         <ChevronRight className="w-4 h-4 text-[var(--text-tertiary)]" />
       </div>
-    </button>
+    </div>
+  )
+
+  if (onClick) {
+    return <button onClick={onClick} className="w-full">{content}</button>
+  }
+  return content
+}
+
+function InfoRow({ label, value, icon }: { label: string; value: string; icon?: React.ReactNode }) {
+  return (
+    <div className="flex items-center gap-3 py-2.5">
+      {icon && <div className="text-[var(--text-tertiary)]">{icon}</div>}
+      <div>
+        <p className="text-xs font-medium text-[var(--text-secondary)] uppercase tracking-wide">{label}</p>
+        <p className="text-sm font-medium text-[var(--text-primary)] mt-0.5">{value || '—'}</p>
+      </div>
+    </div>
   )
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Main Page Component
-// ─────────────────────────────────────────────────────────────────────────────
+/* ═══════════════════════════════════════════════════════════════════════════
+   Main Page
+   ═══════════════════════════════════════════════════════════════════════════ */
 
 export default function SettingsPage() {
-  const { coach, updateCoach, logout } = useAuthStore()
+  const { coach } = useAuthStore()
   const { theme, toggle: toggleTheme } = useThemeStore()
-  const fileInputRef = useRef<HTMLInputElement>(null)
-  const toastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const { data: subscription } = useSubscription()
+  const manageBilling = useManageBilling()
 
-  // Profile state
-  const [name, setName] = useState(coach?.name ?? '')
-  const [surname, setSurname] = useState(coach?.surname ?? '')
-  const [phone, setPhone] = useState(coach?.phone ?? '')
-  const [language, setLanguage] = useState<'en' | 'de'>(coach?.language as 'en' | 'de' ?? 'en')
-  const [linkedin, setLinkedin] = useState(coach?.social_media?.linkedin ?? '')
-  const [instagram, setInstagram] = useState(coach?.social_media?.instagram ?? '')
-  const [website, setWebsite] = useState(coach?.social_media?.website ?? '')
+  const [imageErrored, setImageErrored] = useState(false)
+  const [showPwModal, setShowPwModal] = useState(false)
 
-  // Notification toggles
-  const [notifEmail, setNotifEmail] = useState(true)
+  // Notification toggles (local state only for demo — wire to API as needed)
   const [notifNewClient, setNotifNewClient] = useState(true)
   const [notifMessages, setNotifMessages] = useState(true)
   const [notifCheckins, setNotifCheckins] = useState(true)
   const [loginAlerts, setLoginAlerts] = useState(true)
+  const [doNotDisturb, setDoNotDisturb] = useState(false)
 
-  // UI state
-  const [saving, setSaving] = useState(false)
-  const [photoUploading, setPhotoUploading] = useState(false)
-  const [toast, setToast] = useState<{ type: 'success' | 'error'; message: string } | null>(null)
-  const [dirty, setDirty] = useState(false)
-  const [showPwModal, setShowPwModal] = useState(false)
-  const [pwSaving, setPwSaving] = useState(false)
-  const [pwMessage, setPwMessage] = useState<{ type: 'ok' | 'err'; text: string } | null>(null)
+  // Password modal state
   const [pwCurrent, setPwCurrent] = useState('')
   const [pwNew, setPwNew] = useState('')
   const [pwConfirm, setPwConfirm] = useState('')
-  const [imageErrored, setImageErrored] = useState(false)
+  const [pwSaving, setPwSaving] = useState(false)
+  const [pwMessage, setPwMessage] = useState<{ type: 'ok' | 'err'; text: string } | null>(null)
 
-  // Reset image error state when profile photo changes
   useEffect(() => setImageErrored(false), [coach?.profile_photo])
 
-  const showToast = useCallback((msg: string, type: 'success' | 'error' = 'success') => {
-    setToast({ type, message: msg })
-    if (toastTimeoutRef.current) {
-      clearTimeout(toastTimeoutRef.current)
-    }
-    toastTimeoutRef.current = setTimeout(() => {
-      setToast(null)
-      toastTimeoutRef.current = null
-    }, 2500)
-  }, [])
-
-  useEffect(() => {
-    return () => {
-      if (toastTimeoutRef.current) {
-        clearTimeout(toastTimeoutRef.current)
-      }
-    }
-  }, [])
-
-  // Check for changes
-  useEffect(() => {
-    if (!coach) return
-    const changed =
-      name !== (coach.name ?? '') ||
-      surname !== (coach.surname ?? '') ||
-      phone !== (coach.phone ?? '') ||
-      language !== (coach.language ?? 'en') ||
-      linkedin !== (coach.social_media?.linkedin ?? '') ||
-      instagram !== (coach.social_media?.instagram ?? '') ||
-      website !== (coach.social_media?.website ?? '')
-    setDirty(changed)
-  }, [name, surname, phone, language, linkedin, instagram, website, coach])
-
-  // Save handler
-  const handleSave = async () => {
-    setSaving(true)
-    try {
-      const payload = {
-        name, surname, phone, language,
-        social_media: { linkedin, instagram, website },
-      }
-      const { data: res } = await api.put('/coach/profile', payload)
-      if (res.success && res.data) updateCoach(res.data)
-      setDirty(false)
-      showToast('Settings saved')
-    } catch {
-      showToast('Failed to save')
-    } finally {
-      setSaving(false)
-    }
-  }
-
-  const handleCancel = () => {
-    if (!coach) return
-    setName(coach.name ?? '')
-    setSurname(coach.surname ?? '')
-    setPhone(coach.phone ?? '')
-    setLanguage(coach.language ?? 'en')
-    setLinkedin(coach.social_media?.linkedin ?? '')
-    setInstagram(coach.social_media?.instagram ?? '')
-    setWebsite(coach.social_media?.website ?? '')
-    setDirty(false)
-  }
-
-  const MAX_FILE_SIZE = 5 * 1024 * 1024 // 5 MB
-
-  // Photo handlers
-  const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file) return
-    const ext = file.name.split('.').pop()?.toLowerCase() ?? 'jpg'
-    if (!['jpg', 'jpeg', 'png', 'webp'].includes(ext)) {
-      showToast('Only JPG, PNG, WEBP allowed')
-      return
-    }
-    if (file.size > MAX_FILE_SIZE) {
-      showToast('File too large (max 5 MB)')
-      return
-    }
-    setPhotoUploading(true)
-    try {
-      const formData = new FormData()
-      formData.append('photo', file)
-      const { data: res } = await api.post(`/coach/profile/photo?ext=${ext}`, formData, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-      })
-      const { upload_url, profile_photo } = res.data
-      if (upload_url) {
-        const uploadResponse = await fetch(upload_url, {
-          method: 'PUT',
-          body: file,
-          headers: { 'Content-Type': file.type },
-        })
-        if (!uploadResponse.ok) {
-          throw new Error('Failed to upload photo')
-        }
-      }
-      if (coach) updateCoach({ ...coach, profile_photo })
-      showToast('Photo uploaded successfully')
-    } catch (err: any) {
-      const errorMsg = err?.response?.data?.message || 'Upload failed'
-      showToast(errorMsg, 'error')
-    } finally {
-      setPhotoUploading(false)
-      if (e.target) e.target.value = ''
-    }
-  }
-
-  const handlePhotoDelete = async () => {
-    setPhotoUploading(true)
-    try {
-      await api.delete('/coach/profile/photo')
-      if (coach) updateCoach({ ...coach, profile_photo: undefined })
-      showToast('Photo removed')
-    } catch {
-      showToast('Failed to remove')
-    } finally {
-      setPhotoUploading(false)
-    }
-  }
-
-  // Password change
   const handleChangePassword = async () => {
-    if (pwNew.length < 8) {
-      setPwMessage({ type: 'err', text: 'At least 8 characters' })
-      return
-    }
-    if (pwNew !== pwConfirm) {
-      setPwMessage({ type: 'err', text: 'Passwords do not match' })
-      return
-    }
-    setPwSaving(true)
-    setPwMessage(null)
+    if (pwNew.length < 8) { setPwMessage({ type: 'err', text: 'At least 8 characters' }); return }
+    if (pwNew !== pwConfirm) { setPwMessage({ type: 'err', text: 'Passwords do not match' }); return }
+    setPwSaving(true); setPwMessage(null)
     try {
-      await api.put('/coach/profile/password', {
-        current_password: pwCurrent,
-        new_password: pwNew,
-      })
+      const api = (await import('@/lib/api')).default
+      await api.put('/coach/profile/password', { current_password: pwCurrent, new_password: pwNew })
       setPwMessage({ type: 'ok', text: 'Password changed' })
-      setTimeout(() => {
-        setShowPwModal(false)
-        setPwCurrent('')
-        setPwNew('')
-        setPwConfirm('')
-      }, 1200)
+      setTimeout(() => { setShowPwModal(false); setPwCurrent(''); setPwNew(''); setPwConfirm('') }, 1200)
     } catch (err: any) {
       setPwMessage({ type: 'err', text: err?.response?.data?.message ?? 'Failed' })
-    } finally {
-      setPwSaving(false)
-    }
+    } finally { setPwSaving(false) }
   }
 
+  const tier = subscription?.tier ?? 'free'
+  const tierLabel = tier === 'pro' ? 'Pro' : tier === 'business' ? 'Business' : 'Free'
+  const TierIcon = tier === 'business' ? Building2 : tier === 'pro' ? Crown : Zap
+  const isTrialing = subscription?.status === 'trialing'
+  const isPastDue = subscription?.status === 'past_due'
+
   return (
-    <DashboardLayout>
-      {/* Toast */}
-      <AnimatePresence>
-        {toast && (
-          <motion.div
-            initial={{ opacity: 0, x: 20, y: -10 }}
-            animate={{ opacity: 1, x: 0, y: 0 }}
-            exit={{ opacity: 0, x: 20, y: -10 }}
-            className={`fixed top-4 right-4 z-50 text-white text-sm px-4 py-2.5 flex items-center gap-2 rounded-md ${
-              toast.type === 'error'
-                ? 'bg-red-600'
-                : 'bg-brand-600'
-            }`}
-          >
-            {toast.type === 'error' ? <X className="w-4 h-4" /> : <Check className="w-4 h-4" />}
-            {toast.message}
-          </motion.div>
-        )}
-      </AnimatePresence>
+    <div className="max-w-6xl mx-auto pb-8">
+      {/* Page Header */}
+      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-8">
+        <div>
+          <h1 className="text-2xl font-semibold text-[var(--text-primary)] tracking-tight">Settings</h1>
+          <p className="text-sm text-[var(--text-secondary)] mt-1">
+            Personalize your account and manage preferences securely.
+          </p>
+        </div>
+        <Link
+          href="/settings/edit"
+          className="inline-flex items-center gap-2 px-4 py-2.5 bg-[var(--btn-bg)] text-white text-sm font-medium rounded-lg hover:bg-[var(--btn-hover)] transition-colors shadow-sm"
+        >
+          <Pencil className="w-4 h-4" />
+          Edit Profile
+        </Link>
+      </div>
 
-      {/* Header with dynamic page title and weather */}
-     
-
-      {/* Content */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 pb-24">
-        {/* Left Column - Profile */}
+      {/* Main Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* ── Left Column ── */}
         <div className="lg:col-span-2 space-y-6">
+
           {/* Profile Card */}
           <Card>
-            <div className="p-6 space-y-6 ">
-              {/* Photo Section */}
-              <div className="flex items-center gap-4 rounded-xl p-4 bg-[var(--bg-subtle)]">
-                <div className="relative h-20 w-20 rounded-full">
+            <CardHeader
+              icon={<User className="w-5 h-5 text-white" />}
+              title="Profile Settings"
+              action={
+                <Link
+                  href="/settings/edit"
+                  className="inline-flex items-center gap-1.5 text-sm font-medium text-[var(--accent)] hover:text-emerald-600 transition-colors"
+                >
+                  <Pencil className="w-3.5 h-3.5" />
+                  Edit
+                </Link>
+              }
+            />
+            <div className="p-6">
+              <div className="flex items-start gap-5 mb-6">
+                <div className="relative h-20 w-20 rounded-full flex-shrink-0">
                   {coach?.profile_photo ? (
                     <>
                       {!imageErrored ? (
@@ -441,109 +240,92 @@ export default function SettingsPage() {
                           onError={() => setImageErrored(true)}
                         />
                       ) : (
-                        <div className="absolute inset-0 flex items-center justify-center rounded-full bg-brand-600 text-white text-lg font-bold">
+                        <div className="absolute inset-0 flex items-center justify-center rounded-full bg-[var(--btn-bg)] text-white text-lg font-bold">
                           {coach.name?.[0]?.toUpperCase() ?? 'C'}
                         </div>
                       )}
-                      <button
-                        onClick={() => fileInputRef.current?.click()}
-                        className="absolute -bottom-1 -right-1 flex h-7 w-7 items-center justify-center rounded-full bg-[var(--btn-bg)] text-white hover:bg-[var(--btn-hover)] z-10 shadow-md"
-                        aria-label="Change profile photo"
-                      >
-                        <Camera className="w-3.5 h-3.5" />
-                      </button>
                     </>
                   ) : (
-                    <button
-                      onClick={() => fileInputRef.current?.click()}
-                      className="flex h-full w-full items-center justify-center rounded-xl border-2 border-dashed border-[var(--border)] text-[var(--text-tertiary)] transition-colors hover:border-[var(--btn-bg)] hover:text-[var(--btn-bg)] dark:border-[var(--border)]"
-                      aria-label="Upload profile photo"
-                    >
-                      <Camera className="w-8 h-8" />
-                    </button>
-                  )}
-                  {photoUploading && (
-                    <div className="absolute inset-0 z-20 flex items-center justify-center rounded-xl bg-black/50">
-                      <Loader2 className="w-6 h-6 text-white animate-spin" />
+                    <div className="h-full w-full flex items-center justify-center rounded-full bg-[var(--bg-subtle)] text-[var(--text-tertiary)]">
+                      <User className="w-8 h-8" />
                     </div>
                   )}
                 </div>
-                <div className="flex-1">
-                  <h3 className="text-sm font-semibold text-[var(--text-primary)]">Profile Photo</h3>
-                  <div className="flex gap-3 mt-2">
-                    <button onClick={() => fileInputRef.current?.click()} disabled={photoUploading} className="text-xs font-medium text-brand-600 hover:text-brand-700 disabled:opacity-50">
-                      {coach?.profile_photo ? 'Change' : 'Upload'}
-                    </button>
-                    {coach?.profile_photo && (
-                      <button onClick={handlePhotoDelete} disabled={photoUploading} className="text-xs font-medium text-danger hover:text-red-700 disabled:opacity-50">
-                        Remove
-                      </button>
+                <div className="flex-1 min-w-0">
+                  <h3 className="text-lg font-semibold text-[var(--text-primary)]">
+                    {coach?.name} {coach?.surname}
+                  </h3>
+                  <p className="text-sm text-[var(--text-secondary)] mt-0.5">{coach?.email}</p>
+                  <div className="flex flex-wrap gap-2 mt-3">
+                    <span className="inline-flex items-center px-2.5 py-0.5 text-xs font-medium bg-[var(--accent-light)] text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 rounded-full">
+                      Coach
+                    </span>
+                    <span className="inline-flex items-center px-2.5 py-0.5 text-xs font-medium bg-[var(--bg-subtle)] text-[var(--text-secondary)] rounded-full">
+                      {coach?.language === 'de' ? 'Deutsch' : 'English'}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-1">
+                <InfoRow label="First Name" value={coach?.name ?? ''} icon={<User className="w-4 h-4" />} />
+                <InfoRow label="Last Name" value={coach?.surname ?? ''} icon={<User className="w-4 h-4" />} />
+                <InfoRow label="Phone" value={coach?.phone ?? ''} icon={<Phone className="w-4 h-4" />} />
+                <InfoRow label="Email" value={coach?.email ?? ''} icon={<Mail className="w-4 h-4" />} />
+              </div>
+
+              {(coach?.social_media?.linkedin || coach?.social_media?.instagram || coach?.social_media?.website) && (
+                <div className="mt-5 pt-5 border-t border-[var(--border)]">
+                  <p className="text-xs font-medium text-[var(--text-secondary)] uppercase tracking-wide mb-3">Social Links</p>
+                  <div className="flex flex-wrap gap-3">
+                    {coach.social_media.linkedin && (
+                      <a href={coach.social_media.linkedin} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors">
+                        <Globe className="w-3.5 h-3.5" /> LinkedIn
+                      </a>
+                    )}
+                    {coach.social_media.instagram && (
+                      <a href={coach.social_media.instagram} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors">
+                        <Globe className="w-3.5 h-3.5" /> Instagram
+                      </a>
+                    )}
+                    {coach.social_media.website && (
+                      <a href={coach.social_media.website} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors">
+                        <LinkIcon className="w-3.5 h-3.5" /> Website
+                      </a>
                     )}
                   </div>
                 </div>
-                <input ref={fileInputRef} type="file" accept="image/jpeg,image/png,image/webp" onChange={handlePhotoUpload} className="hidden" />
-              </div>
-
-              {/* Name Fields */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <InputField label="First Name" value={name} onChange={setName} placeholder="John" icon={<User className="w-4 h-4" />} />
-                <InputField label="Last Name" value={surname} onChange={setSurname} placeholder="Doe" icon={<User className="w-4 h-4" />} />
-              </div>
-
-              {/* Language & Phone */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <SelectField
-                  label="Language"
-                  value={language}
-                  onChange={(v) => setLanguage(v as 'en' | 'de')}
-                  options={[
-                    { value: 'en', label: 'English' },
-                    { value: 'de', label: 'Deutsch' },
-                  ]}
-                />
-                <InputField label="Phone" value={phone} onChange={setPhone} placeholder="+1 234 567 890" type="tel" icon={<Phone className="w-4 h-4" />} />
-              </div>
-
-              {/* Email (Read-only) */}
-              <InputField label="Email Address" value={coach?.email ?? ''} onChange={() => {}} disabled icon={<Mail className="w-4 h-4" />} />
-
-              {/* Social Links */}
-              <div className="pt-2">
-                <div className="flex items-center gap-2 pb-3 border-b border-[var(--border)] mb-4">
-                  <LinkIcon className="w-4 h-4 text-[var(--text-tertiary)]" />
-                  <span className="text-xs font-medium text-[var(--text-secondary)] uppercase tracking-wide">Social Links</span>
-                </div>
-                <div className="space-y-4">
-                  <InputField label="LinkedIn" value={linkedin} onChange={setLinkedin} placeholder="linkedin.com/in/yourname" icon={<Globe className="w-4 h-4" />} />
-                  <InputField label="Instagram" value={instagram} onChange={setInstagram} placeholder="instagram.com/yourname" icon={<Globe className="w-4 h-4" />} />
-                  <InputField label="Website" value={website} onChange={setWebsite} placeholder="yourwebsite.com" icon={<Globe className="w-4 h-4" />} />
-                </div>
-              </div>
+              )}
             </div>
           </Card>
 
-          {/* Account & Security Card */}
+          {/* Account & Security */}
           <Card>
             <CardHeader icon={<Shield className="w-5 h-5 text-white" />} title="Account & Security" />
-            <div className="divide-y divide-slate-200 dark:divide-[var(--border)]">
+            <div className="divide-y divide-[var(--border)]">
               <ActionRow
                 icon={<Lock className="w-5 h-5" />}
                 label="Password"
-                description="Change your password"
+                description="Change your password securely"
                 actionText="Change"
                 onClick={() => setShowPwModal(true)}
               />
-              <ToggleRow
+              <ActionRow
                 icon={<Key className="w-5 h-5" />}
+                label="Manage Logged Devices"
+                description="View and revoke active sessions"
+                actionText="View all active logins"
+              />
+              <ToggleRow
+                icon={<Bell className="w-5 h-5" />}
                 label="Login Alerts"
-                description="Get notified about new logins"
+                description="Notify on new/unfamiliar logins"
                 checked={loginAlerts}
                 onChange={setLoginAlerts}
-                className='rounded-full'
               />
-              <div className="flex items-center justify-between py-3 px-4">
+              <div className="flex items-center justify-between py-3.5 px-6 hover:bg-[var(--bg-subtle)] transition-colors">
                 <div className="flex items-center gap-3">
-                  <div className="w-5 h-5 text-[var(--text-tertiary)]">
+                  <div className="text-[var(--text-tertiary)]">
                     {theme === 'dark' ? <Moon className="w-5 h-5" /> : <Sun className="w-5 h-5" />}
                   </div>
                   <div>
@@ -553,87 +335,150 @@ export default function SettingsPage() {
                 </div>
                 <Toggle checked={theme === 'dark'} onChange={toggleTheme} />
               </div>
-              <ActionRow
-                icon={<CreditCard className="w-5 h-5" />}
-                label="Manage Subscription"
-                description="View plans and billing details"
-                actionText="Open"
-                onClick={() => (window.location.href = '/billing')}
-              />
             </div>
           </Card>
         </div>
 
-        {/* Right Column - Notifications */}
+        {/* ── Right Column ── */}
         <div className="space-y-6">
+
+          {/* Notifications */}
           <Card>
-            <CardHeader icon={<Bell className="w-5 h-5 text-white" />} title="Notifications" />
-            <div className="divide-y divide-slate-200 dark:divide-[var(--border)]">
-              <ToggleRow 
-                icon={<Mail className="w-5 h-5" />}
-                label="Email Notifications"
-                description="Receive updates via email"
-                checked={notifEmail}
-                onChange={setNotifEmail}
-              />
-              <ToggleRow
-                icon={<UserCheck className="w-5 h-5" />}
-                label="New Client"
-                description="When a new client signs up"
-                checked={notifNewClient}
-                onChange={setNotifNewClient}
-                className='rounded-full'
-              />
-              <ToggleRow
-                icon={<MessageSquare className="w-5 h-5" />}
-                label="Messages"
-                description="New message notifications"
-                checked={notifMessages}
-                onChange={setNotifMessages}
-                className='rounded-full'
-              />
-              <ToggleRow
-                icon={<Calendar className="w-5 h-5" />}
-                label="Schedule Reminders"
-                description="Check-in reminders"
-                checked={notifCheckins} className="rounded-full"
-                onChange={setNotifCheckins}
-              />
+            <CardHeader icon={<Bell className="w-5 h-5 text-white" />} title="Notification Settings" />
+            <div className="divide-y divide-[var(--border)]">
+              <div className="px-6 py-3">
+                <p className="text-sm font-medium text-[var(--text-primary)]">Notification Channels</p>
+                <p className="text-xs text-[var(--text-secondary)] mt-0.5">Email & in-app</p>
+              </div>
+              <ToggleRow label="Appointments" description="New or updated check-ins" checked={notifCheckins} onChange={setNotifCheckins} />
+              <ToggleRow label="New Clients" description="When a new client signs up" checked={notifNewClient} onChange={setNotifNewClient} />
+              <ToggleRow label="Messages" description="New message notifications" checked={notifMessages} onChange={setNotifMessages} />
+              <ToggleRow label="Login Alerts" description="Notify on new/unfamiliar logins" checked={loginAlerts} onChange={setLoginAlerts} />
+              <ToggleRow label="Do Not Disturb" description="Mute notifications during set hours" checked={doNotDisturb} onChange={setDoNotDisturb} />
+              {doNotDisturb && (
+                <div className="px-6 py-3 bg-[var(--bg-subtle)]">
+                  <div className="flex items-center gap-3">
+                    <Clock className="w-4 h-4 text-[var(--text-tertiary)]" />
+                    <div className="flex items-center gap-2 text-sm text-[var(--text-secondary)]">
+                      <span>From:</span>
+                      <span className="font-medium text-[var(--text-primary)]">22:00</span>
+                      <span className="mx-1">—</span>
+                      <span>To:</span>
+                      <span className="font-medium text-[var(--text-primary)]">07:00</span>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           </Card>
 
-          {/* Danger Zone */}
-         
-        </div>
-      </div>
+          {/* Billing & Subscription */}
+          <Card>
+            <CardHeader
+              icon={<CreditCard className="w-5 h-5 text-white" />}
+              title="Billing & Subscription"
+              action={
+                <button
+                  onClick={() => manageBilling.mutate()}
+                  disabled={manageBilling.isPending}
+                  className="inline-flex items-center gap-1.5 text-sm font-medium text-[var(--accent)] hover:text-emerald-600 transition-colors disabled:opacity-50"
+                >
+                  {manageBilling.isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Pencil className="w-3.5 h-3.5" />}
+                  {manageBilling.isPending ? 'Opening…' : 'Manage'}
+                </button>
+              }
+            />
+            <div className="p-6">
+              <div className="flex items-center gap-4 mb-5">
+                <div className={`w-12 h-12 flex items-center justify-center rounded-xl ${
+                  tier === 'business' ? 'bg-indigo-100 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-400'
+                  : tier === 'pro' ? 'bg-amber-100 text-amber-600 dark:bg-amber-900/30 dark:text-amber-400'
+                  : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400'
+                }`}>
+                  <TierIcon className="w-6 h-6" />
+                </div>
+                <div>
+                  <h3 className="text-base font-semibold text-[var(--text-primary)]">{tierLabel} Plan</h3>
+                  <p className="text-sm text-[var(--text-secondary)]">
+                    {tier === 'pro' ? '$29 / month' : tier === 'business' ? '$79 / month' : 'Free forever'}
+                  </p>
+                </div>
+              </div>
 
-      {/* Sticky Save Bar */}
-      <div className="fixed bottom-0 left-0 lg:left-64 right-0 z-30 bg-[var(--bg-card)]/90 backdrop-blur-md border-t border-[var(--border)] px-6 py-4">
-        <div className="max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3">
-          <div className="text-sm">
-            {dirty ? (
-              <span className="text-amber-600 font-medium">Unsaved changes</span>
-            ) : (
-              <span className="text-[var(--text-secondary)]">All changes saved</span>
-            )}
-          </div>
-          <div className="flex items-center gap-3">
-            <button
-              onClick={handleCancel}
-              disabled={!dirty || saving}
-              className="px-4 py-2 text-sm font-medium text-[var(--text-secondary)] border border-[var(--border)] hover:bg-[var(--bg-subtle)] dark:hover:bg-[var(--bg-subtle)] transition-colors disabled:opacity-50"
-            >
-              Cancel
-            </button>
-            <button
-              onClick={handleSave}
-              disabled={!dirty || saving}
-              className="px-4 py-2 bg-brand-600 text-white text-sm font-medium hover:bg-brand-700 transition-colors disabled:opacity-50 flex items-center gap-2 rounded-md"
-            >
-              {saving && <Loader2 className="w-4 h-4 animate-spin" />}
-              {saving ? 'Saving...' : 'Save Changes'}
-            </button>
-          </div>
+              {isPastDue && (
+                <div className="mb-4 p-3 bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900/30 rounded-lg flex items-start gap-2">
+                  <AlertTriangle className="w-4 h-4 text-red-600 dark:text-red-400 flex-shrink-0 mt-0.5" />
+                  <p className="text-sm text-red-700 dark:text-red-400">Payment failed. Update your payment method to continue using premium features.</p>
+                </div>
+              )}
+
+              {isTrialing && (
+                <div className="mb-4 p-3 bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-900/30 rounded-lg">
+                  <p className="text-sm text-amber-700 dark:text-amber-400">
+                    Trial active until {subscription?.trial_ends_at ? new Date(subscription.trial_ends_at).toLocaleDateString() : 'soon'}.
+                  </p>
+                </div>
+              )}
+
+              <div className="space-y-2 mb-5">
+                <div className="flex justify-between text-sm">
+                  <span className="text-[var(--text-secondary)]">Status</span>
+                  <span className={`font-medium ${
+                    subscription?.status === 'active' ? 'text-[var(--accent)]'
+                    : isPastDue ? 'text-red-600'
+                    : 'text-[var(--text-secondary)]'
+                  }`}>
+                    {subscription?.status === 'active' ? 'Active' : subscription?.status === 'trialing' ? 'Trialing' : isPastDue ? 'Past Due' : 'Free'}
+                  </span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-[var(--text-secondary)]">Clients</span>
+                  <span className="font-medium text-[var(--text-primary)]">
+                    {subscription?.client_count ?? 0} / {subscription?.client_limit ?? 3}
+                  </span>
+                </div>
+                {subscription?.current_period_end && (
+                  <div className="flex justify-between text-sm">
+                    <span className="text-[var(--text-secondary)]">Renews</span>
+                    <span className="font-medium text-[var(--text-primary)]">
+                      {new Date(subscription.current_period_end).toLocaleDateString()}
+                    </span>
+                  </div>
+                )}
+              </div>
+
+              <div className="w-full h-2 bg-[var(--bg-subtle)] rounded-full overflow-hidden mb-5">
+                <div
+                  className={`h-full rounded-full transition-all ${
+                    ((subscription?.client_count ?? 0) / (subscription?.client_limit ?? 3)) > 0.8
+                      ? 'bg-red-500'
+                      : 'bg-[var(--accent)]'
+                  }`}
+                  style={{
+                    width: `${Math.min(((subscription?.client_count ?? 0) / (subscription?.client_limit ?? 3)) * 100, 100)}%`,
+                  }}
+                />
+              </div>
+
+              <div className="flex flex-col gap-2">
+                <button
+                  onClick={() => manageBilling.mutate()}
+                  disabled={manageBilling.isPending}
+                  className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-[var(--btn-bg)] text-white text-sm font-medium rounded-lg hover:bg-[var(--btn-hover)] transition-colors disabled:opacity-50"
+                >
+                  {manageBilling.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <CreditCard className="w-4 h-4" />}
+                  {manageBilling.isPending ? 'Opening Portal…' : 'Update Subscription Info'}
+                </button>
+                <Link
+                  href="/billing"
+                  className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 border border-[var(--border)] text-sm font-medium text-[var(--text-secondary)] rounded-lg hover:bg-[var(--bg-subtle)] transition-colors"
+                >
+                  <ChevronRight className="w-4 h-4" />
+                  View Plans & Billing
+                </Link>
+              </div>
+            </div>
+          </Card>
         </div>
       </div>
 
@@ -646,22 +491,16 @@ export default function SettingsPage() {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               className="absolute inset-0 bg-black/50 backdrop-blur-sm"
-              onClick={() => {
-                setShowPwModal(false)
-                setPwMessage(null)
-                setPwCurrent('')
-                setPwNew('')
-                setPwConfirm('')
-              }}
+              onClick={() => { setShowPwModal(false); setPwMessage(null); setPwCurrent(''); setPwNew(''); setPwConfirm('') }}
             />
             <motion.div
               initial={{ scale: 0.95, opacity: 0, y: 20 }}
               animate={{ scale: 1, opacity: 1, y: 0 }}
               exit={{ scale: 0.95, opacity: 0, y: 20 }}
-              className="relative bg-[var(--bg-card)] border border-[var(--border)] w-full max-w-md p-6"
+              className="relative bg-[var(--bg-card)] border border-[var(--border)] w-full max-w-md rounded-xl p-6 shadow-xl"
             >
               <div className="flex items-center gap-3 mb-5">
-                <div className="w-10 h-10 bg-brand-600 flex items-center justify-center rounded-md">
+                <div className="w-10 h-10 bg-[var(--btn-bg)] flex items-center justify-center rounded-lg">
                   <Lock className="w-5 h-5 text-white" />
                 </div>
                 <div>
@@ -671,35 +510,38 @@ export default function SettingsPage() {
               </div>
 
               <div className="space-y-4">
-                <InputField label="Current Password" value={pwCurrent} onChange={setPwCurrent} type="password" placeholder="Enter current password" />
-                <InputField label="New Password" value={pwNew} onChange={setPwNew} type="password" placeholder="At least 8 characters" />
-                <InputField label="Confirm Password" value={pwConfirm} onChange={setPwConfirm} type="password" placeholder="Re-enter new password" />
+                <div>
+                  <label className="text-xs font-medium text-[var(--text-secondary)] uppercase tracking-wide">Current Password</label>
+                  <input type="password" value={pwCurrent} onChange={(e) => setPwCurrent(e.target.value)} placeholder="Enter current password" className="input mt-1.5 rounded-lg" />
+                </div>
+                <div>
+                  <label className="text-xs font-medium text-[var(--text-secondary)] uppercase tracking-wide">New Password</label>
+                  <input type="password" value={pwNew} onChange={(e) => setPwNew(e.target.value)} placeholder="At least 8 characters" className="input mt-1.5 rounded-lg" />
+                </div>
+                <div>
+                  <label className="text-xs font-medium text-[var(--text-secondary)] uppercase tracking-wide">Confirm Password</label>
+                  <input type="password" value={pwConfirm} onChange={(e) => setPwConfirm(e.target.value)} placeholder="Re-enter new password" className="input mt-1.5 rounded-lg" />
+                </div>
 
                 {pwMessage && (
-                  <div className={`p-3 text-sm rounded-md ${pwMessage.type === 'ok' ? 'bg-accent-50 dark:bg-accent-900/20 text-accent-700 dark:text-accent-400' : 'bg-red-50 dark:bg-red-950/20 text-danger dark:text-red-400'}`}>
+                  <div className={`p-3 text-sm rounded-lg ${pwMessage.type === 'ok' ? 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400' : 'bg-red-50 dark:bg-red-950/20 text-red-700 dark:text-red-400'}`}>
                     {pwMessage.text}
                   </div>
                 )}
 
                 <div className="flex justify-end gap-3 pt-4 border-t border-[var(--border)]">
                   <button
-                    onClick={() => {
-                      setShowPwModal(false)
-                      setPwMessage(null)
-                      setPwCurrent('')
-                      setPwNew('')
-                      setPwConfirm('')
-                    }}
-                    className="px-4 py-2 text-sm font-medium text-[var(--text-secondary)] border border-[var(--border)] rounded-md hover:bg-[var(--bg-subtle)] dark:hover:bg-[var(--bg-subtle)] transition-colors"
+                    onClick={() => { setShowPwModal(false); setPwMessage(null); setPwCurrent(''); setPwNew(''); setPwConfirm('') }}
+                    className="px-4 py-2 text-sm font-medium text-[var(--text-secondary)] border border-[var(--border)] rounded-lg hover:bg-[var(--bg-subtle)] transition-colors"
                   >
                     Cancel
                   </button>
                   <button
                     onClick={handleChangePassword}
                     disabled={pwSaving}
-                    className="px-4 py-2 bg-brand-600 text-white text-sm font-medium hover:bg-brand-700 transition-colors disabled:opacity-50 rounded-md"
+                    className="px-4 py-2 bg-[var(--btn-bg)] text-white text-sm font-medium hover:bg-[var(--btn-hover)] transition-colors disabled:opacity-50 rounded-lg"
                   >
-                    {pwSaving ? 'Saving...' : 'Update Password'}
+                    {pwSaving ? 'Saving…' : 'Update Password'}
                   </button>
                 </div>
               </div>
@@ -707,6 +549,6 @@ export default function SettingsPage() {
           </div>
         )}
       </AnimatePresence>
-    </DashboardLayout>
+    </div>
   )
 }

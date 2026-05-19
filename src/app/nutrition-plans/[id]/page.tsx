@@ -255,7 +255,7 @@ export default function NutritionPlanDetailPage() {
             <button
               onClick={handleSave}
               disabled={saving}
-              className="flex items-center gap-1.5 px-4 py-2 bg-brand-600 hover:bg-brand-700 text-white text-sm font-semibold transition-colors disabled:opacity-50 -600/20"
+              className="ml-auto flex items-center gap-1.5 px-4 py-2 bg-brand-600 hover:bg-brand-700 text-white text-sm font-semibold transition-colors disabled:opacity-50 -600/20"
             >
               {saved ? <><Check size={14} /> Saved</> : <><Save size={14} /> {saving ? 'Saving…' : 'Save Changes'}</>}
             </button>
@@ -266,7 +266,7 @@ export default function NutritionPlanDetailPage() {
         <div>
           <div className="flex flex-col sm:flex-row">
             {/* Gradient panel */}
-            <div className="sm:w-56 flex-shrink-0 bg-gradient-to-br from-green-400 via-emerald-500 to-teal-600 p-6 flex flex-col justify-between min-h-[180px]">
+            <div className="sm:w-56 flex-shrink-0 bg-gradient-to-br from-brand-600 via-brand-700 to-brand-800 p-6 flex flex-col justify-between min-h-[180px]">
               <div className="flex gap-1.5 flex-wrap">
                 <span className="text-[11px] bg-white/20 text-white px-2 py-0.5 font-semibold">Nutrition Plan</span>
                 {clientName && <span className="text-[11px] bg-white/20 text-white px-2 py-0.5 font-semibold">{clientName}</span>}
@@ -447,7 +447,7 @@ export default function NutritionPlanDetailPage() {
               <button
                 onClick={handleSave}
                 disabled={saving}
-                className="flex items-center gap-2 px-6 py-2.5 bg-brand-600 hover:bg-brand-700 text-white text-sm font-semibold transition-colors disabled:opacity-50 -600/20"
+                className="flex items-center gap-2 px-6 py-2.5 rounded-s-xl bg-brand-600 hover:bg-brand-700 text-white text-sm font-semibold transition-colors disabled:opacity-50 -600/20"
               >
                 {saved ? <><Check size={14} /> Saved!</> : <><Save size={14} /> {saving ? 'Saving…' : 'Save Changes'}</>}
               </button>

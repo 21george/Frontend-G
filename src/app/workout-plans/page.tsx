@@ -72,7 +72,7 @@ function UnassignedPlansCard({ plans }: { plans: WorkoutPlan[]; clients: any[] }
   return (
     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
       {/* Header */}
-      <div className="px-6 py-5 border-b border-slate-100 dark:border-white/[0.06]">
+      <div className="px-6 py-5  border-slate-100 dark:border-white/[0.06]">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <WarningAmberIcon className="w-8 h-8 text-amber-500" />
@@ -85,16 +85,7 @@ function UnassignedPlansCard({ plans }: { plans: WorkoutPlan[]; clients: any[] }
               </p>
             </div>
           </div>
-          <div className="hidden sm:flex items-center gap-6">
-            <div className="text-right">
-              <div className="text-xl font-bold text-slate-900 dark:text-white">{workoutStats.totalDays}</div>
-              <div className="text-[10px] text-slate-500 uppercase tracking-wider font-semibold">Workout Days</div>
-            </div>
-            <div className="text-right">
-              <div className="text-xl font-bold text-blue-600 dark:text-blue-400">{workoutStats.totalExercises}</div>
-              <div className="text-[10px] text-slate-500 uppercase tracking-wider font-semibold">Exercises</div>
-            </div>
-          </div>
+          
         </div>
       </div>
 
@@ -175,7 +166,7 @@ function UnassignedPlansCard({ plans }: { plans: WorkoutPlan[]; clients: any[] }
                       <div className="flex items-center gap-2">
                         <Link
                           href={`/workout-plans/${plan.id}/assign`}
-                          className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-cyan-950 hover:bg-cyan-900 text-white text-xs font-medium transition-colors"
+                          className="inline-flex items-center gap-1.5  rounded-s-xl px-3 py-1.5 bg-cyan-950 hover:bg-cyan-900 text-white text-xs font-medium transition-colors"
                         >
                           <GroupIcon className="w-3 h-3" />
                           Assign
@@ -460,7 +451,7 @@ export default function WorkoutPlansPage() {
                         >
                           <td className="px-4 lg:px-6 py-4">
                             <div className="flex items-center gap-3">
-                              <TypeIcon className={`w-5 h-5 ${typeConf.color}`} />
+                              <TypeIcon className={`w-5 h-5 `} />
                               <div>
                                 <div className="text-sm font-semibold text-slate-900 dark:text-white">
                                   {plan.group_name ? `${plan.group_name} — ` : ''}{plan.title}
@@ -474,9 +465,9 @@ export default function WorkoutPlansPage() {
                           </td>
 
                           <td className="px-4 lg:px-6 py-4 hidden sm:table-cell">
-                            <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 text-[10px] font-bold uppercase tracking-tight border ${ plan.plan_type === 'team' ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/20' :
-                              plan.plan_type === 'group' ? 'bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/20' :
-                                                           'bg-blue-500/15 text-blue-600 dark:text-blue-400 border-blue-500/20'
+                            <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 text-[10px] font-bold uppercase tracking-tight ${ plan.plan_type === 'team' ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/20' :
+                              plan.plan_type === 'group' ? '' :
+                                                           ''
                             }`}>
                               <TypeIcon className="w-3 h-3" />
                               {typeConf.label}
@@ -491,7 +482,7 @@ export default function WorkoutPlansPage() {
                           </td>
 
                           <td className="px-4 lg:px-6 py-4">
-                            <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 text-[10px] font-bold uppercase tracking-tight border ${statusConf.badge}`}>
+                            <span className={`inline-flex items-center rounded-4 gap-1.5 px-2.5 py-1 text-[10px] font-bold uppercase tracking-tight border ${statusConf.badge}`}>
                               <span className={`w-1.5 h-1.5 rounded-full ${statusConf.dot}`} />
                               {statusConf.label}
                             </span>
