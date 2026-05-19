@@ -35,7 +35,7 @@ function CircuitCorner({ pos }: { pos: 'tl' | 'tr' | 'bl' | 'br' }) {
 
   return (
     <div
-      className={`absolute pointer-events-none select-none ${bottom ? 'bottom-0' : 'top-0'} ${right ? 'right-0' : 'left-0'}`}
+      className={`absolute pointer-events-none select-none hidden dark:block ${bottom ? 'bottom-0' : 'top-0'} ${right ? 'right-0' : 'left-0'}`}
       aria-hidden
     >
       <svg width="200" height="140" viewBox="0 0 200 140" fill="none">
@@ -162,7 +162,7 @@ export default function LoginPage() {
         />
       )}
 
-      <div className="relative min-h-screen flex items-center justify-center bg-[#0e0e0e] overflow-hidden">
+      <div className="relative min-h-screen flex items-center justify-center bg-[#F8FAFC] dark:bg-[#0e0e0e] overflow-hidden">
 
         {/* ── Circuit corner decorations ── */}
         <CircuitCorner pos="tl" />
@@ -182,18 +182,18 @@ export default function LoginPage() {
           initial={{ opacity: 0, y: 18 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3, ease: 'easeOut' }}
-          className="relative z-10 w-full max-w-[340px] mx-4 bg-[#181818] border border-[#252525] rounded-2xl px-8 py-9 shadow-2xl"
+          className="relative z-10 w-full max-w-[340px] mx-4 bg-white dark:bg-[#181818] border border-[#E2E8F0] dark:border-[#252525] rounded-2xl px-8 py-9 shadow-xl dark:shadow-2xl"
         >
 
           {/* Logo */}
           <div className="flex items-center justify-center gap-3 mb-1">
             <div className="flex gap-[3px]" aria-hidden>
               {[...Array(5)].map((_, i) => (
-                <div key={i} className="w-[3px] h-[3px] rounded-full bg-[#383838]" />
+                <div key={i} className="w-[3px] h-[3px] rounded-full bg-[#CBD5E1] dark:bg-[#383838]" />
               ))}
             </div>
 
-            <div className="w-11 h-11 rounded-full bg-[#111] border border-[#2a2a2a] flex items-center justify-center flex-shrink-0">
+            <div className="w-11 h-11 rounded-full bg-[#F1F5F9] dark:bg-[#111] border border-[#E2E8F0] dark:border-[#2a2a2a] flex items-center justify-center flex-shrink-0">
               <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
                 <circle cx="11" cy="11" r="7" stroke="#3b82f6" strokeWidth="1.8" strokeDasharray="22 12" strokeLinecap="round" />
                 <circle cx="11" cy="11" r="3.5" stroke="#3b82f6" strokeWidth="1.5" />
@@ -202,22 +202,22 @@ export default function LoginPage() {
 
             <div className="flex gap-[3px]" aria-hidden>
               {[...Array(5)].map((_, i) => (
-                <div key={i} className="w-[3px] h-[3px] rounded-full bg-[#383838]" />
+                <div key={i} className="w-[3px] h-[3px] rounded-full bg-[#CBD5E1] dark:bg-[#383838]" />
               ))}
             </div>
           </div>
 
           {/* Title */}
-          <h1 className="text-[22px] font-bold text-white text-center mt-5 mb-1 tracking-tight">
+          <h1 className="text-[22px] font-bold text-[#121212] dark:text-white text-center mt-5 mb-1 tracking-tight">
             Welcome Back
           </h1>
 
           {/* Subtitle */}
-          <p className="text-[12.5px] text-[#666] text-center mb-7">
+          <p className="text-[12.5px] text-[#64748B] dark:text-[#666] text-center mb-7">
             Don&apos;t have an account yet?{' '}
             <Link
               href="/auth/register"
-              className="text-white font-semibold hover:text-blue-400 transition-colors"
+              className="text-[#132E35] dark:text-white font-semibold hover:text-blue-500 dark:hover:text-blue-400 transition-colors"
             >
               Sign up
             </Link>
@@ -243,13 +243,13 @@ export default function LoginPage() {
             {/* Email */}
             <div>
               <div className="relative">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-[15px] h-[15px] text-[#4a4a4a]" />
+                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-[15px] h-[15px] text-[#94A3B8] dark:text-[#4a4a4a]" />
                 <input
                   type="email"
                   placeholder="email address"
                   autoComplete="email"
                   {...form.register('email')}
-                  className="w-full bg-[#111] border border-[#252525] rounded-lg pl-9 pr-4 py-[11px] text-[13px] text-white placeholder:text-[#3a3a3a] focus:outline-none focus:border-[#3d3d3d] transition-colors"
+                  className="w-full bg-white dark:bg-[#111] border border-[#E2E8F0] dark:border-[#252525] rounded-lg pl-9 pr-4 py-[11px] text-[13px] text-[#121212] dark:text-white placeholder:text-[#9CA3AF] dark:placeholder:text-[#3a3a3a] focus:outline-none focus:border-[#132E35] dark:focus:border-[#3d3d3d] transition-colors"
                 />
               </div>
               {form.formState.errors.email && (
@@ -260,19 +260,19 @@ export default function LoginPage() {
             {/* Password */}
             <div>
               <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-[15px] h-[15px] text-[#4a4a4a]" />
+                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-[15px] h-[15px] text-[#94A3B8] dark:text-[#4a4a4a]" />
                 <input
                   type={showPassword ? 'text' : 'password'}
                   placeholder="Password"
                   autoComplete="current-password"
                   {...form.register('password')}
-                  className="w-full bg-[#111] border border-[#252525] rounded-lg pl-9 pr-10 py-[11px] text-[13px] text-white placeholder:text-[#3a3a3a] focus:outline-none focus:border-[#3d3d3d] transition-colors"
+                  className="w-full bg-white dark:bg-[#111] border border-[#E2E8F0] dark:border-[#252525] rounded-lg pl-9 pr-10 py-[11px] text-[13px] text-[#121212] dark:text-white placeholder:text-[#9CA3AF] dark:placeholder:text-[#3a3a3a] focus:outline-none focus:border-[#132E35] dark:focus:border-[#3d3d3d] transition-colors"
                 />
                 <button
                   type="button"
                   tabIndex={-1}
                   onClick={() => setShowPassword(v => !v)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-[#4a4a4a] hover:text-[#888] transition-colors"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-[#94A3B8] dark:text-[#4a4a4a] hover:text-[#64748B] dark:hover:text-[#888] transition-colors"
                 >
                   {showPassword ? <EyeOff size={14} /> : <Eye size={14} />}
                 </button>
