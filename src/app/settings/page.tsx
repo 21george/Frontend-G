@@ -13,6 +13,7 @@ import {
   CreditCard, Crown, Zap, Building2, Pencil,
   Loader2, AlertTriangle, Clock
 } from 'lucide-react'
+import DashboardLayout from '@/components/layout/DashboardLayout'
 
 /* ═══════════════════════════════════════════════════════════════════════════
    UI Primitives
@@ -186,22 +187,13 @@ export default function SettingsPage() {
   const isPastDue = subscription?.status === 'past_due'
 
   return (
-    <div className="max-w-6xl mx-auto pb-8">
+        <DashboardLayout>
+    
+    <div className="mx-auto pb-8">
       {/* Page Header */}
       <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-8">
-        <div>
-          <h1 className="text-2xl font-semibold text-[var(--text-primary)] tracking-tight">Settings</h1>
-          <p className="text-sm text-[var(--text-secondary)] mt-1">
-            Personalize your account and manage preferences securely.
-          </p>
-        </div>
-        <Link
-          href="/settings/edit"
-          className="inline-flex items-center gap-2 px-4 py-2.5 bg-[var(--btn-bg)] text-white text-sm font-medium rounded-lg hover:bg-[var(--btn-hover)] transition-colors shadow-sm"
-        >
-          <Pencil className="w-4 h-4" />
-          Edit Profile
-        </Link>
+        
+       
       </div>
 
       {/* Main Grid */}
@@ -550,5 +542,6 @@ export default function SettingsPage() {
         )}
       </AnimatePresence>
     </div>
+        </DashboardLayout>
   )
 }

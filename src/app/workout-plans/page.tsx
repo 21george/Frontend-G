@@ -2,6 +2,7 @@
 import DashboardLayout from '@/components/layout/DashboardLayout'
 import { useWorkoutPlans, useClients } from '@/lib/hooks'
 import { QueryWrapper } from '@/components/ui/QueryWrapper'
+import { Skeleton } from '@/components/ui/Skeleton'
 import { Button } from '@/components/ui/button'
 import Link from 'next/link'
 import { useState, useMemo } from 'react'
@@ -407,6 +408,22 @@ export default function WorkoutPlansPage() {
         {/* ── PLANS LIST ── */}
         <QueryWrapper
           query={query}
+          skeleton={
+            <div className="bg-white dark:bg-[#171717] overflow-hidden divide-y divide-slate-100 dark:divide-white/[0.05]">
+              {[...Array(6)].map((_, i) => (
+                <div key={i} className="flex items-center gap-4 px-4 lg:px-6 py-4">
+                  <Skeleton className="h-9 w-9 rounded-lg shrink-0" />
+                  <div className="flex-1 min-w-0 space-y-1.5">
+                    <Skeleton className="h-4 w-48" />
+                    <Skeleton className="h-3 w-32" />
+                  </div>
+                  <Skeleton className="h-5 w-16 rounded-full hidden sm:block" />
+                  <Skeleton className="h-5 w-12 rounded-full hidden md:block" />
+                  <Skeleton className="h-5 w-16 rounded-full" />
+                </div>
+              ))}
+            </div>
+          }
           emptyIcon={FitnessCenterIcon}
           emptyTitle="You haven't created any plans yet."
           emptyDescription="Create your first workout plan to get started."

@@ -28,7 +28,13 @@ function ThemeSync() {
 
 export default function Providers({ children }: { children: React.ReactNode }) {
   const [queryClient] = useState(() => new QueryClient({
-    defaultOptions: { queries: { staleTime: 30_000, retry: 1 } },
+    defaultOptions: {
+      queries: {
+        staleTime: 30_000,      // data is fresh for 30 s
+        gcTime:    10 * 60_000, // keep unused cache for 10 min
+        retry: 1,
+      },
+    },
   }))
 
   return (

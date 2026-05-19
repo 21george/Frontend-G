@@ -1,5 +1,5 @@
 import api from '../client'
-import type { SubscriptionInfo, ApiResponse } from '@/types'
+import type { SubscriptionInfo, Invoice, ApiResponse } from '@/types'
 
 export const subscriptionApi = {
   status: () =>
@@ -13,4 +13,10 @@ export const subscriptionApi = {
 
   cancel: () =>
     api.post<ApiResponse<null>>('/subscription/cancel').then(r => r.data),
+
+  invoices: (): Promise<Invoice[]> =>
+    api
+      .get<ApiResponse<Invoice[]>>('/subscription/invoices')
+      .then(r => r.data.data ?? [])
+      .catch(() => []),   // gracefully degrade if endpoint not yet available
 }

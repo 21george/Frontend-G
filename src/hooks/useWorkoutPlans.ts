@@ -7,6 +7,7 @@ export const useWorkoutPlans = (clientId?: string, status?: string, planType?: W
   useQuery({
     queryKey: ['workout-plans', clientId, status, planType],
     queryFn: () => workoutPlansApi.list({ client_id: clientId, status, plan_type: planType }),
+    staleTime: 2 * 60_000,
   })
 
 export const useSavedWorkoutPlans = (params?: { page?: number; limit?: number; offset?: number }) =>

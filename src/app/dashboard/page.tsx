@@ -1,6 +1,7 @@
 'use client'
 
 import DashboardLayout from '@/components/layout/DashboardLayout'
+import { Skeleton } from '@/components/ui/Skeleton'
 import { useClients, useCheckins, useWorkoutPlans } from '@/lib/hooks'
 import { useState, useMemo, useEffect } from 'react'
 import {
@@ -636,9 +637,10 @@ function KpiCard({ label, value, icon: Icon, trend, delay }: KpiCardProps) {
 // ── DashboardPage ─────────────────────────────────────────────────────────────
 
 export default function DashboardPage() {
-  const { data: clientsData  } = useClients()
-  const { data: checkinsData } = useCheckins()
-  const { data: workoutData  } = useWorkoutPlans()
+  const { data: clientsData,  isLoading: clientsLoading  } = useClients()
+  const { data: checkinsData, isLoading: checkinsLoading } = useCheckins()
+  const { data: workoutData,  isLoading: plansLoading   } = useWorkoutPlans()
+  const kpiLoading = clientsLoading || checkinsLoading || plansLoading
 
   const clients: Client[] = useMemo(
     () => (clientsData as PaginatedResponse<Client> | undefined)?.data ?? [],
@@ -730,34 +732,46 @@ export default function DashboardPage() {
             transition={{ delay: 0.24 }}
             className="xl:col-span-2 grid grid-cols-2 gap-4 content-start"
           >
-            <KpiCard
-              label="Total Clients"
-              value={clients.length}
-              icon={Users}
-              trend={{ value: `${activeClients} active`, up: true }}
-              delay={0.24}
-            />
-            <KpiCard
-              label="Active Plans"
-              value={activePlans}
-              icon={Briefcase}
-              trend={{ value: '12%', up: true }}
-              delay={0.30}
-            />
-            <KpiCard
-              label="Today's Sessions"
-              value={todaySessions}
-              icon={Calendar}
-              trend={{ value: String(todaySessions), up: todaySessions > 0 }}
-              delay={0.36}
-            />
-            <KpiCard
-              label="This Week"
-              value={thisWeekSessions}
-              icon={TrendingUp}
-              trend={{ value: '12%', up: thisWeekSessions > 0 }}
-              delay={0.42}
-            />
+            {kpiLoading ? (
+              [...Array(4)].map((_, i) => (
+                <div key={i} className="rounded-xl border border-[var(--border)] bg-white dark:bg-[#1A1A1A] p-4 space-y-3">
+                  <Skeleton className="h-3 w-20" />
+                  <Skeleton className="h-7 w-12" />
+                  <Skeleton className="h-3 w-24" />
+                </div>
+              ))
+            ) : (
+              <>
+                <KpiCard
+                  label="Total Clients"
+                  value={clients.length}
+                  icon={Users}
+                  trend={{ value: `${activeClients} active`, up: true }}
+                  delay={0.24}
+                />
+                <KpiCard
+                  label="Active Plans"
+                  value={activePlans}
+                  icon={Briefcase}
+                  trend={{ value: '12%', up: true }}
+                  delay={0.30}
+                />
+                <KpiCard
+                  label="Today's Sessions"
+                  value={todaySessions}
+                  icon={Calendar}
+                  trend={{ value: String(todaySessions), up: todaySessions > 0 }}
+                  delay={0.36}
+                />
+                <KpiCard
+                  label="This Week"
+                  value={thisWeekSessions}
+                  icon={TrendingUp}
+                  trend={{ value: '12%', up: thisWeekSessions > 0 }}
+                  delay={0.42}
+                />
+              </>
+            )}
           </motion.div>
         </div>
 

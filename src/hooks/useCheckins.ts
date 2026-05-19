@@ -7,11 +7,10 @@ export const useCheckins = (clientId?: string) =>
   useQuery({
     queryKey: ['checkins', clientId],
     queryFn: () => checkinsApi.list(clientId),
-    retry: (failureCount, error: any) => {
-      // Don't retry on authentication errors
-      if (error?.response?.status === 401 || error?.response?.status === 403) {
-        return false
-      }
+    staleTime: 60_000,
+    retry: (failureCount, error: unknown) => {
+      const e = error as { response?: { status?: number } } | undefined
+      if (e?.response?.status === 401 || e?.response?.status === 403) return false
       return failureCount < 3
     },
   })

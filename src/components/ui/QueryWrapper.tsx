@@ -2,6 +2,7 @@
 
 import { type UseQueryResult } from '@tanstack/react-query'
 import { LoadingSpinner } from './LoadingSpinner'
+import { Skeleton } from './Skeleton'
 import { EmptyState } from './EmptyState'
 import { AlertCircle } from 'lucide-react'
 
@@ -9,6 +10,8 @@ interface QueryWrapperProps<T> {
   query: UseQueryResult<T, Error>
   children: (data: T) => React.ReactNode
   loadingClassName?: string
+  /** Custom skeleton to show while loading. Falls back to spinner if omitted. */
+  skeleton?: React.ReactNode
   emptyIcon?: any
   emptyTitle?: string
   emptyDescription?: string
@@ -20,6 +23,7 @@ export function QueryWrapper<T>({
   query,
   children,
   loadingClassName = 'h-64',
+  skeleton,
   emptyIcon,
   emptyTitle = 'No data found',
   emptyDescription,
@@ -27,6 +31,7 @@ export function QueryWrapper<T>({
   isEmpty,
 }: QueryWrapperProps<T>) {
   if (query.isLoading) {
+    if (skeleton) return <>{skeleton}</>
     return (
       <div className={`flex items-center justify-center ${loadingClassName}`}>
         <LoadingSpinner />

@@ -334,6 +334,16 @@ export interface SubscriptionInfo {
   stripe_customer_id: string | null
 }
 
+export interface Invoice {
+  id: string
+  number: string          // e.g. "INV-0001"
+  status: 'paid' | 'open' | 'void' | 'uncollectible'
+  date: string            // ISO date string
+  amount: number          // in cents
+  pdf_url?: string
+  hosted_invoice_url?: string
+}
+
 // ── Notifications ──────────────────────────────────────────────────────────────
 export type NotificationType =
   | 'workout_completed'

@@ -28,6 +28,7 @@ export { useWeather } from './useWeather'
 export { useNearbyGyms } from './useNearbyGyms'
 export { useToastMutation } from './useToastMutation'
 export { useSubscription, useCheckout, useManageBilling, useCancelSubscription } from './useSubscription'
+export { useInvoices } from './useInvoices'
 export {
   useLiveTrainingSessions, useLiveTrainingSession,
   useCreateLiveTraining, useUpdateLiveTraining, useDeleteLiveTraining,

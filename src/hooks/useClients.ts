@@ -7,6 +7,7 @@ export const useClients = (search?: string) =>
   useQuery({
     queryKey: ['clients', search],
     queryFn: () => clientsApi.list(search),
+    staleTime: 2 * 60_000,
   })
 
 export const useClient = (id: string) =>
@@ -14,6 +15,7 @@ export const useClient = (id: string) =>
     queryKey: ['client', id],
     queryFn: () => clientsApi.get(id),
     enabled: !!id,
+    staleTime: 2 * 60_000,
   })
 
 export const useCreateClient = () =>
