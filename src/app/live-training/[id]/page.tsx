@@ -111,7 +111,7 @@ export default function LiveTrainingDetailPage() {
               <ArrowLeft size={15} className="text-[var(--text-secondary)]" />
             </Link>
             <h1 className="text-[15px] font-semibold text-[var(--text-primary)] truncate max-w-xs">{session.title}</h1>
-            <span className="flex items-center gap-1.5 px-2.5 py-1 bg-slate-100 dark:bg-white/[0.06] rounded-full text-[11px] font-semibold text-slate-500 dark:text-slate-400">
+            <span className="flex items-center gap-1.5 px-2.5 py-1 bg-slate-100 dark:bg-white/[0.06] rounded-full text-[11px] font-semibold text-[var(--text-tertiary)] dark:text-slate-400">
               <Users size={11} /> Team
             </span>
           </div>
@@ -132,7 +132,7 @@ export default function LiveTrainingDetailPage() {
 
             {session.meeting_link && (
               <a href={session.meeting_link} target="_blank" rel="noopener noreferrer"
-                className="hidden md:flex items-center gap-1.5 px-3 py-1.5 text-[12px] font-semibold border border-slate-200 dark:border-white/[0.1] rounded-lg text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-white/[0.06] transition-colors">
+                className="hidden md:flex items-center gap-1.5 px-3 py-1.5 text-[12px] font-semibold border border-slate-200 dark:border-white/[0.1] rounded-lg text-[var(--text-secondary)] dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-white/[0.06] transition-colors">
                 <ExternalLink size={13} /> Meeting Link
               </a>
             )}
@@ -186,7 +186,7 @@ export default function LiveTrainingDetailPage() {
               {!isLive && (
                 <div className="relative z-10 text-center space-y-4">
                   <div className="w-16 h-16 mx-auto bg-white/[0.06] border border-white/[0.1] rounded-2xl flex items-center justify-center">
-                    <Video size={28} className="text-slate-500" />
+                    <Video size={28} className="text-[var(--text-tertiary)]" />
                   </div>
                   <p className="text-[13px] text-slate-400">
                     {isUpcoming ? 'Session starts when you go live' : 'Session has ended'}
@@ -261,7 +261,7 @@ export default function LiveTrainingDetailPage() {
                   <Play size={20} />
                 </button>
               ) : (
-                <div className="w-14 h-14 rounded-full flex items-center justify-center bg-white/[0.06] text-slate-600">
+                <div className="w-14 h-14 rounded-full flex items-center justify-center bg-white/[0.06] text-[var(--text-secondary)]">
                   <Square size={18} />
                 </div>
               )}
@@ -286,7 +286,7 @@ export default function LiveTrainingDetailPage() {
                     className={`px-3 pb-2 text-[11px] font-semibold transition-colors border-b-2 -mb-px ${
                       activeTab === tab
                         ? 'border-brand-600 dark:border-brand-400 text-brand-600 dark:text-brand-400'
-                        : 'border-transparent text-slate-400 hover:text-slate-600 dark:hover:text-slate-300'
+                        : 'border-transparent text-slate-400 hover:text-[var(--text-secondary)] dark:hover:text-slate-300'
                     }`}>
                     {tab === 'Requests' && pendingCount > 0 ? `Requests (${pendingCount})` : tab}
                   </button>
@@ -362,7 +362,7 @@ export default function LiveTrainingDetailPage() {
                   <p className="text-center text-[12px] text-slate-400 mt-10">No participants yet</p>
                 )}
                 {participants.map((p: any) => (
-                  <div key={p.id} className="flex items-center gap-3 px-2.5 py-2 rounded-xl hover:bg-slate-50 dark:hover:bg-white/[0.04] transition-colors">
+                  <div key={p.id} className="flex items-center gap-3 px-2.5 py-2 rounded-xl hover:bg-[#13131314] dark:hover:bg-white/[0.04] transition-colors">
                     <div className="w-8 h-8 rounded-full bg-brand-100 dark:bg-brand-600/20 flex items-center justify-center text-[12px] font-semibold text-brand-700 dark:text-brand-300">
                       {p.name?.[0] ?? '?'}
                     </div>

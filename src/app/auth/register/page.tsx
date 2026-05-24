@@ -36,7 +36,7 @@ const registerSchema = z
 type RegisterValues = z.infer<typeof registerSchema>;
 
 function getPasswordStrength(pw: string): { label: string; color: string; width: string } {
-  if (!pw) return { label: '', color: 'bg-slate-200', width: 'w-0' };
+  if (!pw) return { label: '', color: 'bg-[var(--bg-subtle)]', width: 'w-0' };
   let score = 0;
   if (pw.length >= 8) score++;
   if (pw.length >= 12) score++;
@@ -195,7 +195,7 @@ export default function RegisterPage() {
                               type="button"
                               tabIndex={-1}
                               onClick={() => setShowPassword((v) => !v)}
-                              className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                              className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--text-tertiary)] hover:text-[var(--text-secondary)]"
                             >
                               {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                             </button>
@@ -204,12 +204,12 @@ export default function RegisterPage() {
                         {/* Password strength bar */}
                         {passwordValue && (
                           <div className="mt-2">
-                            <div className="h-1.5 w-full bg-slate-200 overflow-hidden">
+                            <div className="h-1.5 w-full bg-[var(--bg-subtle)] overflow-hidden">
                               <div
                                 className={`h-full transition-all duration-300 ${strength.color} ${strength.width}`}
                               />
                             </div>
-                            <p className="text-xs text-slate-500 mt-1">{strength.label}</p>
+                            <p className="text-xs text-[var(--text-secondary)] mt-1">{strength.label}</p>
                           </div>
                         )}
                         <FormMessage />
@@ -239,7 +239,7 @@ export default function RegisterPage() {
                               type="button"
                               tabIndex={-1}
                               onClick={() => setShowConfirm((v) => !v)}
-                              className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                              className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--text-tertiary)] hover:text-[var(--text-secondary)]"
                             >
                               {showConfirm ? <EyeOff size={16} /> : <Eye size={16} />}
                             </button>
@@ -259,7 +259,7 @@ export default function RegisterPage() {
                 </motion.div>
 
                 <motion.div variants={itemVariants} className="text-center">
-                  <p className="text-sm text-slate-500">
+                  <p className="text-sm text-[var(--text-secondary)]">
                     Already have an account?{' '}
                     <Link href="/auth/login" className="text-blue-600 font-medium hover:underline">
                       Sign in

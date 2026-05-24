@@ -142,7 +142,7 @@ export function Modal({ open, onClose, title, children, size = 'md' }: Props) {
         <button
           onClick={onClose}
           aria-label="Close"
-          className="absolute top-3 right-3 p-1.5 text-slate-400 dark:text-slate-500 hover:text-slate-600 hover:bg-slate-100 dark:hover:text-slate-200 dark:hover:bg-white/[0.06] transition-colors z-10"
+          className="absolute top-3 right-3 p-1.5 text-[var(--text-tertiary)] dark:text-slate-500 hover:text-[var(--text-secondary)] hover:bg-[#13131314] dark:hover:text-slate-200 dark:hover:bg-white/[0.06] transition-colors z-10"
         >
           <X className="w-4 h-4" />
         </button>

@@ -101,7 +101,7 @@ export default function MiniCalendar() {
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.9 }}
             onClick={prev}
-            className="w-7 h-7 flex items-center justify-center text-slate-400 hover:text-slate-900 hover:bg-slate-100 dark:text-neutral-400 dark:hover:text-white dark:hover:bg-white/[0.08] transition-colors"
+            className="w-7 h-7 flex items-center justify-center text-slate-400 hover:text-slate-900 hover:bg-[#13131314] dark:text-neutral-400 dark:hover:text-white dark:hover:bg-white/[0.08] transition-colors"
           >
             <ChevronLeft className="w-4 h-4" />
           </motion.button>
@@ -109,7 +109,7 @@ export default function MiniCalendar() {
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.9 }}
             onClick={next}
-            className="w-7 h-7 flex items-center justify-center text-slate-400 hover:text-slate-900 hover:bg-slate-100 dark:text-neutral-400 dark:hover:text-white dark:hover:bg-white/[0.08] transition-colors"
+            className="w-7 h-7 flex items-center justify-center text-slate-400 hover:text-slate-900 hover:bg-[#13131314] dark:text-neutral-400 dark:hover:text-white dark:hover:bg-white/[0.08] transition-colors"
           >
             <ChevronRight className="w-4 h-4" />
           </motion.button>
@@ -119,7 +119,7 @@ export default function MiniCalendar() {
       {/* Day headers */}
       <div className="grid grid-cols-7 gap-0.5 mb-1">
         {DAYS.map(d => (
-          <div key={d} className="text-center text-[10px] font-medium text-slate-500 py-1">
+          <div key={d} className="text-center text-[10px] font-medium text-[var(--text-tertiary)] py-1">
             {d}
           </div>
         ))}
@@ -146,7 +146,7 @@ export default function MiniCalendar() {
                   ? 'bg-brand-600 text-white ring-2 ring-brand-700/30'
                   : todayFlag
                     ? 'bg-gradient-to-br from-brand-500 to-blue-500 text-white ring-2 ring-brand-500/30'
-                    : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-neutral-300 dark:hover:bg-white/[0.08] dark:hover:text-white'
+                    : 'text-slate-600 hover:bg-[#13131314] hover:text-slate-900 dark:text-neutral-300 dark:hover:bg-white/[0.08] dark:hover:text-white'
               }`}
             >
               {d}
@@ -167,7 +167,7 @@ export default function MiniCalendar() {
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
             transition={{ duration: 0.2 }}
-            className="mt-4 pt-4 border-t border-slate-200 dark:border-white/[0.08] overflow-hidden"
+            className="mt-4 pt-4 border-t border-[var(--border)] dark:border-white/[0.08] overflow-hidden"
           >
             <div className="flex items-center gap-2 mb-3">
               <Calendar className="w-4 h-4 text-brand-600 dark:text-brand-400" />
@@ -178,10 +178,10 @@ export default function MiniCalendar() {
 
             {dayProgram.checkins.length === 0 ? (
               <div className="text-center py-4">
-                <div className="w-10 h-10 mx-auto mb-2 bg-slate-100 dark:bg-white/[0.06] flex items-center justify-center">
+                <div className="w-10 h-10 mx-auto mb-2 bg-[var(--bg-subtle)] dark:bg-white/[0.06] flex items-center justify-center">
                   <Calendar className="w-5 h-5 text-slate-400" />
                 </div>
-                <p className="text-xs text-slate-500 dark:text-neutral-400">No scheduled events</p>
+                <p className="text-xs text-[var(--text-tertiary)] dark:text-neutral-400">No scheduled events</p>
               </div>
             ) : (
               <div className="space-y-2">
@@ -191,7 +191,7 @@ export default function MiniCalendar() {
                     initial={{ opacity: 0, x: -10 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: i * 0.05 }}
-                    className="flex items-start gap-3 p-2.5 bg-slate-50 dark:bg-white/[0.04] border border-slate-100 dark:border-white/[0.06]"
+                    className="flex items-start gap-3 p-2.5 bg-[var(--bg-subtle)] dark:bg-white/[0.04] border border-[var(--border)] dark:border-white/[0.06]"
                   >
                     <div className="w-8 h-8 bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center shrink-0">
                       <Clock className="w-4 h-4 text-white" />
@@ -200,7 +200,7 @@ export default function MiniCalendar() {
                       <p className="text-xs font-semibold text-slate-800 dark:text-white truncate">
                         {checkin.client_name || 'Client Check-in'}
                       </p>
-                      <p className="text-[10px] text-slate-500 dark:text-neutral-400 mt-0.5">
+                      <p className="text-[10px] text-[var(--text-tertiary)] dark:text-neutral-400 mt-0.5">
                         {formatDate(checkin.scheduled_at, 'h:mm a')}
                         {checkin.notes && ` · ${checkin.notes}`}
                       </p>

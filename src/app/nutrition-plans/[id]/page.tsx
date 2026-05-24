@@ -353,7 +353,7 @@ export default function NutritionPlanDetailPage() {
                   {/* Day header */}
                   <button
                     onClick={() => toggleDay(day.day)}
-                    className="w-full flex items-center justify-between px-5 py-3.5 bg-[var(--bg-card)] hover:bg-slate-50 dark:hover:bg-white/[0.03] transition-colors text-left"
+                    className="w-full flex items-center justify-between px-5 py-3.5 bg-[var(--bg-card)] hover:bg-[#13131314] dark:hover:bg-white/[0.03] transition-colors text-left"
                   >
                     <div className="flex items-center gap-3">
                       {isOpen

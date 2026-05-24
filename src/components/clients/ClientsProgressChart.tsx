@@ -51,7 +51,7 @@ export function ClientsProgressChart({ clients, isLoading }: ClientsProgressChar
     if (pct >= 80) return 'text-emerald-600 dark:text-emerald-400'
     if (pct >= 50) return 'text-blue-600 dark:text-blue-400'
     if (pct >= 25) return 'text-amber-600 dark:text-amber-400'
-    return 'text-slate-500 dark:text-slate-400'
+    return 'text-[var(--text-tertiary)] dark:text-slate-400'
   }
 
   if (isLoading) {
@@ -60,10 +60,10 @@ export function ClientsProgressChart({ clients, isLoading }: ClientsProgressChar
         <div className="animate-pulse space-y-4">
           {[1, 2, 3].map(i => (
             <div key={i} className="flex items-center gap-4">
-              <div className="w-10 h-10 bg-slate-200 dark:bg-white/[0.06] rounded-xl" />
+              <div className="w-10 h-10 bg-[var(--bg-subtle)] dark:bg-white/[0.06] rounded-xl" />
               <div className="flex-1 space-y-2">
-                <div className="h-4 bg-slate-200 dark:bg-white/[0.06] rounded w-1/3" />
-                <div className="h-3 bg-slate-200 dark:bg-white/[0.06] rounded w-1/2" />
+                <div className="h-4 bg-[var(--bg-subtle)] dark:bg-white/[0.06] rounded w-1/3" />
+                <div className="h-3 bg-[var(--bg-subtle)] dark:bg-white/[0.06] rounded w-1/2" />
               </div>
             </div>
           ))}
@@ -79,11 +79,11 @@ export function ClientsProgressChart({ clients, isLoading }: ClientsProgressChar
           <h3 className="text-sm font-bold text-[var(--text-primary)] dark:text-[var(--text-primary)]">
             Client Progress
           </h3>
-          <p className="text-xs text-slate-500 dark:text-neutral-400 mt-0.5">
+          <p className="text-xs text-[var(--text-tertiary)] dark:text-[var(--text-tertiary)] mt-0.5">
             {clients.filter(c => c.needs_new_plan).length} need new plan assignment
           </p>
         </div>
-        <div className="flex items-center gap-4 text-xs text-slate-500 dark:text-neutral-400">
+        <div className="flex items-center gap-4 text-xs text-[var(--text-tertiary)] dark:text-[var(--text-tertiary)]">
           <div className="flex items-center gap-1">
             <div className="w-2 h-2 rounded-full bg-emerald-500" />
             On Track
@@ -112,7 +112,7 @@ export function ClientsProgressChart({ clients, isLoading }: ClientsProgressChar
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.05 }}
-              className="px-6 py-4 hover:bg-slate-50/50 dark:hover:bg-white/[0.02] transition-colors"
+              className="px-6 py-4 hover:bg-[#13131314] dark:hover:bg-white/[0.02] transition-colors"
             >
               <div className="flex items-center gap-4">
                 {/* Avatar */}
@@ -120,7 +120,7 @@ export function ClientsProgressChart({ clients, isLoading }: ClientsProgressChar
                   <img
                     src={client.client_photo}
                     alt={client.client_name}
-                    className="h-10 w-10 object-cover rounded-xl bg-slate-100 dark:bg-slate-800 flex-shrink-0"
+                    className="h-10 w-10 object-cover rounded-xl bg-[var(--bg-subtle)] dark:bg-slate-800 flex-shrink-0"
                   />
                 ) : (
                   <div className="h-10 w-10 bg-gradient-to-br from-[#132e35] to-[#0b1e22] rounded-xl flex items-center justify-center text-white text-sm font-semibold flex-shrink-0">
@@ -149,7 +149,7 @@ export function ClientsProgressChart({ clients, isLoading }: ClientsProgressChar
                   </div>
 
                   {/* Plan Title or Status */}
-                  <div className="text-xs text-slate-500 dark:text-neutral-400 mb-2">
+                  <div className="text-xs text-[var(--text-tertiary)] dark:text-[var(--text-tertiary)] mb-2">
                     {plan ? (
                       <span className="flex items-center gap-1">
                         <Dumbbell className="w-3 h-3" />
@@ -169,7 +169,7 @@ export function ClientsProgressChart({ clients, isLoading }: ClientsProgressChar
                   {plan && (
                     <div className="relative">
                       <div className="flex items-center gap-3">
-                        <div className="flex-1 h-2 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+                        <div className="flex-1 h-2 bg-[var(--bg-subtle)] dark:bg-slate-800 rounded-full overflow-hidden">
                           <motion.div
                             initial={{ width: 0 }}
                             animate={{ width: `${Math.min(100, pct)}%` }}
@@ -196,7 +196,7 @@ export function ClientsProgressChart({ clients, isLoading }: ClientsProgressChar
                                   className={`w-1 h-1 rounded-full ${
                                     isDone
                                       ? needsPlan ? 'bg-red-400' : 'bg-emerald-400'
-                                      : 'bg-slate-200 dark:bg-slate-700'
+                                      : 'bg-[var(--bg-subtle)] dark:bg-slate-700'
                                   }`}
                                 />
                               </div>
@@ -211,7 +211,7 @@ export function ClientsProgressChart({ clients, isLoading }: ClientsProgressChar
                 {/* Action */}
                 <Link
                   href={`/clients/${client.client_id}`}
-                  className="flex-shrink-0 p-2 rounded-lg text-slate-400 hover:text-[var(--text-primary)] hover:bg-slate-100 dark:hover:bg-white/[0.06] transition-colors"
+                  className="flex-shrink-0 p-2 rounded-lg text-slate-400 hover:text-[var(--text-primary)] hover:bg-[#13131314] dark:hover:bg-white/[0.06] transition-colors"
                 >
                   <ChevronRight className="w-4 h-4" />
                 </Link>
@@ -221,7 +221,7 @@ export function ClientsProgressChart({ clients, isLoading }: ClientsProgressChar
         })}
 
         {sortedClients.length === 0 && (
-          <div className="px-6 py-8 text-center text-sm text-slate-500 dark:text-neutral-400">
+          <div className="px-6 py-8 text-center text-sm text-[var(--text-tertiary)] dark:text-[var(--text-tertiary)]">
             No client progress data available
           </div>
         )}

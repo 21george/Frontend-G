@@ -329,7 +329,7 @@ export default function WorkoutPlanDetailPage() {
           <div className="hidden overflow-x-auto lg:block">
             <div className="min-w-[1160px]">
               <div
-                className="grid border-b border-[var(--border)] dark:border-white/[0.08] bg-slate-50/80 dark:bg-white/[0.02]"
+                className="grid border-b border-[var(--border)] dark:border-white/[0.08] bg-[#13131314] dark:bg-white/[0.02]"
                 style={{ gridTemplateColumns: '230px repeat(7, minmax(132px, 1fr))' }}
               >
                 <div className="border-r border-slate-200 px-5 py-4 dark:border-white/[0.08]">
@@ -455,7 +455,7 @@ export default function WorkoutPlanDetailPage() {
           <motion.div
             initial={{ opacity: 0, y: 18 }}
             animate={{ opacity: 1, y: 0 }}
-            className="border border-slate-200/80 bg-[var(--bg-card)] p-6 dark:border-white/[0.08] "
+            className="border bg-[var(--bg-card)] p-6 dark:border-white/[0.08] "
           >
             <div className="flex items-center justify-between gap-4">
               <div>
@@ -563,34 +563,6 @@ export default function WorkoutPlanDetailPage() {
                   <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">Exercises</p>
                   <p className="mt-2 text-sm font-semibold text-[var(--text-primary)] dark:text-[var(--text-primary)]">{totalExercises}</p>
                 </div>
-              </div>
-            </div>
-
-            <div className="border border-slate-200/80 bg-[var(--bg-card)] p-6 dark:border-white/[0.08] ">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-400 dark:text-slate-500">Daily Overview</p>
-              <div className="mt-5 space-y-3">
-                {boardDays.map((day) => (
-                  <button
-                    key={`overview-${day.key}`}
-                    type="button"
-                    onClick={() => setExpandedDay(day.key)}
-                    className={`flex w-full items-center justify-between border px-4 py-3 text-left transition-colors ${
-                      activeDayKey === day.key
-                        ? 'border-brand-200 bg-brand-50 dark:border-brand-500/30 dark:bg-brand-500/10'
-                        : 'border-slate-200 bg-slate-50 hover:bg-slate-100 dark:border-white/[0.08] dark:bg-white/[0.03] dark:hover:bg-white/[0.05]'
-                    }`}
-                  >
-                    <div>
-                      <p className="text-sm font-semibold capitalize text-[var(--text-primary)] dark:text-[var(--text-primary)]">{day.key}</p>
-                      <p className="mt-1 text-xs text-[var(--text-secondary)] dark:text-[var(--text-secondary)]">
-                        {day.exercises.length > 0 ? `${day.exercises.length} exercise${day.exercises.length === 1 ? '' : 's'}` : 'Rest day'}
-                      </p>
-                    </div>
-                    <span className={`px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] ${day.sessionStyle.badge}`}>
-                      {day.exercises.length > 0 ? day.sessionStyle.label : 'Recovery'}
-                    </span>
-                  </button>
-                ))}
               </div>
             </div>
           </motion.div>

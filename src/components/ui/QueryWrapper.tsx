@@ -45,8 +45,8 @@ export function QueryWrapper<T>({
         <div className="w-16 h-16 bg-red-50 dark:bg-red-500/10 flex items-center justify-center mb-4">
           <AlertCircle className="w-8 h-8 text-red-500" />
         </div>
-        <h3 className="text-base font-semibold text-gray-900 dark:text-white mb-1">Something went wrong</h3>
-        <p className="text-sm text-gray-500 dark:text-gray-400 max-w-xs">
+        <h3 className="text-base font-semibold text-[var(--text-primary)] dark:text-white mb-1">Something went wrong</h3>
+        <p className="text-sm text-[var(--text-secondary)] dark:text-gray-400 max-w-xs">
           {query.error?.message || 'Failed to load data. Please try again.'}
         </p>
         <button

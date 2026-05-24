@@ -162,11 +162,11 @@ export default function ExcelImportPage() {
             className={`border-2 border-dashed rounded-lg p-12 text-center cursor-pointer transition-colors ${
               isDragActive
                 ? 'border-brand-500 bg-brand-50 dark:bg-brand-600/20'
-                : 'border-slate-300 dark:border-white/20 hover:border-slate-400 dark:hover:border-white/30'
+                : 'border-[var(--border)] dark:border-white/20 hover:border-slate-400 dark:hover:border-white/30'
             }`}
           >
             <input {...getInputProps()} />
-            <FileSpreadsheet className="w-12 h-12 text-slate-400 dark:text-slate-500 mx-auto mb-4" />
+            <FileSpreadsheet className="w-12 h-12 text-[var(--text-tertiary)] dark:text-[var(--text-tertiary)] mx-auto mb-4" />
             <p className="font-medium text-[var(--text-primary)]">
               {isDragActive ? 'Drop the Excel file here' : 'Drop your Excel file here'}
             </p>
@@ -243,7 +243,7 @@ export default function ExcelImportPage() {
                     <div className="flex items-start justify-between mb-3">
                       <div className="flex items-center gap-3">
                         <div className="w-10 h-10 bg-[var(--bg-subtle)] dark:bg-white/[0.05] rounded-lg flex items-center justify-center">
-                          <Sheet className="w-5 h-5 text-slate-500" />
+                          <Sheet className="w-5 h-5 text-[var(--text-tertiary)]" />
                         </div>
                         <div>
                           <p className="font-medium text-[var(--text-primary)]">{sheet.name}</p>
@@ -273,17 +273,17 @@ export default function ExcelImportPage() {
                             <thead className="bg-[var(--bg-subtle)] dark:bg-white/[0.05]">
                               <tr>
                                 {sheet.headers.map((h, hi) => (
-                                  <th key={hi} className="px-2 py-2 text-left font-medium text-slate-600 dark:text-slate-400 whitespace-nowrap">
+                                  <th key={hi} className="px-2 py-2 text-left font-medium text-[var(--text-secondary)] dark:text-[var(--text-tertiary)] whitespace-nowrap">
                                     {h}
                                   </th>
                                 ))}
                               </tr>
                             </thead>
-                            <tbody className="divide-y divide-slate-100 dark:divide-white/[0.05]">
+                            <tbody className="divide-y divide-[var(--border)] dark:divide-white/[0.05]">
                               {sheet.preview.map((row, ri) => (
                                 <tr key={ri}>
                                   {row.map((cell, ci) => (
-                                    <td key={ci} className="px-2 py-2 text-slate-700 dark:text-slate-300 whitespace-nowrap max-w-[200px] truncate">
+                                    <td key={ci} className="px-2 py-2 text-[var(--text-primary)] dark:text-slate-300 whitespace-nowrap max-w-[200px] truncate">
                                       {cell}
                                     </td>
                                   ))}
@@ -300,12 +300,12 @@ export default function ExcelImportPage() {
                     <div className="mt-4 flex items-center justify-between">
                       <div className="flex flex-wrap gap-1">
                         {sheet.headers.slice(0, 6).map((h, hi) => (
-                          <span key={hi} className="text-[10px] px-1.5 py-0.5 bg-slate-100 dark:bg-white/[0.05] text-slate-500 rounded">
+                          <span key={hi} className="text-[10px] px-1.5 py-0.5 bg-[var(--bg-subtle)] dark:bg-white/[0.05] text-[var(--text-tertiary)] rounded">
                             {h}
                           </span>
                         ))}
                         {sheet.headers.length > 6 && (
-                          <span className="text-[10px] px-1.5 py-0.5 bg-slate-100 dark:bg-white/[0.05] text-slate-500 rounded">
+                          <span className="text-[10px] px-1.5 py-0.5 bg-[var(--bg-subtle)] dark:bg-white/[0.05] text-[var(--text-tertiary)] rounded">
                             +{sheet.headers.length - 6} more
                           </span>
                         )}

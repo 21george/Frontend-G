@@ -56,7 +56,7 @@ function ThemeToggle() {
         focus:outline-none focus:ring-2 focus:ring-brand-700/40
         ${isDark
           ? 'bg-slate-800 border-white/[0.12] rounded-xl'
-          : 'bg-slate-200 border-slate-300 rounded-xl'}
+          : 'bg-[var(--bg-subtle)] border-[var(--border-hover)] rounded-xl'}
       `}
     >
       <Sun  size={12} className={`absolute left-1.5 top-1/2 -translate-y-1/2  transition-opacity duration-200 ${isDark ? 'opacity-30 text-neutral-400' : 'opacity-100 text-amber-500'}`} />

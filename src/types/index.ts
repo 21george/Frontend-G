@@ -34,6 +34,10 @@ export interface Client {
   occupation?: string
   profile_photo_url?: string
   notes?: string
+  date_of_birth?: string
+  current_weight_kg?: number
+  height_cm?: number
+  sickness?: string
   active: boolean
   is_blocked?: boolean
   created_at: string

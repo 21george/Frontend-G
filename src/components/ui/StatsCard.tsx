@@ -25,8 +25,8 @@ export function StatsCard({ title, value, icon: Icon, color = 'blue', sub, trend
         <Icon className="w-6 h-6" />
       </div>
       <div className="min-w-0">
-        <p className="text-sm text-slate-500 truncate">{title}</p>
-        <p className="text-2xl font-semibold text-slate-900 leading-tight">{value}</p>
+        <p className="text-sm text-[var(--text-tertiary)] truncate">{title}</p>
+        <p className="text-2xl font-semibold text-[var(--text-primary)] leading-tight">{value}</p>
         {sub && <p className="text-xs text-slate-400 mt-0.5">{sub}</p>}
         {trend && (
           <p className={cn('text-xs mt-0.5 font-medium', trend.value >= 0 ? 'text-emerald-600' : 'text-red-500')}>

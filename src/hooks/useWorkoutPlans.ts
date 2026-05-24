@@ -1,13 +1,19 @@
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, type UseQueryOptions } from '@tanstack/react-query'
 import { workoutPlansApi } from '@/lib/api'
 import { useToastMutation } from './useToastMutation'
-import type { WorkoutPlan, WorkoutPlanType } from '@/types'
+import type { WorkoutPlan, WorkoutPlanType, PaginatedResponse } from '@/types'
 
-export const useWorkoutPlans = (clientId?: string, status?: string, planType?: WorkoutPlanType) =>
+export const useWorkoutPlans = (
+  clientId?: string,
+  status?: string,
+  planType?: WorkoutPlanType,
+  options?: Omit<UseQueryOptions<PaginatedResponse<WorkoutPlan>>, 'queryKey' | 'queryFn'>
+) =>
   useQuery({
     queryKey: ['workout-plans', clientId, status, planType],
     queryFn: () => workoutPlansApi.list({ client_id: clientId, status, plan_type: planType }),
     staleTime: 2 * 60_000,
+    ...options,
   })
 
 export const useSavedWorkoutPlans = (params?: { page?: number; limit?: number; offset?: number }) =>

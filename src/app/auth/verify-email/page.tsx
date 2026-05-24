@@ -200,7 +200,7 @@ export default function VerifyEmailPage() {
                   onKeyDown={(e) => handleKeyDown(i, e)}
                   onPaste={i === 0 ? handlePaste : undefined}
                   disabled={isVerifying}
-                  className="w-12 h-14 text-center text-xl font-semibold border-2 border-slate-200 bg-white
+                  className="w-12 h-14 text-center text-xl font-semibold border-2 border-[var(--border)] bg-[var(--bg-card)]
                     focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none
                     disabled:opacity-50 transition-all duration-200
                     dark:bg-[#121212] dark:border-white/10 dark:text-white dark:focus:border-blue-400"
@@ -237,7 +237,7 @@ export default function VerifyEmailPage() {
                 type="button"
                 onClick={handleResend}
                 disabled={resendCooldown > 0 || isResending}
-                className="inline-flex items-center gap-1.5 text-sm text-slate-500 hover:text-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                className="inline-flex items-center gap-1.5 text-sm text-[var(--text-secondary)] hover:text-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
                 {isResending ? (
                   <Loader2 className="h-3.5 w-3.5 animate-spin" />
@@ -252,7 +252,7 @@ export default function VerifyEmailPage() {
 
             {/* Back link */}
             <motion.div variants={itemVariants} className="mt-6">
-              <Link href="/auth/register" className="text-sm text-slate-400 hover:text-slate-600 transition-colors">
+              <Link href="/auth/register" className="text-sm text-[var(--text-tertiary)] hover:text-[var(--text-secondary)] transition-colors">
                 ← Back to registration
               </Link>
             </motion.div>

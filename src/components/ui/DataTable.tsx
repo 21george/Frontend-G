@@ -76,15 +76,15 @@ export function DataTable<T>({
     <div className={cn('bg-[var(--bg-card)]  border border-[var(--border)]  overflow-hidden', className)}>
       {/* Toolbar */}
       {(searchable || headerActions) && (
-        <div className="flex items-center justify-between gap-3 px-4 py-3 border-b border-slate-100 dark:border-white/[0.06]">
+        <div className="flex items-center justify-between gap-3 px-4 py-3 border-b border-[var(--border)] dark:border-white/[0.06]">
           {searchable && (
             <div className="relative flex-1 max-w-xs">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--text-tertiary)]" />
               <input
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder={searchPlaceholder}
-                className="w-full pl-9 pr-3 py-1.5 text-sm bg-slate-50 dark:bg-white/[0.04] border border-[var(--border)] focus:outline-none focus:ring-2 focus:ring-brand-700/30 text-[var(--text-primary)] placeholder:text-slate-400"
+                className="w-full pl-9 pr-3 py-1.5 text-sm bg-[var(--bg-subtle)] dark:bg-white/[0.04] border border-[var(--border)] focus:outline-none focus:ring-2 focus:ring-brand-700/30 text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)]"
               />
             </div>
           )}
@@ -96,13 +96,13 @@ export function DataTable<T>({
       <div className="overflow-x-auto">
         <table className="w-full">
           <thead>
-            <tr className="border-b border-slate-100 dark:border-white/[0.06]">
+            <tr className="border-b border-[var(--border)] dark:border-white/[0.06]">
               {columns.map((col) => (
                 <th
                   key={col.key}
                   className={cn(
                     'px-4 py-2.5 text-left text-[11px] font-semibold text-[var(--text-tertiary)]  uppercase tracking-wider',
-                    col.sortable && 'cursor-pointer select-none hover:text-slate-700 dark:hover:text-slate-200',
+                    col.sortable && 'cursor-pointer select-none hover:text-[var(--text-secondary)] dark:hover:text-slate-200',
                     col.className,
                   )}
                   onClick={() => col.sortable && toggleSort(col.key)}
@@ -118,7 +118,7 @@ export function DataTable<T>({
           <tbody>
             {filtered.length === 0 ? (
               <tr>
-                <td colSpan={columns.length} className="px-4 py-12 text-center text-sm text-slate-400 dark:text-slate-500">
+                <td colSpan={columns.length} className="px-4 py-12 text-center text-sm text-[var(--text-tertiary)] dark:text-slate-500">
                   {emptyMessage}
                 </td>
               </tr>
@@ -128,8 +128,8 @@ export function DataTable<T>({
                   key={keyExtractor(item)}
                   onClick={() => onRowClick?.(item)}
                   className={cn(
-                    'border-b border-slate-50 dark:border-white/[0.04] last:border-0 transition-colors',
-                    onRowClick && 'cursor-pointer hover:bg-slate-50 dark:hover:bg-white/[0.03]',
+                    'border-b border-[var(--border)] dark:border-white/[0.04] last:border-0 transition-colors',
+                    onRowClick && 'cursor-pointer hover:bg-[#13131314] dark:hover:bg-white/[0.03]',
                   )}
                 >
                   {columns.map((col) => (

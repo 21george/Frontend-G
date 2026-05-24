@@ -21,9 +21,23 @@ function AuthLayout({
   const { setupToken } = useSubscriptionStore()
   const router = useRouter()
   const refreshInProgressRef = useRef(false)
-  const [isLoading, setIsLoading] = useState(!accessToken && isAuthenticated)
+  const [isLoading, setIsLoading] = useState(true)
+
+  // Wait for Zustand's persist middleware to rehydrate from localStorage before
+  // making any routing decisions. Without this, the first render always sees
+  // isAuthenticated=false (initial state) and immediately redirects to /auth/login,
+  // which then bounces back once hydration completes — causing an infinite loop.
+  const [isHydrated, setIsHydrated] = useState(() => useAuthStore.persist.hasHydrated())
 
   useEffect(() => {
+    if (isHydrated) return
+    const unsub = useAuthStore.persist.onFinishHydration(() => setIsHydrated(true))
+    return unsub
+  }, [isHydrated])
+
+  useEffect(() => {
+    if (!isHydrated) return
+
     if (!isAuthenticated) {
       router.replace('/auth/login')
       return
@@ -67,9 +81,10 @@ function AuthLayout({
     } else {
       setIsLoading(false)
     }
-  }, [isAuthenticated, accessToken, refreshAccessToken, clearAuth, router, coach, setupToken])
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isHydrated, isAuthenticated, accessToken, refreshAccessToken, clearAuth, coach, setupToken])
 
-  if (!isAuthenticated || isLoading) return null
+  if (!isHydrated || !isAuthenticated || isLoading) return null
 
   // Don't render dashboard content for pending coaches
   if (coach?.subscription_status === 'pending') return null

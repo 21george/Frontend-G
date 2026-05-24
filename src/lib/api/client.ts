@@ -93,7 +93,12 @@ api.interceptors.response.use(
     }
 
     // Handle 403 Forbidden - session expired or invalid, redirect to login
+    // Skip redirect for business-rule 403s (e.g. subscription limit)
     if (status === 403) {
+      const upgradeRequired = error?.response?.data?.errors?.upgrade_required
+      if (upgradeRequired) {
+        return Promise.reject(error)
+      }
       // Clear auth state via callback
       onAuthInvalidated?.()
       // Redirect to login if not already on auth page

@@ -33,11 +33,11 @@ const LEVEL_BADGE: Record<string, string> = {
 const STATUS_CONFIG: Record<string, { label: string; dot: string; badge: string }> = {
  live: { label: 'Live Now', dot: 'bg-green-400 animate-pulse', badge: 'bg-green-500/15 text-green-400 border-green-500/20' },
  upcoming: { label: 'Upcoming', dot: 'bg-amber-400', badge: 'bg-amber-500/15 text-amber-400 border-amber-500/20' },
- ended: { label: 'Ended', dot: 'bg-slate-500', badge: 'bg-slate-500/15 text-slate-400 border-slate-500/20' },
+ ended: { label: 'Ended', dot: 'bg-slate-500', badge: 'bg-slate-500/15 text-[var(--text-tertiary)] border-slate-500/20' },
 }
 
-const FILTER_CLS = 'px-3 py-1.5 border border-slate-200 dark:border-white/[0.1] bg-white dark:bg-white/[0.04] text-[12px] font-medium text-slate-600 dark:text-slate-300 focus:outline-none focus:ring-2 focus:ring-cyan-950/20 dark:focus:ring-cyan-400/20'
-const TH_CLS = 'text-[11px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider'
+const FILTER_CLS = 'px-3 py-1.5 border border-slate-200 dark:border-white/[0.1] bg-white dark:bg-white/[0.04] text-[12px] font-medium text-[var(--text-secondary)] dark:text-slate-300 focus:outline-none focus:ring-2 focus:ring-cyan-950/20 dark:focus:ring-cyan-400/20'
+const TH_CLS = 'text-[11px] font-semibold text-[var(--text-tertiary)] dark:text-[var(--text-tertiary)] uppercase tracking-wider'
 const TABLE_HEADERS = ['Class Name', 'Category', 'Level', 'Duration', 'Time', 'Participants', 'Action']
 
 const FILTERS = [
@@ -118,7 +118,7 @@ export default function LiveTrainingPage() {
  {/* ── FILTERS ── */}
  <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between px-4 py-3">
  <div className="flex items-center gap-2 flex-wrap">
- <Filter size={14} className="text-slate-400" />
+ <Filter size={14} className="text-[var(--text-tertiary)]" />
  {FILTERS.map(f => (
  <select key={f.key} value={filters[f.key]} onChange={e => setFilter(f.key, e.target.value)} className={FILTER_CLS}>
  <option value="all">{f.label}</option>
@@ -127,7 +127,7 @@ export default function LiveTrainingPage() {
  ))}
  </div>
  <div className="relative">
- <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+ <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-tertiary)]" />
  <input type="text" placeholder="Search sessions…" value={search} onChange={e => setSearch(e.target.value)}
  className={`w-full sm:w-52 pl-9 pr-3 ${FILTER_CLS}`} />
  </div>
@@ -141,10 +141,10 @@ export default function LiveTrainingPage() {
  ) : filtered.length === 0 ? (
  <div className="flex flex-col items-center justify-center py-20 text-center">
  <div className="w-16 h-16 bg-slate-100 dark:bg-white/[0.04] flex items-center justify-center mb-4">
- <Radio className="w-7 h-7 text-slate-300 dark:text-slate-600" />
+ <Radio className="w-7 h-7 text-slate-300 dark:text-[var(--text-secondary)]" />
  </div>
- <p className="text-[14px] font-medium text-slate-600 dark:text-slate-400">No sessions found</p>
- <p className="text-[12px] text-slate-400 dark:text-slate-500 mt-1">Create your first live training session to get started</p>
+ <p className="text-[14px] font-medium text-[var(--text-secondary)] dark:text-[var(--text-tertiary)]">No sessions found</p>
+ <p className="text-[12px] text-[var(--text-tertiary)] dark:text-[var(--text-tertiary)] mt-1">Create your first live training session to get started</p>
  <Link
  href="/live-training/new"
  className="mt-4 inline-flex items-center gap-1.5 px-4 py-2 bg-cyan-950 hover:bg-cyan-900 text-white text-[12px] font-semibold transition-colors"
@@ -169,7 +169,7 @@ export default function LiveTrainingPage() {
  const levelConf = LEVEL_BADGE[session.level] ?? LEVEL_BADGE.beginner
 
  return (
- <div key={session.id} className="group grid grid-cols-1 md:grid-cols-[2fr_1fr_1fr_1fr_1fr_1fr_140px] gap-2 md:gap-4 items-center px-5 py-4 hover:bg-slate-50/50 dark:hover:bg-white/[0.02] transition-colors">
+ <div key={session.id} className="group grid grid-cols-1 md:grid-cols-[2fr_1fr_1fr_1fr_1fr_1fr_140px] gap-2 md:gap-4 items-center px-5 py-4 hover:bg-[#13131314] dark:hover:bg-white/[0.02] transition-colors">
  {/* Class Name + Status */}
  <div className="flex items-center gap-3 min-w-0">
  <div className={`w-10 h-10 bg-gradient-to-br ${catConf.gradient} flex items-center justify-center ${catConf.glow} flex-shrink-0`}>
@@ -186,13 +186,13 @@ export default function LiveTrainingPage() {
  </span>
  </div>
  {session.description && (
- <p className="text-[11px] text-slate-400 dark:text-slate-500 truncate mt-0.5">{session.description}</p>
+ <p className="text-[11px] text-[var(--text-tertiary)] dark:text-[var(--text-tertiary)] truncate mt-0.5">{session.description}</p>
  )}
  </div>
  </div>
 
  {/* Category */}
- <span className="text-[12px] font-medium text-slate-600 dark:text-slate-300 capitalize hidden md:block">
+ <span className="text-[12px] font-medium text-[var(--text-secondary)] dark:text-slate-300 capitalize hidden md:block">
  {session.category}
  </span>
 
@@ -204,22 +204,22 @@ export default function LiveTrainingPage() {
  </div>
 
  {/* Duration */}
- <div className="hidden md:flex items-center gap-1.5 text-[12px] text-slate-600 dark:text-slate-400">
- <Timer size={13} className="text-slate-400 dark:text-slate-500" />
+ <div className="hidden md:flex items-center gap-1.5 text-[12px] text-[var(--text-secondary)] dark:text-[var(--text-tertiary)]">
+ <Timer size={13} className="text-[var(--text-tertiary)] dark:text-[var(--text-tertiary)]" />
  {session.duration_min} min
  </div>
 
  {/* Time */}
- <span className="text-[12px] text-slate-600 dark:text-slate-400 hidden md:block">
+ <span className="text-[12px] text-[var(--text-secondary)] dark:text-[var(--text-tertiary)] hidden md:block">
  {getScheduleLabel(session)}
  </span>
 
  {/* Participants */}
  <div className="hidden md:flex items-center gap-1.5">
- <Users size={13} className="text-slate-500 dark:text-slate-500" />
- <span className="text-[12px] font-medium text-slate-600 dark:text-slate-300">
+ <Users size={13} className="text-[var(--text-tertiary)] dark:text-[var(--text-tertiary)]" />
+ <span className="text-[12px] font-medium text-[var(--text-secondary)] dark:text-slate-300">
  {session.participant_count}
- <span className="text-slate-400 dark:text-slate-500">/{session.max_participants}</span>
+ <span className="text-[var(--text-tertiary)] dark:text-[var(--text-tertiary)]">/{session.max_participants}</span>
  </span>
  </div>
 
@@ -244,7 +244,7 @@ export default function LiveTrainingPage() {
  )}
  <Link
  href={`/live-training/${session.id}`}
- className="inline-flex items-center gap-1 px-3 py-1.5 border border-slate-200 dark:border-white/[0.1] bg-white dark:bg-white/[0.04] text-slate-600 dark:text-slate-300 text-[11px] font-semibold hover:bg-slate-50 dark:hover:bg-white/[0.08] transition-colors"
+ className="inline-flex items-center gap-1 px-3 py-1.5 border border-slate-200 dark:border-white/[0.1] bg-white dark:bg-white/[0.04] text-[var(--text-secondary)] dark:text-slate-300 text-[11px] font-semibold hover:bg-slate-50 dark:hover:bg-white/[0.08] transition-colors"
  >
  View
  <ArrowUpRight size={11} />

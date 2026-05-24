@@ -25,11 +25,11 @@ export default function SubscriptionCancelPage() {
           <XCircle className="h-24 w-24 text-slate-400 mx-auto mb-6" />
         </motion.div>
 
-        <h1 className="text-3xl font-bold text-slate-900 mb-4">
+        <h1 className="text-3xl font-bold text-[var(--text-primary)] mb-4">
           Payment Cancelled
         </h1>
 
-        <p className="text-lg text-slate-600 mb-8">
+        <p className="text-lg text-[var(--text-secondary)] mb-8">
           No worries! Your payment was not processed. You can try again or continue with a different plan.
         </p>
 

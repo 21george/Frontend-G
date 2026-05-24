@@ -74,14 +74,14 @@ export function WeekView({ selectedDate, checkins, clientMap, filteredEvents, on
       </div>
 
       {/* Time grid */}
-      <div className="bg-white dark:bg-[#1A1A1A] border border-[#E8E2D9] dark:border-white/[0.06] overflow-hidden">
+      <div className="bg-[var(--bg-card)] dark:bg-[#1A1A1A] border border-[var(--border)] dark:border-white/[0.06] overflow-hidden">
         {HOURS.map(hour => (
           <motion.div
             key={hour}
             variants={itemVariants}
-            className="grid grid-cols-8 border-b border-[#F4F0EA] dark:border-white/[0.04] last:border-b-0"
+            className="grid grid-cols-8 border-b border-[var(--border)] dark:border-white/[0.04] last:border-b-0"
           >
-            <div className="p-3 text-[11px] font-medium text-[#A89B8C] text-right pr-5 border-r border-[#F4F0EA] dark:border-white/[0.04]">
+            <div className="p-3 text-[11px] font-medium text-[#A89B8C] text-right pr-5 border-r border-[var(--border)] dark:border-white/[0.04]">
               {format(new Date(2024, 0, 1, hour), 'h a')}
             </div>
             {weekDays.map((day, dayIndex) => {
@@ -93,7 +93,7 @@ export function WeekView({ selectedDate, checkins, clientMap, filteredEvents, on
               return (
                 <div
                   key={dayIndex}
-                  className={`relative min-h-[72px] p-1.5 border-r border-[#F4F0EA] dark:border-white/[0.04] last:border-r-0 transition-colors ${isTodayDay ? 'bg-[#C65D3B]/[0.02]' : ''}`}
+                  className={`relative min-h-[72px] p-1.5 border-r border-[var(--border)] dark:border-white/[0.04] last:border-r-0 transition-colors ${isTodayDay ? 'bg-[#C65D3B]/[0.02]' : ''}`}
                 >
                   {events.map((event, eventIndex) => {
                     const colors = EVENT_TYPES[event.type as keyof typeof EVENT_TYPES] ?? EVENT_TYPES.chat
@@ -116,7 +116,7 @@ export function WeekView({ selectedDate, checkins, clientMap, filteredEvents, on
                             {event.type === 'chat' && <MessageCircle size={10} className="text-white" />}
                           </div>
                           <div className="min-w-0 flex-1">
-                            <div className="text-xs font-semibold text-slate-900 dark:text-slate-100 truncate">
+                            <div className="text-xs font-semibold text-[var(--text-primary)] dark:text-slate-100 truncate">
                               {client?.name ?? 'Client'}
                             </div>
                             <div className="text-[10px] text-slate-500 dark:text-slate-400">

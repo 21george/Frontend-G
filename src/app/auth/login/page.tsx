@@ -89,6 +89,7 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading,    setIsLoading]    = useState(false);
   const [pendingAlert, setPendingAlert] = useState<'update_payment' | 'resubscribe' | 'renew_subscription' | null>(null);
+  const [isHydrated,   setIsHydrated]   = useState(false);
 
   const form = useForm<LoginValues>({
     resolver: zodResolver(loginSchema),
@@ -96,10 +97,22 @@ export default function LoginPage() {
   });
 
   useEffect(() => {
-    if (isAuthenticated) router.replace('/dashboard');
-  }, [isAuthenticated, router]);
+    // Always start as false so server and client initial renders match (null).
+    // After mount, check if the store is already hydrated (localStorage is sync)
+    // or subscribe to finish-hydration event.
+    if (useAuthStore.persist.hasHydrated()) {
+      setIsHydrated(true);
+      return;
+    }
+    const unsub = useAuthStore.persist.onFinishHydration(() => setIsHydrated(true));
+    return unsub;
+  }, []);
 
-  if (isAuthenticated) return null;
+  useEffect(() => {
+    if (isHydrated && isAuthenticated) router.replace('/dashboard');
+  }, [isHydrated, isAuthenticated, router]);
+
+  if (!isHydrated || isAuthenticated) return null;
 
   const handleLogin = async (data: LoginValues) => {
     setError(null);

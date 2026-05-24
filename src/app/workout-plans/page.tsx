@@ -273,7 +273,7 @@ function WorkoutDetailsTable({ plans }: { plans: WorkoutPlan[] }) {
       <div className="overflow-x-auto">
         <table className="w-full">
           <thead>
-            <tr className="bg-slate-50/80 dark:bg-white/[0.04] border-b border-slate-200/80 dark:border-white/[0.08]">
+            <tr className="bg-[#13131314] dark:bg-white/[0.04] border-b border-slate-200/80 dark:border-white/[0.08]">
               <th className="text-left text-[10px] font-bold text-slate-500 dark:text-neutral-400 uppercase tracking-wider px-5 py-4">Exercise</th>
               <th className="text-left text-[10px] font-bold text-slate-500 dark:text-neutral-400 uppercase tracking-wider px-5 py-4">Plan / Day</th>
               <th className="text-center text-[10px] font-bold text-slate-500 dark:text-neutral-400 uppercase tracking-wider px-5 py-4">Sets</th>
@@ -289,7 +289,7 @@ function WorkoutDetailsTable({ plans }: { plans: WorkoutPlan[] }) {
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.02 }}
-                className="hover:bg-slate-50/50 dark:hover:bg-white/[0.02] transition-colors"
+                className="hover:bg-[#13131314] dark:hover:bg-white/[0.02] transition-colors"
               >
                 <td className="px-5 py-4">
                   <div className="flex items-center gap-3">
@@ -444,7 +444,7 @@ export default function WorkoutPlansPage() {
               <div className="overflow-x-auto">
                 <table className="w-full text-left">
                   <thead>
-                    <tr className="bg-slate-50/80 dark:bg-white/[0.04] border-b border-slate-200/80 dark:border-white/[0.08]">
+                    <tr className="bg-[#13131314] dark:bg-white/[0.04] border-b border-slate-200/80 dark:border-white/[0.08]">
                       <th className="px-4 lg:px-6 py-4 text-[10px] lg:text-xs font-bold text-slate-500 dark:text-neutral-400 uppercase tracking-wider">Plan</th>
                       <th className="px-4 lg:px-6 py-4 text-[10px] lg:text-xs font-bold text-slate-500 dark:text-neutral-400 uppercase tracking-wider hidden sm:table-cell">Type</th>
                       <th className="px-4 lg:px-6 py-4 text-[10px] lg:text-xs font-bold text-slate-500 dark:text-neutral-400 uppercase tracking-wider hidden md:table-cell">Duration</th>
@@ -464,7 +464,7 @@ export default function WorkoutPlansPage() {
                           initial={{ opacity: 0, x: -20 }}
                           animate={{ opacity: 1, x: 0 }}
                           transition={{ delay: index * 0.03 }}
-                          className="hover:bg-slate-50/50 dark:hover:bg-white/[0.03] transition-colors group"
+                          className="hover:bg-[#13131314] dark:hover:bg-white/[0.03] transition-colors group"
                         >
                           <td className="px-4 lg:px-6 py-4">
                             <div className="flex items-center gap-3">

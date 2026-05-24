@@ -48,7 +48,7 @@ export function DayView({ selectedDate, checkins, clientMap, filteredEvents, onS
       className="max-w-3xl mx-auto"
     >
       {/* Day header card */}
-      <motion.div variants={itemVariants} className="mb-6 p-6 bg-white dark:bg-[#1A1A1A] border border-[#E8E2D9] dark:border-white/[0.06]">
+      <motion.div variants={itemVariants} className="mb-6 p-6 bg-[var(--bg-card)] dark:bg-[#1A1A1A] border border-[var(--border)] dark:border-white/[0.06]">
         <div className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#A89B8C] mb-1">
           {format(selectedDate, 'EEEE')}
         </div>
@@ -57,7 +57,7 @@ export function DayView({ selectedDate, checkins, clientMap, filteredEvents, onS
         </div>
       </motion.div>
 
-      <div className="bg-white dark:bg-[#1A1A1A] border border-[#E8E2D9] dark:border-white/[0.06] overflow-hidden">
+      <div className="bg-[var(--bg-card)] dark:bg-[#1A1A1A] border border-[var(--border)] dark:border-white/[0.06] overflow-hidden">
         {HOURS.map(hour => {
           const events = dayEvents(selectedDate).filter(e => {
             const date = parseDateValue(e.scheduled_at)
@@ -67,9 +67,9 @@ export function DayView({ selectedDate, checkins, clientMap, filteredEvents, onS
             <motion.div
               key={hour}
               variants={itemVariants}
-              className="flex border-b border-[#F4F0EA] dark:border-white/[0.04] last:border-b-0"
+              className="flex border-b border-[var(--border)] dark:border-white/[0.04] last:border-b-0"
             >
-              <div className="w-24 p-4 text-[11px] font-medium text-[#A89B8C] text-right pr-5 border-r border-[#F4F0EA] dark:border-white/[0.04] flex-shrink-0">
+              <div className="w-24 p-4 text-[11px] font-medium text-[#A89B8C] text-right pr-5 border-r border-[var(--border)] dark:border-white/[0.04] flex-shrink-0">
                 {format(new Date(2024, 0, 1, hour), 'h a')}
               </div>
               <div className="flex-1 p-2">
@@ -93,7 +93,7 @@ export function DayView({ selectedDate, checkins, clientMap, filteredEvents, onS
                           {event.type === 'chat' && <MessageCircle size={15} className="text-white" />}
                         </div>
                         <div className="flex-1 min-w-0 text-left">
-                          <div className="text-sm font-semibold text-slate-900 dark:text-slate-100">
+                          <div className="text-sm font-semibold text-[var(--text-primary)] dark:text-slate-100">
                             {client?.name ?? 'Client'}
                           </div>
                           <div className="text-xs text-slate-500 dark:text-slate-400">

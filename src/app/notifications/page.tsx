@@ -172,7 +172,7 @@ export default function NotificationsPage() {
               className={`px-3 py-1.5 text-sm font-medium transition-colors ${
                 filter === 'all'
                   ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900'
-                  : 'bg-white text-slate-600 hover:bg-slate-50 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-white/[0.04]'
+                  : 'bg-white text-slate-600 hover:bg-[#13131314] dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-white/[0.04]'
               }`}
             >
               All
@@ -182,7 +182,7 @@ export default function NotificationsPage() {
               className={`px-3 py-1.5 text-sm font-medium transition-colors ${
                 filter === 'unread'
                   ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900'
-                  : 'bg-white text-slate-600 hover:bg-slate-50 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-white/[0.04]'
+                  : 'bg-white text-slate-600 hover:bg-[#13131314] dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-white/[0.04]'
               }`}
             >
               Unread{totalUnread > 0 ? ` (${totalUnread})` : ''}

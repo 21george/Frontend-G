@@ -15,13 +15,13 @@ interface ErrorModalProps {
 
 /* ── Icon + colour per status range ──────────────────────────────────────── */
 function getStyle(status: number) {
-  if (status === 0)   return { icon: WifiOff,      bg: 'bg-slate-100 dark:bg-slate-800',       text: 'text-slate-600 dark:text-slate-300' }
+  if (status === 0)   return { icon: WifiOff,      bg: 'bg-[var(--bg-subtle)] dark:bg-slate-800',       text: 'text-[var(--text-secondary)] dark:text-slate-300' }
   if (status === 401) return { icon: ShieldAlert,   bg: 'bg-amber-100 dark:bg-amber-900/20',    text: 'text-amber-600 dark:text-amber-400' }
   if (status === 403) return { icon: ShieldAlert,   bg: 'bg-red-100 dark:bg-red-900/20',        text: 'text-red-600 dark:text-red-400' }
-  if (status === 404) return { icon: XCircle,        bg: 'bg-slate-100 dark:bg-slate-800',       text: 'text-slate-600 dark:text-slate-300' }
+  if (status === 404) return { icon: XCircle,        bg: 'bg-[var(--bg-subtle)] dark:bg-slate-800',       text: 'text-[var(--text-secondary)] dark:text-slate-300' }
   if (status === 429) return { icon: Clock,          bg: 'bg-orange-100 dark:bg-orange-900/20',   text: 'text-orange-600 dark:text-orange-400' }
   if (status >= 500)  return { icon: AlertTriangle,  bg: 'bg-red-100 dark:bg-red-900/20',        text: 'text-red-600 dark:text-red-400' }
-  return                  { icon: AlertTriangle,  bg: 'bg-slate-100 dark:bg-slate-800',       text: 'text-slate-600 dark:text-slate-300' }
+  return                  { icon: AlertTriangle,  bg: 'bg-[var(--bg-subtle)] dark:bg-slate-800',       text: 'text-[var(--text-secondary)] dark:text-slate-300' }
 }
 
 export function ErrorModal({ open, onClose, error, onRetry, retryLabel = 'Try again', dismissLabel = 'Dismiss' }: ErrorModalProps) {
@@ -51,7 +51,7 @@ export function ErrorModal({ open, onClose, error, onRetry, retryLabel = 'Try ag
         <div className="flex items-center gap-3 w-full">
           <button
             onClick={onClose}
-            className="flex-1 px-4 py-2.5 border border-[var(--border)] text-sm font-medium text-[var(--text-secondary)] hover:bg-slate-50 dark:hover:bg-white/[0.04] transition-colors"
+            className="flex-1 px-4 py-2.5 border border-[var(--border)] text-sm font-medium text-[var(--text-secondary)] hover:bg-[#13131314] dark:hover:bg-white/[0.04] transition-colors"
           >
             {dismissLabel}
           </button>

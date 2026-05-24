@@ -49,10 +49,10 @@ export function WorkoutDetailsTable({ plans }: { plans: WorkoutPlan[] }) {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: 0.1 }}
-      className="bg-white dark:bg-[#1A1A1A] border border-slate-200/80 dark:border-white/[0.08] overflow-hidden "
+      className="bg-[var(--bg-card)] dark:bg-[#1A1A1A] border border-[var(--border)] dark:border-white/[0.08] overflow-hidden "
     >
       {/* Header */}
-      <div className="px-6 py-5 border-b border-slate-100 dark:border-white/[0.06]">
+      <div className="px-6 py-5 border-b border-[var(--border)] dark:border-white/[0.06]">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-pink-600 flex items-center justify-center ">
@@ -68,8 +68,8 @@ export function WorkoutDetailsTable({ plans }: { plans: WorkoutPlan[] }) {
             </div>
           </div>
           <div className="flex items-center gap-2 text-xs">
-            <div className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 dark:bg-white/[0.04] ">
-              <Dumbbell size={12} className="text-slate-400" />
+            <div className="flex items-center gap-1.5 px-3 py-1.5 bg-[var(--bg-subtle)] dark:bg-white/[0.04] ">
+              <Dumbbell size={12} className="text-[var(--text-tertiary)]" />
               <span className="font-semibold text-[var(--text-secondary)] ">{allExercises.length} Total Exercises</span>
             </div>
           </div>
@@ -80,23 +80,23 @@ export function WorkoutDetailsTable({ plans }: { plans: WorkoutPlan[] }) {
       <div className="overflow-x-auto">
         <table className="w-full">
           <thead>
-            <tr className="bg-slate-50/80 dark:bg-white/[0.04] border-b border-slate-200/80 dark:border-white/[0.08]">
-              <th className="text-left text-[10px] font-bold text-slate-500 dark:text-neutral-400 uppercase tracking-wider px-5 py-4">Exercise</th>
-              <th className="text-left text-[10px] font-bold text-slate-500 dark:text-neutral-400 uppercase tracking-wider px-5 py-4">Plan / Day</th>
-              <th className="text-center text-[10px] font-bold text-slate-500 dark:text-neutral-400 uppercase tracking-wider px-5 py-4">Sets</th>
-              <th className="text-center text-[10px] font-bold text-slate-500 dark:text-neutral-400 uppercase tracking-wider px-5 py-4">Reps</th>
-              <th className="text-center text-[10px] font-bold text-slate-500 dark:text-neutral-400 uppercase tracking-wider px-5 py-4">Rest</th>
-              <th className="text-left text-[10px] font-bold text-slate-500 dark:text-neutral-400 uppercase tracking-wider px-5 py-4">Notes</th>
+            <tr className="bg-[#13131314] dark:bg-white/[0.04] border-b border-[var(--border)] dark:border-white/[0.08]">
+              <th className="text-left text-[10px] font-bold text-[var(--text-tertiary)] dark:text-neutral-400 uppercase tracking-wider px-5 py-4">Exercise</th>
+              <th className="text-left text-[10px] font-bold text-[var(--text-tertiary)] dark:text-neutral-400 uppercase tracking-wider px-5 py-4">Plan / Day</th>
+              <th className="text-center text-[10px] font-bold text-[var(--text-tertiary)] dark:text-neutral-400 uppercase tracking-wider px-5 py-4">Sets</th>
+              <th className="text-center text-[10px] font-bold text-[var(--text-tertiary)] dark:text-neutral-400 uppercase tracking-wider px-5 py-4">Reps</th>
+              <th className="text-center text-[10px] font-bold text-[var(--text-tertiary)] dark:text-neutral-400 uppercase tracking-wider px-5 py-4">Rest</th>
+              <th className="text-left text-[10px] font-bold text-[var(--text-tertiary)] dark:text-neutral-400 uppercase tracking-wider px-5 py-4">Notes</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-100 dark:divide-white/[0.05]">
+          <tbody className="divide-y divide-[var(--border)] dark:divide-white/[0.05]">
             {allExercises.slice(0, 20).map((ex, index) => (
               <motion.tr
                 key={`${ex.planId}-${ex.dayName}-${ex.exerciseName}-${index}`}
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.02 }}
-                className="hover:bg-slate-50/50 dark:hover:bg-white/[0.02] transition-colors"
+                className="hover:bg-[#13131314] dark:hover:bg-white/[0.02] transition-colors"
               >
                 <td className="px-5 py-4">
                   <div className="flex items-center gap-3">
@@ -111,28 +111,28 @@ export function WorkoutDetailsTable({ plans }: { plans: WorkoutPlan[] }) {
                 </td>
                 <td className="px-5 py-4">
                   <div className="flex items-center gap-2">
-                    <div className="px-2.5 py-1 bg-slate-100 dark:bg-white/[0.04] ">
+                    <div className="px-2.5 py-1 bg-[var(--bg-subtle)] dark:bg-white/[0.04] ">
                       <span className="text-xs font-medium text-[var(--text-secondary)] capitalize">{ex.dayName}</span>
                     </div>
                   </div>
                 </td>
                 <td className="px-5 py-4">
                   <div className="text-center">
-                    <div className="inline-flex items-center justify-center w-10 h-8 bg-slate-100 dark:bg-white/[0.04] ">
+                    <div className="inline-flex items-center justify-center w-10 h-8 bg-[var(--bg-subtle)] dark:bg-white/[0.04] ">
                       <span className="text-sm font-bold text-[var(--text-primary)] ">{ex.sets}</span>
                     </div>
                   </div>
                 </td>
                 <td className="px-5 py-4">
                   <div className="text-center">
-                    <div className="inline-flex items-center justify-center w-10 h-8 bg-slate-100 dark:bg-white/[0.04] ">
+                    <div className="inline-flex items-center justify-center w-10 h-8 bg-[var(--bg-subtle)] dark:bg-white/[0.04] ">
                       <span className="text-sm font-bold text-[var(--text-primary)] ">{ex.reps}</span>
                     </div>
                   </div>
                 </td>
                 <td className="px-5 py-4">
                   <div className="text-center">
-                    <div className="inline-flex items-center justify-center w-10 h-8 bg-slate-100 dark:bg-white/[0.04] ">
+                    <div className="inline-flex items-center justify-center w-10 h-8 bg-[var(--bg-subtle)] dark:bg-white/[0.04] ">
                       <span className="text-sm font-bold text-[var(--text-primary)] ">{ex.restSeconds}s</span>
                     </div>
                   </div>
@@ -154,16 +154,16 @@ export function WorkoutDetailsTable({ plans }: { plans: WorkoutPlan[] }) {
 
       {allExercises.length === 0 && (
         <div className="p-12 text-center">
-          <div className="w-16 h-16 bg-slate-100 dark:bg-white/[0.04] flex items-center justify-center mx-auto mb-4">
-            <Dumbbell className="w-8 h-8 text-slate-300 dark:text-slate-600" />
+          <div className="w-16 h-16 bg-[var(--bg-subtle)] dark:bg-white/[0.04] flex items-center justify-center mx-auto mb-4">
+            <Dumbbell className="w-8 h-8 text-[var(--text-tertiary)] dark:text-slate-600" />
           </div>
-          <p className="text-sm font-medium text-slate-600 dark:text-slate-400">No exercises configured</p>
-          <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">Add exercises to your workout plans to see them here</p>
+          <p className="text-sm font-medium text-[var(--text-secondary)] dark:text-slate-400">No exercises configured</p>
+          <p className="text-xs text-[var(--text-tertiary)] dark:text-slate-500 mt-1">Add exercises to your workout plans to see them here</p>
         </div>
       )}
 
       {allExercises.length > 20 && (
-        <div className="px-6 py-4 bg-slate-50 dark:bg-white/[0.02] border-t border-slate-100 dark:border-white/[0.06]">
+        <div className="px-6 py-4 bg-[var(--bg-subtle)] dark:bg-white/[0.02] border-t border-[var(--border)] dark:border-white/[0.06]">
           <p className="text-xs text-[var(--text-tertiary)] text-center">
             Showing 20 of {allExercises.length} exercises. View individual plans for complete details.
           </p>

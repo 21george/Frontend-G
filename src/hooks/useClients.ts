@@ -1,13 +1,14 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useQuery, useMutation, useQueryClient, type UseQueryOptions } from '@tanstack/react-query'
 import { clientsApi } from '@/lib/api'
 import { useToastMutation } from './useToastMutation'
-import type { Client } from '@/types'
+import type { Client, PaginatedResponse } from '@/types'
 
-export const useClients = (search?: string) =>
+export const useClients = (search?: string, options?: Omit<UseQueryOptions<PaginatedResponse<Client>>, 'queryKey' | 'queryFn'>) =>
   useQuery({
     queryKey: ['clients', search],
     queryFn: () => clientsApi.list(search),
     staleTime: 2 * 60_000,
+    ...options,
   })
 
 export const useClient = (id: string) =>

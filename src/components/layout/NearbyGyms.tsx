@@ -274,7 +274,7 @@ export function NearbyGymsButton() {
                             initial={{ opacity: 0, x: -20 }}
                             animate={{ opacity: 1, x: 0 }}
                             transition={{ delay: i * 0.05 }}
-                            className="flex items-center gap-4 px-5 py-4 hover:bg-slate-50 dark:hover:bg-white/[0.03] transition-colors group"
+                            className="flex items-center gap-4 px-5 py-4 hover:bg-[#13131314] dark:hover:bg-white/[0.03] transition-colors group"
                           >
                             <div className="w-10 h-10 bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center shrink-0 ">
                               <Dumbbell className="w-5 h-5 text-white" />

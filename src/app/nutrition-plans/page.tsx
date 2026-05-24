@@ -6,10 +6,10 @@ import { Skeleton } from '@/components/ui/Skeleton'
 import { useNutritionPlans, useClients } from '@/lib/hooks'
 import Link from 'next/link'
 import {
-  Plus, Search, SlidersHorizontal, Flame, Zap, Droplets,
+  Search, SlidersHorizontal, Flame, Zap, Droplets, UtensilsCrossed,
   Salad, Clock, ChevronRight, Star, Users, MoreHorizontal,
-  Apple, Coffee, UtensilsCrossed,
 } from 'lucide-react'
+import { NutritionListCard } from '@/components/clients/NutritionListCard'
 import type { NutritionPlan } from '@/types'
 
 // ── Constants ─────────────────────────────────────────────────────────────────
@@ -159,68 +159,6 @@ function FeaturedPlanCard({ plan, clientName }: { plan: NutritionPlan; clientNam
   )
 }
 
-// ── Plan list row ─────────────────────────────────────────────────────────────
-
-function PlanRow({ plan, clientName }: { plan: NutritionPlan; clientName?: string }) {
-  const score = healthScore(plan)
-  const { calories = 0, protein_g = 0, carbs_g = 0, fat_g = 0 } = plan.daily_totals ?? {}
-  const types = getMealTypes(plan)
-  const primary = types[0]
-
-  const iconBg: Record<string, string> = {
-    Breakfast: 'bg-orange-100 dark:bg-orange-900/30',
-    Lunch:     'bg-blue-100   dark:bg-blue-900/30',
-    Dinner:    'bg-indigo-100 dark:bg-indigo-900/30',
-    Snack:     'bg-purple-100 dark:bg-purple-900/30',
-  }
-  const iconColor: Record<string, string> = {
-    Breakfast: 'text-orange-500',
-    Lunch:     'text-blue-500',
-    Dinner:    'text-indigo-500',
-    Snack:     'text-purple-500',
-  }
-
-  const MealIcon = primary === 'Breakfast' ? Coffee
-    : primary === 'Lunch'   ? UtensilsCrossed
-    : primary === 'Snack'   ? Apple
-    : Salad
-
-  return (
-    <Link
-      href={`/nutrition-plans/${plan.id}`}
-      className="flex items-center gap-4 px-4 py-3.5 hover:bg-slate-50 dark:hover:bg-white/[0.03] transition-colors group"
-    >
-      {/* Icon */}
-      <div className={`w-10 h-10 flex items-center justify-center flex-shrink-0 ${primary ? iconBg[primary] : 'bg-green-100 dark:bg-green-900/30'}`}>
-        <MealIcon size={18} className={primary ? iconColor[primary] : 'text-green-600'} />
-      </div>
-
-      {/* Main info */}
-      <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-2 mb-0.5 flex-wrap">
-          <p className="text-sm font-semibold text-[var(--text-primary)] dark:text-[var(--text-primary)] truncate">{plan.title}</p>
-          {types.slice(0, 2).map(t => <MealBadge key={t} type={t} />)}
-        </div>
-        <div className="flex items-center gap-3 text-xs text-slate-400 dark:text-slate-500 flex-wrap">
-          {clientName && <span className="flex items-center gap-1"><Users size={10} />{clientName}</span>}
-          <span>{calories} kcal/day</span>
-          <span className="hidden sm:inline">P: {protein_g}g · C: {carbs_g}g · F: {fat_g}g</span>
-        </div>
-      </div>
-
-      {/* Health score */}
-      <div className="hidden sm:flex flex-col items-end gap-1 flex-shrink-0">
-        <span className={`text-xs font-semibold ${scoreColor(score)}`}>Health Score</span>
-        <div className="flex items-center gap-1">
-          <span className={`text-xs font-semibold ${scoreColor(score)}`}>{score}/10</span>
-          <ScoreBar score={score} />
-        </div>
-      </div>
-
-      <ChevronRight size={14} className="text-slate-300 dark:text-slate-700 group-hover:text-slate-500 dark:group-hover:text-slate-400 transition-colors flex-shrink-0" />
-    </Link>
-  )
-}
 
 // ── Right panel mini card ─────────────────────────────────────────────────────
 
@@ -232,7 +170,7 @@ function MiniPlanCard({ plan, rank }: { plan: NutritionPlan; rank?: number }) {
   return (
     <Link
       href={`/nutrition-plans/${plan.id}`}
-      className="flex items-center gap-3 p-2 hover:bg-slate-50 dark:hover:bg-white/[0.04] transition-colors group"
+      className="flex items-center gap-3 p-2 hover:bg-[#13131314] dark:hover:bg-white/[0.04] transition-colors group"
     >
       <div className={`w-10 h-10 flex-shrink-0 flex items-center justify-center ${
         types[0] === 'Breakfast' ? 'bg-orange-100 dark:bg-orange-900/30' :
@@ -288,6 +226,16 @@ export default function NutritionPlansPage() {
   const [activeTab, setActiveTab] = useState<MealTab>('All')
   const [search,    setSearch]    = useState('')
   const [sortBy,    setSortBy]    = useState<'calories' | 'score' | 'name'>('calories')
+  const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set())
+
+  const togglePlan = (id: string) => {
+    setExpandedIds(prev => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
+  }
 
   const plans = rawPlans as NutritionPlan[]
 
@@ -427,9 +375,18 @@ export default function NutritionPlansPage() {
                       Create your first plan →
                     </Link>
                   </div>
-                ) : filtered.map(plan => (
-                  <PlanRow key={plan.id} plan={plan} clientName={clientMap[plan.client_id]} />
-                ))}
+                ) : (
+                  <div className="space-y-4">
+                    {filtered.map(plan => (
+                      <NutritionListCard
+                        key={plan.id}
+                        plan={plan}
+                        expanded={expandedIds.has(plan.id)}
+                        onToggle={() => togglePlan(plan.id)}
+                      />
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
           </div>

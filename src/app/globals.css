@@ -25,8 +25,8 @@
 
     /* Light */
     --bg-page:       #F8FAFC;
-    --bg-card:       #FFFFFF;
-    --bg-subtle:     #F1F5F9;
+    --bg-card:       #13131314;
+    --bg-subtle:     #f1f5f9b0;
     --text-primary:  #121212;
     --text-secondary:#64748B;
     --text-tertiary: #94A3B8;
@@ -136,9 +136,9 @@
 
   }
   .btn-secondary {
-    @apply btn bg-white border border-slate-200 text-slate-700 px-4 py-2.5 text-sm font-medium
-           hover:bg-slate-50 hover:border-slate-300 active:bg-slate-100
-           focus-visible:ring-slate-300;
+    @apply btn bg-[var(--bg-card)] border border-[var(--border)] text-[var(--text-secondary)] px-4 py-2.5 text-sm font-medium
+           hover:bg-[#13131314] hover:border-[var(--border-hover)] active:bg-[var(--bg-subtle)]
+           focus-visible:ring-[var(--border-hover)];
 
   }
   .btn-danger {
@@ -146,8 +146,8 @@
            hover:bg-red-600 active:bg-red-700 focus-visible:ring-red-500;
   }
   .btn-ghost {
-    @apply btn text-slate-600 px-4 py-2.5 text-sm font-medium
-           hover:bg-slate-100 active:bg-slate-200 focus-visible:ring-slate-200;
+    @apply btn text-[var(--text-secondary)] px-4 py-2.5 text-sm font-medium
+           hover:bg-[#13131314] active:bg-[var(--bg-subtle)] focus-visible:ring-[var(--border)];
   }
 
   /* ── Dark mode buttons ─────────────────────────────────────────────────── */
@@ -173,11 +173,11 @@
      CARDS
      ═══════════════════════════════════════════════════════════════════════ */
   .card {
-    @apply bg-white border border-slate-200 ;
-
+    @apply border border-[var(--border)] ;
+    background-color: #13131314;
   }
   .card-hover {
-    @apply card hover:border-slate-300 transition-all duration-200 cursor-pointer;
+    @apply card hover:border-[var(--border-hover)] transition-all duration-200 cursor-pointer;
   }
   html.dark .card {
     background-color: var(--bg-card);
@@ -193,13 +193,13 @@
      FORM INPUTS
      ═══════════════════════════════════════════════════════════════════════ */
   .input {
-    @apply w-full bg-white border border-slate-200 px-3.5 py-2.5 text-sm text-slate-900
-           placeholder:text-slate-400 transition-all duration-150
-           focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500
-           hover:border-slate-300;
+    @apply w-full bg-[var(--bg-card)] border border-[var(--border)] px-3.5 py-2.5 text-sm text-[var(--text-primary)]
+           placeholder:text-[var(--text-tertiary)] transition-all duration-150
+           focus:outline-none focus:ring-2 focus:ring-[var(--ring)] focus:ring-opacity-20 focus:border-[var(--ring)]
+           hover:border-[var(--border-hover)];
   }
   .label {
-    @apply block text-sm font-medium text-slate-700 mb-1.5;
+    @apply block text-sm font-medium text-[var(--text-secondary)] mb-1.5;
   }
   html.dark .input {
     @apply border-white/[0.08] text-slate-100 placeholder:text-slate-500
@@ -220,7 +220,7 @@
   .badge-green   { @apply badge bg-emerald-50 text-emerald-700 ring-1 ring-inset ring-emerald-200/50; }
   .badge-red     { @apply badge bg-red-50 text-red-700 ring-1 ring-inset ring-red-200/50; }
   .badge-amber   { @apply badge bg-amber-50 text-amber-700 ring-1 ring-inset ring-amber-200/50; }
-  .badge-gray    { @apply badge bg-slate-100 text-slate-600; }
+  .badge-gray    { @apply badge bg-[var(--bg-subtle)] text-[var(--text-secondary)]; }
   html.dark .badge-blue   { color: #A5B4FC; background-color: rgba(30, 27, 75, 0.4); border: 1px solid rgba(99, 102, 241, 0.2); }
   html.dark .badge-green  { color: #6EE7B7; background-color: rgba(6, 78, 59, 0.4); border: 1px solid rgba(16, 185, 129, 0.2); }
   html.dark .badge-red    { color: #FCA5A5; background-color: rgba(127, 29, 29, 0.4); border: 1px solid rgba(239, 68, 68, 0.2); }
@@ -263,14 +263,18 @@
 
   }
   .nav-link-inactive {
-    @apply nav-link text-slate-400 hover:bg-white/[0.06] hover:text-slate-200;
+    @apply nav-link text-[var(--text-tertiary)] hover:bg-white/[0.06] hover:text-[var(--text-secondary)];
   }
 
   /* ═══════════════════════════════════════════════════════════════════════
      TABLE ROWS
      ═══════════════════════════════════════════════════════════════════════ */
   .table-row {
-    @apply flex items-center gap-3 p-3.5 bg-slate-50/80 hover:bg-slate-100 transition-colors;
+    @apply flex items-center gap-3 p-3.5 transition-colors;
+    background-color: #13131314;
+  }
+  .table-row:hover {
+    background-color: #13131314;
   }
   html.dark .table-row {
     @apply bg-white/[0.03] hover:bg-white/[0.06];
@@ -280,7 +284,7 @@
      SECTION DIVIDER
      ═══════════════════════════════════════════════════════════════════════ */
   .section-title {
-    @apply text-[11px] font-semibold uppercase tracking-wider text-slate-400 px-3 mb-2 mt-1;
+    @apply text-[11px] font-semibold uppercase tracking-wider text-[var(--text-tertiary)] px-3 mb-2 mt-1;
   }
   html.dark .section-title {
     @apply text-slate-500;
@@ -327,3 +331,13 @@
   .border-default { border-color: var(--border); }
   .border-hover   { border-color: var(--border-hover); }
 }
+
+/* ── intl-tel-input flag sprite override ─────────────────────────────────── */
+:root {
+  --iti-path-flags-1x: url('/img/flags.webp');
+  --iti-path-flags-2x: url('/img/flags@2x.webp');
+}
+
+/* Blend phone input into app styles */
+.iti { width: 100%; }
+.iti__tel-input { width: 100%; }

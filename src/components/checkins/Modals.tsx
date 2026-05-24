@@ -38,7 +38,7 @@ export function EventDetailModal({ selected, clientMap, onClose, onReschedule, o
           animate={{ scale: 1, opacity: 1, y: 0 }}
           exit={{ scale: 0.94, opacity: 0, y: 16 }}
           transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-          className="relative w-full max-w-md bg-white dark:bg-[#1A1A1A] overflow-hidden border border-slate-200 dark:border-white/[0.08] rounded-xl shadow-elevated dark:shadow-dark-elevated"
+          className="relative w-full max-w-md bg-[var(--bg-card)] dark:bg-[#1A1A1A] overflow-hidden border border-[var(--border)] dark:border-white/[0.08] rounded-xl shadow-elevated dark:shadow-dark-elevated"
           onClick={e => e.stopPropagation()}
         >
           {/* Accent top bar */}
@@ -47,17 +47,17 @@ export function EventDetailModal({ selected, clientMap, onClose, onReschedule, o
           <div className="p-7">
             <div className="flex items-start justify-between mb-6">
               <div className="flex items-center gap-4">
-                <div className="w-14 h-14 flex items-center justify-center bg-slate-100 dark:bg-white/[0.06] ">
-                  <User size={26} className="text-slate-500" />
+                <div className="w-14 h-14 flex items-center justify-center bg-[var(--bg-subtle)] dark:bg-white/[0.06] ">
+                  <User size={26} className="text-[var(--text-tertiary)]" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
+                  <h3 className="text-lg font-semibold text-[var(--text-primary)] dark:text-slate-100">
                     {selectedClient?.name ?? 'Client'}
                   </h3>
                   <div className="flex items-center gap-2 mt-1.5">
                     <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 text-[11px] font-bold uppercase tracking-wider rounded ${
-                      EVENT_TYPES[selected.type as keyof typeof EVENT_TYPES]?.bg ?? 'bg-slate-100'
-                    } ${EVENT_TYPES[selected.type as keyof typeof EVENT_TYPES]?.text ?? 'text-slate-700'}`}>
+                      EVENT_TYPES[selected.type as keyof typeof EVENT_TYPES]?.bg ?? 'bg-[var(--bg-subtle)]'
+                    } ${EVENT_TYPES[selected.type as keyof typeof EVENT_TYPES]?.text ?? 'text-[var(--text-secondary)]'}`}>
                       {selected.type === 'video' && <Video size={11} />}
                       {selected.type === 'call' && <Phone size={11} />}
                       {selected.type === 'chat' && <MessageCircle size={11} />}
@@ -79,21 +79,21 @@ export function EventDetailModal({ selected, clientMap, onClose, onReschedule, o
             </div>
 
             <div className="space-y-2.5">
-              <div className="flex items-center gap-3 text-sm p-3.5 bg-slate-50 dark:bg-surface-subtle-dark border border-slate-200 dark:border-white/[0.06] rounded-lg">
-                <Calendar size={16} className="text-slate-500" />
-                <span className="text-slate-900 dark:text-slate-100">
+              <div className="flex items-center gap-3 text-sm p-3.5 bg-[var(--bg-subtle)] dark:bg-surface-subtle-dark border border-[var(--border)] dark:border-white/[0.06] rounded-lg">
+                <Calendar size={16} className="text-[var(--text-tertiary)]" />
+                <span className="text-[var(--text-primary)] dark:text-slate-100">
                   {formatDate(selected.scheduled_at, 'EEEE, MMMM d, yyyy')}
                 </span>
               </div>
-              <div className="flex items-center gap-3 text-sm p-3.5 bg-slate-50 dark:bg-surface-subtle-dark border border-slate-200 dark:border-white/[0.06] rounded-lg">
-                <Clock size={16} className="text-slate-500" />
-                <span className="text-slate-900 dark:text-slate-100">
+              <div className="flex items-center gap-3 text-sm p-3.5 bg-[var(--bg-subtle)] dark:bg-surface-subtle-dark border border-[var(--border)] dark:border-white/[0.06] rounded-lg">
+                <Clock size={16} className="text-[var(--text-tertiary)]" />
+                <span className="text-[var(--text-primary)] dark:text-slate-100">
                   {formatDate(selected.scheduled_at, 'h:mm a')}
                 </span>
               </div>
               {selected.meeting_link && (
-                <div className="flex items-center gap-3 text-sm p-3.5 bg-slate-50 dark:bg-surface-subtle-dark border border-slate-200 dark:border-white/[0.06] rounded-lg">
-                  <Video size={16} className="text-slate-500" />
+                <div className="flex items-center gap-3 text-sm p-3.5 bg-[var(--bg-subtle)] dark:bg-surface-subtle-dark border border-[var(--border)] dark:border-white/[0.06] rounded-lg">
+                  <Video size={16} className="text-[var(--text-tertiary)]" />
                   <a href={selected.meeting_link} target="_blank" rel="noopener noreferrer" className="text-brand-600 hover:text-brand-700 dark:text-brand-400 dark:hover:text-brand-300 hover:underline font-medium">
                     Join meeting
                   </a>
@@ -101,13 +101,13 @@ export function EventDetailModal({ selected, clientMap, onClose, onReschedule, o
               )}
               {selected.notes && (
                 <div className="pt-2">
-                  <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400 mb-2">Notes</p>
-                  <p className="text-sm text-slate-900 dark:text-slate-100 p-3.5 bg-slate-50 dark:bg-surface-subtle-dark border border-slate-200 dark:border-white/[0.06] rounded-lg">{selected.notes}</p>
+                  <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--text-tertiary)] dark:text-slate-400 mb-2">Notes</p>
+                  <p className="text-sm text-[var(--text-primary)] dark:text-slate-100 p-3.5 bg-[var(--bg-subtle)] dark:bg-surface-subtle-dark border border-[var(--border)] dark:border-white/[0.06] rounded-lg">{selected.notes}</p>
                 </div>
               )}
             </div>
 
-            <div className="flex items-center gap-3 mt-7 pt-5 border-t border-slate-200 dark:border-white/[0.08]">
+            <div className="flex items-center gap-3 mt-7 pt-5 border-t border-[var(--border)] dark:border-white/[0.08]">
               <button
                 onClick={() => onReschedule(selected)}
                 className="flex-1 px-4 py-2.5 text-sm font-semibold text-white transition-colors rounded-lg hover:bg-brand-700"
@@ -118,7 +118,7 @@ export function EventDetailModal({ selected, clientMap, onClose, onReschedule, o
               <button
                 onClick={onCancel}
                 disabled={isDeleting}
-                className="flex-1 px-4 py-2.5 bg-slate-100 dark:bg-white/[0.06] text-slate-900 dark:text-slate-100 text-sm font-semibold transition-colors hover:bg-slate-200 dark:hover:bg-white/[0.1] rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex-1 px-4 py-2.5 bg-[var(--bg-subtle)] dark:bg-white/[0.06] text-[var(--text-primary)] dark:text-slate-100 text-sm font-semibold transition-colors hover:bg-[#13131314] dark:hover:bg-white/[0.1] rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isDeleting ? 'Cancelling…' : 'Cancel'}
               </button>
@@ -181,29 +181,29 @@ export function CreateEventModal({ isOpen, onClose, selectedDate, clients, onSub
             animate={{ scale: 1, opacity: 1, y: 0 }}
             exit={{ scale: 0.94, opacity: 0, y: 16 }}
             transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-            className="relative w-full max-w-md bg-white dark:bg-slate-900 overflow-hidden border border-slate-200 dark:border-white/[0.08] rounded-xl shadow-elevated"
+            className="relative w-full max-w-md bg-[var(--bg-card)] dark:bg-slate-900 overflow-hidden border border-[var(--border)] dark:border-white/[0.08] rounded-xl shadow-elevated"
             onClick={e => e.stopPropagation()}
           >
             <div className="h-1.5 w-full" style={{ backgroundColor: BRAND.DEFAULT }} />
 
-            <div className="flex items-center justify-between px-7 pt-7 pb-5 border-b border-slate-100 dark:border-white/[0.06]">
+            <div className="flex items-center justify-between px-7 pt-7 pb-5 border-b border-[var(--border)] dark:border-white/[0.06]">
               <div>
-                <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">New Event</h2>
-                <p className="text-sm text-slate-500 dark:text-slate-400">Schedule a session</p>
+                <h2 className="text-lg font-semibold text-[var(--text-primary)] dark:text-slate-100">New Event</h2>
+                <p className="text-sm text-[var(--text-tertiary)] dark:text-slate-400">Schedule a session</p>
               </div>
-              <button onClick={onClose} className="p-2 hover:bg-slate-100 dark:hover:bg-white/[0.06] transition-colors rounded-lg">
-                <X size={18} className="text-slate-500" />
+              <button onClick={onClose} className="p-2 hover:bg-[#13131314] dark:hover:bg-white/[0.06] transition-colors rounded-lg">
+                <X size={18} className="text-[var(--text-tertiary)]" />
               </button>
             </div>
 
             <form onSubmit={handleCreate} className="px-7 py-5 space-y-4">
               <div>
-                <label className="block text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400 mb-2">Client</label>
+                <label className="block text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--text-tertiary)] dark:text-slate-400 mb-2">Client</label>
                 <select
                   value={formClient}
                   onChange={e => setFormClient(e.target.value)}
                   required
-                  className="w-full px-4 py-3 bg-slate-50 dark:bg-white/[0.03] border border-slate-200 dark:border-white/[0.08] text-sm text-slate-900 dark:text-slate-100 focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 transition-colors rounded-lg"
+                  className="w-full px-4 py-3 bg-[var(--bg-subtle)] dark:bg-white/[0.03] border border-[var(--border)] dark:border-white/[0.08] text-sm text-[var(--text-primary)] dark:text-slate-100 focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 transition-colors rounded-lg"
                 >
                   <option value="">Select a client...</option>
                   {clients.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
@@ -212,33 +212,33 @@ export function CreateEventModal({ isOpen, onClose, selectedDate, clients, onSub
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400 mb-2">Date</label>
+                  <label className="block text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--text-tertiary)] dark:text-slate-400 mb-2">Date</label>
                   <input
                     type="date"
                     value={formDate}
                     onChange={e => setFormDate(e.target.value)}
                     required
-                    className="w-full px-4 py-3 bg-slate-50 dark:bg-white/[0.03] border border-slate-200 dark:border-white/[0.08] text-sm text-slate-900 dark:text-slate-100 focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 transition-colors rounded-lg"
+                    className="w-full px-4 py-3 bg-[var(--bg-subtle)] dark:bg-white/[0.03] border border-[var(--border)] dark:border-white/[0.08] text-sm text-[var(--text-primary)] dark:text-slate-100 focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 transition-colors rounded-lg"
                   />
                 </div>
                 <div>
-                  <label className="block text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400 mb-2">Time</label>
+                  <label className="block text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--text-tertiary)] dark:text-slate-400 mb-2">Time</label>
                   <input
                     type="time"
                     value={formTime}
                     onChange={e => setFormTime(e.target.value)}
                     required
-                    className="w-full px-4 py-3 bg-slate-50 dark:bg-white/[0.03] border border-slate-200 dark:border-white/[0.08] text-sm text-slate-900 dark:text-slate-100 focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 transition-colors rounded-lg"
+                    className="w-full px-4 py-3 bg-[var(--bg-subtle)] dark:bg-white/[0.03] border border-[var(--border)] dark:border-white/[0.08] text-sm text-[var(--text-primary)] dark:text-slate-100 focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 transition-colors rounded-lg"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400 mb-2">Type</label>
+                <label className="block text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--text-tertiary)] dark:text-slate-400 mb-2">Type</label>
                 <select
                   value={formType}
                   onChange={e => setFormType(e.target.value as 'video' | 'call' | 'chat')}
-                  className="w-full px-4 py-3 bg-slate-50 dark:bg-white/[0.03] border border-slate-200 dark:border-white/[0.08] text-sm text-slate-900 dark:text-slate-100 focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 transition-colors rounded-lg"
+                  className="w-full px-4 py-3 bg-[var(--bg-subtle)] dark:bg-white/[0.03] border border-[var(--border)] dark:border-white/[0.08] text-sm text-[var(--text-primary)] dark:text-slate-100 focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 transition-colors rounded-lg"
                 >
                   <option value="video">Video Call</option>
                   <option value="call">Phone Call</option>
@@ -247,32 +247,32 @@ export function CreateEventModal({ isOpen, onClose, selectedDate, clients, onSub
               </div>
 
               <div>
-                <label className="block text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400 mb-2">Meeting Link</label>
+                <label className="block text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--text-tertiary)] dark:text-slate-400 mb-2">Meeting Link</label>
                 <input
                   type="url"
                   value={formLink}
                   onChange={e => setFormLink(e.target.value)}
                   placeholder="https://meet.google.com/..."
-                  className="w-full px-4 py-3 bg-slate-50 dark:bg-white/[0.03] border border-slate-200 dark:border-white/[0.08] text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 transition-colors rounded-lg"
+                  className="w-full px-4 py-3 bg-[var(--bg-subtle)] dark:bg-white/[0.03] border border-[var(--border)] dark:border-white/[0.08] text-sm text-[var(--text-primary)] dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 transition-colors rounded-lg"
                 />
               </div>
 
               <div>
-                <label className="block text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400 mb-2">Notes</label>
+                <label className="block text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--text-tertiary)] dark:text-slate-400 mb-2">Notes</label>
                 <textarea
                   value={formNotes}
                   onChange={e => setFormNotes(e.target.value)}
                   rows={3}
                   placeholder="Agenda, topics to discuss..."
-                  className="w-full px-4 py-3 bg-slate-50 dark:bg-white/[0.03] border border-slate-200 dark:border-white/[0.08] text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 transition-colors resize-none rounded-lg"
+                  className="w-full px-4 py-3 bg-[var(--bg-subtle)] dark:bg-white/[0.03] border border-[var(--border)] dark:border-white/[0.08] text-sm text-[var(--text-primary)] dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 transition-colors resize-none rounded-lg"
                 />
               </div>
 
-              <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-100 dark:border-white/[0.06]">
+              <div className="flex items-center justify-end gap-3 pt-4 border-t border-[var(--border)] dark:border-white/[0.06]">
                 <button
                   type="button"
                   onClick={onClose}
-                  className="px-5 py-2.5 text-sm font-semibold text-slate-600 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-white/[0.06] transition-colors rounded-lg"
+                  className="px-5 py-2.5 text-sm font-semibold text-[var(--text-secondary)] hover:bg-[#13131314] dark:text-slate-400 dark:hover:bg-white/[0.06] transition-colors rounded-lg"
                 >
                   Cancel
                 </button>
@@ -336,40 +336,40 @@ export function RescheduleModal({ isOpen, onClose, selected, onUpdate, isLoading
             animate={{ scale: 1, opacity: 1, y: 0 }}
             exit={{ scale: 0.94, opacity: 0, y: 16 }}
             transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-            className="relative w-full max-w-md bg-white dark:bg-slate-900 overflow-hidden border border-slate-200 dark:border-white/[0.08] rounded-xl shadow-elevated"
+            className="relative w-full max-w-md bg-[var(--bg-card)] dark:bg-slate-900 overflow-hidden border border-[var(--border)] dark:border-white/[0.08] rounded-xl shadow-elevated"
             onClick={e => e.stopPropagation()}
           >
             <div className="h-1.5 w-full" style={{ backgroundColor: BRAND.DEFAULT }} />
 
-            <div className="flex items-center justify-between px-7 pt-7 pb-5 border-b border-slate-100 dark:border-white/[0.06]">
+            <div className="flex items-center justify-between px-7 pt-7 pb-5 border-b border-[var(--border)] dark:border-white/[0.06]">
               <div>
-                <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">Reschedule</h2>
-                <p className="text-sm text-slate-500 dark:text-slate-400">Choose a new time</p>
+                <h2 className="text-lg font-semibold text-[var(--text-primary)] dark:text-slate-100">Reschedule</h2>
+                <p className="text-sm text-[var(--text-tertiary)] dark:text-slate-400">Choose a new time</p>
               </div>
-              <button onClick={onClose} className="p-2 hover:bg-slate-100 dark:hover:bg-white/[0.06] transition-colors rounded-lg">
-                <X size={18} className="text-slate-500" />
+              <button onClick={onClose} className="p-2 hover:bg-[#13131314] dark:hover:bg-white/[0.06] transition-colors rounded-lg">
+                <X size={18} className="text-[var(--text-tertiary)]" />
               </button>
             </div>
 
             <form onSubmit={handleSubmit} className="px-7 py-5 space-y-4">
               <div>
-                <label className="block text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400 mb-2">Date</label>
+                <label className="block text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--text-tertiary)] dark:text-slate-400 mb-2">Date</label>
                 <input
                   type="date"
                   value={rescheduleDate}
                   onChange={e => setRescheduleDate(e.target.value)}
                   required
-                  className="w-full px-4 py-3 bg-slate-50 dark:bg-white/[0.03] border border-slate-200 dark:border-white/[0.08] text-sm text-slate-900 dark:text-slate-100 focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 transition-colors rounded-lg"
+                  className="w-full px-4 py-3 bg-[var(--bg-subtle)] dark:bg-white/[0.03] border border-[var(--border)] dark:border-white/[0.08] text-sm text-[var(--text-primary)] dark:text-slate-100 focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 transition-colors rounded-lg"
                 />
               </div>
               <div>
-                <label className="block text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400 mb-2">Time</label>
+                <label className="block text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--text-tertiary)] dark:text-slate-400 mb-2">Time</label>
                 <input
                   type="time"
                   value={rescheduleTime}
                   onChange={e => setRescheduleTime(e.target.value)}
                   required
-                  className="w-full px-4 py-3 bg-slate-50 dark:bg-white/[0.03] border border-slate-200 dark:border-white/[0.08] text-sm text-slate-900 dark:text-slate-100 focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 transition-colors rounded-lg"
+                  className="w-full px-4 py-3 bg-[var(--bg-subtle)] dark:bg-white/[0.03] border border-[var(--border)] dark:border-white/[0.08] text-sm text-[var(--text-primary)] dark:text-slate-100 focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 transition-colors rounded-lg"
                 />
               </div>
 
@@ -377,11 +377,11 @@ export function RescheduleModal({ isOpen, onClose, selected, onUpdate, isLoading
                 <p className="text-sm text-red-600 dark:text-red-400">{rescheduleError}</p>
               )}
 
-              <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-100 dark:border-white/[0.06]">
+              <div className="flex items-center justify-end gap-3 pt-4 border-t border-[var(--border)] dark:border-white/[0.06]">
                 <button
                   type="button"
                   onClick={onClose}
-                  className="px-5 py-2.5 text-sm font-semibold text-slate-600 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-white/[0.06] transition-colors rounded-lg"
+                  className="px-5 py-2.5 text-sm font-semibold text-[var(--text-secondary)] hover:bg-[#13131314] dark:text-slate-400 dark:hover:bg-white/[0.06] transition-colors rounded-lg"
                 >
                   Cancel
                 </button>

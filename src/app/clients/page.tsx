@@ -13,6 +13,7 @@ import {
 import { QueryWrapper } from '@/components/ui/QueryWrapper'
 import { Button } from '@/components/ui/button'
 import { ClientsProgressChart } from '@/components/clients/ClientsProgressChart'
+import { SegmentedProgressBar } from '@/components/ui/SegmentedProgressBar'
 import { motion } from 'framer-motion'
 
 // Status badge configuration - using your app's color scheme
@@ -66,12 +67,12 @@ function getClientStatus(client: any) {
 
 export default function ClientsPage() {
   const [search, setSearch] = useState('')
-  const query = useClients(search)
+  const query = useClients(search, { refetchInterval: 10_000 })
   const clients = query.data?.data ?? []
   const total = query.data?.pagination?.total ?? clients.length
 
-  // Fetch all workout plans to calculate real progress
-  const allPlansQuery = useWorkoutPlans()
+  // Fetch all workout plans to calculate real progress — polls every 10s
+  const allPlansQuery = useWorkoutPlans(undefined, undefined, undefined, { refetchInterval: 10_000 })
   const allPlans = allPlansQuery.data?.data ?? []
 
   // Build client progress map from actual workout plans
@@ -211,7 +212,7 @@ export default function ClientsPage() {
 
         
 
-        {/* Clients Table */}
+        {/* Clients Table — Card-based grid matching server-management style */}
         <QueryWrapper
           query={query}
           emptyIcon={Users}
@@ -227,54 +228,128 @@ export default function ClientsPage() {
           isEmpty={(data) => (data?.data ?? []).length === 0}
         >
           {(data) => (
-            <div className="rounded-xl border-slate-200/80 dark:border-white/[0.08] overflow-hidden ">
-              <div className="overflow-x-auto">
-                <table className="w-full text-left">
-                  <thead>
-                    <tr className="border-b border-slate-200/80 dark:border-white/[0.08]">
-                      <th className="px-4 lg:px-6 py-4 text-[10px] lg:text-xs font-bold text-slate-500 dark:text-neutral-400 uppercase tracking-wider">Client</th>
-                      <th className="px-4 lg:px-6 py-4 text-[10px] lg:text-xs font-bold text-slate-500 dark:text-neutral-400 uppercase tracking-wider hidden sm:table-cell">Progress</th>
-                      <th className="px-4 lg:px-6 py-4 text-[10px] lg:text-xs font-bold text-slate-500 dark:text-neutral-400 uppercase tracking-wider hidden md:table-cell">Last Active</th>
-                      <th className="px-4 lg:px-6 py-4 text-[10px] lg:text-xs font-bold text-slate-500 dark:text-neutral-400 uppercase tracking-wider">Status</th>
-                      <th className="px-4 lg:px-6 py-4 text-[10px] lg:text-xs font-bold text-slate-500 dark:text-neutral-400 uppercase tracking-wider text-right">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-100 dark:divide-white/[0.05]">
-                    {(data.data ?? []).map((client: any, index) => {
-                      const status = getClientStatus(client)
-                      const progress = clientProgressMap.get(client.id)
-                      const hasActivePlan = progress?.hasActivePlan ?? false
-                      const progressPct = progress?.progressPct ?? 0
-                      const isInGroupProgram = groupClientIds.has(client.id)
-                      const needsNewPlan = !hasActivePlan
+            <div className="relative  p-5">
+              {/* Header */}
+              <div className="flex items-center justify-between mb-5">
+                <div className="flex items-center gap-4">
+                  <div className="flex items-center gap-2">
+                    <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                    <h2 className="text-lg font-semibold text-[var(--text-primary)]">All Clients</h2>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <div className="text-sm text-[var(--text-secondary)]">
+                      {stats.active} Active · {stats.newClients} New
+                    </div>
+                    <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-emerald-500/10 border border-emerald-500/20 text-[10px] font-semibold text-emerald-600 dark:text-emerald-400">
+                      <span className="relative flex h-1.5 w-1.5">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                        <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500"></span>
+                      </span>
+                      Live
+                    </span>
+                  </div>
+                </div>
+              </div>
 
-                      return (
-                        <motion.tr
-                          key={client.id}
-                          initial={{ opacity: 0, x: -20 }}
-                          animate={{ opacity: 1, x: 0 }}
-                          transition={{ delay: index * 0.03 }}
-                          className="hover:bg-slate-50/50 dark:hover:bg-white/[0.03]  rounded-xl transition-colors group"
-                        >
-                          <td className="px-4 lg:px-6 py-4">
+              {/* Column Headers */}
+              <div className="grid grid-cols-12 gap-4 px-4 py-2 text-xs font-medium text-[var(--text-secondary)] uppercase tracking-wider">
+                <div className="col-span-3 sm:col-span-3">Client</div>
+                <div className="col-span-3 hidden sm:block">Progress</div>
+                <div className="col-span-2 hidden md:block">Last Active</div>
+                <div className="col-span-3 sm:col-span-2">Status</div>
+                <div className="col-span-3 sm:col-span-2 text-right">Actions</div>
+              </div>
+
+              {/* Card Rows */}
+              <motion.div
+                className="space-y-2"
+                variants={{
+                  visible: {
+                    transition: {
+                      staggerChildren: 0.06,
+                      delayChildren: 0.05,
+                    },
+                  },
+                }}
+                initial="hidden"
+                animate="visible"
+              >
+                {(data.data ?? []).map((client: any) => {
+                  const status = getClientStatus(client)
+                  const progress = clientProgressMap.get(client.id)
+                  const hasActivePlan = progress?.hasActivePlan ?? false
+                  const progressPct = progress?.progressPct ?? 0
+                  const isInGroupProgram = groupClientIds.has(client.id)
+                  const needsNewPlan = !hasActivePlan
+
+                  const statusGradient =
+                    status.label === 'Blocked' || status.label === 'Attention Required'
+                      ? 'from-red-500/10 to-transparent'
+                      : status.label === 'New Client'
+                        ? 'from-blue-500/10 to-transparent'
+                        : status.label === 'Completed'
+                          ? 'from-slate-500/10 to-transparent'
+                          : 'from-emerald-500/10 to-transparent'
+
+                  return (
+                    <motion.div
+                      key={client.id}
+                      variants={{
+                        hidden: {
+                          opacity: 0,
+                          x: -20,
+                          scale: 0.97,
+                        },
+                        visible: {
+                          opacity: 1,
+                          x: 0,
+                          scale: 1,
+                          transition: {
+                            type: 'spring',
+                            stiffness: 400,
+                            damping: 28,
+                            mass: 0.6,
+                          },
+                        },
+                      }}
+                      whileHover={{
+                        y: -1,
+                        transition: { type: 'spring', stiffness: 400, damping: 25 },
+                      }}
+                      className="relative cursor-pointer"
+                    >
+                      <div className="relative bg-[#13131314] dark:bg-white/[0.03]   p-4 overflow-hidden transition-colors hover:border-[var(--border-hover)]">
+                        {/* Status gradient overlay */}
+                        <div
+                          className={`absolute inset-0 bg-gradient-to-l ${statusGradient} pointer-events-none`}
+                          style={{
+                            backgroundSize: '25% 100%',
+                            backgroundPosition: 'right',
+                            backgroundRepeat: 'no-repeat',
+                          }}
+                        />
+
+                        <div className="relative grid grid-cols-12 gap-4 items-center">
+                          {/* Client */}
+                          <div className="col-span-12 sm:col-span-3">
                             <div className="flex items-center gap-3">
                               {client.profile_photo_url ? (
                                 <img
                                   src={client.profile_photo_url}
                                   alt={client.name}
-                                  className="h-10 w-10 object-cover rounded-xl bg-slate-100 dark:bg-slate-800"
+                                  className="h-10 w-10 object-cover rounded-full bg-slate-100 dark:bg-slate-800 flex-shrink-0"
                                 />
                               ) : (
-                                <div className="h-10 w-10 bg-gradient-to-br from-[#132e35] to-[#0b1e22] rounded-xl flex items-center justify-center text-white text-sm font-semibold flex-shrink-0">
+                                <div className="h-10 w-10 bg-gradient-to-br from-[#132e35] to-[#0b1e22] rounded-full flex items-center justify-center text-white text-sm font-semibold flex-shrink-0">
                                   {client.name?.[0]?.toUpperCase() ?? 'C'}
                                 </div>
                               )}
-                              <div>
-                                <div className="flex items-center gap-2">
-                                  <div className="text-sm font-semibold text-[var(--text-primary)] dark:text-[var(--text-primary)]">{client.name}</div>
+                              <div className="min-w-0">
+                                <div className="flex items-center gap-2 flex-wrap">
+                                  <span className="text-sm font-semibold text-[var(--text-primary)] truncate">{client.name}</span>
                                   {isInGroupProgram && (
-                                    <Link 
-                                      href={`/workout-plans/`}
+                                    <Link
+                                      href="/workout-plans/"
                                       onClick={(e) => e.stopPropagation()}
                                       title="View group program"
                                       className="inline-flex items-center gap-1 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-tight bg-indigo-50 text-indigo-700 border border-indigo-200/60 rounded-lg dark:bg-indigo-900/30 dark:text-indigo-400 dark:border-indigo-800 hover:bg-indigo-100 dark:hover:bg-indigo-900/50 transition-colors"
@@ -286,11 +361,11 @@ export default function ClientsPage() {
                                   {needsNewPlan && (
                                     <span className="inline-flex items-center gap-1 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-tight bg-red-50 text-red-700 border border-red-200/60 rounded-lg dark:bg-red-900/30 dark:text-red-400 dark:border-red-800">
                                       <AlertCircle className="w-3 h-3" />
-                                      Needs Plan
+                                      No Plan
                                     </span>
                                   )}
                                 </div>
-                                <div className="text-xs text-slate-500 dark:text-neutral-400">
+                                <div className="text-xs text-[var(--text-secondary)]">
                                   {(() => {
                                     if (!client.created_at) return 'Recently added'
                                     const createdDate = new Date(client.created_at)
@@ -301,42 +376,39 @@ export default function ClientsPage() {
                                 </div>
                               </div>
                             </div>
-                          </td>
+                          </div>
 
-                          <td className="px-4 lg:px-6 py-4 hidden sm:table-cell">
-                            <div className="w-full max-w-[200px]">
+                          {/* Progress */}
+                          <div className="col-span-6 sm:col-span-3 hidden sm:block">
+                            <div className="w-full max-w-[220px]">
                               {hasActivePlan ? (
-                                <>
+                                <div className="w-full max-w-[240px]">
                                   <div className="flex justify-between items-center mb-1.5 text-xs">
-                                    <span className="text-[var(--text-primary)] dark:text-[var(--text-primary)] font-semibold">
-                                      {progressPct}%
-                                    </span>
-                                    <span className="text-slate-500 dark:text-neutral-400">
-                                      {progress?.completedDays ?? 0}/{progress?.totalDays ?? 0} days
-                                    </span>
+                                    <span className="text-[var(--text-primary)] font-semibold">{progressPct}%</span>
+                                    <span className="text-[var(--text-secondary)]">{progress?.completedDays ?? 0}/{progress?.totalDays ?? 0} days</span>
                                   </div>
-                                  <div className="h-2 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
-                                    <div
-                                      className={`h-full rounded-full transition-all ${
-                                        progressPct >= 80 ? 'bg-emerald-500' : 
-                                        progressPct >= 50 ? 'bg-blue-500' : 
-                                        progressPct >= 25 ? 'bg-amber-500' : 'bg-slate-400'
-                                      }`}
-                                      style={{ width: `${Math.min(100, progressPct)}%` }}
-                                    />
-                                  </div>
-                                </>
+                                  <SegmentedProgressBar
+                                    percentage={progressPct}
+                                    segments={10}
+                                    activeColor={
+                                      progressPct >= 80 ? 'bg-emerald-500' :
+                                      progressPct >= 50 ? 'bg-blue-500' :
+                                      progressPct >= 25 ? 'bg-amber-500' : 'bg-slate-400'
+                                    }
+                                  />
+                                </div>
                               ) : (
-                                <div className="flex items-center gap-2 text-amber-600 dark:text-amber-400">
+                                <div className="flex items-center gap-2 text-amber-800 dark:text-amber-900">
                                   <AlertCircle className="w-4 h-4" />
-                                  <span className="text-xs font-medium">Needs Plan</span>
+                                  <span className="text-xs font-medium">No Plan</span>
                                 </div>
                               )}
                             </div>
-                          </td>
+                          </div>
 
-                          <td className="px-4 lg:px-6 py-4 hidden md:table-cell">
-                            <div className="text-sm text-[var(--text-primary)] dark:text-[var(--text-primary)]">
+                          {/* Last Active */}
+                          <div className="col-span-2 hidden md:block">
+                            <div className="text-sm text-[var(--text-primary)]">
                               {(() => {
                                 if (!client.created_at) return 'Recently'
                                 const date = new Date(client.created_at)
@@ -348,50 +420,54 @@ export default function ClientsPage() {
                                 return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
                               })()}
                             </div>
-                            <div className="text-xs text-slate-500 dark:text-neutral-400">Program active</div>
-                          </td>
+                            <div className="text-xs text-[var(--text-secondary)]">Program active</div>
+                          </div>
 
-                          <td className="px-4 lg:px-6 py-4">
-                            <span className={`px-2.5 py-1 text-[10px] font-bold uppercase tracking-tight ${status.lightClass} ${status.darkClass}`}>
+                          {/* Status */}
+                          <div className="col-span-3 sm:col-span-2">
+                            <span className={`inline-flex items-center px-2.5 py-1 text-[10px] font-bold uppercase tracking-tight ${status.lightClass} ${status.darkClass}`}>
                               {status.label}
                             </span>
-                          </td>
+                          </div>
 
-                          <td className="px-4 lg:px-6 py-4 text-right">
-                            <div className="flex items-center justify-end gap-2">
+                          {/* Actions */}
+                          <div className="col-span-3 sm:col-span-2 text-right">
+                            <div className="flex items-center justify-end gap-1">
                               <Link
                                 href={`/messages?client=${client.id}`}
-                                className="p-2 rounded-md text-[var(--text-tertiary)] hover:text-brand-600 dark:hover:text-brand-400 hover:bg-[var(--bg-subtle)] transition-colors"
+                                className="p-2 rounded-lg text-[var(--text-tertiary)] hover:text-brand-600 dark:hover:text-brand-400 hover:bg-[var(--bg-subtle)] transition-colors"
                                 title="Message client"
+                                onClick={(e) => e.stopPropagation()}
                               >
                                 <MessageSquare className="w-4 h-4" />
                               </Link>
                               <Link
                                 href={`/clients/${client.id}`}
-                                className="p-2 rounded-md text-[var(--text-tertiary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-subtle)] transition-colors"
+                                className="p-2 rounded-lg text-[var(--text-tertiary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-subtle)] transition-colors"
                                 title="View client"
+                                onClick={(e) => e.stopPropagation()}
                               >
                                 <MoreVertical className="w-4 h-4" />
                               </Link>
                             </div>
-                          </td>
-                        </motion.tr>
-                      )
-                    })}
-                  </tbody>
-                </table>
-              </div>
+                          </div>
+                        </div>
+                      </div>
+                    </motion.div>
+                  )
+                })}
+              </motion.div>
 
               {/* Pagination */}
-              <div className="px-4 lg:px-6 py-4 border-t border-slate-200/80 dark:border-white/[0.08] bg-slate-50/50 dark:bg-white/[0.02] flex items-center justify-between">
-                <span className="text-xs text-slate-500 dark:text-neutral-400">
+              <div className="mt-4 px-4 py-3 flex items-center justify-between">
+                <span className="text-xs text-[var(--text-secondary)]">
                   Showing 1-{Math.min(10, total)} of {total} clients
                 </span>
                 <div className="flex gap-2">
-                  <button className="p-1.5 border rounded-xl border-slate-200 dark:border-white/[0.1] text-slate-400 hover:bg-slate-100 dark:hover:bg-white/[0.08] transition-colors disabled:opacity-50" disabled>
+                  <button className="p-1.5 border rounded-xl border-[var(--border)] text-[var(--text-tertiary)] hover:bg-[var(--bg-subtle)] transition-colors disabled:opacity-50" disabled>
                     <ChevronLeft className="w-4 h-4" />
                   </button>
-                  <button className="p-1.5 border rounded-xl border-slate-200 dark:border-white/[0.1] text-slate-400 hover:bg-slate-100 dark:hover:bg-white/[0.08] transition-colors disabled:opacity-50" disabled={total <= 10}>
+                  <button className="p-1.5 border rounded-xl border-[var(--border)] text-[var(--text-tertiary)] hover:bg-[var(--bg-subtle)] transition-colors disabled:opacity-50" disabled={total <= 10}>
                     <ChevronRight className="w-4 h-4" />
                   </button>
                 </div>

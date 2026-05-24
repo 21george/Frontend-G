@@ -135,7 +135,7 @@ export function SubscriptionAlertModal({ alert, onClose }: Props) {
             variant="ghost"
             size="md"
             onClick={handleDismiss}
-            className="text-slate-500 hover:text-slate-700"
+            className="text-[var(--text-tertiary)] hover:text-[var(--text-secondary)]"
           >
             <X className="w-4 h-4 mr-1" />
             Dismiss

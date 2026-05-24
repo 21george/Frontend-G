@@ -73,26 +73,26 @@ export default function SubscriptionSuccessPage() {
               <CheckCircle2 className="h-24 w-24 text-green-500 mx-auto mb-6" />
             </motion.div>
 
-            <h1 className="text-3xl font-bold text-slate-900 mb-4">
+            <h1 className="text-3xl font-bold text-[var(--text-primary)] mb-4">
               Payment Successful!
             </h1>
 
-            <p className="text-lg text-slate-600 mb-8">
+            <p className="text-lg text-[var(--text-secondary)] mb-8">
               Thank you for subscribing. Verifying your subscription...
             </p>
 
             <Loader2 className="h-8 w-8 animate-spin text-green-500 mx-auto" />
 
-            <p className="text-sm text-slate-500 mt-4">
+            <p className="text-sm text-[var(--text-secondary)] mt-4">
               Redirecting to dashboard...
             </p>
           </>
         ) : error ? (
           <>
-            <h1 className="text-2xl font-bold text-slate-900 mb-4">
+            <h1 className="text-2xl font-bold text-[var(--text-primary)] mb-4">
               Verification Issue
             </h1>
-            <p className="text-slate-600 mb-6">{error}</p>
+            <p className="text-[var(--text-secondary)] mb-6">{error}</p>
             <Button onClick={() => router.push('/dashboard')}>
               Go to Dashboard
               <ArrowRight className="ml-2 h-4 w-4" />

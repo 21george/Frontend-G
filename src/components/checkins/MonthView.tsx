@@ -63,8 +63,8 @@ export function MonthView({ selectedDate, onSelectDate, checkins, clientMap, fil
       initial="hidden"
       animate="show"
     >
-      <div className="bg-white dark:bg-[#1A1A1A] border border-slate-200 dark:border-white/[0.06] overflow-hidden rounded-lg shadow-card dark:shadow-dark-card">
-        <div className="grid grid-cols-7 border-b border-slate-200 dark:border-white/[0.06]">
+      <div className="bg-[var(--bg-card)] dark:bg-[#1A1A1A] border border-[var(--border)] dark:border-white/[0.06] overflow-hidden rounded-lg shadow-card dark:shadow-dark-card">
+        <div className="grid grid-cols-7 border-b border-[var(--border)] dark:border-white/[0.06]">
           {DAYS_SHORT.map(d => (
             <div key={d} className="p-3 text-center text-[10px] font-bold uppercase tracking-[0.15em] text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-white/[0.02]">
               {d}
@@ -88,7 +88,7 @@ export function MonthView({ selectedDate, onSelectDate, checkins, clientMap, fil
                   } ${isTodayDay ? 'bg-brand-500/[0.05] dark:bg-brand-500/[0.1]' : ''}`}
                 >
                   <div className={`text-sm font-medium mb-2 w-8 h-8 flex items-center justify-center rounded-full ${
-                    isTodayDay ? 'bg-brand-600 text-white' : isCurrent ? 'text-slate-900 dark:text-slate-100' : 'text-slate-300 dark:text-slate-600'
+                    isTodayDay ? 'bg-brand-600 text-white' : isCurrent ? 'text-[var(--text-primary)] dark:text-slate-100' : 'text-slate-300 dark:text-slate-600'
                   }`}>
                     {format(day, 'd')}
                   </div>

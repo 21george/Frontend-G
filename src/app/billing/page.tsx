@@ -72,7 +72,7 @@ const PLANS = [
 function BillingSkeleton() {
   return (
     <DashboardLayout>
-      <div className="space-y-5 max-w-5xl">
+      <div className="space-y-5">
         <div className="space-y-2">
           <Skeleton className="h-3 w-28 rounded-none" />
           <Skeleton className="h-7 w-48 rounded-none" />
@@ -147,21 +147,10 @@ export default function BillingPage() {
 
   return (
     <DashboardLayout>
-      <div className="max-w-5xl space-y-6">
+      <div className="space-y-6">
 
         {/* ── Header ── */}
         <div className="flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
-          <div>
-            <nav className="flex items-center gap-1.5 text-[10px] text-[#888780] dark:text-[#FAFAFA]/40 mb-2 uppercase tracking-[0.18em]">
-              <span>Dashboard</span>
-              <ChevronRight className="w-3 h-3" />
-              <span className="text-[#171717] dark:text-[#FAFAFA]">Billing</span>
-            </nav>
-            <h1 className="text-2xl font-bold text-[#171717] dark:text-[#FAFAFA] tracking-tight">Billing & Plans</h1>
-            <p className="text-[11px] text-[#888780] dark:text-[#FAFAFA]/40 mt-0.5 uppercase tracking-[0.12em]">
-              Manage your subscription and payment history
-            </p>
-          </div>
           <button
             onClick={() => manageBilling.mutate()}
             disabled={manageBilling.isPending}

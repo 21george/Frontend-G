@@ -185,7 +185,7 @@ export default function SelectPlanPage() {
           <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">
             Choose Your Plan
           </h2>
-          <p className="mt-4 text-lg text-slate-600">
+          <p className="mt-4 text-lg text-[var(--text-secondary)]">
             Select the perfect plan for your coaching business
           </p>
         </motion.div>
@@ -205,7 +205,7 @@ export default function SelectPlanPage() {
               className={`relative flex flex-col border-2 bg-white p-8 transition-all ${
                 plan.highlighted
                   ? 'border-blue-500 shadow-lg shadow-blue-500/20'
-                  : 'border-slate-200'
+                  : 'border-[var(--border)]'
               }`}
             >
               {plan.highlighted && (
@@ -218,19 +218,19 @@ export default function SelectPlanPage() {
 
               <div className="mb-6">
                 <h3 className="text-xl font-semibold">{plan.name}</h3>
-                <p className="text-sm text-slate-500 mt-1">{plan.description}</p>
+                <p className="text-sm text-[var(--text-secondary)] mt-1">{plan.description}</p>
               </div>
 
               <div className="mb-6">
                 <span className="text-4xl font-bold">{plan.price}</span>
-                <span className="text-slate-500">{plan.period}</span>
+                <span className="text-[var(--text-secondary)]">{plan.period}</span>
               </div>
 
               <ul className="mb-8 space-y-3 flex-1">
                 {plan.features.map((feature, idx) => (
                   <li key={idx} className="flex items-start gap-2">
                     <Check className="h-5 w-5 text-green-500 flex-shrink-0" />
-                    <span className="text-sm text-slate-700">{feature}</span>
+                    <span className="text-sm text-[var(--text-primary)]">{feature}</span>
                   </li>
                 ))}
               </ul>
@@ -282,7 +282,7 @@ export default function SelectPlanPage() {
                 </div>
                 <div>
                   <h4 className="font-medium">{item.title}</h4>
-                  <p className="text-sm text-slate-500">{item.desc}</p>
+                  <p className="text-sm text-[var(--text-secondary)]">{item.desc}</p>
                 </div>
               </div>
             ))}
@@ -291,8 +291,8 @@ export default function SelectPlanPage() {
       </main>
 
       {/* Footer */}
-      <footer className="border-t bg-slate-50 mt-16">
-        <div className="container mx-auto px-4 py-8 text-center text-sm text-slate-500">
+      <footer className="border-t bg-[var(--bg-subtle)] mt-16">
+        <div className="container mx-auto px-4 py-8 text-center text-sm text-[var(--text-secondary)]">
           <p>14-day free trial on Pro and Business plans. No credit card required for signup.</p>
           <p className="mt-2">Cancel anytime from your account settings.</p>
         </div>

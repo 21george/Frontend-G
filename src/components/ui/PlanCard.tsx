@@ -18,12 +18,12 @@ export function WorkoutPlanCard({ plan, href }: WorkoutPlanCardProps) {
   const statusColor = {
     active: 'bg-emerald-50 text-emerald-600 dark:bg-emerald-500/15 dark:text-emerald-400',
     completed: 'bg-blue-50 text-blue-600 dark:bg-blue-500/15 dark:text-blue-400',
-    draft: 'bg-slate-100 text-slate-500 dark:bg-white/[0.06] dark:text-slate-400',
+    draft: 'bg-[var(--bg-subtle)] text-[var(--text-tertiary)] dark:bg-white/[0.06] dark:text-slate-400',
     saved: 'bg-amber-50 text-amber-600 dark:bg-amber-500/15 dark:text-amber-400',
-  }[plan.status] ?? 'bg-slate-100 text-slate-500'
+  }[plan.status] ?? 'bg-[var(--bg-subtle)] text-[var(--text-tertiary)]'
 
   return (
-    <Link href={link} className="bg-[var(--bg-card)] border border-[var(--border)] p-4 hover:border-slate-300 dark:hover:border-white/20 transition-colors block">
+    <Link href={link} className="bg-[var(--bg-card)] border border-[var(--border)] p-4 hover:border-[var(--border-hover)] dark:hover:border-white/20 transition-colors block">
       <div className="flex items-start justify-between mb-3">
         <div className="flex items-center gap-2">
           <div className="w-8 h-8 bg-brand-600 flex items-center justify-center">
@@ -31,7 +31,7 @@ export function WorkoutPlanCard({ plan, href }: WorkoutPlanCardProps) {
           </div>
           <div>
             <h3 className="text-sm font-semibold text-[var(--text-primary)] ">{plan.title || 'Untitled Plan'}</h3>
-            <p className="text-[11px] text-slate-400 dark:text-slate-500 capitalize">{plan.plan_type}</p>
+            <p className="text-[11px] text-[var(--text-tertiary)] dark:text-slate-500 capitalize">{plan.plan_type}</p>
           </div>
         </div>
         <span className={cn('px-2 py-0.5 text-[10px] font-semibold capitalize', statusColor)}>
@@ -64,12 +64,12 @@ export function NutritionPlanCard({ plan, href }: NutritionPlanCardProps) {
   const statusMap: Record<string, string> = {
     active: 'bg-emerald-50 text-emerald-600 dark:bg-emerald-500/15 dark:text-emerald-400',
     completed: 'bg-blue-50 text-blue-600 dark:bg-blue-500/15 dark:text-blue-400',
-    draft: 'bg-slate-100 text-slate-500 dark:bg-white/[0.06] dark:text-slate-400',
+    draft: 'bg-[var(--bg-subtle)] text-[var(--text-tertiary)] dark:bg-white/[0.06] dark:text-slate-400',
   }
   const statusColor = statusMap[plan.status] ?? 'bg-emerald-50 text-emerald-600'
 
   return (
-    <Link href={link} className="bg-[var(--bg-card)] border border-[var(--border)] p-4 hover:border-slate-300 dark:hover:border-white/20 transition-colors block">
+    <Link href={link} className="bg-[var(--bg-card)] border border-[var(--border)] p-4 hover:border-[var(--border-hover)] dark:hover:border-white/20 transition-colors block">
       <div className="flex items-start justify-between mb-3">
         <div className="flex items-center gap-2">
           <div className="w-8 h-8 bg-emerald-500 flex items-center justify-center">
@@ -77,7 +77,7 @@ export function NutritionPlanCard({ plan, href }: NutritionPlanCardProps) {
           </div>
           <div>
             <h3 className="text-sm font-semibold text-[var(--text-primary)] ">{plan.title || 'Nutrition Plan'}</h3>
-            <p className="text-[11px] text-slate-400 dark:text-slate-500">{plan.days?.length ?? 0} days</p>
+            <p className="text-[11px] text-[var(--text-tertiary)] dark:text-slate-500">{plan.days?.length ?? 0} days</p>
           </div>
         </div>
         <span className={cn('px-2 py-0.5 text-[10px] font-semibold capitalize', statusColor)}>
