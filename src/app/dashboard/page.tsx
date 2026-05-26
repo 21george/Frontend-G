@@ -74,7 +74,7 @@ export default function DashboardPage() {
 
   return (
     <DashboardLayout>
-      <div className="min-h-screen bg-[#FAFAFA] dark:bg-[#171717] px-6 sm:px-10 py-8">
+      <div className="min-h-screen bg-[var(--bg-page)] px-6 sm:px-10 py-8">
 
         {/* Welcome header */}
         <motion.div
@@ -111,7 +111,7 @@ export default function DashboardPage() {
           >
             {kpiLoading ? (
               [...Array(4)].map((_, i) => (
-                <div key={i} className="rounded-xl border border-[var(--border)] bg-white dark:bg-[#1A1A1A] p-4 space-y-3">
+                <div key={i} className="rounded-xl border border-[var(--border)] bg-[var(--bg-card)] p-4 space-y-3">
                   <Skeleton className="h-3 w-20" />
                   <Skeleton className="h-7 w-12" />
                   <Skeleton className="h-3 w-24" />
@@ -130,7 +130,7 @@ export default function DashboardPage() {
                   label="Active Plans"
                   value={activePlans}
                   icon={Briefcase}
-                  trend={{ value: '12%', up: true }}
+                  trend={{ value: `${workoutPlans.length > 0 ? Math.round((activePlans / workoutPlans.length) * 100) : 0}% of total`, up: activePlans > 0 }}
                   delay={0.30}
                 />
                 <KpiCard
@@ -144,7 +144,7 @@ export default function DashboardPage() {
                   label="This Week"
                   value={thisWeekSessions}
                   icon={TrendingUp}
-                  trend={{ value: '12%', up: thisWeekSessions > 0 }}
+                  trend={{ value: `${todaySessions} today`, up: thisWeekSessions > 0 }}
                   delay={0.42}
                 />
               </>

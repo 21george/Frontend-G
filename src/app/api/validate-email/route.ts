@@ -26,7 +26,7 @@ export async function POST(req: NextRequest) {
     const valid = await emailValidator(email, { checkMx: true, timeout: 5000 })
     return NextResponse.json({ valid })
   } catch {
-    // DNS timeout or network error — fall back to format-only result
-    return NextResponse.json({ valid: formatOk })
+    // DNS timeout or network error — do not fall back to format-only; require MX
+    return NextResponse.json({ valid: false, reason: 'dns_lookup_failed' })
   }
 }

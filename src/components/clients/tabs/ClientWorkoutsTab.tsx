@@ -5,8 +5,8 @@ import {
   ImageIcon, Clock, ChevronDown, Trash2, Loader2, Play,
 } from 'lucide-react'
 import Link from 'next/link'
-import type { PaginatedResponse, WorkoutPlan, WorkoutLogDetailed } from '@/types'
-import type { ClientWorkoutProgress, WorkoutProgressPlan } from '@/lib/api/services/media'
+import type { PaginatedResponse, WorkoutPlan, WorkoutLogDetailed, Exercise } from '@/types'
+import type { ClientWorkoutProgress, WorkoutProgressPlan, WorkoutProgressDay } from '@/lib/api/services/media'
 import { getWorkoutCategory, CATEGORY_CONFIG } from '@/lib/workoutCategories'
 import { DailyProtocol } from '@/components/clients/DailyProtocol'
 import { formatDate, timeAgo } from '@/lib/utils'
@@ -23,6 +23,65 @@ interface Props {
   setExpandedLog: (id: string | null) => void
   onDeleteWorkout: (plan: WorkoutPlan) => void
   isDeleteWorkoutPending: boolean
+}
+
+function ExerciseBadge({ ex, color }: { ex: Exercise; color: string }) {
+  return (
+    <div className="flex items-center gap-2 p-2 bg-[var(--bg-subtle)] dark:bg-white/[0.02] border border-[var(--border)] dark:border-white/[0.05]">
+      <div className="w-1.5 h-1.5 flex-shrink-0" style={{ background: color }} />
+      <div className="min-w-0 flex-1">
+        <p className="text-[12px] text-[var(--text-secondary)] dark:text-[var(--text-tertiary)] truncate">{ex.name}</p>
+        <p className="text-[10px] text-[var(--text-secondary)] dark:text-[var(--text-secondary)]">{ex.sets}×{ex.reps}{ex.rest_seconds ? ` · ${ex.rest_seconds}s` : ''}</p>
+      </div>
+      {ex.demo_video_url && (
+        <a href={ex.demo_video_url} target="_blank" rel="noopener noreferrer" className="flex-shrink-0 text-blue-500 hover:text-blue-300 transition-colors">
+          <Video size={11} />
+        </a>
+      )}
+    </div>
+  )
+}
+
+function DayBlock({
+  day, planId, completedDaysMap, idx,
+}: {
+  day: WorkoutProgressDay
+  planId: string
+  completedDaysMap: Record<string, boolean>
+  idx: number
+}) {
+  const dayCategory = getWorkoutCategory(day.exercises ?? [])
+  const dayCfg = CATEGORY_CONFIG[dayCategory]
+  const isCompleted = completedDaysMap[`${planId}-${day.day.toLowerCase()}`] ?? day.is_completed ?? false
+  return (
+    <div className="p-4 sm:px-5">
+      <div className="flex items-center gap-3 mb-3">
+        <div className="w-9 h-9 flex items-center justify-center text-lg flex-shrink-0" style={{ background: dayCfg.bg }}>{dayCfg.icon}</div>
+        <div className="flex-1">
+          <div className="flex items-center gap-2">
+            <p className="text-[13px] font-medium text-[var(--text-primary)] dark:text-[var(--text-primary)]">{day.day}</p>
+            <span className="text-[10px] font-medium px-1.5 py-0.5 rounded-s-xl" style={{ color: dayCfg.color, background: dayCfg.bg }}>{dayCfg.label}</span>
+            {isCompleted && (
+              <span className="flex items-center gap-1 text-[10px] font-semibold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-1.5 py-0.5">
+                <CheckCircle2 size={9} /> Completed
+              </span>
+            )}
+          </div>
+          <p className="text-[11px] text-[var(--text-secondary)] dark:text-[var(--text-secondary)]">{day.exercises?.length ?? 0} exercises</p>
+        </div>
+        <div className={`w-5 h-5 border-2 flex items-center justify-center flex-shrink-0 ${isCompleted ? 'border-emerald-400 bg-emerald-400/10' : 'border-[var(--border)] dark:border-white/10'}`}>
+          {isCompleted && <Check size={10} className="text-emerald-400" />}
+        </div>
+      </div>
+      {day.exercises?.length ? (
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 ml-12">
+          {day.exercises.map((ex, ei) => (
+            <ExerciseBadge key={ei} ex={ex} color={dayCfg.color} />
+          ))}
+        </div>
+      ) : null}
+    </div>
+  )
 }
 
 function WorkoutPlanCard({
@@ -61,12 +120,12 @@ function WorkoutPlanCard({
             </p>
           </div>
           <div className="flex items-center gap-2 flex-shrink-0 flex-wrap justify-end">
-            <span className={`inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-semibold ${
+            <span className={`inline-flex rounded-8 items-center gap-1 px-2.5 py-1 text-[11px] font-semibold ${
               plan.status === 'active' ? 'bg-emerald-100 dark:bg-emerald-900/25 text-emerald-700 dark:text-emerald-400'
               : plan.status === 'completed' ? 'bg-blue-100 dark:bg-blue-900/25 text-blue-700 dark:text-blue-400'
               : 'bg-[var(--bg-subtle)] dark:bg-white/[0.06] text-[var(--text-secondary)] dark:text-[var(--text-tertiary)]'
             }`}>
-              <span className={`w-1.5 h-1.5 ${plan.status === 'active' ? 'bg-emerald-500' : plan.status === 'completed' ? 'bg-blue-500' : 'bg-slate-400'}`} />
+              <span className={`w-1.5 h-1.5 rounded-full ${plan.status === 'active' ? 'bg-emerald-500' : plan.status === 'completed' ? 'bg-blue-500' : 'bg-slate-400'}`} />
               {plan.status}
             </span>
             <button onClick={() => setExpandedPlan(isExpanded ? null : plan.id)}
@@ -75,7 +134,7 @@ function WorkoutPlanCard({
               <ChevronDown size={12} className={`transition-transform ${isExpanded ? 'rotate-180' : ''}`} />
             </button>
             <button onClick={() => onDeleteWorkout(plan)} disabled={isDeleteWorkoutPending}
-              className="w-8 h-8 border border-[var(--border)] dark:border-white/[0.08] flex items-center justify-center text-[var(--text-tertiary)] hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors disabled:opacity-50">
+              className="w-8 h-8  border-[var(--border)] dark:border-white/[0.08] flex items-center justify-center text-[var(--text-tertiary)] hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors disabled:opacity-50">
               {isDeleteWorkoutPending ? <Loader2 size={14} className="animate-spin" /> : <Trash2 size={14} />}
             </button>
           </div>
@@ -103,12 +162,12 @@ function WorkoutPlanCard({
             ))}
           </div>
           {plan.notes && (
-            <div className="mx-4 sm:mx-5 mb-4 p-3 bg-amber-50 dark:bg-amber-900/10">
-              <p className="text-[12px] text-amber-800 dark:text-amber-200">{plan.notes}</p>
+            <div className="mx-4 sm:mx-5 mb-4 p-3 ">
+              <p className="text-[12px] font-semibold ">{plan.notes}</p>
             </div>
           )}
           {plan.days?.length ? (
-            <div className="divide-y divide-slate-100 dark:divide-white/[0.04] bg-[#1A1A1A]">
+            <div className="divide-y divide-slate-100 dark:divide-white/[0.04] bg-[var(--bg-card)]">
               {plan.days.map((day, idx) => {
                 const dayCategory = getWorkoutCategory(day.exercises ?? [])
                 const dayCfg = CATEGORY_CONFIG[dayCategory]
@@ -176,8 +235,8 @@ function WorkoutLogCard({ log, expandedLog, setExpandedLog }: { log: WorkoutLogD
   const totalSets = (log.exercises ?? []).reduce((acc, ex) => acc + (ex.sets_completed?.length ?? 0), 0)
   const totalVolume = (log.exercises ?? []).reduce((acc, ex) =>
     acc + (ex.sets_completed ?? []).reduce((s, set) => s + (set.kg ?? 0) * (set.reps_done ?? set.reps ?? 0), 0), 0)
-  const logMedia = (log as any).media ?? []
-  const plannedExercises = (log as any).planned_exercises ?? []
+  const logMedia = log.media ?? []
+  const plannedExercises = log.planned_exercises ?? []
 
   return (
     <div className={`border overflow-hidden transition-all ${isExpanded ? 'border-blue-300 dark:border-blue-700/50' : 'border-[var(--border)] dark:border-white/[0.07]'} bg-[var(--bg-card)]`}>
@@ -188,7 +247,7 @@ function WorkoutLogCard({ log, expandedLog, setExpandedLog }: { log: WorkoutLogD
         </div>
         <div className="flex-1 min-w-0">
           <p className="text-[13px] font-semibold text-[var(--text-primary)] dark:text-[var(--text-primary)] truncate">
-            {(log as any).plan_title ?? 'Workout'} — {log.day}
+            {log.plan_title ?? 'Workout'} — {log.day}
           </p>
           <div className="flex items-center gap-3 mt-0.5 flex-wrap">
             <span className="text-[11px] text-[var(--text-tertiary)]">{log.exercises?.length ?? 0} exercises</span>
@@ -343,25 +402,68 @@ export function ClientWorkoutsTab({
             <span className="text-[11px] text-[var(--text-secondary)] dark:text-[var(--text-secondary)]">({workoutProgress.in_progress.length})</span>
           </div>
           <div className="space-y-2">
-            {workoutProgress.in_progress.map((plan: WorkoutProgressPlan) => (
-              <div key={plan.id} className="flex items-center gap-3 p-3  dark:border-amber-800/30 bg-amber-50/30 dark:bg-amber-900/5">
-                <div className="w-9 h-9 bg-amber-100 dark:bg-amber-900/20 flex items-center justify-center flex-shrink-0">
-                  <Dumbbell size={14} className="text-amber-600 dark:text-amber-400" />
+            {workoutProgress.in_progress.map((plan: WorkoutProgressPlan) => {
+              const isExpanded = expandedPlan === plan.id
+              const allExercises = plan.days?.flatMap(d => d.exercises ?? []) ?? []
+              const planCategory = getWorkoutCategory(allExercises)
+              const catCfg = CATEGORY_CONFIG[planCategory]
+              return (
+                <div key={plan.id} className={`border overflow-hidden transition-all ${isExpanded ? 'border-blue-300 dark:border-blue-700/50' : 'border-[var(--border)] dark:border-white/[0.07]'} bg-[var(--bg-card)]`}>
+                  <button onClick={() => setExpandedPlan(isExpanded ? null : plan.id)}
+                    className="w-full flex items-center gap-3 p-3 hover:bg-[#13131314] dark:hover:bg-white/[0.02] transition-colors text-left">
+                    <div className="w-9 h-9 bg-amber-100 dark:bg-amber-900/20 flex items-center justify-center flex-shrink-0" style={isExpanded ? { background: catCfg.bg } : undefined}>
+                      {isExpanded ? <span className="text-lg">{catCfg.icon}</span> : <Dumbbell size={14} className="text-amber-600 dark:text-amber-400" />}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-[13px] font-semibold text-[var(--text-primary)] dark:text-[var(--text-primary)] truncate">{plan.title}</p>
+                      <p className="text-[11px] text-[var(--text-secondary)] dark:text-[var(--text-secondary)]">{plan.completed_days}/{plan.total_days} days · {plan.progress_pct}% complete · {allExercises.length} exercises</p>
+                    </div>
+                    <div className="w-20 flex-shrink-0">
+                      <div className="h-1.5 w-full bg-[var(--bg-subtle)] dark:bg-slate-800 overflow-hidden">
+                        <div className="h-full bg-amber-500 transition-all" style={{ width: `${plan.progress_pct}%` }} />
+                      </div>
+                    </div>
+                    <Link href={`/workout-plans/${plan.id}`} onClick={e => e.stopPropagation()} className="p-1.5 hover:bg-[#13131314] dark:hover:bg-white/[0.06] transition-colors flex-shrink-0">
+                      <ExternalLink size={14} className="text-[var(--text-tertiary)]" />
+                    </Link>
+                    <ChevronDown size={14} className={`text-[var(--text-tertiary)] transition-transform flex-shrink-0 ${isExpanded ? 'rotate-180' : ''}`} />
+                  </button>
+                  {isExpanded && (
+                    <div className="border-t border-[var(--border)] dark:border-white/[0.06]">
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 p-4 sm:p-5 bg-[var(--bg-card)]">
+                        {[
+                          { label: 'Week', value: plan.week_start ? formatDate(plan.week_start, 'MMM d, yyyy') : '—' },
+                          { label: 'Days', value: `${plan.total_days} training days` },
+                          { label: 'Exercises', value: `${allExercises.length} total` },
+                          { label: 'Progress', value: `${plan.completed_days}/${plan.total_days} completed` },
+                        ].map(({ label, value }) => (
+                          <div key={label}>
+                            <p className="text-[11px] font-semibold text-[var(--text-tertiary)] dark:text-[var(--text-tertiary)] uppercase tracking-wider">{label}</p>
+                            <p className="text-[13px] font-medium text-[var(--text-primary)] dark:text-white mt-0.5">{value}</p>
+                          </div>
+                        ))}
+                      </div>
+                      {plan.days?.length ? (
+                        <div className="divide-y divide-slate-100 dark:divide-white/[0.04] bg-[var(--bg-card)]">
+                          {plan.days.map((day, idx) => (
+                            <DayBlock key={idx} day={day} planId={plan.id} completedDaysMap={completedDaysMap} idx={idx} />
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="p-6 text-center bg-[var(--bg-card)]">
+                          <p className="text-[12px] text-[var(--text-secondary)] dark:text-[var(--text-secondary)]">No workout days defined</p>
+                        </div>
+                      )}
+                      <div className="border-t border-[var(--border)] dark:border-white/[0.06] p-4 sm:px-5 flex items-center justify-end gap-2 bg-[var(--bg-card)]">
+                        <Link href={`/workout-plans/${plan.id}`} className="inline-flex items-center gap-1.5 px-4 py-2 text-[12px] rounded-s-xl font-semibold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/15 hover:bg-blue-100 dark:hover:bg-blue-900/25 transition-colors">
+                          <ExternalLink size={12} /> Open Plan
+                        </Link>
+                      </div>
+                    </div>
+                  )}
                 </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-[13px] font-semibold text-[var(--text-primary)] dark:text-[var(--text-primary)] truncate">{plan.title}</p>
-                  <p className="text-[11px] text-[var(--text-secondary)] dark:text-[var(--text-secondary)]">{plan.completed_days}/{plan.total_days} days · {plan.progress_pct}% complete</p>
-                </div>
-                <div className="w-20 flex-shrink-0">
-                  <div className="h-1.5 w-full bg-[var(--bg-subtle)] dark:bg-slate-800 overflow-hidden">
-                    <div className="h-full bg-amber-500 transition-all" style={{ width: `${plan.progress_pct}%` }} />
-                  </div>
-                </div>
-                <Link href={`/workout-plans/${plan.id}`} className="p-1.5 hover:bg-[#13131314] dark:hover:bg-white/[0.06] transition-colors flex-shrink-0">
-                  <ExternalLink size={14} className="text-[var(--text-tertiary)]" />
-                </Link>
-              </div>
-            ))}
+              )
+            })}
           </div>
         </div>
       )}
@@ -375,21 +477,64 @@ export function ClientWorkoutsTab({
             <span className="text-[11px] text-[var(--text-secondary)] dark:text-[var(--text-secondary)]">({workoutProgress.completed.length})</span>
           </div>
           <div className="space-y-2">
-            {workoutProgress.completed.map((plan: WorkoutProgressPlan) => (
-              <div key={plan.id} className="flex items-center gap-3 p-3 dark:border-emerald-800/30 bg-emerald-50/30 dark:bg-emerald-900/5">
-                <div className="w-9 h-9 bg-emerald-100 dark:bg-emerald-900/20 flex items-center justify-center flex-shrink-0">
-                  <CheckCircle2 size={14} className="text-emerald-600 dark:text-emerald-400" />
+            {workoutProgress.completed.map((plan: WorkoutProgressPlan) => {
+              const isExpanded = expandedPlan === plan.id
+              const allExercises = plan.days?.flatMap(d => d.exercises ?? []) ?? []
+              const planCategory = getWorkoutCategory(allExercises)
+              const catCfg = CATEGORY_CONFIG[planCategory]
+              return (
+                <div key={plan.id} className={`border overflow-hidden transition-all ${isExpanded ? 'border-blue-300 dark:border-blue-700/50' : 'border-[var(--border)] dark:border-white/[0.07]'} bg-[var(--bg-card)]`}>
+                  <button onClick={() => setExpandedPlan(isExpanded ? null : plan.id)}
+                    className="w-full flex items-center gap-3 p-3 hover:bg-[#13131314] dark:hover:bg-white/[0.02] transition-colors text-left">
+                    <div className="w-9 h-9 bg-emerald-100 dark:bg-emerald-900/20 flex items-center justify-center flex-shrink-0" style={isExpanded ? { background: catCfg.bg } : undefined}>
+                      {isExpanded ? <span className="text-lg">{catCfg.icon}</span> : <CheckCircle2 size={14} className="text-emerald-600 dark:text-emerald-400" />}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-[13px] font-semibold text-[var(--text-primary)] dark:text-[var(--text-primary)] truncate">{plan.title}</p>
+                      <p className="text-[11px] text-[var(--text-secondary)] dark:text-[var(--text-secondary)]">{plan.total_days} days · 100% complete · {allExercises.length} exercises</p>
+                    </div>
+                    <span className="text-[10px] font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-100 dark:bg-emerald-900/20 px-2 py-0.5 flex-shrink-0">✓ Done</span>
+                    <Link href={`/workout-plans/${plan.id}`} onClick={e => e.stopPropagation()} className="p-1.5 hover:bg-[#13131314] dark:hover:bg-white/[0.06] transition-colors flex-shrink-0">
+                      <ExternalLink size={14} className="text-[var(--text-tertiary)]" />
+                    </Link>
+                    <ChevronDown size={14} className={`text-[var(--text-tertiary)] transition-transform flex-shrink-0 ${isExpanded ? 'rotate-180' : ''}`} />
+                  </button>
+                  {isExpanded && (
+                    <div className="border-t border-[var(--border)] dark:border-white/[0.06]">
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 p-4 sm:p-5 bg-[var(--bg-card)]">
+                        {[
+                          { label: 'Week', value: plan.week_start ? formatDate(plan.week_start, 'MMM d, yyyy') : '—' },
+                          { label: 'Days', value: `${plan.total_days} training days` },
+                          { label: 'Exercises', value: `${allExercises.length} total` },
+                          { label: 'Status', value: 'All days completed' },
+                        ].map(({ label, value }) => (
+                          <div key={label}>
+                            <p className="text-[11px] font-semibold text-[var(--text-tertiary)] dark:text-[var(--text-tertiary)] uppercase tracking-wider">{label}</p>
+                            <p className="text-[13px] font-medium text-[var(--text-primary)] dark:text-white mt-0.5">{value}</p>
+                          </div>
+                        ))}
+                      </div>
+                      {plan.days?.length ? (
+                        <div className="divide-y divide-slate-100 dark:divide-white/[0.04] bg-[var(--bg-card)]">
+                          {plan.days.map((day, idx) => (
+                            <DayBlock key={idx} day={day} planId={plan.id} completedDaysMap={completedDaysMap} idx={idx} />
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="p-6 text-center bg-[var(--bg-card)]">
+                          <p className="text-[12px] text-[var(--text-secondary)] dark:text-[var(--text-secondary)]">No workout days defined</p>
+                        </div>
+                      )}
+                      <div className="border-t border-[var(--border)] dark:border-white/[0.06] p-4 sm:px-5 flex items-center justify-end gap-2 bg-[var(--bg-card)]">
+                        <Link href={`/workout-plans/${plan.id}`} className="inline-flex items-center gap-1.5 px-4 py-2 text-[12px] rounded-s-xl font-semibold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/15 hover:bg-blue-100 dark:hover:bg-blue-900/25 transition-colors">
+                          <ExternalLink size={12} /> Open Plan
+                        </Link>
+                      </div>
+                    </div>
+                  )}
                 </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-[13px] font-semibold text-[var(--text-primary)] dark:text-[var(--text-primary)] truncate">{plan.title}</p>
-                  <p className="text-[11px] text-[var(--text-secondary)] dark:text-[var(--text-secondary)]">{plan.total_days} days · 100% complete</p>
-                </div>
-                <span className="text-[10px] font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-100 dark:bg-emerald-900/20 px-2 py-0.5 flex-shrink-0">✓ Done</span>
-                <Link href={`/workout-plans/${plan.id}`} className="p-1.5 hover:bg-[#13131314] dark:hover:bg-white/[0.06] transition-colors flex-shrink-0">
-                  <ExternalLink size={14} className="text-[var(--text-tertiary)]" />
-                </Link>
-              </div>
-            ))}
+              )
+            })}
           </div>
         </div>
       )}

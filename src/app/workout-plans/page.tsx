@@ -78,7 +78,7 @@ function UnassignedPlansCard({ plans }: { plans: WorkoutPlan[]; clients: any[] }
           <div className="flex items-center gap-3">
             <WarningAmberIcon className="w-8 h-8 text-amber-500" />
             <div>
-              <h2 className="text-base font-bold text-slate-900 dark:text-white">
+              <h2 className="text-base font-bold text-[var(--text-primary)]">
                 Workout Plans Not Assigned
               </h2>
               <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
@@ -93,7 +93,7 @@ function UnassignedPlansCard({ plans }: { plans: WorkoutPlan[]; clients: any[] }
       {unassignedPlans.length === 0 ? (
         <div className="p-8 text-center">
           <CheckCircleIcon className="w-12 h-12 text-emerald-500 mx-auto mb-3" />
-          <p className="text-sm font-medium text-slate-900 dark:text-white">All plans are assigned!</p>
+          <p className="text-sm font-medium text-[var(--text-primary)]">All plans are assigned!</p>
           <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">No unassigned workout plans</p>
         </div>
       ) : (
@@ -123,7 +123,7 @@ function UnassignedPlansCard({ plans }: { plans: WorkoutPlan[]; clients: any[] }
                     <div className="flex items-start gap-3 mb-3 pr-20">
                       <InsertDriveFileIcon className={`w-5 h-5 ${meta.color} mt-0.5`} />
                       <div className="flex-1 min-w-0">
-                        <h3 className="text-sm font-semibold text-slate-900 dark:text-white truncate leading-tight">
+                        <h3 className="text-sm font-semibold text-[var(--text-primary)] truncate leading-tight">
                           {plan.title}
                         </h3>
                         {plan.group_name && (
@@ -252,7 +252,7 @@ function WorkoutDetailsTable({ plans }: { plans: WorkoutPlan[] }) {
           <div className="flex items-center gap-3">
             <BarChartIcon className="w-6 h-6 text-purple-500" />
             <div>
-              <h2 className="text-base font-bold text-slate-900 dark:text-white">
+              <h2 className="text-base font-bold text-[var(--text-primary)]">
                 Professional Fitness Details
               </h2>
               <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
@@ -295,7 +295,7 @@ function WorkoutDetailsTable({ plans }: { plans: WorkoutPlan[] }) {
                   <div className="flex items-center gap-3">
                     <span className="text-xs font-bold text-slate-400 w-5">{ex.order + 1}</span>
                     <div>
-                      <div className="text-sm font-semibold text-slate-900 dark:text-white">{ex.exerciseName}</div>
+                      <div className="text-sm font-semibold text-[var(--text-primary)]">{ex.exerciseName}</div>
                       <div className="text-xs text-slate-500 dark:text-slate-400">{ex.planTitle}</div>
                     </div>
                   </div>
@@ -304,13 +304,13 @@ function WorkoutDetailsTable({ plans }: { plans: WorkoutPlan[] }) {
                   <span className="text-xs font-medium text-slate-700 dark:text-slate-300 capitalize">{ex.dayName}</span>
                 </td>
                 <td className="px-5 py-4">
-                  <span className="text-sm font-bold text-slate-900 dark:text-white">{ex.sets}</span>
+                  <span className="text-sm font-bold text-[var(--text-primary)]">{ex.sets}</span>
                 </td>
                 <td className="px-5 py-4">
-                  <span className="text-sm font-bold text-slate-900 dark:text-white">{ex.reps}</span>
+                  <span className="text-sm font-bold text-[var(--text-primary)]">{ex.reps}</span>
                 </td>
                 <td className="px-5 py-4">
-                  <span className="text-sm font-bold text-slate-900 dark:text-white">{ex.restSeconds}s</span>
+                  <span className="text-sm font-bold text-[var(--text-primary)]">{ex.restSeconds}s</span>
                 </td>
                 <td className="px-5 py-4">
                   {ex.notes ? (
@@ -470,7 +470,7 @@ export default function WorkoutPlansPage() {
                             <div className="flex items-center gap-3">
                               <TypeIcon className={`w-5 h-5 `} />
                               <div>
-                                <div className="text-sm font-semibold text-slate-900 dark:text-white">
+                                <div className="text-sm font-semibold text-[var(--text-primary)]">
                                   {plan.group_name ? `${plan.group_name} — ` : ''}{plan.title}
                                 </div>
                                 <div className="text-xs text-slate-500 dark:text-neutral-400 mt-0.5">

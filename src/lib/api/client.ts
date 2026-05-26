@@ -87,9 +87,9 @@ api.interceptors.response.use(
 
     // Log structured error info for debugging (skip 401/403 — handled below)
     if (status && status >= 400 && status !== 401 && status !== 403) {
-      const parsed = parseApiError(error)
       // Intentionally not using console.error here to avoid cluttering logs in production.
       // The caller receives the full error object and can choose to log or display it.
+      void parseApiError(error)
     }
 
     // Handle 403 Forbidden - session expired or invalid, redirect to login

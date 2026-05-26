@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 
 export interface Gym {
   id: string
@@ -20,7 +20,7 @@ function haversine(lat1: number, lon1: number, lat2: number, lon2: number): numb
   return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
 }
 
-async function queryOverpass(lat: number, lon: number, radius = 3000): Promise<Gym[]> {
+async function queryOverpass(lat: number, lon: number, signal?: AbortSignal, radius = 3000): Promise<Gym[]> {
   const query = `
     [out:json][timeout:10];
     (
@@ -34,6 +34,7 @@ async function queryOverpass(lat: number, lon: number, radius = 3000): Promise<G
     method: 'POST',
     body: `data=${encodeURIComponent(query)}`,
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    signal,
   })
   const json = await res.json()
 
@@ -59,37 +60,47 @@ export function useNearbyGyms() {
   const [loading, setLoading] = useState(false)
   const [error,   setError]   = useState<string | null>(null)
   const [userLocation, setUserLocation] = useState<{ lat: number; lon: number } | null>(null)
+  const abortRef = useRef<AbortController | null>(null)
 
   function load() {
     if (!navigator.geolocation) {
       setError('Geolocation not supported')
       return
     }
+    abortRef.current?.abort()
+    abortRef.current = new AbortController()
+    const signal = abortRef.current.signal
     setLoading(true)
     setError(null)
 
     navigator.geolocation.getCurrentPosition(
       async (pos) => {
+        if (signal.aborted) return
         try {
           const { latitude, longitude } = pos.coords
           setUserLocation({ lat: latitude, lon: longitude })
-          const results = await queryOverpass(latitude, longitude)
-          setGyms(results)
+          const results = await queryOverpass(latitude, longitude, signal)
+          if (!signal.aborted) setGyms(results)
         } catch (e: any) {
-          setError(e.message ?? 'Failed to load gyms')
+          if (!signal.aborted) setError(e.message ?? 'Failed to load gyms')
         } finally {
-          setLoading(false)
+          if (!signal.aborted) setLoading(false)
         }
       },
       (err) => {
-        setError(err.message)
-        setLoading(false)
+        if (!signal.aborted) {
+          setError(err.message)
+          setLoading(false)
+        }
       },
       { timeout: 8000 }
     )
   }
 
-  useEffect(() => { load() }, []) // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => {
+    load()
+    return () => { abortRef.current?.abort() }
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   return { gyms, loading, error, reload: load, userLocation }
 }

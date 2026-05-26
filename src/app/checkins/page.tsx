@@ -106,10 +106,10 @@ export default function SchedulePage() {
 
   return (
     <DashboardLayout>
-      <div className="flex flex-col min-h-screen bg-[#FDFBF7] dark:bg-[#121212]">
+      <div className="flex flex-col min-h-screen bg-[var(--bg-page)]">
 
         {/* ═══════════ HEADER ═══════════ */}
-        <header className="relative px-6 sm:px-10 pt-8 pb-6 bg-[#FDFBF7] dark:bg-[#121212]">
+        <header className="relative px-6 sm:px-10 pt-8 pb-6 bg-[var(--bg-page)]">
           <div className="absolute top-0 left-0 right-0 h-px bg-slate-200 dark:bg-white/[0.08]" />
 
           <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-6">
@@ -155,7 +155,7 @@ export default function SchedulePage() {
                   placeholder="Search..."
                   value={searchQuery}
                   onChange={e => setSearchQuery(e.target.value)}
-                  className="w-44 pl-9 pr-3 py-2 bg-transparent border border-[var(--border)] dark:border-white/[0.08] text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 transition-colors rounded-lg"
+                  className="w-full sm:w-44 pl-9 pr-3 py-2 bg-transparent border border-[var(--border)] dark:border-white/[0.08] text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 transition-colors rounded-lg"
                 />
               </div>
 

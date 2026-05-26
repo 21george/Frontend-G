@@ -16,8 +16,10 @@
     --accent-light:  #ECFDF5;
     --warning:       #F59E0B;
     --danger:        #EF4444;
-    --sidebar-bg:    #121212;
-    --sidebar-bdr:   rgba(255,255,255,0.1);
+    --sidebar-bg:    #FFFFFF;
+    --sidebar-bdr:   #E2E8F0;
+    --sidebar-text:  #1A3C34;
+    --sidebar-text-secondary: #6B7B75;
     --btn-bg:        #0F2027;
     --btn-text:      #FFFFFF;
     --btn-hover:     #16313b;
@@ -47,6 +49,8 @@
     --ring:         #818CF8;
     --sidebar-bg:    #121212;
     --sidebar-bdr:   rgba(255,255,255,0.06);
+    --sidebar-text:  #FFFFFF;
+    --sidebar-text-secondary: rgba(255,255,255,0.6);
     --btn-bg:        #0F2027;
     --btn-text:      #FFFFFF;
     --btn-hover:     #16313b;
@@ -174,7 +178,7 @@
      ═══════════════════════════════════════════════════════════════════════ */
   .card {
     @apply border border-[var(--border)] ;
-    background-color: #13131314;
+    background-color: var(--bg-card);
   }
   .card-hover {
     @apply card hover:border-[var(--border-hover)] transition-all duration-200 cursor-pointer;
@@ -271,10 +275,10 @@
      ═══════════════════════════════════════════════════════════════════════ */
   .table-row {
     @apply flex items-center gap-3 p-3.5 transition-colors;
-    background-color: #13131314;
+    background-color: var(--bg-card);
   }
   .table-row:hover {
-    background-color: #13131314;
+    background-color: var(--bg-subtle);
   }
   html.dark .table-row {
     @apply bg-white/[0.03] hover:bg-white/[0.06];

@@ -17,6 +17,7 @@ import {
   Bell,
 } from 'lucide-react'
 import { timeAgo } from '@/lib/utils'
+import toast from 'react-hot-toast'
 import { motion, AnimatePresence } from 'framer-motion'
 
 function formatWhen(sentAt: string): string {
@@ -185,9 +186,9 @@ export default function MessagesPage() {
       const result = await uploadMedia.mutateAsync(file)
       setPendingFile(result)
     } catch {
-      window.alert('Failed to upload file.')
+      toast.error('Failed to upload file.')
     }
-    if (fileInputRef.current) fileInputRef.current.value = ''
+    e.target.value = ''
   }
 
   const handleMarkAllRead = () => {

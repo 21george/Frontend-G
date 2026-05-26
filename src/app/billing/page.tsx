@@ -470,58 +470,59 @@ export default function BillingPage() {
 
             {/* Table */}
             <div className="border border-[#E5E5E5] dark:border-white/[0.07] bg-white dark:bg-[#1A1A1A] overflow-hidden">
-              {/* Head */}
-              <div className="grid grid-cols-[1.5fr_1fr_1.5fr_1fr_auto] gap-4 px-5 py-3 border-b border-[#E5E5E5] dark:border-white/[0.07] bg-[#FAFAFA] dark:bg-white/[0.02]">
-                {['Invoice', 'Status', 'Date', 'Amount', ''].map((h, i) => (
-                  <span key={i} className="text-[9px] font-bold uppercase tracking-[0.2em] text-[#888780] dark:text-[#FAFAFA]/40">{h}</span>
-                ))}
-              </div>
-
-              {/* Loading */}
-              {invLoading && (
-                <div>
-                  {[...Array(4)].map((_, i) => (
-                    <div key={i} className="grid grid-cols-[1.5fr_1fr_1.5fr_1fr_auto] gap-4 px-5 py-4 border-b border-[#E5E5E5] dark:border-white/[0.07] last:border-0">
-                      <Skeleton className="h-4 w-24 rounded-none" />
-                      <Skeleton className="h-4 w-14 rounded-none" />
-                      <Skeleton className="h-4 w-28 rounded-none" />
-                      <Skeleton className="h-4 w-16 rounded-none" />
-                      <Skeleton className="h-5 w-5 rounded-none" />
-                    </div>
+              <div className="overflow-x-auto">
+                {/* Head */}
+                <div className="grid grid-cols-[1.5fr_1fr_1.5fr_1fr_auto] gap-4 px-5 py-3 border-b border-[#E5E5E5] dark:border-white/[0.07] bg-[#FAFAFA] dark:bg-white/[0.02] min-w-[540px]">
+                  {['Invoice', 'Status', 'Date', 'Amount', ''].map((h, i) => (
+                    <span key={i} className="text-[9px] font-bold uppercase tracking-[0.2em] text-[#888780] dark:text-[#FAFAFA]/40">{h}</span>
                   ))}
                 </div>
-              )}
 
-              {/* Empty */}
-              {!invLoading && filteredInvoices.length === 0 && (
-                <div className="flex flex-col items-center justify-center py-16 text-center">
-                  <FileText className="w-8 h-8 mb-3 text-[#E5E5E5] dark:text-white/10" />
-                  <p className="text-xs font-bold uppercase tracking-wider text-[#888780] dark:text-[#FAFAFA]/40">
-                    {invoiceSearch ? 'No matching invoices' : 'No invoices yet'}
-                  </p>
-                  <p className="text-[11px] text-[#888780] dark:text-[#FAFAFA]/30 mt-1">
-                    {invoiceSearch ? '' : 'Billing history will appear here after your first payment.'}
-                  </p>
-                  {invoiceSearch && (
-                    <button onClick={() => setInvoiceSearch('')}
-                      className="mt-3 inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-[#132E35] dark:text-[#2A96AD] hover:underline">
-                      <X size={10} /> Clear
-                    </button>
-                  )}
-                </div>
-              )}
+                {/* Loading */}
+                {invLoading && (
+                  <div>
+                    {[...Array(4)].map((_, i) => (
+                      <div key={i} className="grid grid-cols-[1.5fr_1fr_1.5fr_1fr_auto] gap-4 px-5 py-4 border-b border-[#E5E5E5] dark:border-white/[0.07] last:border-0 min-w-[540px]">
+                        <Skeleton className="h-4 w-24 rounded-none" />
+                        <Skeleton className="h-4 w-14 rounded-none" />
+                        <Skeleton className="h-4 w-28 rounded-none" />
+                        <Skeleton className="h-4 w-16 rounded-none" />
+                        <Skeleton className="h-5 w-5 rounded-none" />
+                      </div>
+                    ))}
+                  </div>
+                )}
 
-              {/* Rows */}
-              {!invLoading && filteredInvoices.length > 0 && (
-                <div>
-                  {filteredInvoices.map((inv, i) => (
-                    <motion.div
-                      key={inv.id}
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      transition={{ delay: i * 0.03 }}
-                      className="grid grid-cols-[1.5fr_1fr_1.5fr_1fr_auto] gap-4 px-5 py-4 items-center border-b border-[#E5E5E5] dark:border-white/[0.07] last:border-0 hover:bg-[#FAFAFA] dark:hover:bg-white/[0.02] transition-colors"
-                    >
+                {/* Empty */}
+                {!invLoading && filteredInvoices.length === 0 && (
+                  <div className="flex flex-col items-center justify-center py-16 text-center">
+                    <FileText className="w-8 h-8 mb-3 text-[#E5E5E5] dark:text-white/10" />
+                    <p className="text-xs font-bold uppercase tracking-wider text-[#888780] dark:text-[#FAFAFA]/40">
+                      {invoiceSearch ? 'No matching invoices' : 'No invoices yet'}
+                    </p>
+                    <p className="text-[11px] text-[#888780] dark:text-[#FAFAFA]/30 mt-1">
+                      {invoiceSearch ? '' : 'Billing history will appear here after your first payment.'}
+                    </p>
+                    {invoiceSearch && (
+                      <button onClick={() => setInvoiceSearch('')}
+                        className="mt-3 inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-[#132E35] dark:text-[#2A96AD] hover:underline">
+                        <X size={10} /> Clear
+                      </button>
+                    )}
+                  </div>
+                )}
+
+                {/* Rows */}
+                {!invLoading && filteredInvoices.length > 0 && (
+                  <div>
+                    {filteredInvoices.map((inv, i) => (
+                      <motion.div
+                        key={inv.id}
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ delay: i * 0.03 }}
+                        className="grid grid-cols-[1.5fr_1fr_1.5fr_1fr_auto] gap-4 px-5 py-4 items-center border-b border-[#E5E5E5] dark:border-white/[0.07] last:border-0 hover:bg-[#FAFAFA] dark:hover:bg-white/[0.02] transition-colors min-w-[540px]"
+                      >
                       <div className="flex items-center gap-2 min-w-0">
                         <FileText className="w-3.5 h-3.5 text-[#888780] shrink-0" />
                         <p className="text-xs font-bold text-[#171717] dark:text-[#FAFAFA] truncate">{inv.number}</p>
@@ -553,6 +554,7 @@ export default function BillingPage() {
                   ))}
                 </div>
               )}
+              </div>
             </div>
 
             {!invLoading && filteredInvoices.length > 0 && (

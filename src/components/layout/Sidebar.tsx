@@ -34,8 +34,8 @@ function SidebarContent({ onClose, collapsed = false }: SidebarContentProps) {
   const isDark = theme === 'dark'
 
   const brandIcon = (
-    <div className="w-8 h-8 bg-white/20 dark:bg-white/10 flex items-center justify-center rounded-lg">
-      <Zap className="w-4 h-4 text-white" />
+    <div className="w-8 h-8 bg-[var(--sidebar-text)]/10 flex items-center justify-center rounded-lg">
+      <Zap className="w-4 h-4 text-[var(--sidebar-text)]" />
     </div>
   )
 
@@ -49,7 +49,7 @@ function SidebarContent({ onClose, collapsed = false }: SidebarContentProps) {
         {!collapsed && (
           <div className="flex items-center gap-2.5">
             {brandIcon}
-            <span className="font-semibold text-white dark:text-white text-lg tracking-tight">CoachPro</span>
+            <span className="font-semibold text-[var(--sidebar-text)] text-lg tracking-tight">CoachPro</span>
           </div>
         )}
         {collapsed && brandIcon}
@@ -59,7 +59,7 @@ function SidebarContent({ onClose, collapsed = false }: SidebarContentProps) {
 
       {/* ── Navigation ── */}
       <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
-        {!collapsed && <p className="section-title text-white/40 dark:text-slate-500 mb-3">Main Menu</p>}
+        {!collapsed && <p className="section-title text-[var(--sidebar-text-secondary)] mb-3">Main Menu</p>}
         {NAV.map(({ href, label, icon: Icon }) => {
           const active = path.startsWith(href)
           return (
@@ -75,8 +75,8 @@ function SidebarContent({ onClose, collapsed = false }: SidebarContentProps) {
                   'flex items-center gap-4 px-4 py-3 text-base font-medium transition-all duration-150',
                   collapsed ? 'justify-center px-2' : '',
                   active
-                    ? 'bg-white/15 dark:bg-white/10 text-white '
-                    : 'text-white/60 dark:text-neutral-400 hover:bg-white/10 dark:hover:bg-white/[0.08] hover:text-white dark:hover:text-white'
+                    ? 'bg-[var(--sidebar-text)]/10 text-[var(--sidebar-text)]'
+                    : 'text-[var(--sidebar-text-secondary)] hover:bg-[var(--sidebar-text)]/5 hover:text-[var(--sidebar-text)]'
                 )}
                 tabIndex={0}
                 title={collapsed ? label : undefined}
@@ -84,7 +84,7 @@ function SidebarContent({ onClose, collapsed = false }: SidebarContentProps) {
                 <Icon className="w-5 h-5 flex-shrink-0" />
                 {!collapsed && <span>{label}</span>}
                 {!collapsed && active && (
-                  <span className="ml-auto w-1.5 h-1.5 bg-white/60 opacity-80" />
+                  <span className="ml-auto w-1.5 h-1.5 bg-[var(--sidebar-text)]/60 opacity-80" />
                 )}
               </Link>
             </motion.div>
@@ -101,20 +101,20 @@ function SidebarContent({ onClose, collapsed = false }: SidebarContentProps) {
           "flex items-center hover:bg-white/10 dark:hover:bg-white/[0.06] transition-colors",
           collapsed ? "justify-center p-2" : "gap-3 px-2 py-2"
         )}>
-          <div className="w-9 h-9 bg-gradient-to-br from-brand-400 to-brand-600 flex items-center justify-center text-white text-sm font-semibold flex-shrink-0 ring-2 ring-white/20 rounded-lg"
-            style={{ background: 'var(--btn-bg)' }}>
+          <div className="w-9 h-9 flex items-center justify-center text-[var(--sidebar-text)] text-sm font-semibold flex-shrink-0 ring-2 ring-[var(--sidebar-bdr)] rounded-lg"
+            style={{ background: 'var(--bg-subtle)' }}>
             {coach?.name?.[0]?.toUpperCase() ?? 'C'}
           </div>
           {!collapsed && (
             <>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-semibold text-white dark:text-white truncate leading-snug">{coach?.name}</p>
-                <p className="text-xs text-white/50 dark:text-neutral-500 truncate">{coach?.email}</p>
+                <p className="text-sm font-semibold text-[var(--sidebar-text)] truncate leading-snug">{coach?.name}</p>
+                <p className="text-xs text-[var(--sidebar-text-secondary)] truncate">{coach?.email}</p>
               </div>
               <button
                 onClick={logout}
                 title="Sign out"
-                className="text-white/50 hover:text-red-400 transition-colors p-1.5 hover:bg-red-400/10 flex-shrink-0"
+                className="text-[var(--sidebar-text-secondary)] hover:text-red-500 transition-colors p-1.5 hover:bg-red-500/10 flex-shrink-0"
               >
                 <LogOut className="w-4 h-4" />
               </button>
@@ -179,7 +179,7 @@ export default function Sidebar() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="lg:hidden fixed inset-0 z-40 bg-black/60 backdrop-blur-sm"
+            className="lg:hidden fixed inset-0 z-40 bg-black/40 backdrop-blur-sm"
             onClick={() => setMobileOpen(false)}
             aria-hidden="true"
           />
@@ -194,7 +194,8 @@ export default function Sidebar() {
             animate={{ x: 0 }}
             exit={{ x: '-100%' }}
             transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-            className="lg:hidden fixed inset-y-0 left-0 z-50 w-64 bg-sidebar dark:bg-sidebar-dark flex flex-col border-r border-white/10 dark:border-white/[0.06]"
+            className="lg:hidden fixed inset-y-0 left-0 z-50 w-64 flex flex-col border-r"
+            style={{ backgroundColor: 'var(--sidebar-bg)', borderColor: 'var(--sidebar-bdr)' }}
             tabIndex={-1}
             aria-modal={mobileOpen}
             role="dialog"
@@ -208,7 +209,8 @@ export default function Sidebar() {
       <motion.aside
         initial={false}
         animate={{ width: collapsed ? 80 : 256 }}
-        className="hidden lg:flex bg-sidebar dark:bg-sidebar-dark flex-col h-screen fixed left-0 top-0 z-30 border-r border-white/10 dark:border-white/[0.06] overflow-hidden"
+        className="hidden lg:flex flex-col h-screen fixed left-0 top-0 z-30 border-r overflow-hidden"
+        style={{ backgroundColor: 'var(--sidebar-bg)', borderColor: 'var(--sidebar-bdr)' }}
       >
         <SidebarContent collapsed={collapsed} />
 

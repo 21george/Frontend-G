@@ -31,7 +31,7 @@ export default function SubscriptionSuccessPage() {
         if (status === 'active' || status === 'trialing') {
           // Subscription verified, redirect to dashboard
           setTimeout(() => {
-            window.location.href = '/dashboard';
+            router.replace('/dashboard');
           }, 2000);
         } else {
           setError('Subscription not yet activated. Please contact support.');
@@ -43,7 +43,7 @@ export default function SubscriptionSuccessPage() {
           // User might not have cookies set yet - this is expected after Stripe redirect
           // We'll show a message and redirect
           setTimeout(() => {
-            window.location.href = '/dashboard';
+            router.replace('/dashboard');
           }, 3000);
         } else {
           setError('Failed to verify subscription');

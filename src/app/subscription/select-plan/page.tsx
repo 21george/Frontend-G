@@ -89,14 +89,15 @@ export default function SelectPlanPage() {
       return;
     }
 
-    // Get token from URL params
+    // Get token from URL params once
     const token = searchParams.get('token');
     const coachIdParam = searchParams.get('coach_id');
 
     if (token && coachIdParam) {
       setSetupToken(token, coachIdParam);
     }
-  }, [searchParams, setupToken, setSetupToken, router, coach]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams, setSetupToken, router, coach]);
 
   const handleSelectPlan = async (planId: 'free' | 'pro' | 'business') => {
     setError(null);
@@ -120,12 +121,7 @@ export default function SelectPlanPage() {
 
       if (planId === 'free') {
         // Free plan - set auth cookies and redirect to dashboard
-        if (access_token) {
-          // Tokens are set via cookies from backend
-          window.location.href = redirect || '/dashboard';
-        } else {
-          window.location.href = '/dashboard';
-        }
+        router.replace(redirect || '/dashboard');
       } else {
         // Paid plan - redirect to Stripe Checkout
         if (checkout_url) {

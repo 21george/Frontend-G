@@ -92,7 +92,7 @@ export default function MiniCalendar() {
           key={`${MONTHS[month]} ${year}`}
           initial={{ opacity: 0, x: -10 }}
           animate={{ opacity: 1, x: 0 }}
-          className="text-sm font-semibold text-slate-900 dark:text-white"
+          className="text-sm font-semibold text-[var(--text-primary)]"
         >
           {MONTHS[month]} {year}
         </motion.h3>
@@ -101,7 +101,7 @@ export default function MiniCalendar() {
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.9 }}
             onClick={prev}
-            className="w-7 h-7 flex items-center justify-center text-slate-400 hover:text-slate-900 hover:bg-[#13131314] dark:text-neutral-400 dark:hover:text-white dark:hover:bg-white/[0.08] transition-colors"
+            className="w-7 h-7 flex items-center justify-center text-slate-400 hover:text-[var(--text-primary)] hover:bg-[var(--bg-subtle)] dark:text-neutral-400 dark:hover:text-white dark:hover:bg-white/[0.08] transition-colors"
           >
             <ChevronLeft className="w-4 h-4" />
           </motion.button>
@@ -109,7 +109,7 @@ export default function MiniCalendar() {
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.9 }}
             onClick={next}
-            className="w-7 h-7 flex items-center justify-center text-slate-400 hover:text-slate-900 hover:bg-[#13131314] dark:text-neutral-400 dark:hover:text-white dark:hover:bg-white/[0.08] transition-colors"
+            className="w-7 h-7 flex items-center justify-center text-slate-400 hover:text-[var(--text-primary)] hover:bg-[var(--bg-subtle)] dark:text-neutral-400 dark:hover:text-white dark:hover:bg-white/[0.08] transition-colors"
           >
             <ChevronRight className="w-4 h-4" />
           </motion.button>
@@ -197,7 +197,7 @@ export default function MiniCalendar() {
                       <Clock className="w-4 h-4 text-white" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-xs font-semibold text-slate-800 dark:text-white truncate">
+                      <p className="text-xs font-semibold text-[var(--text-primary)] truncate">
                         {checkin.client_name || 'Client Check-in'}
                       </p>
                       <p className="text-[10px] text-[var(--text-tertiary)] dark:text-neutral-400 mt-0.5">

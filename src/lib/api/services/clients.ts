@@ -26,7 +26,8 @@ export const clientsApi = {
   unblock: (id: string) =>
     api.post<ApiResponse<Client>>(`/coach/clients/${id}/unblock`).then(r => r.data.data),
 
-  /** Check if a client already exists by email or phone (returns true if found). */
+  /** Check if a client already exists by email or phone (returns true if found).
+   *  Rejects if the API call itself fails so the caller knows the check is inconclusive. */
   checkExists: async (params: { email?: string; phone?: string }): Promise<{ email: boolean; phone: boolean }> => {
     const results = { email: false, phone: false }
     const checks: Promise<void>[] = []
@@ -38,7 +39,6 @@ export const clientsApi = {
               (c: Client) => c.email?.toLowerCase() === params.email!.toLowerCase()
             )
           })
-          .catch(() => {})
       )
     }
     if (params.phone) {
@@ -49,7 +49,6 @@ export const clientsApi = {
               (c: Client) => c.phone === params.phone
             )
           })
-          .catch(() => {})
       )
     }
     await Promise.all(checks)

@@ -17,6 +17,5 @@ export const subscriptionApi = {
   invoices: (): Promise<Invoice[]> =>
     api
       .get<ApiResponse<Invoice[]>>('/subscription/invoices')
-      .then(r => r.data.data ?? [])
-      .catch(() => []),   // gracefully degrade if endpoint not yet available
+      .then(r => r.data.data ?? []),
 }

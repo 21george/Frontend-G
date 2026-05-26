@@ -38,10 +38,11 @@ export const useAuthStore = create<AuthState>()(
         set({ accessToken: token })
       },
       logout: () => {
-        // Clear httpOnly cookies via backend; use raw fetch to avoid interceptor loop
+        const token = get().accessToken
         fetch(`${resolveBaseUrl()}/auth/logout`, {
           method: 'POST',
           credentials: 'include',
+          headers: token ? { Authorization: `Bearer ${token}` } : undefined,
         }).catch(() => {})
         set({ coach: null, isAuthenticated: false, accessToken: null })
       },

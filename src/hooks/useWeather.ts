@@ -41,6 +41,9 @@ export function useWeather() {
   const [error,   setError]   = useState<string | null>(null)
 
   useEffect(() => {
+    let mounted = true
+    const abortCtrl = new AbortController()
+
     if (!navigator.geolocation) {
       setError('Geolocation not supported')
       setLoading(false)
@@ -49,13 +52,14 @@ export function useWeather() {
 
     navigator.geolocation.getCurrentPosition(
       async (pos) => {
+        if (!mounted) return
         try {
           const { latitude, longitude } = pos.coords
 
           // Reverse geocode via Nominatim (free, no key)
           const geoRes  = await fetch(
             `https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json`,
-            { headers: { 'Accept-Language': 'en' } }
+            { headers: { 'Accept-Language': 'en' }, signal: abortCtrl.signal }
           )
           const geoJson = await geoRes.json()
           const city    =
@@ -66,7 +70,8 @@ export function useWeather() {
 
           // Weather via Open-Meteo (free, no key)
           const wtRes  = await fetch(
-            `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current_weather=true&daily=weather_code,temperature_2m_max,temperature_2m_min&timezone=auto`
+            `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current_weather=true&daily=weather_code,temperature_2m_max,temperature_2m_min&timezone=auto`,
+            { signal: abortCtrl.signal }
           )
           const wtJson = await wtRes.json()
           const cw     = wtJson.current_weather
@@ -86,6 +91,7 @@ export function useWeather() {
             }]
           }) ?? []
 
+          if (!mounted) return
           setWeather({
             temp: Math.round(cw.temperature),
             condition,
@@ -94,24 +100,32 @@ export function useWeather() {
             forecast,
           })
         } catch (e: any) {
-          setError(e.message ?? 'Failed to load weather')
+          if (!mounted) return
+          if (e.name !== 'AbortError') setError(e.message ?? 'Failed to load weather')
         } finally {
-          setLoading(false)
+          if (mounted) setLoading(false)
         }
       },
       (err) => {
+        if (!mounted) return
         // Fallback to Munich, Germany for demo/development
         setError('Using demo location (Munich)')
-        fetchWeatherFallback(48.1351, 11.5820, 'Munich')
+        fetchWeatherFallback(48.1351, 11.5820, 'Munich', abortCtrl.signal)
       },
       { timeout: 8000 }
     )
+
+    return () => {
+      mounted = false
+      abortCtrl.abort()
+    }
   }, [])
 
-  async function fetchWeatherFallback(lat: number, lon: number, city: string) {
+  async function fetchWeatherFallback(lat: number, lon: number, city: string, signal?: AbortSignal) {
     try {
       const wtRes = await fetch(
-        `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true&daily=weather_code,temperature_2m_max,temperature_2m_min&timezone=auto`
+        `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true&daily=weather_code,temperature_2m_max,temperature_2m_min&timezone=auto`,
+        { signal }
       )
       const wtJson = await wtRes.json()
       const cw = wtJson.current_weather
@@ -139,7 +153,7 @@ export function useWeather() {
         forecast,
       })
     } catch (e: any) {
-      setError('Failed to load weather data')
+      if (e.name !== 'AbortError') setError('Failed to load weather data')
     } finally {
       setLoading(false)
     }

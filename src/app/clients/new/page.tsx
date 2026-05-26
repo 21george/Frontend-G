@@ -462,9 +462,14 @@ export default function NewClientPage() {
           email: data.email || undefined,
           phone: data.phone || undefined,
         })
-        if (exists.email) { setSubmitError('A client with this email already exists.'); return }
-        if (exists.phone) { setSubmitError('A client with this phone number already exists.'); return }
-      } catch { /* non-fatal */ } finally { setChecking(false) }
+        if (exists.email) { setSubmitError('A client with this email already exists.'); setChecking(false); return }
+        if (exists.phone) { setSubmitError('A client with this phone number already exists.'); setChecking(false); return }
+      } catch (err: any) {
+        setSubmitError(err?.response?.data?.message || 'Unable to verify duplicates. Please try again.')
+        setChecking(false)
+        return
+      }
+      setChecking(false)
     }
 
     const payload: Partial<Client> = {

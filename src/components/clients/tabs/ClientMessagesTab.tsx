@@ -42,7 +42,7 @@ export function ClientMessagesTab({
           <div className="w-8 h-8 bg-[var(--bg-subtle)] border border-[var(--border)] dark:border-white/[0.1] flex items-center justify-center overflow-hidden flex-shrink-0">
             {client.profile_photo_url
               ? <img src={client.profile_photo_url} alt="" className="w-full h-full object-cover" />
-              : <span className="text-xs font-semibold text-[var(--text-primary)]">{client.name[0].toUpperCase()}</span>}
+              : <span className="text-xs font-semibold text-[var(--text-primary)]">{client.name?.[0]?.toUpperCase() ?? '?'}</span>}
           </div>
           <div>
             <h3 className="text-[14px] font-semibold text-[var(--text-primary)] dark:text-[var(--text-primary)]">{client.name}</h3>
@@ -71,7 +71,7 @@ export function ClientMessagesTab({
                 <div className="w-7 h-7 bg-[var(--bg-subtle)]  rounded-full flex items-center justify-center flex-shrink-0 mt-1">
                   {client.profile_photo_url
                     ? <img src={client.profile_photo_url} alt="" className="w-full rounded-full h-full object-cover" />
-                    : <span className="text-[10px] font-semibold text-slate-700 dark:text-slate-300 rounded-full">{client.name[0].toUpperCase()}</span>}
+                    : <span className="text-[10px] font-semibold text-slate-700 dark:text-slate-300 rounded-full">{client.name?.[0]?.toUpperCase() ?? '?'}</span>}
                 </div>
               )}
               <div className={`max-w-[80%] rounded-8 sm:max-w-md px-3 sm:px-4 py-2 sm:py-2.5 text-[13px] break-words ${

@@ -164,7 +164,7 @@ export default function NotificationsPage() {
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
           {/* Filter */}
           <div className="flex border border-[var(--border)] dark:border-white/[0.08] overflow-hidden rounded-lg">
             <button

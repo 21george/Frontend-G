@@ -114,6 +114,8 @@ export default function NewWorkoutPlanPage() {
       }
       await createPlan.mutateAsync(payload)
       router.push('/workout-plans')
+    } catch {
+      // Error toast is handled by useToastMutation
     } finally {
       setLoading(false)
     }

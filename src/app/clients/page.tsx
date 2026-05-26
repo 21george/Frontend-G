@@ -204,7 +204,7 @@ export default function ClientsPage() {
             value={search}
             onChange={e => setSearch(e.target.value)}
             placeholder="Search clients"
-            className="w-[12rem]   py-3 pl-11 pr-4 text-sm text-[var(--text-primary)]  rounded-4 placeholder-slate-400 dark:placeholder:text-neutral-500 focus:outline-none focus:border-brand-700/30 focus:ring-2 focus:ring-brand-700/20 transition-colors"
+            className="w-full sm:w-[12rem] py-3 pl-11 pr-4 text-sm text-[var(--text-primary)] rounded-4 placeholder-slate-400 dark:placeholder:text-neutral-500 focus:outline-none focus:border-brand-700/30 focus:ring-2 focus:ring-brand-700/20 transition-colors"
           />
         </div>
 

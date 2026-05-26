@@ -3,7 +3,7 @@
 import DashboardLayout from '@/components/layout/DashboardLayout'
 import { useNutritionPlan, useUpdateNutritionPlan, useDeleteNutritionPlan, useClients } from '@/lib/hooks'
 import { useParams, useRouter } from 'next/navigation'
-import { useState, useMemo, useCallback } from 'react'
+import { useState, useMemo, useCallback, useRef, useEffect } from 'react'
 import Link from 'next/link'
 import {
   ArrowLeft, Plus, Trash2, Save, ChevronDown, ChevronRight,
@@ -78,7 +78,7 @@ function MacroPill({
 function NutrFact({ label, value, unit, bold }: { label: string; value: number; unit?: string; bold?: boolean }) {
   return (
     <div className={`flex items-center justify-between py-1.5 border-b border-slate-100 dark:border-white/[0.04] last:border-0 ${bold ? 'font-semibold' : ''}`}>
-      <span className={`text-sm ${bold ? 'text-slate-800 dark:text-white' : 'text-slate-600 dark:text-slate-400'}`}>{label}</span>
+      <span className={`text-sm ${bold ? 'text-[var(--text-primary)]' : 'text-slate-600 dark:text-slate-400'}`}>{label}</span>
       <span className={`text-sm ${bold ? 'text-[var(--text-primary)] dark:text-[var(--text-primary)] font-semibold' : 'text-slate-700 dark:text-slate-300'}`}>
         {value} {unit ?? 'g'}
       </span>
@@ -122,7 +122,10 @@ export default function NutritionPlanDetailPage() {
   const [openDays,    setOpenDays]    = useState<Record<string, boolean>>({})
   const [saving,      setSaving]      = useState(false)
   const [saved,       setSaved]       = useState(false)
+  const savedTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const [deleting,    setDeleting]    = useState(false)
+
+  useEffect(() => () => { if (savedTimeoutRef.current) clearTimeout(savedTimeoutRef.current) }, [])
   const [showDelete,  setShowDelete]  = useState(false)
   const [initialised, setInitialised] = useState(false)
 
@@ -167,7 +170,8 @@ export default function NutritionPlanDetailPage() {
     try {
       await updatePlan.mutateAsync({ title, days, daily_totals: weeklyAvg } as Partial<NutritionPlan>)
       setSaved(true)
-      setTimeout(() => setSaved(false), 2500)
+      if (savedTimeoutRef.current) clearTimeout(savedTimeoutRef.current)
+      savedTimeoutRef.current = setTimeout(() => { setSaved(false); savedTimeoutRef.current = null }, 2500)
     } finally { setSaving(false) }
   }
 
@@ -359,7 +363,7 @@ export default function NutritionPlanDetailPage() {
                       {isOpen
                         ? <ChevronDown size={15} className="text-green-500 dark:text-green-400" />
                         : <ChevronRight size={15} className="text-slate-400 dark:text-slate-600" />}
-                      <span className="text-sm font-semibold text-slate-800 dark:text-white capitalize">{day.day}</span>
+                      <span className="text-sm font-semibold text-[var(--text-primary)] capitalize">{day.day}</span>
                       <span className="text-xs text-slate-400 dark:text-slate-600">{day.meals.length} meal{day.meals.length !== 1 ? 's' : ''}</span>
                     </div>
                     <div className="flex items-center gap-4 text-xs text-slate-200 dark:text-slate-500">
@@ -380,7 +384,7 @@ export default function NutritionPlanDetailPage() {
                             <input
                               value={meal.meal_name}
                               onChange={e => updateMeal(di, mi, 'meal_name', e.target.value)}
-                              className="bg-transparent text-sm font-semibold text-slate-800 dark:text-white outline-none border-b border-transparent focus:border-green-400 pb-0.5 w-36"
+                              className="bg-transparent text-sm font-semibold text-[var(--text-primary)] outline-none border-b border-transparent focus:border-green-400 pb-0.5 w-36"
                               placeholder="Meal name"
                             />
                             <input
@@ -498,7 +502,7 @@ export default function NutritionPlanDetailPage() {
                 ].map(({ icon, label, value }) => (
                   <div key={label} className="flex items-center justify-between py-1 border-b border-slate-100 dark:border-white/[0.04] last:border-0">
                     <span className="flex items-center gap-2 text-[var(--text-secondary)] dark:text-[var(--text-secondary)]">{icon}{label}</span>
-                    <span className="font-semibold text-slate-800 dark:text-white text-xs">{value}</span>
+                    <span className="font-semibold text-[var(--text-primary)] text-xs">{value}</span>
                   </div>
                 ))}
               </div>

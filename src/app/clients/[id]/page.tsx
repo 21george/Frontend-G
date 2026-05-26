@@ -50,6 +50,7 @@ import Link from 'next/link'
 import { useParams, useRouter } from 'next/navigation'
 import { formatDate, timeAgo } from '@/lib/utils'
 import { useSocketChat } from '@/lib/useSocketChat'
+import toast from 'react-hot-toast'
 import type { CheckinMeeting, NutritionPlan, WorkoutPlan, WorkoutLogDetailed } from '@/types'
 import type { WorkoutProgressPlan } from '@/lib/api/services/media'
 import {
@@ -195,7 +196,6 @@ export default function ClientDetailPage() {
   const sendMsg                     = useSendMessage()
   const uploadMedia                 = useUploadMessageMedia()
   const regenerateCode              = useRegenerateCode(id)
-  const fileInputRef                = useRef<HTMLInputElement>(null)
   const [pendingFile, setPendingFile] = useState<{ media_url: string; media_type: string; media_filename: string } | null>(null)
   const [expandedLog, setExpandedLog] = useState<string | null>(null)
   const createCheckin               = useCreateCheckin()
@@ -258,8 +258,12 @@ export default function ClientDetailPage() {
       payload.media_filename = pendingFile.media_filename
       setPendingFile(null)
     }
-    await sendMsg.mutateAsync(payload)
-    relayViaSocket(content)
+    try {
+      await sendMsg.mutateAsync(payload)
+      relayViaSocket(content)
+    } catch {
+      // Error toast is handled by useToastMutation
+    }
   }
 
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -269,9 +273,9 @@ export default function ClientDetailPage() {
       const result = await uploadMedia.mutateAsync(file)
       setPendingFile(result)
     } catch {
-      window.alert('Failed to upload file.')
+      toast.error('Failed to upload file.')
     }
-    if (fileInputRef.current) fileInputRef.current.value = ''
+    e.target.value = ''
   }
 
   const handleRegenerate = async () => {
@@ -331,7 +335,7 @@ export default function ClientDetailPage() {
         await blockClient.mutateAsync()
       }
     } catch {
-      window.alert(`Failed to ${computedIsBlocked ? 'unblock' : 'block'} client.`)
+      toast.error(`Failed to ${computedIsBlocked ? 'unblock' : 'block'} client.`)
     }
   }
 
@@ -483,7 +487,7 @@ export default function ClientDetailPage() {
               onClick={handleToggleBlockClient}
               disabled={blockClient.isPending || unblockClient.isPending}
               title={client.is_blocked ? 'Restore client access' : client.active ? 'Temporarily disable client access' : 'Restore client access'}
-              className={`hidden sm:inline-flex items-center gap-1.5 border px-3 py-1.5 text-xs font-semibold transition-colors disabled:opacity-50 ${
+              className={`inline-flex items-center gap-1.5 border px-3 py-1.5 text-xs font-semibold transition-colors disabled:opacity-50 ${
                 client.is_blocked || !client.active
                   ? 'border-emerald-200 dark:border-emerald-900/40 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-50 dark:hover:bg-emerald-500/10'
                   : 'border-amber-200 dark:border-amber-900/40 text-amber-700 dark:text-amber-300 hover:bg-amber-50 dark:hover:bg-amber-500/10'
@@ -496,7 +500,7 @@ export default function ClientDetailPage() {
               onClick={handleDeleteClient}
               disabled={deleteClient.isPending}
               title="Permanently delete this client (cannot be undone)"
-              className="hidden sm:inline-flex rounded-s-xl  items-center gap-1.5 border border-red-200 dark:border-red-900/40 px-3 py-1.5 text-xs font-semibold text-red-600 dark:text-red-300 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors disabled:opacity-50"
+              className="inline-flex rounded-s-xl items-center gap-1.5 border border-red-200 dark:border-red-900/40 px-3 py-1.5 text-xs font-semibold text-red-600 dark:text-red-300 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors disabled:opacity-50"
             >
               {deleteClient.isPending ? <Loader2 size={13} className="animate-spin" /> : <Trash2 size={13} />}
               Delete Permanently

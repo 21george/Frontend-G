@@ -219,7 +219,7 @@ export default function DashboardHeader({
           <CoachAvatar name={coach?.name} surname={coach?.surname} photo={coach?.profile_photo} />
           {fullName && (
             <div className="hidden sm:flex flex-col">
-              <span className="text-[13px] font-semibold text-slate-800 dark:text-white leading-tight">{fullName}</span>
+              <span className="text-[13px] font-semibold text-[var(--text-primary)] leading-tight">{fullName}</span>
               <span className="text-[11px] text-slate-500 dark:text-neutral-400 leading-tight">{coach?.email}</span>
             </div>
           )}

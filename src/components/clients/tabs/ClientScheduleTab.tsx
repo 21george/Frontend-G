@@ -277,8 +277,7 @@ export function ClientScheduleTab({
                               <div className="flex-1 overflow-y-auto p-3 space-y-2 bg-[var(--bg-page)] dark:bg-[var(--bg-page)]">
                                 {allMessages
                                   .filter((m: any) => Math.abs(new Date(c.scheduled_at).getTime() - new Date(m.sent_at).getTime()) < 2 * 60 * 60 * 1000)
-                                  .concat(allMessages.slice(-5))
-                                  .filter((m: any, i: number, arr: any[]) => arr.findIndex(x => x.id === m.id) === i)
+                                  .filter((m: any, i: number, arr: any[]) => arr.findIndex((x: any) => x.id === m.id) === i)
                                   .sort((a: any, b: any) => new Date(a.sent_at).getTime() - new Date(b.sent_at).getTime())
                                   .map((m: any) => (
                                     <div key={m.id} className={`flex ${m.sender_role === 'coach' ? 'justify-end' : 'justify-start'}`}>
