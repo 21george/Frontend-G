@@ -16,14 +16,20 @@
     --accent-light:  #ECFDF5;
     --warning:       #F59E0B;
     --danger:        #EF4444;
-    --sidebar-bg:    #FFFFFF;
-    --sidebar-bdr:   #E2E8F0;
-    --sidebar-text:  #1A3C34;
-    --sidebar-text-secondary: #6B7B75;
+    --sidebar-bg:    #132E35;
+    --sidebar-bdr:   rgba(255,255,255,0.10);
+    --sidebar-text:  #FFFFFF;
+    --sidebar-text-secondary: rgba(255,255,255,0.55);
     --btn-bg:        #0F2027;
     --btn-text:      #FFFFFF;
     --btn-hover:     #16313b;
     --btn-active:    #0b171c;
+
+    /* 360fit Energy */
+    --energy:        #a3e635;
+    --energy-dark:   #84cc16;
+    --energy-light:  #d9f99d;
+    --energy-glow:   rgba(163,230,53,0.35);
 
     /* Light */
     --bg-page:       #F8FAFC;
@@ -47,14 +53,20 @@
     --border:       rgba(255,255,255,0.06);
     --border-hover: rgba(255,255,255,0.12);
     --ring:         #818CF8;
-    --sidebar-bg:    #121212;
-    --sidebar-bdr:   rgba(255,255,255,0.06);
+    --sidebar-bg:    #132E35;
+    --sidebar-bdr:   rgba(255,255,255,0.10);
     --sidebar-text:  #FFFFFF;
-    --sidebar-text-secondary: rgba(255,255,255,0.6);
+    --sidebar-text-secondary: rgba(255,255,255,0.55);
     --btn-bg:        #0F2027;
     --btn-text:      #FFFFFF;
     --btn-hover:     #16313b;
     --btn-active:    #0b171c;
+
+    /* 360fit Energy (dark) */
+    --energy:        #a3e635;
+    --energy-dark:   #84cc16;
+    --energy-light:  #d9f99d;
+    --energy-glow:   rgba(163,230,53,0.45);
   }
 
   /* ── Light mode specific overrides ────────────────────────────────────── */

@@ -42,7 +42,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
       {loading && (
         <span
           role="status"
-          className="w-4 h-4 rounded-full border-2 border-current border-t-transparent animate-spin flex-shrink-0"
+          className="w-4 h-4 rounded-s-lg border-2 border-current border-t-transparent animate-spin flex-shrink-0"
         >
           <span className="sr-only">Loading</span>
         </span>

@@ -7,3 +7,10 @@ export const useClientAnalytics = (id: string) =>
     queryFn: () => analyticsApi.client(id),
     enabled: !!id,
   })
+
+export const useCoachAnalytics = () =>
+  useQuery({
+    queryKey: ['analytics', 'coach'],
+    queryFn: () => analyticsApi.coach(),
+    staleTime: 2 * 60_000,
+  })

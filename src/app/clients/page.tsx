@@ -8,7 +8,7 @@ import Link from 'next/link'
 import {
   Users, Plus, Search, Filter, MessageSquare, MoreVertical,
   TrendingUp, ChevronLeft, ChevronRight, Activity, CheckCircle2, XCircle,
-  UsersRound, Dumbbell, AlertCircle, Clock
+  UsersRound, Dumbbell, AlertCircle, Clock, Upload
 } from 'lucide-react'
 import { QueryWrapper } from '@/components/ui/QueryWrapper'
 import { Button } from '@/components/ui/button'
@@ -32,7 +32,10 @@ const statusConfig: Record<string, { label: string; lightClass: string; darkClas
     label: 'New Client',
     lightClass: 'bg-blue-50 text-blue-700 border border-blue-200/60 rounded-2xl',
     darkClass: 'dark:bg-blue-900/30 dark:text-blue-400 dark:border-blue-800 rounded-2xl'
-  },
+  }
+  
+  
+  ,
   'attention': {
     label: 'Attention Required',
     lightClass: 'bg-red-50 text-red-700 border border-red-200/60 rounded-2xl',
@@ -65,8 +68,11 @@ function getClientStatus(client: any) {
   return statusConfig[statusKey] || statusConfig['on-track']
 }
 
+type FilterKey = 'all' | 'active' | 'new' | 'attention' | 'group' | 'needs-plan'
+
 export default function ClientsPage() {
   const [search, setSearch] = useState('')
+  const [filter, setFilter] = useState<FilterKey>('all')
   const query = useClients(search, { refetchInterval: 10_000 })
   const clients = query.data?.data ?? []
   const total = query.data?.pagination?.total ?? clients.length
@@ -148,12 +154,47 @@ export default function ClientsPage() {
     }
     return ids
   }, [groupPlans])
+  // Filtered clients based on active filter
+  const filteredClients = useMemo(() => {
+    if (filter === 'all') return clients
+    if (filter === 'active') return clients.filter(c => c.active)
+    if (filter === 'new') {
+      return clients.filter(c => {
+        if (!c.created_at) return false
+        const createdDate = new Date(c.created_at)
+        if (isNaN(createdDate.getTime())) return false
+        const days = Math.floor((Date.now() - createdDate.getTime()) / (1000 * 60 * 60 * 24))
+        return days <= 14
+      })
+    }
+    if (filter === 'attention') {
+      return clients.filter(c =>
+        c.notes?.toLowerCase().includes('urgent') ||
+        c.notes?.toLowerCase().includes('attention')
+      )
+    }
+    if (filter === 'group') return clients.filter(c => groupClientIds.has(c.id))
+    if (filter === 'needs-plan') {
+      return clients.filter(c => {
+        const progress = clientProgressMap.get(c.id)
+        return !progress?.hasActivePlan
+      })
+    }
+    return clients
+  }, [clients, filter, groupClientIds, clientProgressMap])
+
   const quickActions = useMemo(() => ([
     {
       href: '/clients/new',
       label: 'Add Client',
       icon: Plus,
       color: 'bg-blue-50 text-blue-700 hover:bg-blue-100 dark:bg-blue-900/30 dark:text-blue-400 dark:hover:bg-blue-900/50',
+    },
+    {
+      href: '/import-excel',
+      label: 'Import Clients',
+      icon: Upload,
+      color: 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100 dark:bg-emerald-900/30 dark:text-emerald-400 dark:hover:bg-emerald-900/50',
     },
   ]), [])
 
@@ -198,7 +239,7 @@ export default function ClientsPage() {
         />
 
         {/* Search Bar */}
-        <div className="relative mb-6">
+        <div className="relative mb-4">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
           <input
             value={search}
@@ -206,6 +247,39 @@ export default function ClientsPage() {
             placeholder="Search clients"
             className="w-full sm:w-[12rem] py-3 pl-11 pr-4 text-sm text-[var(--text-primary)] rounded-4 placeholder-slate-400 dark:placeholder:text-neutral-500 focus:outline-none focus:border-brand-700/30 focus:ring-2 focus:ring-brand-700/20 transition-colors"
           />
+        </div>
+
+        {/* Filter Pills — count display */}
+        <div className="flex flex-wrap items-center gap-2 mb-6">
+          {([
+            { key: 'all', label: 'All', count: stats.total },
+            { key: 'active', label: 'Active', count: stats.active },
+            { key: 'new', label: 'New', count: stats.newClients },
+            { key: 'attention', label: 'Attention', count: stats.attention },
+            { key: 'group', label: 'Group', count: stats.groupProgram },
+            { key: 'needs-plan', label: 'Needs Plan', count: stats.needsPlan },
+          ] as { key: FilterKey; label: string; count: number }[]).map((f) => (
+            <button
+              key={f.key}
+              onClick={() => setFilter(f.key)}
+              className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold transition-all border ${
+                filter === f.key
+                  ? 'bg-brand-600 text-white border-brand-600 shadow-sm'
+                  : 'bg-white dark:bg-neutral-900 text-[var(--text-secondary)] border-[var(--border)] hover:border-brand-400 hover:text-brand-600 dark:hover:text-brand-400'
+              }`}
+            >
+              {f.label}
+              <span
+                className={`inline-flex items-center justify-center min-w-[1.25rem] h-5 px-1 rounded-full text-[10px] font-bold ${
+                  filter === f.key
+                    ? 'bg-white/20 text-white'
+                    : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400'
+                }`}
+              >
+                {f.count > 999 ? '999+' : f.count}
+              </span>
+            </button>
+          ))}
         </div>
 
         
@@ -219,13 +293,20 @@ export default function ClientsPage() {
           emptyTitle="Add your first client to get started."
           emptyDescription="Create client profiles to manage workouts, nutrition, and progress."
           emptyAction={
-            <Link href="/clients/new">
-              <Button className="bg-brand-600 text-white hover:bg-brand-700">
-                <Plus className="w-4 h-4" /> Add Client
-              </Button>
-            </Link>
+            <div className="flex items-center gap-3">
+              <Link href="/clients/new">
+                <Button className="bg-brand-600 text-white hover:bg-brand-700">
+                  <Plus className="w-4 h-4" /> Add Client
+                </Button>
+              </Link>
+              <Link href="/import-excel">
+                <Button variant="secondary">
+                  <Upload className="w-4 h-4" /> Import Clients
+                </Button>
+              </Link>
+            </div>
           }
-          isEmpty={(data) => (data?.data ?? []).length === 0}
+          isEmpty={() => filteredClients.length === 0}
         >
           {(data) => (
             <div className="relative  p-5">
@@ -234,11 +315,11 @@ export default function ClientsPage() {
                 <div className="flex items-center gap-4">
                   <div className="flex items-center gap-2">
                     <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                    <h2 className="text-lg font-semibold text-[var(--text-primary)]">All Clients</h2>
+                    <h2 className="text-lg font-semibold text-[var(--text-primary)]">{filter === 'all' ? 'All Clients' : 'Filtered Clients'}</h2>
                   </div>
                   <div className="flex items-center gap-3">
                     <div className="text-sm text-[var(--text-secondary)]">
-                      {stats.active} Active · {stats.newClients} New
+                      {filteredClients.length} shown
                     </div>
                     <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-emerald-500/10 border border-emerald-500/20 text-[10px] font-semibold text-emerald-600 dark:text-emerald-400">
                       <span className="relative flex h-1.5 w-1.5">
@@ -274,7 +355,7 @@ export default function ClientsPage() {
                 initial="hidden"
                 animate="visible"
               >
-                {(data.data ?? []).map((client: any) => {
+                {filteredClients.map((client: any) => {
                   const status = getClientStatus(client)
                   const progress = clientProgressMap.get(client.id)
                   const hasActivePlan = progress?.hasActivePlan ?? false
@@ -461,13 +542,13 @@ export default function ClientsPage() {
               {/* Pagination */}
               <div className="mt-4 px-4 py-3 flex items-center justify-between">
                 <span className="text-xs text-[var(--text-secondary)]">
-                  Showing 1-{Math.min(10, total)} of {total} clients
+                  Showing 1-{Math.min(10, filteredClients.length)} of {filteredClients.length} clients
                 </span>
                 <div className="flex gap-2">
                   <button className="p-1.5 border rounded-xl border-[var(--border)] text-[var(--text-tertiary)] hover:bg-[var(--bg-subtle)] transition-colors disabled:opacity-50" disabled>
                     <ChevronLeft className="w-4 h-4" />
                   </button>
-                  <button className="p-1.5 border rounded-xl border-[var(--border)] text-[var(--text-tertiary)] hover:bg-[var(--bg-subtle)] transition-colors disabled:opacity-50" disabled={total <= 10}>
+                  <button className="p-1.5 border rounded-xl border-[var(--border)] text-[var(--text-tertiary)] hover:bg-[var(--bg-subtle)] transition-colors disabled:opacity-50" disabled={filteredClients.length <= 10}>
                     <ChevronRight className="w-4 h-4" />
                   </button>
                 </div>

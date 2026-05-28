@@ -2,9 +2,12 @@
 
 import { useState, useEffect, useRef } from 'react'
 
+export type GymType = 'gym' | 'fitness_centre' | 'outdoor'
+
 export interface Gym {
   id: string
   name: string
+  type: GymType
   distance: number   // metres
   address: string
   location: { lat: number; lon: number }
@@ -27,8 +30,9 @@ async function queryOverpass(lat: number, lon: number, signal?: AbortSignal, rad
       node["leisure"="fitness_centre"](around:${radius},${lat},${lon});
       node["amenity"="gym"](around:${radius},${lat},${lon});
       way["leisure"="fitness_centre"](around:${radius},${lat},${lon});
+      node["leisure"="outdoor_gym"](around:${radius},${lat},${lon});
     );
-    out center 8;
+    out center 50;
   `
   const res  = await fetch('https://overpass-api.de/api/interpreter', {
     method: 'POST',
@@ -42,9 +46,14 @@ async function queryOverpass(lat: number, lon: number, signal?: AbortSignal, rad
     .map((el: any) => {
       const elLat = el.lat ?? el.center?.lat ?? 0
       const elLon = el.lon ?? el.center?.lon ?? 0
+      const gymType: GymType =
+        el.tags?.leisure === 'outdoor_gym' ? 'outdoor'
+        : el.tags?.amenity === 'gym'       ? 'gym'
+        : 'fitness_centre'
       return {
         id:       String(el.id),
         name:     el.tags?.name ?? 'Fitness Studio',
+        type:     gymType,
         distance: Math.round(haversine(lat, lon, elLat, elLon)),
         address:  [el.tags?.['addr:street'], el.tags?.['addr:housenumber']]
                    .filter(Boolean).join(' ') || '',
@@ -52,17 +61,16 @@ async function queryOverpass(lat: number, lon: number, signal?: AbortSignal, rad
       }
     })
     .sort((a: Gym, b: Gym) => a.distance - b.distance)
-    .slice(0, 5)
 }
 
-export function useNearbyGyms() {
+export function useNearbyGyms(radius: number = 3000) {
   const [gyms,    setGyms]    = useState<Gym[]>([])
   const [loading, setLoading] = useState(false)
   const [error,   setError]   = useState<string | null>(null)
   const [userLocation, setUserLocation] = useState<{ lat: number; lon: number } | null>(null)
   const abortRef = useRef<AbortController | null>(null)
 
-  function load() {
+  function load(r: number) {
     if (!navigator.geolocation) {
       setError('Geolocation not supported')
       return
@@ -79,7 +87,7 @@ export function useNearbyGyms() {
         try {
           const { latitude, longitude } = pos.coords
           setUserLocation({ lat: latitude, lon: longitude })
-          const results = await queryOverpass(latitude, longitude, signal)
+          const results = await queryOverpass(latitude, longitude, signal, r)
           if (!signal.aborted) setGyms(results)
         } catch (e: any) {
           if (!signal.aborted) setError(e.message ?? 'Failed to load gyms')
@@ -98,9 +106,9 @@ export function useNearbyGyms() {
   }
 
   useEffect(() => {
-    load()
+    load(radius)
     return () => { abortRef.current?.abort() }
-  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [radius]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  return { gyms, loading, error, reload: load, userLocation }
+  return { gyms, loading, error, reload: () => load(radius), userLocation }
 }

@@ -26,6 +26,9 @@ export const clientsApi = {
   unblock: (id: string) =>
     api.post<ApiResponse<Client>>(`/coach/clients/${id}/unblock`).then(r => r.data.data),
 
+  import: (clients: Array<{ name?: string; full_name?: string; email?: string; age?: number; location?: string; city?: string; weight?: number; height?: number; phone?: string; notes?: string }>) =>
+    api.post<ApiResponse<{ created: number; failed: number; total: number; errors: Array<{ index: number; field: string | null; message: string }>; login_codes: Array<{ id: string; name: string; login_code: string }> }>>('/coach/clients/import', { clients }).then(r => r.data),
+
   /** Check if a client already exists by email or phone (returns true if found).
    *  Rejects if the API call itself fails so the caller knows the check is inconclusive. */
   checkExists: async (params: { email?: string; phone?: string }): Promise<{ email: boolean; phone: boolean }> => {

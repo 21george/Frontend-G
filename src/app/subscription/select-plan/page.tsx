@@ -9,22 +9,14 @@ import { useAuthStore } from '@/store/auth';
 import { useSubscriptionStore } from '@/store/subscription';
 import { Button } from '@/components/ui/button';
 
+const PERIOD_OPTIONS = [
+  { key: 'monthly', label: 'Monthly' },
+  { key: 'quarterly', label: '3 Months' },
+  { key: 'semi_annual', label: '6 Months' },
+  { key: 'annual', label: 'Yearly' },
+];
+
 const PLANS = [
-  {
-    id: 'free' as const,
-    name: 'Free',
-    price: '$0',
-    period: '/month',
-    description: 'Perfect for getting started',
-    features: [
-      'Up to 3 clients',
-      'Basic workout plans',
-      'Client messaging',
-      'Progress tracking',
-    ],
-    cta: 'Get Started',
-    highlighted: false,
-  },
   {
     id: 'pro' as const,
     name: 'Pro',
@@ -32,7 +24,7 @@ const PLANS = [
     period: '/month',
     description: 'For growing coaches',
     features: [
-      'Up to 25 clients',
+      'Unlimited clients',
       'Advanced workout builder',
       'Nutrition plans',
       'Live training sessions',
@@ -77,6 +69,7 @@ export default function SelectPlanPage() {
   const searchParams = useSearchParams();
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [selectedPeriod, setSelectedPeriod] = useState<typeof PERIOD_OPTIONS[number]['key']>('monthly');
 
   const accessToken = useAuthStore((s) => s.accessToken);
   const coach = useAuthStore((s) => s.coach);
@@ -99,7 +92,7 @@ export default function SelectPlanPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams, setSetupToken, router, coach]);
 
-  const handleSelectPlan = async (planId: 'free' | 'pro' | 'business') => {
+  const handleSelectPlan = async (planId: 'pro' | 'business') => {
     setError(null);
     setIsLoading(true);
 
@@ -113,22 +106,17 @@ export default function SelectPlanPage() {
 
       const res = await apiClient.post(
         '/subscription/select-plan',
-        { plan_tier: planId },
+        { plan_tier: planId, plan_period: selectedPeriod },
         { headers }
       );
 
-      const { checkout_url, access_token, redirect } = res.data.data;
+      const { checkout_url } = res.data.data;
 
-      if (planId === 'free') {
-        // Free plan - set auth cookies and redirect to dashboard
-        router.replace(redirect || '/dashboard');
+      // Paid plan - redirect to Stripe Checkout
+      if (checkout_url) {
+        window.location.href = checkout_url;
       } else {
-        // Paid plan - redirect to Stripe Checkout
-        if (checkout_url) {
-          window.location.href = checkout_url;
-        } else {
-          setError('Failed to create checkout session');
-        }
+        setError('Failed to create checkout session');
       }
     } catch (e: any) {
       const status = e?.response?.status;
@@ -179,19 +167,38 @@ export default function SelectPlanPage() {
           className="text-center mb-12"
         >
           <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">
-            Choose Your Plan
+            Start Your 14-Day Free Trial
           </h2>
           <p className="mt-4 text-lg text-[var(--text-secondary)]">
-            Select the perfect plan for your coaching business
+            Choose a plan and try it free for 14 days. No credit card required.
           </p>
         </motion.div>
+
+        {/* Period Selector */}
+        <div className="flex justify-center mb-8">
+          <div className="inline-flex items-center gap-1 p-1 rounded-xl bg-white border border-[var(--border)] shadow-sm">
+            {PERIOD_OPTIONS.map((opt) => (
+              <button
+                key={opt.key}
+                onClick={() => setSelectedPeriod(opt.key)}
+                className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all ${
+                  selectedPeriod === opt.key
+                    ? 'bg-blue-600 text-white'
+                    : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
+                }`}
+              >
+                {opt.label}
+              </button>
+            ))}
+          </div>
+        </div>
 
         {/* Plan Cards */}
         <motion.div
           variants={containerVariants}
           initial="hidden"
           animate="visible"
-          className="grid gap-8 md:grid-cols-3 max-w-6xl mx-auto"
+          className="grid gap-8 md:grid-cols-2 max-w-4xl mx-auto"
         >
           {PLANS.map((plan, index) => (
             <motion.div
@@ -204,14 +211,6 @@ export default function SelectPlanPage() {
                   : 'border-[var(--border)]'
               }`}
             >
-              {plan.highlighted && (
-                <div className="absolute -top-4 left-1/2 -translate-x-1/2">
-                  <span className="bg-blue-500 text-white text-xs font-semibold px-3 py-1 ">
-                    MOST POPULAR
-                  </span>
-                </div>
-              )}
-
               <div className="mb-6">
                 <h3 className="text-xl font-semibold">{plan.name}</h3>
                 <p className="text-sm text-[var(--text-secondary)] mt-1">{plan.description}</p>
@@ -289,8 +288,8 @@ export default function SelectPlanPage() {
       {/* Footer */}
       <footer className="border-t bg-[var(--bg-subtle)] mt-16">
         <div className="container mx-auto px-4 py-8 text-center text-sm text-[var(--text-secondary)]">
-          <p>14-day free trial on Pro and Business plans. No credit card required for signup.</p>
-          <p className="mt-2">Cancel anytime from your account settings.</p>
+          <p>14-day free trial on all plans. No credit card required.</p>
+          <p className="mt-2">Cancel anytime from your account settings. You won't be charged until your trial ends.</p>
         </div>
       </footer>
     </div>

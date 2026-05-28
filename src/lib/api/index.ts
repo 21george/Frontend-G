@@ -17,4 +17,6 @@ export { mediaApi } from './services/media'
 export { analyticsApi } from './services/analytics'
 export { liveTrainingApi } from './services/live-training'
 export { subscriptionApi } from './services/subscription'
+export { settingsApi } from './services/settings'
+export type { NotificationSettings } from './services/settings'
 

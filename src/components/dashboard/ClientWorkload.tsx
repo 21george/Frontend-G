@@ -1,37 +1,39 @@
-'use client'
+"use client";
 
-import { useMemo } from 'react'
-import { MoreHorizontal, Users, AlertCircle } from 'lucide-react'
-import type { Client, CheckinMeeting } from '@/types'
-import { motion } from 'framer-motion'
-import { ClientAvatar } from '@/components/ui/ClientAvatar'
+import { useMemo } from "react";
+import { MoreHorizontal, Users, AlertCircle } from "lucide-react";
+import type { Client, CheckinMeeting } from "@/types";
+import { motion } from "framer-motion";
+import { ClientAvatar } from "@/components/ui/ClientAvatar";
 
 interface ClientWorkloadProps {
-  clients:  Client[]
-  checkins: CheckinMeeting[]
+  clients: Client[];
+  checkins: CheckinMeeting[];
 }
 
 interface WorkloadRow {
-  client:   Client
-  total:    number
-  filled:   number
-  overload: boolean
+  client: Client;
+  total: number;
+  filled: number;
+  overload: boolean;
 }
 
 function idHash(s: string): number {
-  return s.split('').reduce((a, c) => a + c.charCodeAt(0), 0)
+  return s.split("").reduce((a, c) => a + c.charCodeAt(0), 0);
 }
 
 export function ClientWorkload({ clients, checkins }: ClientWorkloadProps) {
   const rows = useMemo<WorkloadRow[]>(() => {
-    return clients.slice(0, 6).map(client => {
-      const h            = idHash(client.id)
-      const total        = (h % 5) + 6
-      const checkinCount = checkins.filter(c => c.client_id === client.id).length
-      const filled       = Math.min(checkinCount + (h % 4), total)
-      return { client, total, filled, overload: filled >= total }
-    })
-  }, [clients, checkins])
+    return clients.slice(0, 6).map((client) => {
+      const h = idHash(client.id);
+      const total = (h % 5) + 6;
+      const checkinCount = checkins.filter(
+        (c) => c.client_id === client.id,
+      ).length;
+      const filled = Math.min(checkinCount + (h % 4), total);
+      return { client, total, filled, overload: filled >= total };
+    });
+  }, [clients, checkins]);
 
   return (
     <motion.div
@@ -42,7 +44,9 @@ export function ClientWorkload({ clients, checkins }: ClientWorkloadProps) {
     >
       <div className="flex items-start justify-between mb-5">
         <div>
-          <p className="text-sm font-semibold text-[var(--text-primary)] dark:text-[#FAFAFA]">Client Workload</p>
+          <p className="text-sm font-semibold text-[var(--text-primary)] dark:text-[#FAFAFA]">
+            Client Workload
+          </p>
           <p className="text-[11px] text-[var(--text-secondary)] dark:text-[#FAFAFA]/40 mt-0.5">
             How busy you are today
           </p>
@@ -56,7 +60,7 @@ export function ClientWorkload({ clients, checkins }: ClientWorkloadProps) {
       </div>
 
       {rows.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-10 text-[var(--text-tertiary)] dark:text-[#FAFAFA]/30">
+        <div className="flex flex-col items-center justify-center rounded-full py-10 text-[var(--text-tertiary)] dark:text-[#FAFAFA]/30">
           <Users size={24} className="mb-2" />
           <p className="text-xs">Add your first client to get started.</p>
         </div>
@@ -92,14 +96,16 @@ export function ClientWorkload({ clients, checkins }: ClientWorkloadProps) {
                     {overload && (
                       <>
                         <AlertCircle size={11} className="text-[#EF4444]" />
-                        <span className="text-[10px] font-semibold text-[#EF4444]">Overloaded</span>
+                        <span className="text-[10px] font-semibold text-[#EF4444]">
+                          Overloaded
+                        </span>
                       </>
                     )}
                     <span
                       className={`text-[10px] font-semibold ${
                         overload
-                          ? 'text-[#EF4444]'
-                          : 'text-[var(--text-secondary)] dark:text-[#FAFAFA]/40'
+                          ? "text-[#EF4444]"
+                          : "text-[var(--text-secondary)] dark:text-[#FAFAFA]/40"
                       }`}
                     >
                       {filled}/{total}
@@ -110,9 +116,11 @@ export function ClientWorkload({ clients, checkins }: ClientWorkloadProps) {
                 <div className="h-1.5 bg-[var(--bg-subtle)] dark:bg-[#242424] overflow-hidden">
                   <motion.div
                     initial={{ width: 0 }}
-                    animate={{ width: `${Math.round((filled / total) * 100)}%` }}
+                    animate={{
+                      width: `${Math.round((filled / total) * 100)}%`,
+                    }}
                     transition={{ duration: 0.7, delay: 0.18 + i * 0.06 }}
-                    className={`h-full ${overload ? 'bg-[#EF4444]' : 'bg-[#132E35] dark:bg-[#2A96AD]'}`}
+                    className={`h-full ${overload ? "bg-[#EF4444]" : "bg-[#132E35] dark:bg-[#2A96AD]"}`}
                   />
                 </div>
               </div>
@@ -121,5 +129,5 @@ export function ClientWorkload({ clients, checkins }: ClientWorkloadProps) {
         </div>
       )}
     </motion.div>
-  )
+  );
 }

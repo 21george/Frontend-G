@@ -25,8 +25,14 @@ export async function POST(req: NextRequest) {
     // Does format check + DNS MX record lookup with 5s timeout
     const valid = await emailValidator(email, { checkMx: true, timeout: 5000 })
     return NextResponse.json({ valid })
-  } catch {
-    // DNS timeout or network error — do not fall back to format-only; require MX
+  } catch (err: any) {
+    // ENOTFOUND means the domain has no DNS records at all — deterministic failure.
+    // All other thrown errors (ETIMEDOUT, ECONNRESET, ENETUNREACH, etc.) are transient
+    // network issues; fall back to format-only so valid addresses are not blocked.
+    const isTransient = err?.code !== 'ENOTFOUND'
+    if (isTransient) {
+      return NextResponse.json({ valid: formatOk, reason: 'dns_unavailable_format_only' })
+    }
     return NextResponse.json({ valid: false, reason: 'dns_lookup_failed' })
   }
 }

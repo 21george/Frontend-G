@@ -51,6 +51,7 @@ import { useParams, useRouter } from 'next/navigation'
 import { formatDate, timeAgo } from '@/lib/utils'
 import { useSocketChat } from '@/lib/useSocketChat'
 import toast from 'react-hot-toast'
+import { motion } from 'framer-motion'
 import type { CheckinMeeting, NutritionPlan, WorkoutPlan, WorkoutLogDetailed } from '@/types'
 import type { WorkoutProgressPlan } from '@/lib/api/services/media'
 import {
@@ -181,6 +182,13 @@ export default function ClientDetailPage() {
   // Delete confirmation modal
   const [deleteModal, setDeleteModal] = useState<{ open: boolean; type: 'client' | 'workout'; item?: any }>({ open: false, type: 'client' })
   const [deleteError, setDeleteError] = useState<string | null>(null)
+  // Edit client modal
+  const [editModal, setEditModal] = useState(false)
+  const [editForm, setEditForm] = useState({
+    name: '', email: '', phone: '', date_of_birth: '', city: '', address: '', notes: '',
+    current_weight_kg: '', height_cm: '', nationality: '', occupation: '', sickness: '',
+  })
+  const [editSaving, setEditSaving] = useState(false)
   const chatEndRef      = useRef<HTMLDivElement>(null)
   const messagesEndRef  = useRef<HTMLDivElement>(null)
 
@@ -336,6 +344,61 @@ export default function ClientDetailPage() {
       }
     } catch {
       toast.error(`Failed to ${computedIsBlocked ? 'unblock' : 'block'} client.`)
+    }
+  }
+
+  const handleOpenEdit = () => {
+    if (!client) return
+    setEditForm({
+      name: client.name ?? '',
+      email: client.email ?? '',
+      phone: client.phone ?? '',
+      date_of_birth: client.date_of_birth ?? '',
+      city: client.city ?? '',
+      address: client.address ?? '',
+      notes: client.notes ?? '',
+      current_weight_kg: client.current_weight_kg != null ? String(client.current_weight_kg) : '',
+      height_cm: client.height_cm != null ? String(client.height_cm) : '',
+      nationality: client.nationality ?? '',
+      occupation: client.occupation ?? '',
+      sickness: client.sickness ?? '',
+    })
+    setEditModal(true)
+  }
+
+  const handleSaveEdit = async () => {
+    if (!editForm.name.trim()) {
+      toast.error('Name is required')
+      return
+    }
+    setEditSaving(true)
+    try {
+      const payload: Record<string, any> = {
+        name: editForm.name.trim(),
+        email: editForm.email.trim() || undefined,
+        phone: editForm.phone.trim() || undefined,
+        date_of_birth: editForm.date_of_birth || undefined,
+        city: editForm.city.trim() || undefined,
+        address: editForm.address.trim() || undefined,
+        notes: editForm.notes.trim() || undefined,
+        nationality: editForm.nationality.trim() || undefined,
+        occupation: editForm.occupation.trim() || undefined,
+        sickness: editForm.sickness.trim() || undefined,
+      }
+      if (editForm.current_weight_kg.trim()) {
+        const w = parseFloat(editForm.current_weight_kg)
+        if (!isNaN(w)) payload.current_weight_kg = w
+      }
+      if (editForm.height_cm.trim()) {
+        const h = parseInt(editForm.height_cm, 10)
+        if (!isNaN(h)) payload.height_cm = h
+      }
+      await updateClient.mutateAsync(payload)
+      setEditModal(false)
+    } catch {
+      toast.error('Failed to update client')
+    } finally {
+      setEditSaving(false)
     }
   }
 
@@ -497,6 +560,15 @@ export default function ClientDetailPage() {
               {client.is_blocked ? 'Unblock' : !client.active ? 'Restore Access' : 'Block Access'}
             </button>
             <button
+              onClick={handleOpenEdit}
+              disabled={updateClient.isPending}
+              title="Edit client information"
+              className="inline-flex items-center gap-1.5 border border-[var(--border)] dark:border-white/[0.07] px-3 py-1.5 text-xs font-semibold text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-subtle)] transition-colors disabled:opacity-50"
+            >
+              <Pencil size={13} />
+              Edit
+            </button>
+            <button
               onClick={handleDeleteClient}
               disabled={deleteClient.isPending}
               title="Permanently delete this client (cannot be undone)"
@@ -543,6 +615,7 @@ export default function ClientDetailPage() {
             isUnblockPending={unblockClient.isPending}
             onDeleteClient={handleDeleteClient}
             isDeletePending={deleteClient.isPending}
+            onEditClient={handleOpenEdit}
           />
 
           {/* ══════════ RIGHT PANEL ══════════ */}
@@ -643,6 +716,157 @@ export default function ClientDetailPage() {
         isLoading={deleteClient.isPending || deleteWorkoutPlan.isPending}
         error={deleteError}
       />
+
+      {/* Edit client modal */}
+      {editModal && client && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => !editSaving && setEditModal(false)} />
+          <motion.div
+            initial={{ scale: 0.95, opacity: 0, y: 20 }}
+            animate={{ scale: 1, opacity: 1, y: 0 }}
+            exit={{ scale: 0.95, opacity: 0, y: 20 }}
+            className="relative bg-[var(--bg-card)] border border-[var(--border)] w-full max-w-lg rounded-xl p-6 shadow-xl max-h-[90vh] overflow-y-auto"
+          >
+            <div className="flex items-center justify-between mb-5">
+              <h3 className="text-base font-semibold text-[var(--text-primary)]">Edit Client</h3>
+              <button onClick={() => setEditModal(false)} className="p-1 text-[var(--text-tertiary)] hover:text-[var(--text-primary)]">
+                <X size={16} />
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <label className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider">Name *</label>
+                <input
+                  value={editForm.name}
+                  onChange={e => setEditForm(f => ({ ...f, name: e.target.value }))}
+                  className="w-full mt-1 px-3 py-2 rounded-lg bg-[var(--bg-subtle)] border border-[var(--border)] text-sm text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--energy)]/20 focus:border-[var(--energy)]/30"
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider">Email</label>
+                  <input
+                    type="email"
+                    value={editForm.email}
+                    onChange={e => setEditForm(f => ({ ...f, email: e.target.value }))}
+                    className="w-full mt-1 px-3 py-2 rounded-lg bg-[var(--bg-subtle)] border border-[var(--border)] text-sm text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--energy)]/20 focus:border-[var(--energy)]/30"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider">Phone</label>
+                  <input
+                    value={editForm.phone}
+                    onChange={e => setEditForm(f => ({ ...f, phone: e.target.value }))}
+                    className="w-full mt-1 px-3 py-2 rounded-lg bg-[var(--bg-subtle)] border border-[var(--border)] text-sm text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--energy)]/20 focus:border-[var(--energy)]/30"
+                  />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider">Date of Birth</label>
+                  <input
+                    type="date"
+                    value={editForm.date_of_birth}
+                    onChange={e => setEditForm(f => ({ ...f, date_of_birth: e.target.value }))}
+                    className="w-full mt-1 px-3 py-2 rounded-lg bg-[var(--bg-subtle)] border border-[var(--border)] text-sm text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--energy)]/20 focus:border-[var(--energy)]/30"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider">City</label>
+                  <input
+                    value={editForm.city}
+                    onChange={e => setEditForm(f => ({ ...f, city: e.target.value }))}
+                    className="w-full mt-1 px-3 py-2 rounded-lg bg-[var(--bg-subtle)] border border-[var(--border)] text-sm text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--energy)]/20 focus:border-[var(--energy)]/30"
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider">Address</label>
+                <input
+                  value={editForm.address}
+                  onChange={e => setEditForm(f => ({ ...f, address: e.target.value }))}
+                  className="w-full mt-1 px-3 py-2 rounded-lg bg-[var(--bg-subtle)] border border-[var(--border)] text-sm text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--energy)]/20 focus:border-[var(--energy)]/30"
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider">Weight (kg)</label>
+                  <input
+                    type="number"
+                    step="0.1"
+                    value={editForm.current_weight_kg}
+                    onChange={e => setEditForm(f => ({ ...f, current_weight_kg: e.target.value }))}
+                    className="w-full mt-1 px-3 py-2 rounded-lg bg-[var(--bg-subtle)] border border-[var(--border)] text-sm text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--energy)]/20 focus:border-[var(--energy)]/30"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider">Height (cm)</label>
+                  <input
+                    type="number"
+                    value={editForm.height_cm}
+                    onChange={e => setEditForm(f => ({ ...f, height_cm: e.target.value }))}
+                    className="w-full mt-1 px-3 py-2 rounded-lg bg-[var(--bg-subtle)] border border-[var(--border)] text-sm text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--energy)]/20 focus:border-[var(--energy)]/30"
+                  />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider">Nationality</label>
+                  <input
+                    value={editForm.nationality}
+                    onChange={e => setEditForm(f => ({ ...f, nationality: e.target.value }))}
+                    className="w-full mt-1 px-3 py-2 rounded-lg bg-[var(--bg-subtle)] border border-[var(--border)] text-sm text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--energy)]/20 focus:border-[var(--energy)]/30"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider">Occupation</label>
+                  <input
+                    value={editForm.occupation}
+                    onChange={e => setEditForm(f => ({ ...f, occupation: e.target.value }))}
+                    className="w-full mt-1 px-3 py-2 rounded-lg bg-[var(--bg-subtle)] border border-[var(--border)] text-sm text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--energy)]/20 focus:border-[var(--energy)]/30"
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider">Health Conditions</label>
+                <input
+                  value={editForm.sickness}
+                  onChange={e => setEditForm(f => ({ ...f, sickness: e.target.value }))}
+                  className="w-full mt-1 px-3 py-2 rounded-lg bg-[var(--bg-subtle)] border border-[var(--border)] text-sm text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--energy)]/20 focus:border-[var(--energy)]/30"
+                />
+              </div>
+              <div>
+                <label className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider">Notes</label>
+                <textarea
+                  value={editForm.notes}
+                  onChange={e => setEditForm(f => ({ ...f, notes: e.target.value }))}
+                  rows={3}
+                  className="w-full mt-1 px-3 py-2 rounded-lg bg-[var(--bg-subtle)] border border-[var(--border)] text-sm text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--energy)]/20 focus:border-[var(--energy)]/30 resize-none"
+                />
+              </div>
+            </div>
+
+            <div className="flex items-center justify-end gap-3 mt-6 pt-4 border-t border-[var(--border)]">
+              <button
+                onClick={() => setEditModal(false)}
+                disabled={editSaving}
+                className="px-4 py-2 text-sm font-medium text-[var(--text-secondary)] border border-[var(--border)] rounded-lg hover:bg-[var(--bg-subtle)] transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleSaveEdit}
+                disabled={editSaving}
+                className="px-4 py-2 bg-[var(--btn-bg)] text-[var(--btn-text)] text-sm font-medium hover:bg-[var(--btn-hover)] transition-colors disabled:opacity-50 rounded-lg"
+              >
+                {editSaving ? <Loader2 size={13} className="animate-spin inline mr-1" /> : null}
+                Save Changes
+              </button>
+            </div>
+          </motion.div>
+        </div>
+      )}
     </>
   )
 }

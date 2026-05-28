@@ -2,8 +2,11 @@
 import DashboardLayout from '@/components/layout/DashboardLayout'
 import { useState, useCallback } from 'react'
 import { useDropzone } from 'react-dropzone'
-import { Upload, FileSpreadsheet, Download, ArrowLeft, CheckCircle, AlertCircle, Eye, Loader2, Sheet, Database } from 'lucide-react'
+import { FileSpreadsheet, ArrowLeft, CheckCircle, AlertCircle, Eye, Loader2, Sheet, Database, Ban } from 'lucide-react'
 import Link from 'next/link'
+import { useImportClients } from '@/lib/hooks'
+import { clientsApi } from '@/lib/api'
+import toast from 'react-hot-toast'
 
 // Dynamic import xlsx only when needed
 let XLSX: any = null
@@ -19,6 +22,7 @@ interface SheetInfo {
   rowCount: number
   headers: string[]
   preview: string[][]
+  dataRows: (string | number | null)[][]
   detectedType: string
 }
 
@@ -79,12 +83,15 @@ async function parseExcelFile(file: File): Promise<ParsedExcel> {
       rowCount: dataRows.length,
       headers,
       preview: dataRows.slice(0, 5).map(row => row.map(c => String(c || ''))),
+      dataRows,
       detectedType,
     })
   }
 
   return { sheets, fileName: file.name }
 }
+
+const UNSUPPORTED_TYPES = ['Nutrition Plans', 'Weekly Schedule', 'Completed Workouts']
 
 export default function ExcelImportPage() {
   const [file, setFile] = useState<File | null>(null)
@@ -93,7 +100,8 @@ export default function ExcelImportPage() {
   const [error, setError] = useState('')
   const [selectedSheet, setSelectedSheet] = useState<number | null>(null)
   const [importing, setImporting] = useState(false)
-  const [importResult, setImportResult] = useState<{ success: boolean; message: string } | null>(null)
+  const [importResult, setImportResult] = useState<{ success: boolean; message: string; details?: { created: number; failed: number; total: number } } | null>(null)
+  const importClients = useImportClients()
 
   const onDrop = useCallback(async (files: File[]) => {
     const f = files[0]
@@ -132,27 +140,154 @@ export default function ExcelImportPage() {
     setImporting(true)
     setImportResult(null)
 
-    // Simulate import - in production this would call the API
-    await new Promise(resolve => setTimeout(resolve, 1500))
-
     const sheet = parsed.sheets[sheetIndex]
-    setImportResult({
-      success: true,
-      message: `Successfully processed ${sheet.name} (${sheet.rowCount} rows)`,
+
+    // Only client sheets are wired to the API for now
+    if (sheet.detectedType !== 'Client Overview') {
+      setImportResult({
+        success: false,
+        message: `Import for "${sheet.detectedType}" is not yet supported. Only client imports are available.`,
+      })
+      setImporting(false)
+      return
+    }
+
+    // Map headers to normalized field names
+    const headerMap = new Map<string, number>()
+    sheet.headers.forEach((h, i) => {
+      headerMap.set(h.toLowerCase().trim().replace(/\s+/g, '_'), i)
     })
-    setImporting(false)
+
+    const getCol = (row: (string | number | null)[], ...keys: string[]) => {
+      for (const key of keys) {
+        const idx = headerMap.get(key.toLowerCase().trim().replace(/\s+/g, '_'))
+        if (idx !== undefined && idx < row.length) {
+          const v = row[idx]
+          return v !== undefined && v !== null ? String(v).trim() : undefined
+        }
+      }
+      return undefined
+    }
+
+    const clients = sheet.dataRows.map(row => ({
+      name: getCol(row, 'name', 'full_name', 'full name', 'client_name') || '',
+      email: getCol(row, 'email', 'email_address', 'e-mail'),
+      age: (() => {
+        const v = getCol(row, 'age')
+        if (!v) return undefined
+        const n = parseInt(v, 10)
+        return isNaN(n) ? undefined : n
+      })(),
+      location: getCol(row, 'location', 'city', 'address', 'town'),
+      weight: (() => {
+        const v = getCol(row, 'weight', 'current_weight', 'current_weight_kg', 'weight_kg')
+        if (!v) return undefined
+        const n = parseFloat(v)
+        return isNaN(n) ? undefined : n
+      })(),
+      height: (() => {
+        const v = getCol(row, 'height', 'current_height', 'height_cm', 'height_cm')
+        if (!v) return undefined
+        const n = parseFloat(v)
+        return isNaN(n) ? undefined : Math.round(n)
+      })(),
+      phone: getCol(row, 'phone', 'phone_number', 'mobile'),
+      notes: getCol(row, 'notes', 'comments', 'remarks'),
+    })).filter(c => c.name.trim().length > 0)
+
+    if (clients.length === 0) {
+      setImportResult({
+        success: false,
+        message: 'No valid client rows found. Ensure each row has a name column.',
+      })
+      setImporting(false)
+      return
+    }
+
+    // ── Duplicate check: fetch existing clients and filter out duplicates ──
+    let duplicatesSkipped = 0
+    let clientsToImport = clients
+    try {
+      const existing = await clientsApi.list()
+      const existingEmails = new Set((existing.data ?? [])
+        .map((c: any) => c.email?.toLowerCase().trim())
+        .filter(Boolean))
+      const existingPhones = new Set((existing.data ?? [])
+        .map((c: any) => c.phone?.trim())
+        .filter(Boolean))
+
+      clientsToImport = clients.filter(c => {
+        const emailDup = c.email && existingEmails.has(c.email.toLowerCase().trim())
+        const phoneDup = c.phone && existingPhones.has(c.phone.trim())
+        if (emailDup || phoneDup) {
+          duplicatesSkipped++
+          return false
+        }
+        return true
+      })
+    } catch {
+      // If fetching existing clients fails, continue with full list and let the backend handle duplicates
+    }
+
+    if (clientsToImport.length === 0) {
+      setImportResult({
+        success: false,
+        message: `All ${clients.length} rows are duplicates (email or phone already exists). No new clients to import.`,
+      })
+      setImporting(false)
+      return
+    }
+
+    try {
+      const res = await importClients.mutateAsync(clientsToImport)
+      const data = res.data
+      const dupMsg = duplicatesSkipped > 0 ? ` (${duplicatesSkipped} duplicates skipped)` : ''
+      setImportResult({
+        success: data.failed === 0,
+        message: `Imported ${data.created} of ${data.total} clients${data.failed > 0 ? ` (${data.failed} failed)` : ''}${dupMsg}.`,
+        details: { created: data.created, failed: data.failed, total: data.total },
+      })
+
+      // Check for imported clients without email
+      const importedWithoutEmail = clients.filter((c, idx) => {
+        const hasEmail = !!c.email?.trim()
+        // If row had no email, it was imported but login code can't be emailed
+        return !hasEmail
+      })
+      if (importedWithoutEmail.length > 0) {
+        toast((t) => (
+          <div className="flex items-start gap-3">
+            <div>
+              <p className="text-sm font-medium">{importedWithoutEmail.length} imported client{importedWithoutEmail.length > 1 ? 's' : ''} missing email</p>
+              <p className="text-xs text-slate-500 mt-0.5">Add emails so login codes can be sent automatically.</p>
+              <Link href="/clients" onClick={() => toast.dismiss(t.id)} className="text-xs font-semibold text-blue-600 hover:underline mt-1 inline-block">
+                Go to Clients →
+              </Link>
+            </div>
+          </div>
+        ), { duration: 8000 })
+      }
+    } catch (e: any) {
+      const msg = e?.response?.data?.message || e?.message || 'Import failed. Please try again.'
+      setImportResult({
+        success: false,
+        message: msg,
+      })
+    } finally {
+      setImporting(false)
+    }
   }
 
   return (
     <DashboardLayout>
       <div className="max-w-6xl mx-auto p-6">
-        <Link href="/workout-plans" className="flex items-center gap-1 text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)] mb-6">
-          <ArrowLeft className="w-3 h-3" /> Back to Workout Plans
+        <Link href="/clients" className="flex items-center gap-1 text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)] mb-6">
+          <ArrowLeft className="w-3 h-3" /> Back to Clients
         </Link>
 
         <h1 className="text-2xl font-semibold text-[var(--text-primary)] mb-2">Import from Excel</h1>
         <p className="text-[var(--text-secondary)] text-sm mb-6">
-          Upload your Excel file to import clients, workout plans, nutrition plans, schedules, and workout logs.
+          Upload an Excel file to bulk-import clients. We auto-detect columns for name, email, age, location, weight, and height.
         </p>
 
         {/* Dropzone */}
@@ -251,6 +386,12 @@ export default function ExcelImportPage() {
                             <span className="px-2 py-0.5 bg-[var(--bg-subtle)] dark:bg-white/[0.05] rounded text-xs">
                               {sheet.detectedType}
                             </span>
+                            {UNSUPPORTED_TYPES.includes(sheet.detectedType) && (
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium bg-amber-50 text-amber-700 border border-amber-200/60 dark:bg-amber-900/30 dark:text-amber-400 dark:border-amber-800">
+                                <Ban className="w-3 h-3" />
+                                Not yet supported
+                              </span>
+                            )}
                             <span>{sheet.rowCount} rows</span>
                             <span>{sheet.headers.length} columns</span>
                           </div>
@@ -310,23 +451,30 @@ export default function ExcelImportPage() {
                           </span>
                         )}
                       </div>
-                      <button
-                        onClick={() => handleImportSheet(idx)}
-                        disabled={importing}
-                        className="px-4 py-2 bg-brand-600 hover:bg-brand-700 text-white text-sm font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-                      >
-                        {importing ? (
-                          <>
-                            <Loader2 className="w-4 h-4 animate-spin" />
-                            Importing...
-                          </>
-                        ) : (
-                          <>
-                            <Database className="w-4 h-4" />
-                            Import
-                          </>
-                        )}
-                      </button>
+                      {UNSUPPORTED_TYPES.includes(sheet.detectedType) ? (
+                        <div className="px-4 py-2 bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 text-sm font-medium rounded-lg flex items-center gap-2 cursor-not-allowed">
+                          <Ban className="w-4 h-4" />
+                          Import unavailable
+                        </div>
+                      ) : (
+                        <button
+                          onClick={() => handleImportSheet(idx)}
+                          disabled={importing}
+                          className="px-4 py-2 bg-brand-600 hover:bg-brand-700 text-white text-sm font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                        >
+                          {importing ? (
+                            <>
+                              <Loader2 className="w-4 h-4 animate-spin" />
+                              Importing...
+                            </>
+                          ) : (
+                            <>
+                              <Database className="w-4 h-4" />
+                              Import
+                            </>
+                          )}
+                        </button>
+                      )}
                     </div>
                   </div>
                 </div>

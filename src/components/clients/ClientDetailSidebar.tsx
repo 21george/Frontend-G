@@ -2,7 +2,7 @@
 
 import {
   RefreshCw, Check, X, Tag, FileText, User, Phone, BarChart2, Copy, Video, ImageIcon,
-  ExternalLink, Loader2, Trash2,
+  ExternalLink, Loader2, Trash2, Pencil,
 } from 'lucide-react'
 import type { Client, MediaUpload, NutritionPlan, AnalyticsData, CheckinMeeting, PaginatedResponse, WorkoutPlan } from '@/types'
 import { formatDate } from '@/lib/utils'
@@ -27,6 +27,7 @@ interface Props {
   isUnblockPending: boolean
   onDeleteClient: () => void
   isDeletePending: boolean
+  onEditClient?: () => void
 }
 
 function calculateAge(dob?: string): number | null {
@@ -64,6 +65,7 @@ export function ClientDetailSidebar({
   onRegenerate, isRegenerateLoading,
   onToggleBlock, isBlockPending, isUnblockPending,
   onDeleteClient, isDeletePending,
+  onEditClient,
 }: Props) {
   const computedIsBlocked = client.is_blocked ?? !client.active
 
@@ -110,7 +112,15 @@ export function ClientDetailSidebar({
               : <span className="text-2xl font-semibold text-[var(--text-primary)]">{client.name[0].toUpperCase()}</span>}
           </div>
           <div className="flex-1 min-w-0">
-            <h2 className="text-[15px] font-semibold text-[var(--text-primary)] leading-snug truncate">{client.name}</h2>
+            <div className="flex items-start justify-between gap-2">
+              <h2 className="text-[15px] font-semibold text-[var(--text-primary)] leading-snug truncate">{client.name}</h2>
+              {onEditClient && (
+                <button onClick={onEditClient} title="Edit client"
+                  className="p-1 text-[var(--text-tertiary)] hover:text-[var(--text-primary)] transition-colors">
+                  <Pencil size={12} />
+                </button>
+              )}
+            </div>
             <span className={`inline-flex items-center gap-1 text-[11px] font-medium mt-0.5 mb-2.5 ${client.is_blocked ? 'text-red-400' : client.active ? 'text-emerald-400' : 'text-amber-400'}`}>
               <span className={`w-1.5 h-1.5 rounded-full ${client.is_blocked ? 'bg-red-400' : client.active ? 'bg-emerald-400 ' : 'bg-amber-400'}`} />
               {client.is_blocked ? 'Blocked' : client.active ? 'Active' : 'Inactive'}

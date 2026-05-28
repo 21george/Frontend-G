@@ -60,6 +60,21 @@ const config: Config = {
           hover:   '#F1F5F9',
           border:  '#E2E8F0',
         },
+        /* ── 360fit Energy palette (lime/cyan accent) ──────────────────── */
+        energy: {
+          DEFAULT: '#a3e635',
+          dark:    '#84cc16',
+          light:   '#d9f99d',
+          glow:    'rgba(163,230,53,0.4)',
+          50:  '#f7fee7',
+          100: '#ecfccb',
+          200: '#d9f99d',
+          300: '#bef264',
+          400: '#a3e635',
+          500: '#84cc16',
+          600: '#65a30d',
+          700: '#4d7c0f',
+        },
       },
       fontFamily: {
         sans: ['Inter', 'var(--font-sans)', 'system-ui', '-apple-system', 'sans-serif'],
@@ -91,6 +106,7 @@ const config: Config = {
         'sidebar': '-4px 0 24px 0 rgb(0 0 0 / 0.15)',
         'dark-card': '0 1px 3px 0 rgb(0 0 0 / 0.2), 0 0 0 1px rgba(255,255,255,0.06)',
         'dark-elevated': '0 8px 30px rgb(0 0 0 / 0.35), 0 0 0 1px rgba(255,255,255,0.06)',
+        'energy-glow': '0 0 40px -10px rgba(163,230,53,0.35), 0 0 80px -20px rgba(163,230,53,0.15)',
       },
       backgroundImage: {
         'gradient-dark': 'linear-gradient(180deg, #0F172A 0%, #1E293B 100%)',
@@ -111,11 +127,16 @@ const config: Config = {
           '0%':   { opacity: '0', transform: 'scale(0.95)' },
           '100%': { opacity: '1', transform: 'scale(1)' },
         },
+        'energy-pulse': {
+          '0%, 100%': { boxShadow: '0 0 30px -8px rgba(163,230,53,0.35)' },
+          '50%':      { boxShadow: '0 0 50px -4px rgba(163,230,53,0.45), 0 0 80px -12px rgba(163,230,53,0.2)' },
+        },
       },
       animation: {
         'fade-in':  'fade-in 0.2s ease-out',
         'slide-in': 'slide-in 0.2s ease-out',
         'scale-in': 'scale-in 0.15s ease-out',
+        'energy-pulse': 'energy-pulse 3s ease-in-out infinite',
       },
     },
   },

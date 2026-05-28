@@ -1,67 +1,96 @@
-'use client'
-import { useState, useEffect } from 'react'
-import Link from 'next/link'
-import { usePathname } from 'next/navigation'
-import { cn } from '@/lib/utils'
-import { useAuthStore } from '@/store/auth'
-import { useThemeStore } from '@/store/theme'
+"use client";
+import { useState, useEffect } from "react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { cn } from "@/lib/utils";
+import { useAuthStore } from "@/store/auth";
+import { useThemeStore } from "@/store/theme";
+import { useSubscription } from "@/hooks/useSubscription";
 import {
-  LayoutDashboard, Users, Dumbbell, Salad, Calendar, Radio,
-   Settings, LogOut, Zap, Menu, 
-  ChevronLeft, ChevronRight,
-} from 'lucide-react'
-import { motion, AnimatePresence } from 'framer-motion'
+  LayoutDashboard,
+  Users,
+  Dumbbell,
+  Salad,
+  Calendar,
+  Radio,
+  Settings,
+  LogOut,
+  Zap,
+  Menu,
+  CreditCard,
+  ChevronLeft,
+  ChevronRight,
+  BarChart3,
+  LifeBuoy,
+} from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 
 const NAV = [
-  { href: '/dashboard',         label: 'Dashboard',        icon: LayoutDashboard },
-  { href: '/clients',           label: 'Clients',          icon: Users },
-  { href: '/workout-plans',     label: 'Workout Plans',    icon: Dumbbell },
-  { href: '/nutrition-plans',   label: 'Nutrition',        icon: Salad },
-  { href: '/checkins',          label: 'Schedule',         icon: Calendar },
-  { href: '/live-training',     label: 'Live Training',    icon: Radio },
-  { href: '/settings',          label: 'Settings',         icon: Settings },
-]
+  { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+  { href: "/clients", label: "Clients", icon: Users },
+  { href: "/workout-plans", label: "Workout Plans", icon: Dumbbell },
+  { href: "/nutrition-plans", label: "Nutrition", icon: Salad },
+  { href: "/checkins", label: "Schedule", icon: Calendar },
+  { href: "/live-training", label: "Live Training", icon: Radio },
+  { href: "/analytics", label: "Analytics", icon: BarChart3 },
+  { href: "/settings", label: "Settings", icon: Settings },
+];
 
 interface SidebarContentProps {
-  onClose?: () => void
-  collapsed?: boolean
+  onClose?: () => void;
+  collapsed?: boolean;
 }
 
 function SidebarContent({ onClose, collapsed = false }: SidebarContentProps) {
-  const path = usePathname()
-  const { coach, logout } = useAuthStore()
-  const { theme, toggle } = useThemeStore()
-  const isDark = theme === 'dark'
+  const path = usePathname();
+  const { coach, logout } = useAuthStore();
+  const { theme, toggle } = useThemeStore();
+  const isDark = theme === "dark";
+  const { data: subscription } = useSubscription();
+
+  const TIER_LABEL: Record<string, { label: string; color: string }> = {
+    none: { label: "No Plan", color: "#888780" },
+    free: { label: "Billing", color: "#888780" },
+    pro: { label: "Pro", color: "#2A96AD" },
+    business: { label: "Business", color: "#8B5CF6" },
+  };
+  const tierInfo = TIER_LABEL[subscription?.tier ?? "free"];
 
   const brandIcon = (
     <div className="w-8 h-8 bg-[var(--sidebar-text)]/10 flex items-center justify-center rounded-lg">
       <Zap className="w-4 h-4 text-[var(--sidebar-text)]" />
     </div>
-  )
+  );
 
   return (
     <div className="flex flex-col h-full">
       {/* ── Brand ── */}
-      <div className={cn(
-        "flex items-center border-b border-white/10 dark:border-white/[0.08]",
-        collapsed ? "justify-center px-3 py-4" : "justify-between px-5 py-5"
-      )}>
+      <div
+        className={cn(
+          "flex items-center border-b border-white/10 dark:border-white/[0.08]",
+          collapsed ? "justify-center px-3 py-4" : "justify-between px-5 py-5",
+        )}
+      >
         {!collapsed && (
           <div className="flex items-center gap-2.5">
             {brandIcon}
-            <span className="font-semibold text-[var(--sidebar-text)] text-lg tracking-tight">CoachPro</span>
+            <span className="font-semibold text-[var(--sidebar-text)] text-lg tracking-tight">
+              CoachPro
+            </span>
           </div>
         )}
         {collapsed && brandIcon}
-
-        
       </div>
 
       {/* ── Navigation ── */}
       <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
-        {!collapsed && <p className="section-title text-[var(--sidebar-text-secondary)] mb-3">Main Menu</p>}
+        {!collapsed && (
+          <p className="section-title text-[var(--sidebar-text-secondary)] mb-3">
+            Main Menu
+          </p>
+        )}
         {NAV.map(({ href, label, icon: Icon }) => {
-          const active = path.startsWith(href)
+          const active = path.startsWith(href);
           return (
             <motion.div
               key={href}
@@ -72,11 +101,11 @@ function SidebarContent({ onClose, collapsed = false }: SidebarContentProps) {
                 href={href}
                 onClick={onClose}
                 className={cn(
-                  'flex items-center gap-4 px-4 py-3 text-base font-medium transition-all duration-150',
-                  collapsed ? 'justify-center px-2' : '',
+                  "flex items-center gap-4 px-4 py-3 text-base font-medium transition-all duration-150",
+                  collapsed ? "justify-center px-2" : "",
                   active
-                    ? 'bg-[var(--sidebar-text)]/10 text-[var(--sidebar-text)]'
-                    : 'text-[var(--sidebar-text-secondary)] hover:bg-[var(--sidebar-text)]/5 hover:text-[var(--sidebar-text)]'
+                    ? "bg-[var(--sidebar-text)]/10 text-[var(--sidebar-text)]"
+                    : "text-[var(--sidebar-text-secondary)] hover:bg-[var(--sidebar-text)]/5 hover:text-[var(--sidebar-text)]",
                 )}
                 tabIndex={0}
                 title={collapsed ? label : undefined}
@@ -88,28 +117,69 @@ function SidebarContent({ onClose, collapsed = false }: SidebarContentProps) {
                 )}
               </Link>
             </motion.div>
-          )
+          );
         })}
       </nav>
 
+      {/* ── Plan badge ── */}
+      <div
+        className={cn(
+          "border-t border-white/10 dark:border-white/[0.08]",
+          collapsed ? "px-2 py-2" : "px-3 py-2",
+        )}
+      >
+        <Link
+          href="/billing"
+          onClick={onClose}
+          className={cn(
+            "flex items-center gap-2 px-2 py-2 hover:bg-white/10 dark:hover:bg-white/[0.06] transition-colors",
+            collapsed ? "justify-center" : "",
+          )}
+          title={collapsed ? `Plan: ${tierInfo?.label}` : undefined}
+        >
+          <CreditCard
+            className="w-4 h-4 flex-shrink-0"
+            style={{ color: tierInfo?.color }}
+          />
+          {!collapsed && (
+            <span
+              className="text-xs font-bold uppercase tracking-wider"
+              style={{ color: tierInfo?.color }}
+            >
+              {tierInfo?.label}
+            </span>
+          )}
+        </Link>
+      </div>
+
       {/* ── Coach profile ── */}
-      <div className={cn(
-        "border-t border-white/10 dark:border-white/[0.08]",
-        collapsed ? "px-2 py-3" : "px-3 py-4"
-      )}>
-        <div className={cn(
-          "flex items-center hover:bg-white/10 dark:hover:bg-white/[0.06] transition-colors",
-          collapsed ? "justify-center p-2" : "gap-3 px-2 py-2"
-        )}>
-          <div className="w-9 h-9 flex items-center justify-center text-[var(--sidebar-text)] text-sm font-semibold flex-shrink-0 ring-2 ring-[var(--sidebar-bdr)] rounded-lg"
-            style={{ background: 'var(--bg-subtle)' }}>
-            {coach?.name?.[0]?.toUpperCase() ?? 'C'}
+      <div
+        className={cn(
+          "border-t border-white/10 dark:border-white/[0.08]",
+          collapsed ? "px-2 py-3" : "px-3 py-4",
+        )}
+      >
+        <div
+          className={cn(
+            "flex items-center hover:bg-white/10 dark:hover:bg-white/[0.06] transition-colors",
+            collapsed ? "justify-center p-2" : "gap-3 px-2 py-2",
+          )}
+        >
+          <div
+            className="w-9 h-9 flex items-center justify-center text-[var(--sidebar-text)] text-sm font-semibold flex-shrink-0 ring-2 ring-[var(--sidebar-bdr)] rounded-lg"
+            style={{ background: "var(--bg-subtle)" }}
+          >
+            {coach?.name?.[0]?.toUpperCase() ?? "C"}
           </div>
           {!collapsed && (
             <>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-semibold text-[var(--sidebar-text)] truncate leading-snug">{coach?.name}</p>
-                <p className="text-xs text-[var(--sidebar-text-secondary)] truncate">{coach?.email}</p>
+                <p className="text-sm font-semibold text-[var(--sidebar-text)] truncate leading-snug">
+                  {coach?.name}
+                </p>
+                <p className="text-xs text-[var(--sidebar-text-secondary)] truncate">
+                  {coach?.email}
+                </p>
               </div>
               <button
                 onClick={logout}
@@ -123,41 +193,41 @@ function SidebarContent({ onClose, collapsed = false }: SidebarContentProps) {
         </div>
       </div>
     </div>
-  )
+  );
 }
 
 export default function Sidebar() {
-  const [mobileOpen, setMobileOpen] = useState(false)
-  const [collapsed, setCollapsed] = useState(false)
-  const pathname = usePathname()
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const [collapsed, setCollapsed] = useState(false);
+  const pathname = usePathname();
 
   // Close mobile menu on route change
   useEffect(() => {
-    setMobileOpen(false)
-  }, [pathname])
+    setMobileOpen(false);
+  }, [pathname]);
 
   // Close on Escape key
   useEffect(() => {
-    if (!mobileOpen) return
+    if (!mobileOpen) return;
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setMobileOpen(false)
-    }
-    window.addEventListener('keydown', handleKeyDown)
-    return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [mobileOpen])
+      if (e.key === "Escape") setMobileOpen(false);
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [mobileOpen]);
 
   // Load collapsed state from localStorage
   useEffect(() => {
-    const saved = localStorage.getItem('sidebar-collapsed')
-    if (saved) setCollapsed(JSON.parse(saved))
-  }, [])
+    const saved = localStorage.getItem("sidebar-collapsed");
+    if (saved) setCollapsed(JSON.parse(saved));
+  }, []);
 
   // Save collapsed state
   const toggleCollapsed = () => {
-    const newState = !collapsed
-    setCollapsed(newState)
-    localStorage.setItem('sidebar-collapsed', JSON.stringify(newState))
-  }
+    const newState = !collapsed;
+    setCollapsed(newState);
+    localStorage.setItem("sidebar-collapsed", JSON.stringify(newState));
+  };
 
   return (
     <>
@@ -166,7 +236,7 @@ export default function Sidebar() {
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
         onClick={() => setMobileOpen(true)}
-            className="lg:hidden fixed top-4 left-4 z-50 p-2.5 bg-white dark:bg-[#192230] text-[var(--text-primary)] border border-slate-200 dark:border-white/10"
+        className="lg:hidden fixed top-4 left-4 z-50 p-2.5 bg-white dark:bg-[#192230] text-[var(--text-primary)] border border-slate-200 dark:border-white/10"
         aria-label="Open menu"
       >
         <Menu className="w-5 h-5" />
@@ -190,12 +260,15 @@ export default function Sidebar() {
       <AnimatePresence>
         {mobileOpen && (
           <motion.aside
-            initial={{ x: '-100%' }}
+            initial={{ x: "-100%" }}
             animate={{ x: 0 }}
-            exit={{ x: '-100%' }}
-            transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+            exit={{ x: "-100%" }}
+            transition={{ type: "spring", damping: 25, stiffness: 300 }}
             className="lg:hidden fixed inset-y-0 left-0 z-50 w-64 flex flex-col border-r"
-            style={{ backgroundColor: 'var(--sidebar-bg)', borderColor: 'var(--sidebar-bdr)' }}
+            style={{
+              backgroundColor: "var(--sidebar-bg)",
+              borderColor: "var(--sidebar-bdr)",
+            }}
             tabIndex={-1}
             aria-modal={mobileOpen}
             role="dialog"
@@ -210,7 +283,10 @@ export default function Sidebar() {
         initial={false}
         animate={{ width: collapsed ? 80 : 256 }}
         className="hidden lg:flex flex-col h-screen fixed left-0 top-0 z-30 border-r overflow-hidden"
-        style={{ backgroundColor: 'var(--sidebar-bg)', borderColor: 'var(--sidebar-bdr)' }}
+        style={{
+          backgroundColor: "var(--sidebar-bg)",
+          borderColor: "var(--sidebar-bdr)",
+        }}
       >
         <SidebarContent collapsed={collapsed} />
 
@@ -220,7 +296,7 @@ export default function Sidebar() {
           whileTap={{ scale: 0.9 }}
           onClick={toggleCollapsed}
           className="absolute -right-3 top-20 w-6 h-6 bg-white dark:bg-[#192230] border border-slate-200 dark:border-white/10 flex items-center justify-center text-slate-500 dark:text-neutral-400 hover:text-slate-700 dark:hover:text-white z-10"
-          aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+          aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
         >
           {collapsed ? (
             <ChevronRight className="w-3.5 h-3.5" />
@@ -231,7 +307,10 @@ export default function Sidebar() {
       </motion.aside>
 
       {/* Spacer for main content */}
-      <div className="hidden lg:block flex-shrink-0" style={{ width: collapsed ? 80 : 256 }} />
+      <div
+        className="hidden lg:block flex-shrink-0"
+        style={{ width: collapsed ? 80 : 256 }}
+      />
     </>
-  )
+  );
 }

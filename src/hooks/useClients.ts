@@ -65,3 +65,12 @@ export const useUnblockClient = (id: string) =>
     errorMessage: 'Failed to unblock client',
     invalidateKeys: [['client', id], ['clients']],
   })
+
+export const useImportClients = () =>
+  useToastMutation({
+    mutationFn: (clients: Array<{ name?: string; full_name?: string; email?: string; age?: number; location?: string; city?: string; weight?: number; height?: number; phone?: string; notes?: string }>) =>
+      clientsApi.import(clients),
+    successMessage: 'Clients imported successfully',
+    errorMessage: 'Failed to import clients',
+    invalidateKeys: [['clients']],
+  })

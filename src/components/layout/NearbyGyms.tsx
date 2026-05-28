@@ -3,11 +3,11 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import {
   MapPin, Dumbbell, X, Loader2, RefreshCw, Navigation,
-  Search, SlidersHorizontal, Home, Building2, Trees,
-  Bookmark, Star, Phone, Clock, ChevronDown, ArrowUpRight,
+  Search, SlidersHorizontal, Building2, Trees,
+  Bookmark, Star, Phone, Clock, ArrowUpRight,
   LocateFixed, Filter,
 } from 'lucide-react'
-import { useNearbyGyms, Gym } from '@/hooks/useNearbyGyms'
+import { useNearbyGyms, Gym, GymType } from '@/hooks/useNearbyGyms'
 import { motion, AnimatePresence } from 'framer-motion'
 
 function formatDistance(m: number): string {
@@ -33,12 +33,24 @@ function gymImage(index: number): string {
   return GYM_IMAGES[index % GYM_IMAGES.length]
 }
 
-/* ── Category Icons ──────────────────────────────────────────── */
+/* ── Category Icons & Labels ─────────────────────────────────── */
 
-const categoryIcons: Record<string, React.ReactNode> = {
-  'gym': <Home className="w-3.5 h-3.5" />,
-  'fitness_centre': <Building2 className="w-3.5 h-3.5" />,
-  'outdoor': <Trees className="w-3.5 h-3.5" />,
+const categoryIcons: Record<GymType, React.ReactNode> = {
+  'gym':            <Dumbbell  className="w-3 h-3" />,
+  'fitness_centre': <Building2 className="w-3 h-3" />,
+  'outdoor':        <Trees     className="w-3 h-3" />,
+}
+
+const categoryLabel: Record<GymType, string> = {
+  'gym':            'Gym',
+  'fitness_centre': 'Fitness Centre',
+  'outdoor':        'Outdoor',
+}
+
+const categoryColor: Record<GymType, string> = {
+  'gym':            'bg-blue-50 text-blue-700 dark:bg-blue-900/20 dark:text-blue-300',
+  'fitness_centre': 'bg-violet-50 text-violet-700 dark:bg-violet-900/20 dark:text-violet-300',
+  'outdoor':        'bg-emerald-50 text-emerald-700 dark:bg-emerald-900/20 dark:text-emerald-300',
 }
 
 /* ── Map Component ────────────────────────────────────────────── */
@@ -246,6 +258,7 @@ function GymCard({
   onHover: () => void
 }) {
   const img = gymImage(index)
+  const [imgError, setImgError] = useState(false)
 
   return (
     <motion.div
@@ -262,13 +275,20 @@ function GymCard({
     >
       {/* Image */}
       <div className="relative h-44 overflow-hidden">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src={img}
-          alt={gym.name}
-          className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-          loading="lazy"
-        />
+        {imgError ? (
+          <div className="w-full h-full flex items-center justify-center bg-[#E8EDEA] dark:bg-[#1E1E1E]">
+            <Dumbbell className="w-10 h-10 text-[#6B7B75] dark:text-[#A1A1AA]" />
+          </div>
+        ) : (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={img}
+            alt={gym.name}
+            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+            loading="lazy"
+            onError={() => setImgError(true)}
+          />
+        )}
         <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
 
         {/* Badges */}
@@ -311,12 +331,17 @@ function GymCard({
       <div className="p-4">
         <div className="flex items-start justify-between gap-2">
           <div className="flex-1 min-w-0">
-            <h3 className="text-sm font-bold text-[#1A3C34] truncate group-hover:text-[#2A96AD] transition-colors">
+            <h3 className="text-sm font-bold text-[#1A3C34] dark:text-[#FAFAFA] truncate group-hover:text-[#2A96AD] transition-colors">
               {gym.name}
             </h3>
             <p className="text-xs text-[#6B7B75] dark:text-[#A1A1AA] mt-0.5 truncate">
               {gym.address || 'Fitness studio'}
             </p>
+            {/* Type badge */}
+            <span className={`inline-flex items-center gap-1 mt-1.5 px-2 py-0.5 rounded-full text-[10px] font-semibold ${categoryColor[gym.type]}`}>
+              {categoryIcons[gym.type]}
+              {categoryLabel[gym.type]}
+            </span>
           </div>
         </div>
 
@@ -337,7 +362,7 @@ function GymCard({
           href={`https://www.google.com/maps/dir/?api=1&destination=${gym.location.lat},${gym.location.lon}`}
           target="_blank"
           rel="noopener noreferrer"
-          className="mt-3 flex items-center justify-center gap-1.5 w-full py-2.5 bg-[#F5F7F6] dark:bg-white/[0.04] hover:bg-[#2A96AD] text-[#1A3C34] hover:text-white rounded-lg text-xs font-semibold transition-all duration-200 group/direction"
+          className="mt-3 flex items-center justify-center gap-1.5 w-full py-2.5 bg-[#F5F7F6] dark:bg-white/[0.08] hover:bg-[#2A96AD] text-[#1A3C34] dark:text-[#D4E8E4] hover:text-white rounded-lg text-xs font-semibold transition-all duration-200 group/direction"
         >
           <Navigation className="w-3.5 h-3.5" />
           Get Directions
@@ -366,24 +391,24 @@ function FilterSidebar({
   onDistanceChange: (d: number) => void
 }) {
   const types: { id: FilterType; label: string; icon: React.ReactNode }[] = [
-    { id: 'all', label: 'All Studios', icon: <Filter className="w-4 h-4" /> },
-    { id: 'gym', label: 'Gyms', icon: <Home className="w-4 h-4" /> },
-    { id: 'fitness_centre', label: 'Fitness Centres', icon: <Building2 className="w-4 h-4" /> },
-    { id: 'outdoor', label: 'Outdoor', icon: <Trees className="w-4 h-4" /> },
+    { id: 'all',            label: 'All',            icon: <Filter    className="w-4 h-4" /> },
+    { id: 'gym',            label: 'Gyms',           icon: <Dumbbell  className="w-4 h-4" /> },
+    { id: 'fitness_centre', label: 'Fitness Ctrs',   icon: <Building2 className="w-4 h-4" /> },
+    { id: 'outdoor',        label: 'Outdoor',        icon: <Trees     className="w-4 h-4" /> },
   ]
 
   return (
-    <div className="w-64 shrink-0 bg-white dark:bg-[#1A1A1A] border-r border-[#E2E8E4] dark:border-white/[0.06] dark:border-white/[0.06] h-full overflow-y-auto">
+    <div className="w-64 shrink-0 bg-[#132E35] border-r border-[#132E35] h-full overflow-y-auto">
       <div className="p-5 space-y-6">
         {/* Header */}
         <div>
-          <h2 className="text-sm font-bold text-[#1A3C34] dark:text-[#FAFAFA] tracking-tight">Filters</h2>
-          <p className="text-[11px] text-[#6B7B75] dark:text-[#A1A1AA] mt-0.5">Refine your search</p>
+          <h2 className="text-sm font-bold text-white tracking-tight">Filters</h2>
+          <p className="text-[11px] text-white/50 mt-0.5">Refine your search</p>
         </div>
 
         {/* Studio Type */}
         <div>
-          <h3 className="text-xs font-semibold text-[#1A3C34] uppercase tracking-wider mb-3">
+          <h3 className="text-xs font-semibold text-white/50 uppercase tracking-wider mb-3">
             Studio Type
           </h3>
           <div className="grid grid-cols-2 gap-2">
@@ -394,8 +419,8 @@ function FilterSidebar({
                 className={`
                   flex flex-col items-center gap-1.5 p-3 rounded-xl border text-[11px] font-medium transition-all duration-200
                   ${activeType === t.id
-                    ? 'bg-[#1A3C34] border-[#1A3C34] text-white shadow-md'
-                    : 'bg-white border-[#E2E8E4] dark:border-white/[0.06] text-[#6B7B75] dark:text-[#A1A1AA] hover:border-[#2A96AD]/40 hover:text-[#1A3C34]'}
+                    ? 'bg-[#2A96AD] border-[#2A96AD] text-white shadow-md'
+                    : 'bg-white/[0.08] border-white/[0.10] text-white/70 hover:bg-white/[0.14] hover:border-[#2A96AD]/60 hover:text-white'}
                 `}
               >
                 {t.icon}
@@ -407,7 +432,7 @@ function FilterSidebar({
 
         {/* Distance Range */}
         <div>
-          <h3 className="text-xs font-semibold text-[#1A3C34] uppercase tracking-wider mb-3">
+          <h3 className="text-xs font-semibold text-white/50 uppercase tracking-wider mb-3">
             Max Distance
           </h3>
           <div className="space-y-3">
@@ -420,7 +445,7 @@ function FilterSidebar({
               onChange={(e) => onDistanceChange(Number(e.target.value))}
               className="w-full accent-[#2A96AD]"
             />
-            <div className="flex justify-between text-[11px] text-[#6B7B75] dark:text-[#A1A1AA]">
+            <div className="flex justify-between text-[11px] text-white/50">
               <span>500 m</span>
               <span className="font-semibold text-[#2A96AD]">{maxDistance >= 1000 ? `${(maxDistance / 1000).toFixed(1)} km` : `${maxDistance} m`}</span>
               <span>5 km</span>
@@ -430,7 +455,7 @@ function FilterSidebar({
 
         {/* Sort */}
         <div>
-          <h3 className="text-xs font-semibold text-[#1A3C34] uppercase tracking-wider mb-3">
+          <h3 className="text-xs font-semibold text-white/50 uppercase tracking-wider mb-3">
             Sort By
           </h3>
           <div className="space-y-1.5">
@@ -444,13 +469,13 @@ function FilterSidebar({
                 className={`
                   w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium transition-all
                   ${sortBy === s.id
-                    ? 'bg-[#EAF4F1] text-[#2A96AD]'
-                    : 'text-[#6B7B75] dark:text-[#A1A1AA] hover:bg-[#F5F7F6] dark:bg-white/[0.04]'}
+                    ? 'bg-white/[0.12] text-[#2A96AD]'
+                    : 'text-white/70 hover:bg-white/[0.08]'}
                 `}
               >
                 <div className={`
                   w-4 h-4 rounded-full border flex items-center justify-center
-                  ${sortBy === s.id ? 'border-[#2A96AD] bg-[#2A96AD]' : 'border-[#C5D1CC]'}
+                  ${sortBy === s.id ? 'border-[#2A96AD] bg-[#2A96AD]' : 'border-white/[0.25]'}
                 `}>
                   {sortBy === s.id && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
                 </div>
@@ -475,7 +500,7 @@ export function NearbyGymsButton() {
   const [maxDistance, setMaxDistance] = useState(3000)
   const [searchQuery, setSearchQuery] = useState('')
 
-  const { gyms: rawGyms, loading, error, reload, userLocation } = useNearbyGyms()
+  const { gyms: rawGyms, loading, error, reload, userLocation } = useNearbyGyms(maxDistance)
 
   const toggleSave = useCallback((id: string) => {
     setSavedGyms((prev) => {
@@ -490,6 +515,7 @@ export function NearbyGymsButton() {
   const filteredGyms = rawGyms
     .filter((g) => {
       if (g.distance > maxDistance) return false
+      if (filterType !== 'all' && g.type !== filterType) return false
       if (searchQuery) {
         const q = searchQuery.toLowerCase()
         return g.name.toLowerCase().includes(q) || g.address.toLowerCase().includes(q)
@@ -533,7 +559,7 @@ export function NearbyGymsButton() {
             className="fixed inset-0 z-[100] bg-[#F0F4F2] dark:bg-[#121212] flex flex-col"
           >
             {/* Top Navigation Bar */}
-            <header className="shrink-0 h-16 bg-white dark:bg-[#1A1A1A] border-b border-[#E2E8E4] dark:border-white/[0.06] dark:border-white/[0.06] flex items-center px-6 gap-4">
+            <header className="shrink-0 h-16 bg-white dark:bg-[#1A1A1A] border-b border-[#E2E8E4] dark:border-white/[0.06] flex items-center px-6 gap-4">
               {/* Logo / Brand */}
               <div className="flex items-center gap-2.5 shrink-0">
                 <div className="w-8 h-8 bg-[#1A3C34] rounded-lg flex items-center justify-center">
@@ -595,7 +621,7 @@ export function NearbyGymsButton() {
               {/* List Panel */}
               <div className="flex-1 flex flex-col min-w-0 bg-[#F0F4F2] dark:bg-[#121212]">
                 {/* List header */}
-                <div className="px-5 py-3 flex items-center justify-between border-b border-[#E2E8E4] dark:border-white/[0.06]/60">
+                <div className="px-5 py-3 flex items-center justify-between border-b border-[#E2E8E4] dark:border-white/[0.06]">
                   <div className="flex items-center gap-2">
                     <SlidersHorizontal className="w-3.5 h-3.5 text-[#6B7B75] dark:text-[#A1A1AA]" />
                     <span className="text-xs font-medium text-[#6B7B75] dark:text-[#A1A1AA]">
@@ -672,10 +698,10 @@ export function NearbyGymsButton() {
               </div>
 
               {/* Map Panel */}
-              <div className="hidden xl:block w-[420px] shrink-0 border-l border-[#E2E8E4] dark:border-white/[0.06] dark:border-white/[0.06] relative bg-[#E8EDEA] dark:bg-[#1E1E1E]">
+              <div className="hidden xl:block w-[420px] shrink-0 border-l border-[#E2E8E4] dark:border-white/[0.06] relative bg-[#E8EDEA] dark:bg-[#1E1E1E]">
                 <div className="absolute top-4 left-4 z-10 bg-white/90 backdrop-blur-sm rounded-lg shadow-sm border border-[#E2E8E4] dark:border-white/[0.06] px-3 py-2">
                   <p className="text-[11px] font-semibold text-[#1A3C34] dark:text-[#FAFAFA]">Studio Map</p>
-                  <p className="text-[10px] text-[#6B7B75] dark:text-[#A1A1AA] dark:text-[#A1A1AA]">{filteredGyms.length} locations shown</p>
+                  <p className="text-[10px] text-[#6B7B75] dark:text-[#A1A1AA]">{filteredGyms.length} locations shown</p>
                 </div>
                 <GymMap
                   gyms={filteredGyms}

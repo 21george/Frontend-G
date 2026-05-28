@@ -35,11 +35,11 @@ export function DeleteConfirmModal({ open, type, clientName, planTitle, onClose,
 
         <div className="flex gap-2">
           <button onClick={onClose}
-            className="flex-1 py-2.5 text-[13px] font-medium border border-[var(--border)] dark:border-white/[0.09] text-[var(--text-secondary)] dark:text-[var(--text-secondary)] hover:bg-slate-50 dark:hover:bg-white/[0.05] transition-colors">
+            className="flex-1 py-2.5 text-[13px] font-medium border border-[var(--border)] text-[var(--text-secondary)] hover:bg-[var(--bg-subtle)] transition-colors">
             Cancel
           </button>
           <button onClick={onConfirm} disabled={isLoading}
-            className="flex-1 py-2.5 text-[13px] font-semibold bg-red-600 hover:bg-red-700 text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+            className="flex-1 py-2.5 text-[13px] font-semibold bg-red-600 hover:bg-red-700 text-[var(--btn-text)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
             {isLoading ? 'Deleting…' : isClient ? 'Delete Client' : 'Delete Plan'}
           </button>
         </div>
