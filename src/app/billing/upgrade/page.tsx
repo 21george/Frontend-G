@@ -1,15 +1,20 @@
-'use client';
+"use client";
 
-import { useMemo, useState } from 'react';
-import Link from 'next/link';
-import DashboardLayout from '@/components/layout/DashboardLayout';
-import { useSubscription, useCheckout, useUpgradeSubscription, useManageBilling } from '@/lib/hooks';
-import { PLANS, FEATURE_COMPARISON } from '@/components/billing/PlanMeta';
-import { GlowingCard } from '@/components/billing/GlowingCard';
-import { SubscriptionAlerts } from '@/components/billing/SubscriptionAlerts';
-import { Button } from '@/components/ui/button';
-import { Skeleton } from '@/components/ui/Skeleton';
-import { motion } from 'framer-motion';
+import { useMemo, useState } from "react";
+import Link from "next/link";
+import DashboardLayout from "@/components/layout/DashboardLayout";
+import {
+  useSubscription,
+  useCheckout,
+  useUpgradeSubscription,
+  useManageBilling,
+} from "@/lib/hooks";
+import { PLANS, FEATURE_COMPARISON } from "@/components/billing/PlanMeta";
+import { GlowingCard } from "@/components/billing/GlowingCard";
+import { SubscriptionAlerts } from "@/components/billing/SubscriptionAlerts";
+import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/Skeleton";
+import { motion } from "framer-motion";
 import {
   Check,
   X,
@@ -18,8 +23,8 @@ import {
   ShieldCheck,
   Infinity,
   CreditCard,
-} from 'lucide-react';
-import type { SubscriptionTier } from '@/types';
+} from "lucide-react";
+import type { SubscriptionTier } from "@/types";
 
 /* ── Animation variants ──────────────────────────────────────────────────── */
 
@@ -36,13 +41,20 @@ const cardVariants = {
   visible: {
     y: 0,
     opacity: 1,
-    transition: { duration: 0.5, ease: [0.22, 1, 0.36, 1] as [number, number, number, number] },
+    transition: {
+      duration: 0.5,
+      ease: [0.22, 1, 0.36, 1] as [number, number, number, number],
+    },
   },
 };
 
 const heroVariants = {
   hidden: { opacity: 0, y: -20 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: 'easeOut' as const } },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.6, ease: "easeOut" as const },
+  },
 };
 
 /* ── Loading skeleton ─────────────────────────────────────────────────────── */
@@ -74,11 +86,11 @@ function FeatureValue({
   value: boolean | string;
   highlight?: boolean;
 }) {
-  if (typeof value === 'boolean') {
+  if (typeof value === "boolean") {
     return value ? (
       <Check
         className={`w-4 h-4 mx-auto ${
-          highlight ? 'text-[var(--energy)]' : 'text-emerald-400'
+          highlight ? "text-[var(--energy)]" : "text-emerald-400"
         }`}
       />
     ) : (
@@ -88,7 +100,7 @@ function FeatureValue({
   return (
     <span
       className={`text-sm font-semibold ${
-        highlight ? 'text-[var(--energy)]' : 'text-[var(--text-primary)]'
+        highlight ? "text-[var(--energy)]" : "text-[var(--text-primary)]"
       }`}
     >
       {value}
@@ -104,37 +116,61 @@ export default function BillingUpgradePage() {
   const upgradeSub = useUpgradeSubscription();
   const manageBilling = useManageBilling();
 
-  const PERIOD_OPTIONS: { key: 'monthly' | 'quarterly' | 'semi_annual' | 'annual'; label: string; discount?: string }[] = [
-    { key: 'monthly', label: 'Monthly' },
-    { key: 'quarterly', label: 'Quarterly', discount: 'Save 10%' },
-    { key: 'semi_annual', label: '6 Months', discount: 'Save 15%' },
-    { key: 'annual', label: 'Yearly', discount: 'Save 20%' },
+  const PERIOD_OPTIONS: {
+    key: "monthly" | "quarterly" | "semi_annual" | "annual";
+    label: string;
+    discount?: string;
+  }[] = [
+    { key: "monthly", label: "Monthly" },
+    { key: "quarterly", label: "Quarterly", discount: "Save 10%" },
+    { key: "semi_annual", label: "6 Months", discount: "Save 15%" },
+    { key: "annual", label: "Yearly", discount: "Save 20%" },
   ];
 
-  const [selectedPeriod, setSelectedPeriod] = useState<typeof PERIOD_OPTIONS[number]['key']>('monthly');
+  const [selectedPeriod, setSelectedPeriod] =
+    useState<(typeof PERIOD_OPTIONS)[number]["key"]>("monthly");
 
-  const currentTier = subscription?.tier ?? 'none';
-  const currentStatus = subscription?.status ?? 'none';
+  const currentTier = subscription?.tier ?? "none";
+  const currentStatus = subscription?.status ?? "none";
 
   const getPrice = (tier: SubscriptionTier) => {
-    const plan = PLANS.find((p) => p.tier === tier)!;
+    const plan = PLANS.find((p) => p.tier === tier);
+    if (!plan)
+      return {
+        label: "—",
+        period: "",
+        save: false,
+        discountPct: 0,
+        periodLabel: "",
+      };
     const pricing = plan.periods[selectedPeriod];
+    const periodOption = PERIOD_OPTIONS.find((o) => o.key === selectedPeriod);
     return {
       label: pricing.priceLabel,
       period: pricing.periodLabel,
       save: pricing.discountPct > 0,
+      discountPct: pricing.discountPct,
+      periodLabel: periodOption?.label ?? selectedPeriod,
     };
   };
 
   const handlePlanAction = (tier: SubscriptionTier) => {
-    if (currentStatus === 'active' || currentStatus === 'trialing') {
-      upgradeSub.mutate({ tier: tier as 'pro' | 'business', period: selectedPeriod });
+    if (currentStatus === "active" || currentStatus === "trialing") {
+      upgradeSub.mutate({
+        tier: tier as "pro" | "business",
+        period: selectedPeriod,
+      });
     } else {
-      checkout.mutate({ tier: tier as 'pro' | 'business', period: selectedPeriod });
+      checkout.mutate({
+        tier: tier as "pro" | "business",
+        period: selectedPeriod,
+      });
     }
   };
 
-  const visiblePlans = PLANS.filter((p) => p.tier === 'pro' || p.tier === 'business');
+  const visiblePlans = PLANS.filter(
+    (p) => p.tier === "pro" || p.tier === "business",
+  );
 
   if (isLoading) return <UpgradeSkeleton />;
 
@@ -147,7 +183,7 @@ export default function BillingUpgradePage() {
           className="absolute inset-0 opacity-40"
           style={{
             background:
-              'radial-gradient(ellipse 60% 40% at 80% 20%, rgba(163,230,53,0.08) 0%, transparent 60%), radial-gradient(ellipse 50% 50% at 20% 80%, rgba(34,211,238,0.06) 0%, transparent 60%)',
+              "radial-gradient(ellipse 60% 40% at 80% 20%, rgba(163,230,53,0.08) 0%, transparent 60%), radial-gradient(ellipse 50% 50% at 20% 80%, rgba(34,211,238,0.06) 0%, transparent 60%)",
           }}
         />
 
@@ -173,7 +209,7 @@ export default function BillingUpgradePage() {
             </div>
 
             <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight text-[var(--text-primary)] mb-4">
-              Choose Your{' '}
+              Choose Your{" "}
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-[var(--energy)] to-[#22d3ee]">
                 Power Level
               </span>
@@ -191,8 +227,8 @@ export default function BillingUpgradePage() {
                   onClick={() => setSelectedPeriod(opt.key)}
                   className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all ${
                     selectedPeriod === opt.key
-                      ? 'bg-[var(--energy)] text-black'
-                      : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
+                      ? "bg-[var(--energy)] text-black"
+                      : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
                   }`}
                 >
                   {opt.label}
@@ -215,7 +251,7 @@ export default function BillingUpgradePage() {
           >
             {visiblePlans.map((plan) => {
               const isCurrent = currentTier === plan.tier;
-              const isPro = plan.tier === 'pro';
+              const isPro = plan.tier === "pro";
               const price = getPrice(plan.tier);
               const Icon = plan.icon;
 
@@ -280,13 +316,13 @@ export default function BillingUpgradePage() {
                       <th className="text-left px-6 py-3 text-xs font-medium text-[var(--text-tertiary)] uppercase tracking-wider">
                         Feature
                       </th>
-                      {(['pro', 'business'] as const).map((tier) => (
+                      {(["pro", "business"] as const).map((tier) => (
                         <th
                           key={tier}
                           className={`text-center px-6 py-3 text-xs font-bold uppercase tracking-wider ${
-                            tier === 'pro'
-                              ? 'text-[var(--energy)]'
-                              : 'text-[var(--text-tertiary)]'
+                            tier === "pro"
+                              ? "text-[var(--energy)]"
+                              : "text-[var(--text-tertiary)]"
                           }`}
                         >
                           {PLANS.find((p) => p.tier === tier)?.name}
@@ -303,7 +339,9 @@ export default function BillingUpgradePage() {
                         transition={{ delay: 0.7 + i * 0.03 }}
                         className="hover:bg-[var(--bg-subtle)] transition-colors"
                       >
-                        <td className="px-6 py-3 text-sm text-[var(--text-secondary)]">{row.label}</td>
+                        <td className="px-6 py-3 text-sm text-[var(--text-secondary)]">
+                          {row.label}
+                        </td>
                         <td className="px-6 py-3 text-center">
                           <FeatureValue value={row.pro} highlight />
                         </td>
@@ -340,7 +378,8 @@ export default function BillingUpgradePage() {
               </div>
             </div>
             <p className="text-xs text-[var(--text-tertiary)]">
-              14-day free trial on Pro and Business plans. No credit card required for signup.
+              14-day free trial on Pro and Business plans. No credit card
+              required for signup.
             </p>
           </motion.div>
         </div>
@@ -363,7 +402,13 @@ function PlanCardContent({
   plan: (typeof PLANS)[0];
   isCurrent: boolean;
   isPro: boolean;
-  price: { label: string; period: string; save: boolean };
+  price: {
+    label: string;
+    period: string;
+    save: boolean;
+    discountPct: number;
+    periodLabel: string;
+  };
   Icon: React.ElementType;
   onAction: () => void;
   isPending: boolean;
@@ -372,24 +417,27 @@ function PlanCardContent({
     <div className="p-6 sm:p-8 flex flex-col h-full">
       {/* Header */}
       <div className="mb-6">
-
         <div className="flex items-center gap-3 mb-3">
           <div
             className="w-10 h-10 rounded-xl flex items-center justify-center"
             style={{
               backgroundColor: isPro
-                ? 'rgba(163,230,53,0.12)'
+                ? "rgba(163,230,53,0.12)"
                 : `${plan.accent}18`,
             }}
           >
             <Icon
               className="w-5 h-5"
-              style={{ color: isPro ? 'var(--energy)' : plan.accent }}
+              style={{ color: isPro ? "var(--energy)" : plan.accent }}
             />
           </div>
           <div>
-            <h3 className="text-lg font-bold text-[var(--text-primary)]">{plan.name}</h3>
-            <p className="text-xs text-[var(--text-tertiary)]">{plan.description}</p>
+            <h3 className="text-lg font-bold text-[var(--text-primary)]">
+              {plan.name}
+            </h3>
+            <p className="text-xs text-[var(--text-tertiary)]">
+              {plan.description}
+            </p>
           </div>
         </div>
 
@@ -397,11 +445,13 @@ function PlanCardContent({
           <span className="text-4xl sm:text-5xl font-black text-[var(--text-primary)]">
             {price.label}
           </span>
-          <span className="text-sm text-[var(--text-tertiary)]">{price.period}</span>
+          <span className="text-sm text-[var(--text-tertiary)]">
+            {price.period}
+          </span>
         </div>
         {price.save && (
           <p className="text-xs text-[var(--energy)] mt-1 font-medium">
-            Save 20% with yearly billing
+            Save {price.discountPct}% with {price.periodLabel} billing
           </p>
         )}
       </div>
@@ -414,16 +464,18 @@ function PlanCardContent({
               className="w-5 h-5 rounded-md flex items-center justify-center shrink-0 mt-0.5"
               style={{
                 backgroundColor: isPro
-                  ? 'rgba(163,230,53,0.12)'
+                  ? "rgba(163,230,53,0.12)"
                   : `${plan.accent}18`,
               }}
             >
               <Check
                 className="w-3 h-3"
-                style={{ color: isPro ? 'var(--energy)' : plan.accent }}
+                style={{ color: isPro ? "var(--energy)" : plan.accent }}
               />
             </div>
-            <span className="text-sm text-[var(--text-secondary)]">{feature}</span>
+            <span className="text-sm text-[var(--text-secondary)]">
+              {feature}
+            </span>
           </li>
         ))}
       </ul>
@@ -442,8 +494,8 @@ function PlanCardContent({
           size="lg"
           className={`w-full ${
             isPro
-              ? 'bg-[var(--energy)] text-black hover:bg-[var(--energy-dark)]'
-              : ''
+              ? "bg-[var(--energy)] text-black hover:bg-[var(--energy-dark)]"
+              : ""
           }`}
         >
           {plan.cta}

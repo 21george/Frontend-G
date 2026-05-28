@@ -359,7 +359,11 @@ export type SubscriptionStatus =
   | "past_due"
   | "cancelled";
 
-export type SubscriptionPeriod = "monthly" | "quarterly" | "semi_annual" | "annual";
+export type SubscriptionPeriod =
+  | "monthly"
+  | "quarterly"
+  | "semi_annual"
+  | "annual";
 
 export interface SubscriptionInfo {
   tier: SubscriptionTier;
@@ -384,6 +388,7 @@ export interface Invoice {
   pdf_url?: string;
   hosted_invoice_url?: string;
   description?: string;
+  last4?: string; // card last 4 digits from the charge payment method
 }
 
 // ── Notifications ──────────────────────────────────────────────────────────────

@@ -3,7 +3,12 @@
 import { useState, useEffect } from "react";
 import { useAuthStore } from "@/store/auth";
 import { useThemeStore } from "@/store/theme";
-import { useSubscription, useManageBilling, useNotificationSettings, useUpdateNotificationSettings } from "@/lib/hooks";
+import {
+  useSubscription,
+  useManageBilling,
+  useNotificationSettings,
+  useUpdateNotificationSettings,
+} from "@/lib/hooks";
 import Image from "next/image";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
@@ -233,11 +238,15 @@ export default function SettingsPage() {
   const loginAlerts = notifData?.login_alerts ?? true;
   const doNotDisturb = notifData?.dnd_enabled ?? false;
 
-  const setNotifNewClient = (v: boolean) => updateNotif.mutate({ consultation: v });
+  const setNotifNewClient = (v: boolean) =>
+    updateNotif.mutate({ consultation: v });
   const setNotifMessages = (v: boolean) => updateNotif.mutate({ email_sms: v });
-  const setNotifCheckins = (v: boolean) => updateNotif.mutate({ appointments: v });
-  const setLoginAlerts = (v: boolean) => updateNotif.mutate({ login_alerts: v });
-  const setDoNotDisturb = (v: boolean) => updateNotif.mutate({ dnd_enabled: v });
+  const setNotifCheckins = (v: boolean) =>
+    updateNotif.mutate({ appointments: v });
+  const setLoginAlerts = (v: boolean) =>
+    updateNotif.mutate({ login_alerts: v });
+  const setDoNotDisturb = (v: boolean) =>
+    updateNotif.mutate({ dnd_enabled: v });
 
   // Password modal state
   const [pwCurrent, setPwCurrent] = useState("");
@@ -535,12 +544,12 @@ export default function SettingsPage() {
                       <div className="flex items-center gap-2 text-sm text-[var(--text-secondary)]">
                         <span>From:</span>
                         <span className="font-medium text-[var(--text-primary)]">
-                          22:00
+                          {notifData?.dnd_from ?? "22:00"}
                         </span>
                         <span className="mx-1">—</span>
                         <span>To:</span>
                         <span className="font-medium text-[var(--text-primary)]">
-                          07:00
+                          {notifData?.dnd_to ?? "07:00"}
                         </span>
                       </div>
                     </div>
@@ -551,7 +560,7 @@ export default function SettingsPage() {
 
             {/* Billing & Subscription */}
             <Card>
-              <CardHeader 
+              <CardHeader
                 icon={<CreditCard className="w-5 h-5 text-white" />}
                 title="Billing & Subscription"
                 action={
@@ -650,16 +659,20 @@ export default function SettingsPage() {
                       {subscription?.client_limit !== null && (
                         <> / {subscription?.client_limit}</>
                       )}
-                      {subscription?.client_limit === null && ' (Unlimited)'}
+                      {subscription?.client_limit === null && " (Unlimited)"}
                     </span>
                   </div>
                   {subscription?.next_payment_date && (
                     <div className="flex justify-between text-sm">
                       <span className="text-[var(--text-secondary)]">
-                        {subscription?.status === 'trialing' ? 'Trial Ends' : 'Renews'}
+                        {subscription?.status === "trialing"
+                          ? "Trial Ends"
+                          : "Renews"}
                       </span>
                       <span className="font-medium text-[var(--text-primary)]">
-                        {new Date(subscription.next_payment_date).toLocaleDateString()}
+                        {new Date(
+                          subscription.next_payment_date,
+                        ).toLocaleDateString()}
                       </span>
                     </div>
                   )}

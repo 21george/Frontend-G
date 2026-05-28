@@ -1,22 +1,26 @@
-'use client';
+"use client";
 
-import { useState, useMemo } from 'react';
-import Link from 'next/link';
-import DashboardLayout from '@/components/layout/DashboardLayout';
+import { useState, useMemo } from "react";
+import Link from "next/link";
+import DashboardLayout from "@/components/layout/DashboardLayout";
 import {
   useSubscription,
   useManageBilling,
   useCancelSubscription,
   useUpgradeSubscription,
   useInvoices,
-} from '@/lib/hooks';
-import { PLANS, getPlanPricing, PERIOD_LABELS } from '@/components/billing/PlanMeta';
-import { SubscriptionAlerts } from '@/components/billing/SubscriptionAlerts';
-import { PaymentMethodManager } from '@/components/billing/PaymentMethodManager';
-import { Button } from '@/components/ui/button';
-import { Modal } from '@/components/ui/Modal';
-import { Skeleton } from '@/components/ui/Skeleton';
-import { motion } from 'framer-motion';
+} from "@/lib/hooks";
+import {
+  PLANS,
+  getPlanPricing,
+  PERIOD_LABELS,
+} from "@/components/billing/PlanMeta";
+import { SubscriptionAlerts } from "@/components/billing/SubscriptionAlerts";
+import { PaymentMethodManager } from "@/components/billing/PaymentMethodManager";
+import { Button } from "@/components/ui/button";
+import { Modal } from "@/components/ui/Modal";
+import { Skeleton } from "@/components/ui/Skeleton";
+import { motion } from "framer-motion";
 import {
   CreditCard,
   ArrowLeft,
@@ -28,45 +32,59 @@ import {
   AlertTriangle,
   Receipt,
   Zap,
-} from 'lucide-react';
-import type { Invoice, SubscriptionPeriod } from '@/types';
+} from "lucide-react";
+import type { Invoice, SubscriptionPeriod } from "@/types";
+
+/* ── Currency formatter ─────────────────────────────────────────────────── */
+
+function formatCurrency(amount: number, currency = "EUR"): string {
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: currency.toUpperCase(),
+  }).format(amount);
+}
 
 /* ── Status badge with dot ───────────────────────────────────────────────── */
 
-function StatusBadge({ status }: { status: Invoice['status'] }) {
-  const configs: Record<string, { label: string; dot: string; bg: string; text: string; border: string }> = {
+function StatusBadge({ status }: { status: Invoice["status"] }) {
+  const configs: Record<
+    string,
+    { label: string; dot: string; bg: string; text: string; border: string }
+  > = {
     paid: {
-      label: 'Paid',
-      dot: 'bg-emerald-500',
-      bg: 'bg-emerald-50 dark:bg-emerald-500/10',
-      text: 'text-emerald-700 dark:text-emerald-400',
-      border: 'border-emerald-200/50 dark:border-emerald-500/20',
+      label: "Paid",
+      dot: "bg-emerald-500",
+      bg: "bg-emerald-50 dark:bg-emerald-500/10",
+      text: "text-emerald-700 dark:text-emerald-400",
+      border: "border-emerald-200/50 dark:border-emerald-500/20",
     },
     open: {
-      label: 'Pending',
-      dot: 'bg-amber-500',
-      bg: 'bg-amber-50 dark:bg-amber-500/10',
-      text: 'text-amber-700 dark:text-amber-400',
-      border: 'border-amber-200/50 dark:border-amber-500/20',
+      label: "Pending",
+      dot: "bg-amber-500",
+      bg: "bg-amber-50 dark:bg-amber-500/10",
+      text: "text-amber-700 dark:text-amber-400",
+      border: "border-amber-200/50 dark:border-amber-500/20",
     },
     void: {
-      label: 'Void',
-      dot: 'bg-slate-400',
-      bg: 'bg-slate-50 dark:bg-white/5',
-      text: 'text-slate-600 dark:text-slate-400',
-      border: 'border-slate-200/50 dark:border-white/10',
+      label: "Void",
+      dot: "bg-slate-400",
+      bg: "bg-slate-50 dark:bg-white/5",
+      text: "text-slate-600 dark:text-slate-400",
+      border: "border-slate-200/50 dark:border-white/10",
     },
     uncollectible: {
-      label: 'Failed',
-      dot: 'bg-red-500',
-      bg: 'bg-red-50 dark:bg-red-500/10',
-      text: 'text-red-700 dark:text-red-400',
-      border: 'border-red-200/50 dark:border-red-500/20',
+      label: "Failed",
+      dot: "bg-red-500",
+      bg: "bg-red-50 dark:bg-red-500/10",
+      text: "text-red-700 dark:text-red-400",
+      border: "border-red-200/50 dark:border-red-500/20",
     },
   };
   const c = configs[status] ?? configs.open;
   return (
-    <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold border ${c.bg} ${c.text} ${c.border}`}>
+    <span
+      className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold border ${c.bg} ${c.text} ${c.border}`}
+    >
       <span className={`w-1.5 h-1.5 rounded-full ${c.dot}`} />
       {c.label}
     </span>
@@ -100,34 +118,35 @@ export default function BillingManagePage() {
   const upgradeSub = useUpgradeSubscription();
 
   const [showCancelModal, setShowCancelModal] = useState(false);
-  const [invoiceSearch, setInvoiceSearch] = useState('');
+  const [invoiceSearch, setInvoiceSearch] = useState("");
 
-  const currentTier = subscription?.tier ?? 'none';
-  const currentPeriod = subscription?.period ?? 'monthly';
-  const currentStatus = subscription?.status ?? 'none';
-  const isTrialing = currentStatus === 'trialing';
+  const currentTier = subscription?.tier ?? "none";
+  const currentPeriod = subscription?.period ?? "monthly";
+  const currentStatus = subscription?.status ?? "none";
+  const isTrialing = currentStatus === "trialing";
   const isCancelling = subscription?.cancel_at_period_end;
-  const hasNoPlan = currentTier === 'none' || currentTier === 'free';
+  const hasNoPlan = currentTier === "none" || currentTier === "free";
 
   const currentPlan = PLANS.find((p) => p.tier === currentTier) ?? PLANS[0];
   const currentPricing = getPlanPricing(currentTier, currentPeriod);
 
-  const nextPaymentDateRaw = subscription?.next_payment_date || subscription?.current_period_end;
+  const nextPaymentDateRaw =
+    subscription?.next_payment_date || subscription?.current_period_end;
   const nextPaymentDate = nextPaymentDateRaw
-    ? new Date(nextPaymentDateRaw).toLocaleDateString('en-US', {
-        month: 'long',
-        day: 'numeric',
-        year: 'numeric',
+    ? new Date(nextPaymentDateRaw).toLocaleDateString("en-US", {
+        month: "long",
+        day: "numeric",
+        year: "numeric",
       })
-    : '—';
+    : "—";
 
   const trialEndDate = subscription?.trial_ends_at
-    ? new Date(subscription.trial_ends_at).toLocaleDateString('en-US', {
-        month: 'long',
-        day: 'numeric',
-        year: 'numeric',
+    ? new Date(subscription.trial_ends_at).toLocaleDateString("en-US", {
+        month: "long",
+        day: "numeric",
+        year: "numeric",
       })
-    : '—';
+    : "—";
 
   const filteredInvoices = useMemo(() => {
     const q = invoiceSearch.trim().toLowerCase();
@@ -136,14 +155,16 @@ export default function BillingManagePage() {
       (inv) =>
         inv.number.toLowerCase().includes(q) ||
         inv.status.toLowerCase().includes(q) ||
-        (inv.description ?? '').toLowerCase().includes(q)
+        (inv.description ?? "").toLowerCase().includes(q),
     );
   }, [invoices, invoiceSearch]);
 
   const clientCount = subscription?.client_count ?? 0;
   const clientLimit = subscription?.client_limit;
   const isUnlimited = clientLimit === null;
-  const progressPct = isUnlimited ? 0 : Math.min(100, (clientCount / Math.max(1, clientLimit ?? 1)) * 100);
+  const progressPct = isUnlimited
+    ? 0
+    : Math.min(100, (clientCount / Math.max(1, clientLimit ?? 1)) * 100);
 
   if (subLoading) return <ManageSkeleton />;
 
@@ -224,12 +245,14 @@ export default function BillingManagePage() {
                     <p className="text-2xl font-bold text-[var(--text-primary)]">
                       {currentPricing.priceLabel}
                     </p>
-                    <p className="text-xs text-[var(--text-tertiary)]">{currentPricing.periodLabel}</p>
+                    <p className="text-xs text-[var(--text-tertiary)]">
+                      {currentPricing.periodLabel}
+                    </p>
                   </div>
                 </div>
 
                 <p className="text-sm text-[var(--text-secondary)] mb-4">
-                  Client limit: {isUnlimited ? 'Unlimited' : clientLimit}
+                  Client limit: {isUnlimited ? "Unlimited" : clientLimit}
                 </p>
 
                 {/* Client usage */}
@@ -273,21 +296,23 @@ export default function BillingManagePage() {
                     Billing Period
                   </p>
                   <div className="grid grid-cols-2 gap-2">
-                    {(['monthly', 'quarterly', 'semi_annual', 'annual'] as const).map((period) => (
+                    {(
+                      ["monthly", "quarterly", "semi_annual", "annual"] as const
+                    ).map((period) => (
                       <button
                         key={period}
                         onClick={() => {
                           if (period === currentPeriod) return;
                           upgradeSub.mutate({
-                            tier: currentTier as 'pro' | 'business',
+                            tier: currentTier as "pro" | "business",
                             period,
                           });
                         }}
                         disabled={upgradeSub.isPending}
                         className={`px-3 py-2 rounded-lg text-xs font-semibold border transition-colors ${
                           currentPeriod === period
-                            ? 'bg-[var(--energy)]/10 border-[var(--energy)]/30 text-[var(--energy)]'
-                            : 'border-[var(--border)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-subtle)]'
+                            ? "bg-[var(--energy)]/10 border-[var(--energy)]/30 text-[var(--energy)]"
+                            : "border-[var(--border)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-subtle)]"
                         }`}
                       >
                         {PERIOD_LABELS[period]}
@@ -334,7 +359,7 @@ export default function BillingManagePage() {
               <p className="text-sm text-[var(--text-secondary)] mt-4 pt-4 border-t border-[var(--border)]">
                 <span className="font-medium text-[var(--text-primary)]">
                   Next payment:
-                </span>{' '}
+                </span>{" "}
                 {isTrialing ? trialEndDate : nextPaymentDate}
               </p>
             )}
@@ -366,7 +391,7 @@ export default function BillingManagePage() {
               />
               {invoiceSearch && (
                 <button
-                  onClick={() => setInvoiceSearch('')}
+                  onClick={() => setInvoiceSearch("")}
                   className="absolute right-3 top-1/2 -translate-y-1/2"
                 >
                   <X className="w-3.5 h-3.5 text-[var(--text-tertiary)]" />
@@ -395,28 +420,32 @@ export default function BillingManagePage() {
               <div className="flex flex-col items-center justify-center py-16 text-center">
                 <Receipt className="w-10 h-10 mb-3 text-[var(--text-tertiary)]/30" />
                 <p className="text-sm font-semibold text-[var(--text-secondary)]">
-                  {invoiceSearch ? 'No matching invoices' : 'No invoices yet'}
+                  {invoiceSearch ? "No matching invoices" : "No invoices yet"}
                 </p>
                 <p className="text-xs text-[var(--text-tertiary)] mt-1">
                   {invoiceSearch
-                    ? ''
-                    : 'Billing history appears after your first payment.'}
+                    ? ""
+                    : "Billing history appears after your first payment."}
                 </p>
               </div>
             ) : (
               <table className="w-full min-w-[640px]">
                 <thead>
                   <tr className="border-b border-[var(--border)]">
-                    {['Description', 'Payment Method', 'Date', 'Amount', 'Status'].map(
-                      (h) => (
-                        <th
-                          key={h}
-                          className="text-left px-6 py-3 text-[10px] font-bold uppercase tracking-wider text-[var(--text-tertiary)]"
-                        >
-                          {h}
-                        </th>
-                      )
-                    )}
+                    {[
+                      "Description",
+                      "Payment Method",
+                      "Date",
+                      "Amount",
+                      "Status",
+                    ].map((h) => (
+                      <th
+                        key={h}
+                        className="text-left px-6 py-3 text-[10px] font-bold uppercase tracking-wider text-[var(--text-tertiary)]"
+                      >
+                        {h}
+                      </th>
+                    ))}
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-[var(--border)]">
@@ -430,23 +459,25 @@ export default function BillingManagePage() {
                     >
                       <td className="px-6 py-4">
                         <span className="text-sm font-medium text-[var(--text-primary)]">
-                          {inv.description ?? 'Plan subscription'}
+                          {inv.description ?? "Plan subscription"}
                         </span>
                       </td>
                       <td className="px-6 py-4">
                         <span className="text-sm text-[var(--text-secondary)]">
-                          Card ending {inv.number.slice(-4)}
+                          {inv.last4
+                            ? `Card ending ${inv.last4}`
+                            : "Card on file"}
                         </span>
                       </td>
                       <td className="px-6 py-4 text-sm text-[var(--text-secondary)]">
-                        {new Date(inv.date).toLocaleDateString('en-US', {
-                          month: 'short',
-                          day: 'numeric',
-                          year: 'numeric',
+                        {new Date(inv.date).toLocaleDateString("en-US", {
+                          month: "short",
+                          day: "numeric",
+                          year: "numeric",
                         })}
                       </td>
                       <td className="px-6 py-4 text-sm font-bold text-[var(--text-primary)]">
-                        ${inv.amount.toFixed(2)}
+                        {formatCurrency(inv.amount, inv.currency)}
                       </td>
                       <td className="px-6 py-4">
                         <StatusBadge status={inv.status} />
@@ -461,7 +492,7 @@ export default function BillingManagePage() {
           {!invLoading && filteredInvoices.length > 0 && (
             <div className="px-6 py-3 border-t border-[var(--border)] text-[10px] uppercase tracking-wider text-[var(--text-tertiary)]">
               Showing {filteredInvoices.length} of {invoices.length} invoice
-              {invoices.length !== 1 ? 's' : ''}
+              {invoices.length !== 1 ? "s" : ""}
             </div>
           )}
         </div>
@@ -478,8 +509,8 @@ export default function BillingManagePage() {
                   Cancel Subscription
                 </h3>
                 <p className="text-sm text-[var(--text-secondary)] mt-1 max-w-lg">
-                  Your subscription will remain active until {nextPaymentDate}. After
-                  that, you will be downgraded to no active plan.
+                  Your subscription will remain active until {nextPaymentDate}.
+                  After that, you will be downgraded to no active plan.
                 </p>
                 <Button
                   variant="danger"
@@ -506,9 +537,9 @@ export default function BillingManagePage() {
           <div className="flex items-start gap-4 p-4 rounded-xl bg-red-50 dark:bg-red-500/10 border border-red-200/50 dark:border-red-500/20">
             <AlertTriangle className="w-5 h-5 text-red-500 dark:text-red-400 shrink-0 mt-0.5" />
             <p className="text-sm text-red-700 dark:text-red-300 leading-relaxed">
-              You will keep full access until {nextPaymentDate}. After that, your
-              account will downgrade to no active plan. This action
-              cannot be undone early.
+              You will keep full access until {nextPaymentDate}. After that,
+              your account will downgrade to no active plan. This action cannot
+              be undone early.
             </p>
           </div>
 
@@ -529,7 +560,7 @@ export default function BillingManagePage() {
                 setShowCancelModal(false);
               }}
             >
-              {cancelSub.isPending ? 'Cancelling…' : 'Yes, Cancel'}
+              {cancelSub.isPending ? "Cancelling…" : "Yes, Cancel"}
             </Button>
           </div>
         </div>

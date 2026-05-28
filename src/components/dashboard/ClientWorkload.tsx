@@ -60,7 +60,7 @@ export function ClientWorkload({ clients, checkins }: ClientWorkloadProps) {
       </div>
 
       {rows.length === 0 ? (
-        <div className="flex flex-col items-center justify-center rounded-full py-10 text-[var(--text-tertiary)] dark:text-[#FAFAFA]/30">
+        <div className="flex flex-col items-center justify-center rounded-lg py-10 text-[var(--text-tertiary)] dark:text-[#FAFAFA]/30">
           <Users size={24} className="mb-2" />
           <p className="text-xs">Add your first client to get started.</p>
         </div>
