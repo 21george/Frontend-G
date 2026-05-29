@@ -1,20 +1,30 @@
-'use client'
+"use client";
 
-import { Plus, Salad, Ruler, Weight, Target, Activity, Pencil, X, Loader2 } from 'lucide-react'
-import Link from 'next/link'
-import { useState } from 'react'
-import type { NutritionPlan, Client, AnalyticsData } from '@/types'
-import { NutritionListCard } from '@/components/clients/NutritionListCard'
-import { Modal } from '@/components/ui/Modal'
-import { useStoreMeasurement } from '@/hooks'
+import {
+  Plus,
+  Salad,
+  Ruler,
+  Weight,
+  Target,
+  Activity,
+  Pencil,
+  X,
+  Loader2,
+} from "lucide-react";
+import Link from "next/link";
+import { useState } from "react";
+import type { NutritionPlan, Client, AnalyticsData } from "@/types";
+import { NutritionListCard } from "@/components/clients/NutritionListCard";
+import { Modal } from "@/components/ui/Modal";
+import { useStoreMeasurement } from "@/hooks";
 
 interface Props {
-  clientId: string
-  client: Client
-  nutrition: NutritionPlan[] | undefined
-  analytics: AnalyticsData | undefined
-  expandedPlan: string | null
-  setExpandedPlan: (id: string | null) => void
+  clientId: string;
+  client: Client;
+  nutrition: NutritionPlan[] | undefined;
+  analytics: AnalyticsData | undefined;
+  expandedPlan: string | null;
+  setExpandedPlan: (id: string | null) => void;
 }
 
 /* ── Female silhouette SVG ─────────────────────────────────────────────── */
@@ -46,16 +56,53 @@ function FemaleSilhouette({ className }: { className?: string }) {
         strokeWidth="1.2"
       />
       {/* Left eye */}
-      <path d="M90 56C91 54 93 54 94 56" stroke="#374151" strokeWidth="1" strokeLinecap="round" fill="none" />
+      <path
+        d="M90 56C91 54 93 54 94 56"
+        stroke="#374151"
+        strokeWidth="1"
+        strokeLinecap="round"
+        fill="none"
+      />
       {/* Right eye */}
-      <path d="M102 56C103 54 105 54 106 56" stroke="#374151" strokeWidth="1" strokeLinecap="round" fill="none" />
+      <path
+        d="M102 56C103 54 105 54 106 56"
+        stroke="#374151"
+        strokeWidth="1"
+        strokeLinecap="round"
+        fill="none"
+      />
       {/* Eyebrows */}
-      <path d="M88 52C90 50 92 50 94 52" stroke="#374151" strokeWidth="0.8" strokeLinecap="round" fill="none" />
-      <path d="M102 52C104 50 106 50 108 52" stroke="#374151" strokeWidth="0.8" strokeLinecap="round" fill="none" />
+      <path
+        d="M88 52C90 50 92 50 94 52"
+        stroke="#374151"
+        strokeWidth="0.8"
+        strokeLinecap="round"
+        fill="none"
+      />
+      <path
+        d="M102 52C104 50 106 50 108 52"
+        stroke="#374151"
+        strokeWidth="0.8"
+        strokeLinecap="round"
+        fill="none"
+      />
       {/* Nose */}
-      <path d="M98 60L97 65L99 65" stroke="#374151" strokeWidth="0.8" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+      <path
+        d="M98 60L97 65L99 65"
+        stroke="#374151"
+        strokeWidth="0.8"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        fill="none"
+      />
       {/* Mouth */}
-      <path d="M94 70C96 72 100 72 102 70" stroke="#374151" strokeWidth="0.8" strokeLinecap="round" fill="none" />
+      <path
+        d="M94 70C96 72 100 72 102 70"
+        stroke="#374151"
+        strokeWidth="0.8"
+        strokeLinecap="round"
+        fill="none"
+      />
       {/* Blush (subtle pink circles) */}
       <ellipse cx="88" cy="64" rx="3.5" ry="2" fill="#FCA5A5" opacity="0.35" />
       <ellipse cx="108" cy="64" rx="3.5" ry="2" fill="#FCA5A5" opacity="0.35" />
@@ -165,19 +212,51 @@ function FemaleSilhouette({ className }: { className?: string }) {
 
       {/* Measurement callout lines */}
       {/* Chest line */}
-      <line x1="48" y1="120" x2="62" y2="120" stroke="#6B7280" strokeWidth="0.8" strokeDasharray="3 2" />
+      <line
+        x1="48"
+        y1="120"
+        x2="62"
+        y2="120"
+        stroke="#6B7280"
+        strokeWidth="0.8"
+        strokeDasharray="3 2"
+      />
       <circle cx="46" cy="120" r="2" fill="#8B5CF6" opacity="0.6" />
       {/* Waist line */}
-      <line x1="50" y1="178" x2="72" y2="178" stroke="#6B7280" strokeWidth="0.8" strokeDasharray="3 2" />
+      <line
+        x1="50"
+        y1="178"
+        x2="72"
+        y2="178"
+        stroke="#6B7280"
+        strokeWidth="0.8"
+        strokeDasharray="3 2"
+      />
       <circle cx="48" cy="178" r="2" fill="#8B5CF6" opacity="0.6" />
       {/* Hip line */}
-      <line x1="52" y1="232" x2="64" y2="232" stroke="#6B7280" strokeWidth="0.8" strokeDasharray="3 2" />
+      <line
+        x1="52"
+        y1="232"
+        x2="64"
+        y2="232"
+        stroke="#6B7280"
+        strokeWidth="0.8"
+        strokeDasharray="3 2"
+      />
       <circle cx="50" cy="232" r="2" fill="#8B5CF6" opacity="0.6" />
       {/* Thigh line */}
-      <line x1="58" y1="290" x2="82" y2="290" stroke="#6B7280" strokeWidth="0.8" strokeDasharray="3 2" />
+      <line
+        x1="58"
+        y1="290"
+        x2="82"
+        y2="290"
+        stroke="#6B7280"
+        strokeWidth="0.8"
+        strokeDasharray="3 2"
+      />
       <circle cx="56" cy="290" r="2" fill="#8B5CF6" opacity="0.6" />
     </svg>
-  )
+  );
 }
 
 /* ── Read-only measurement field (no border-radius) ─────────────────────── */
@@ -187,23 +266,29 @@ function MeasureField({
   unit,
   icon: Icon,
 }: {
-  label: string
-  value: string | number | undefined | null
-  unit: string
-  icon: React.ElementType
+  label: string;
+  value: string | number | undefined | null;
+  unit: string;
+  icon: React.ElementType;
 }) {
-  const display = value != null && value !== '' ? `${value} ${unit}` : `— ${unit}`
+  const display =
+    value != null && value !== "" ? `${value} ${unit}` : `— ${unit}`;
   return (
     <div>
       <label className="block text-[11px] font-medium text-[var(--text-secondary)] mb-1.5">
         {label}
       </label>
       <div className="flex items-center gap-2.5 bg-[#F8F9FA] dark:bg-white/[0.04] border border-[#E9ECEF] dark:border-white/[0.06] px-3.5 py-2.5">
-        <Icon className="w-4 h-4 text-[var(--text-tertiary)]" strokeWidth={1.5} />
-        <span className="text-[13px] font-medium text-[var(--text-primary)]">{display}</span>
+        <Icon
+          className="w-4 h-4 text-[var(--text-tertiary)]"
+          strokeWidth={1.5}
+        />
+        <span className="text-[13px] font-medium text-[var(--text-primary)]">
+          {display}
+        </span>
       </div>
     </div>
-  )
+  );
 }
 
 /* ── Number input row inside modal ────────────────────────────────────── */
@@ -214,11 +299,11 @@ function NumberInput({
   unit,
   icon: Icon,
 }: {
-  label: string
-  value: string
-  onChange: (v: string) => void
-  unit: string
-  icon: React.ElementType
+  label: string;
+  value: string;
+  onChange: (v: string) => void;
+  unit: string;
+  icon: React.ElementType;
 }) {
   return (
     <div>
@@ -226,7 +311,10 @@ function NumberInput({
         {label}
       </label>
       <div className="flex items-center gap-2 bg-[#F8F9FA] dark:bg-white/[0.04] border border-[#E9ECEF] dark:border-white/[0.06] px-3 py-2">
-        <Icon className="w-4 h-4 text-[var(--text-tertiary)]" strokeWidth={1.5} />
+        <Icon
+          className="w-4 h-4 text-[var(--text-tertiary)]"
+          strokeWidth={1.5}
+        />
         <input
           type="number"
           step="0.1"
@@ -238,7 +326,7 @@ function NumberInput({
         <span className="text-[11px] text-[var(--text-tertiary)]">{unit}</span>
       </div>
     </div>
-  )
+  );
 }
 
 export function ClientNutritionTab({
@@ -249,48 +337,68 @@ export function ClientNutritionTab({
   expandedPlan,
   setExpandedPlan,
 }: Props) {
-  const latestMeasurement = analytics?.measurements?.[0]
+  const latestMeasurement = analytics?.measurements?.[0];
 
-  const height = client.height_cm
-  const currentWeight = latestMeasurement?.weight_kg ?? client.current_weight_kg
-  const waist = latestMeasurement?.waist_cm
-  const chest = latestMeasurement?.chest_cm
-  const hips = latestMeasurement?.hips_cm
-  const arm = (latestMeasurement as any)?.arms_cm
-  const thigh = (latestMeasurement as any)?.legs_cm ?? (latestMeasurement as any)?.thigh_cm
+  const height = client.height_cm;
+  const currentWeight =
+    latestMeasurement?.weight_kg ?? client.current_weight_kg;
+  const waist = latestMeasurement?.waist_cm;
+  const chest = latestMeasurement?.chest_cm;
+  const hips = latestMeasurement?.hips_cm;
+  const arm = (latestMeasurement as any)?.arms_cm;
+  const thigh =
+    (latestMeasurement as any)?.legs_cm ?? (latestMeasurement as any)?.thigh_cm;
 
   /* ── Modal state ── */
-  const [open, setOpen] = useState(false)
+  const [open, setOpen] = useState(false);
   const [form, setForm] = useState({
-    weight_kg: currentWeight?.toString() ?? '',
-    chest_cm: chest?.toString() ?? '',
-    waist_cm: waist?.toString() ?? '',
-    hips_cm: hips?.toString() ?? '',
-    arms_cm: arm?.toString() ?? '',
-    legs_cm: thigh?.toString() ?? '',
-    body_fat_pct: '',
-    notes: '',
-  })
+    weight_kg: currentWeight?.toString() ?? "",
+    chest_cm: chest?.toString() ?? "",
+    waist_cm: waist?.toString() ?? "",
+    hips_cm: hips?.toString() ?? "",
+    arms_cm: arm?.toString() ?? "",
+    legs_cm: thigh?.toString() ?? "",
+    body_fat_pct: "",
+    notes: "",
+  });
 
-  const storeMutation = useStoreMeasurement(clientId)
+  const storeMutation = useStoreMeasurement(clientId);
 
-  const update = (key: keyof typeof form, val: string) => setForm((p) => ({ ...p, [key]: val }))
+  const openModal = () => {
+    setForm({
+      weight_kg: currentWeight?.toString() ?? "",
+      chest_cm: chest?.toString() ?? "",
+      waist_cm: waist?.toString() ?? "",
+      hips_cm: hips?.toString() ?? "",
+      arms_cm: arm?.toString() ?? "",
+      legs_cm: thigh?.toString() ?? "",
+      body_fat_pct: "",
+      notes: "",
+    });
+    setOpen(true);
+  };
+
+  const update = (key: keyof typeof form, val: string) =>
+    setForm((p) => ({ ...p, [key]: val }));
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    const payload = {
-      weight_kg: parseFloat(form.weight_kg) || 0,
-      chest_cm: parseFloat(form.chest_cm) || 0,
-      waist_cm: parseFloat(form.waist_cm) || 0,
-      hips_cm: parseFloat(form.hips_cm) || 0,
-      arms_cm: parseFloat(form.arms_cm) || 0,
-      legs_cm: parseFloat(form.legs_cm) || 0,
-      body_fat_pct: parseFloat(form.body_fat_pct) || 0,
-      notes: form.notes || undefined,
-    }
-    await storeMutation.mutateAsync(payload)
-    setOpen(false)
-  }
+    e.preventDefault();
+    const payload: import("@/lib/api/services/media").StoreMeasurementPayload =
+      {
+        ...(form.weight_kg !== "" && { weight_kg: parseFloat(form.weight_kg) }),
+        ...(form.chest_cm !== "" && { chest_cm: parseFloat(form.chest_cm) }),
+        ...(form.waist_cm !== "" && { waist_cm: parseFloat(form.waist_cm) }),
+        ...(form.hips_cm !== "" && { hips_cm: parseFloat(form.hips_cm) }),
+        ...(form.arms_cm !== "" && { arms_cm: parseFloat(form.arms_cm) }),
+        ...(form.legs_cm !== "" && { legs_cm: parseFloat(form.legs_cm) }),
+        ...(form.body_fat_pct !== "" && {
+          body_fat_pct: parseFloat(form.body_fat_pct),
+        }),
+        ...(form.notes !== "" && { notes: form.notes }),
+      };
+    await storeMutation.mutateAsync(payload);
+    setOpen(false);
+  };
 
   return (
     <div className="space-y-6">
@@ -298,11 +406,16 @@ export function ClientNutritionTab({
       <div className="bg-white dark:bg-[#121212] border border-[var(--border)] dark:border-white/[0.06] p-5 sm:p-6">
         <div className="flex items-center justify-between mb-5">
           <div className="flex items-center gap-2">
-            <Ruler className="w-4 h-4 text-[var(--text-secondary)]" strokeWidth={1.5} />
-            <h3 className="text-[14px] font-semibold text-[var(--text-primary)]">Body measurements</h3>
+            <Ruler
+              className="w-4 h-4 text-[var(--text-secondary)]"
+              strokeWidth={1.5}
+            />
+            <h3 className="text-[14px] font-semibold text-[var(--text-primary)]">
+              Body measurements
+            </h3>
           </div>
           <button
-            onClick={() => setOpen(true)}
+            onClick={openModal}
             className="flex items-center gap-1.5 px-3 py-1.5 text-[12px] font-semibold bg-brand-600 text-white hover:bg-brand-700 transition-colors"
           >
             <Pencil size={13} /> Record
@@ -325,29 +438,78 @@ export function ClientNutritionTab({
           <div className="flex-1 min-w-0">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="sm:col-span-2">
-                <MeasureField label="Growth" value={height} unit="cm" icon={Ruler} />
+                <MeasureField
+                  label="Growth"
+                  value={height}
+                  unit="cm"
+                  icon={Ruler}
+                />
               </div>
-              <MeasureField label="Current weight" value={currentWeight} unit="kg" icon={Weight} />
-              <MeasureField label="Desired weight" value={undefined} unit="kg" icon={Target} />
-              <MeasureField label="Waist circumference" value={waist} unit="cm" icon={Ruler} />
-              <MeasureField label="Chest circumference" value={chest} unit="cm" icon={Ruler} />
-              <MeasureField label="Thigh circumference" value={thigh} unit="cm" icon={Ruler} />
-              <MeasureField label="Arm circumference" value={arm} unit="cm" icon={Ruler} />
+              <MeasureField
+                label="Current weight"
+                value={currentWeight}
+                unit="kg"
+                icon={Weight}
+              />
+              <MeasureField
+                label="Desired weight"
+                value={undefined}
+                unit="kg"
+                icon={Target}
+              />
+              <MeasureField
+                label="Waist circumference"
+                value={waist}
+                unit="cm"
+                icon={Ruler}
+              />
+              <MeasureField
+                label="Chest circumference"
+                value={chest}
+                unit="cm"
+                icon={Ruler}
+              />
+              <MeasureField
+                label="Thigh circumference"
+                value={thigh}
+                unit="cm"
+                icon={Ruler}
+              />
+              <MeasureField
+                label="Arm circumference"
+                value={arm}
+                unit="cm"
+                icon={Ruler}
+              />
             </div>
 
             <div className="mt-5 pt-5 border-t border-[var(--border)] dark:border-white/[0.06] grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-[11px] font-medium text-[var(--text-primary)] mb-2">Set your nutritional goals</label>
+                <label className="block text-[11px] font-medium text-[var(--text-primary)] mb-2">
+                  Set your nutritional goals
+                </label>
                 <div className="flex items-center gap-2.5 bg-[#F8F9FA] dark:bg-white/[0.04] border border-[#E9ECEF] dark:border-white/[0.06] px-3.5 py-2.5">
-                  <Target className="w-4 h-4 text-[var(--text-tertiary)]" strokeWidth={1.5} />
-                  <span className="text-[13px] font-medium text-[var(--text-primary)] flex-1 truncate">Not set</span>
+                  <Target
+                    className="w-4 h-4 text-[var(--text-tertiary)]"
+                    strokeWidth={1.5}
+                  />
+                  <span className="text-[13px] font-medium text-[var(--text-primary)] flex-1 truncate">
+                    Not set
+                  </span>
                 </div>
               </div>
               <div>
-                <label className="block text-[11px] font-medium text-[var(--text-primary)] mb-2">Define your activity level</label>
+                <label className="block text-[11px] font-medium text-[var(--text-primary)] mb-2">
+                  Define your activity level
+                </label>
                 <div className="flex items-center gap-2.5 bg-[#F8F9FA] dark:bg-white/[0.04] border border-[#E9ECEF] dark:border-white/[0.06] px-3.5 py-2.5">
-                  <Activity className="w-4 h-4 text-[var(--text-tertiary)]" strokeWidth={1.5} />
-                  <span className="text-[13px] font-medium text-[var(--text-primary)] flex-1 truncate">Not set</span>
+                  <Activity
+                    className="w-4 h-4 text-[var(--text-tertiary)]"
+                    strokeWidth={1.5}
+                  />
+                  <span className="text-[13px] font-medium text-[var(--text-primary)] flex-1 truncate">
+                    Not set
+                  </span>
                 </div>
               </div>
             </div>
@@ -356,23 +518,72 @@ export function ClientNutritionTab({
       </div>
 
       {/* Record Measurements Modal */}
-      <Modal open={open} onClose={() => setOpen(false)} title="Record Measurements" size="md">
+      <Modal
+        open={open}
+        onClose={() => setOpen(false)}
+        title="Record Measurements"
+        size="md"
+      >
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <NumberInput label="Current weight" value={form.weight_kg} onChange={(v) => update('weight_kg', v)} unit="kg" icon={Weight} />
-            <NumberInput label="Chest circumference" value={form.chest_cm} onChange={(v) => update('chest_cm', v)} unit="cm" icon={Ruler} />
-            <NumberInput label="Waist circumference" value={form.waist_cm} onChange={(v) => update('waist_cm', v)} unit="cm" icon={Ruler} />
-            <NumberInput label="Hip circumference" value={form.hips_cm} onChange={(v) => update('hips_cm', v)} unit="cm" icon={Ruler} />
-            <NumberInput label="Arm circumference" value={form.arms_cm} onChange={(v) => update('arms_cm', v)} unit="cm" icon={Ruler} />
-            <NumberInput label="Thigh circumference" value={form.legs_cm} onChange={(v) => update('legs_cm', v)} unit="cm" icon={Ruler} />
-            <NumberInput label="Body fat %" value={form.body_fat_pct} onChange={(v) => update('body_fat_pct', v)} unit="%" icon={Activity} />
+            <NumberInput
+              label="Current weight"
+              value={form.weight_kg}
+              onChange={(v) => update("weight_kg", v)}
+              unit="kg"
+              icon={Weight}
+            />
+            <NumberInput
+              label="Chest circumference"
+              value={form.chest_cm}
+              onChange={(v) => update("chest_cm", v)}
+              unit="cm"
+              icon={Ruler}
+            />
+            <NumberInput
+              label="Waist circumference"
+              value={form.waist_cm}
+              onChange={(v) => update("waist_cm", v)}
+              unit="cm"
+              icon={Ruler}
+            />
+            <NumberInput
+              label="Hip circumference"
+              value={form.hips_cm}
+              onChange={(v) => update("hips_cm", v)}
+              unit="cm"
+              icon={Ruler}
+            />
+            <NumberInput
+              label="Arm circumference"
+              value={form.arms_cm}
+              onChange={(v) => update("arms_cm", v)}
+              unit="cm"
+              icon={Ruler}
+            />
+            <NumberInput
+              label="Thigh circumference"
+              value={form.legs_cm}
+              onChange={(v) => update("legs_cm", v)}
+              unit="cm"
+              icon={Ruler}
+            />
+            <NumberInput
+              label="Body fat %"
+              value={form.body_fat_pct}
+              onChange={(v) => update("body_fat_pct", v)}
+              unit="%"
+              icon={Activity}
+            />
           </div>
 
           <div>
-            <label className="block text-[11px] font-medium text-[var(--text-secondary)] mb-1.5">Notes</label>
+            <label className="block text-[11px] font-medium text-[var(--text-secondary)] mb-1.5">
+              Notes
+            </label>
             <textarea
               value={form.notes}
-              onChange={(e) => update('notes', e.target.value)}
+              onChange={(e) => update("notes", e.target.value)}
               rows={3}
               className="w-full bg-[#F8F9FA] dark:bg-white/[0.04] border border-[#E9ECEF] dark:border-white/[0.06] px-3 py-2 text-[13px] text-[var(--text-primary)] outline-none placeholder:text-[var(--text-tertiary)] resize-none"
               placeholder="Optional notes..."
@@ -392,7 +603,9 @@ export function ClientNutritionTab({
               disabled={storeMutation.isPending}
               className="px-4 py-2 text-[13px] font-medium bg-brand-600 text-white hover:bg-brand-700 disabled:opacity-50 transition-colors flex items-center gap-2"
             >
-              {storeMutation.isPending && <Loader2 className="w-4 h-4 animate-spin" />}
+              {storeMutation.isPending && (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              )}
               Save Measurements
             </button>
           </div>
@@ -415,7 +628,9 @@ export function ClientNutritionTab({
       {(nutrition ?? []).length === 0 ? (
         <div className="dark:bg-transparent p-12 text-center">
           <Salad className="w-10 h-10 mx-auto mb-3 text-[var(--text-secondary)]" />
-          <p className="text-[13px] text-[var(--text-tertiary)]">No nutrition plans yet</p>
+          <p className="text-[13px] text-[var(--text-tertiary)]">
+            No nutrition plans yet
+          </p>
         </div>
       ) : (
         (nutrition ?? []).map((plan) => (
@@ -423,10 +638,12 @@ export function ClientNutritionTab({
             key={plan.id}
             plan={plan}
             expanded={expandedPlan === plan.id}
-            onToggle={() => setExpandedPlan(expandedPlan === plan.id ? null : plan.id)}
+            onToggle={() =>
+              setExpandedPlan(expandedPlan === plan.id ? null : plan.id)
+            }
           />
         ))
       )}
     </div>
-  )
+  );
 }

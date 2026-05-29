@@ -4,8 +4,11 @@
 export function isSafeRedirectUrl(url: string): boolean {
   if (!url) return false;
 
-  // Allow relative paths
-  if (url.startsWith("/") && !url.startsWith("//")) return true;
+  // Normalize backslashes so "/\evil.com" doesn't slip through as a relative path.
+  const normalized = url.replace(/\\/g, "/");
+
+  // Allow relative paths, but reject protocol-relative URLs ("//host" or "/\host").
+  if (normalized.startsWith("/") && !normalized.startsWith("//")) return true;
 
   try {
     const parsed = new URL(url);
