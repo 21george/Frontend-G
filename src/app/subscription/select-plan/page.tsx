@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { Check, Loader2, ArrowRight } from 'lucide-react';
 import apiClient from '@/lib/api';
+import { safeRedirect } from '@/lib/validateUrl';
 import { useAuthStore } from '@/store/auth';
 import { useSubscriptionStore } from '@/store/subscription';
 import { Button } from '@/components/ui/button';
@@ -114,7 +115,7 @@ export default function SelectPlanPage() {
 
       // Paid plan - redirect to Stripe Checkout
       if (checkout_url) {
-        window.location.href = checkout_url;
+        safeRedirect(checkout_url);
       } else {
         setError('Failed to create checkout session');
       }

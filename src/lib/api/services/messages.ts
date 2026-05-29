@@ -19,7 +19,16 @@ interface UnreadClientMessage {
 
 export const messagesApi = {
   list: (clientId: string) =>
-    api.get(`/messages/${clientId}`).then(r => r.data),
+    api.get<PaginatedResponse<{
+      id: string
+      content: string
+      sender_role: 'coach' | 'client'
+      read: boolean
+      sent_at: string
+      media_url?: string | null
+      media_type?: string | null
+      media_filename?: string | null
+    }>>(`/messages/${clientId}`).then(r => r.data),
 
   send: (data: { client_id: string; content: string; media_url?: string; media_type?: string; media_filename?: string }) =>
     api.post('/messages', data).then(r => r.data),

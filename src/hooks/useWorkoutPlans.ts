@@ -77,3 +77,21 @@ export const useAssignWorkoutPlan = (id: string) =>
     errorMessage: 'Failed to assign workout plan',
     invalidateKeys: [['workout-plans'], ['workout-plan', id]],
   })
+
+export const useAllWorkoutPlans = () =>
+  useQuery({
+    queryKey: ['workout-plans', 'all'],
+    queryFn: async () => {
+      const all: WorkoutPlan[] = []
+      let page = 1
+      let totalPages = 1
+      do {
+        const res = await workoutPlansApi.list({ page } as Parameters<typeof workoutPlansApi.list>[0])
+        all.push(...(res.data ?? []))
+        totalPages = res.pagination?.total_pages ?? 1
+        page++
+      } while (page <= totalPages)
+      return all
+    },
+    staleTime: 2 * 60_000,
+  })

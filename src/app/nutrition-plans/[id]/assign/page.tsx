@@ -2,9 +2,9 @@
 import { useParams, useRouter } from "next/navigation";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import {
-  useWorkoutPlan,
+  useNutritionPlan,
   useAllClients,
-  useAssignWorkoutPlan,
+  useAssignNutritionPlan,
 } from "@/lib/hooks";
 import Link from "next/link";
 import { useState } from "react";
@@ -13,7 +13,7 @@ import {
   ArrowLeft,
   Users,
   Check,
-  Dumbbell,
+  Salad,
   Calendar,
   Loader2,
   Search,
@@ -23,16 +23,38 @@ import {
 import { motion, AnimatePresence } from "framer-motion";
 import { Skeleton } from "@/components/ui/Skeleton";
 
-export default function AssignWorkoutPlanPage() {
+export default function AssignNutritionPlanPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
-  const { data: plan, isLoading: planLoading } = useWorkoutPlan(id);
+  const { data: plan, isLoading: planLoading } = useNutritionPlan(id);
   const { data: clients = [], isLoading: clientsLoading } = useAllClients();
-  const assignMutation = useAssignWorkoutPlan(id);
+  const assignMutation = useAssignNutritionPlan(id);
+
   const [selectedClients, setSelectedClients] = useState<string[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
 
-  const isLoading = planLoading;
+  const filteredClients = clients.filter((client) => {
+    if (!searchQuery.trim()) return true;
+    const q = searchQuery.toLowerCase();
+    return (
+      client.name?.toLowerCase().includes(q) ||
+      client.email?.toLowerCase().includes(q)
+    );
+  });
+
+  const toggleClient = (clientId: string) => {
+    setSelectedClients((prev) =>
+      prev.includes(clientId)
+        ? prev.filter((id) => id !== clientId)
+        : [...prev, clientId],
+    );
+  };
+
+  const handleAssign = async () => {
+    if (selectedClients.length === 0) return;
+    await assignMutation.mutateAsync(selectedClients);
+    router.push(`/nutrition-plans/${id}`);
+  };
 
   if (planLoading) {
     return (
@@ -62,41 +84,18 @@ export default function AssignWorkoutPlanPage() {
     );
   }
 
-  const filteredClients = clients.filter((client) => {
-    if (!searchQuery.trim()) return true;
-    const q = searchQuery.toLowerCase();
-    return (
-      client.name?.toLowerCase().includes(q) ||
-      client.email?.toLowerCase().includes(q)
-    );
-  });
-
-  const toggleClient = (clientId: string) => {
-    setSelectedClients((prev) =>
-      prev.includes(clientId)
-        ? prev.filter((id) => id !== clientId)
-        : [...prev, clientId],
-    );
-  };
-
-  const handleAssign = async () => {
-    if (selectedClients.length === 0) return;
-    await assignMutation.mutateAsync(selectedClients);
-    router.push(`/workout-plans/${id}`);
-  };
-
   if (!plan) {
     return (
       <DashboardLayout>
         <div className="flex flex-col items-center justify-center py-20">
           <div className="w-16 h-16 bg-slate-100 dark:bg-white/[0.04] flex items-center justify-center mb-4">
-            <Dumbbell className="w-8 h-8 text-slate-300 dark:text-slate-600" />
+            <Salad className="w-8 h-8 text-slate-300 dark:text-slate-600" />
           </div>
           <p className="text-sm font-medium text-slate-600 dark:text-slate-400">
-            Workout plan not found
+            Nutrition plan not found
           </p>
           <Link
-            href="/workout-plans"
+            href="/nutrition-plans"
             className="mt-4 inline-flex items-center gap-2 px-4 py-2 bg-brand-600 hover:bg-brand-700 text-white text-sm font-medium transition-colors"
           >
             <ArrowLeft className="w-4 h-4" />
@@ -115,21 +114,21 @@ export default function AssignWorkoutPlanPage() {
           <div>
             <nav className="flex items-center gap-2 text-xs text-slate-500 dark:text-neutral-400 mb-3 uppercase tracking-tighter">
               <Link
-                href="/workout-plans"
+                href="/nutrition-plans"
                 className="hover:text-brand-600 dark:hover:text-brand-300 transition-colors"
               >
                 Dashboard
               </Link>
               <ChevronRight className="w-3 h-3" />
               <Link
-                href="/workout-plans"
+                href="/nutrition-plans"
                 className="hover:text-brand-600 dark:hover:text-brand-300 transition-colors"
               >
-                Workout Plans
+                Nutrition Plans
               </Link>
               <ChevronRight className="w-3 h-3" />
               <Link
-                href={`/workout-plans/${id}`}
+                href={`/nutrition-plans/${id}`}
                 className="hover:text-brand-600 dark:hover:text-brand-300 transition-colors truncate max-w-[150px]"
               >
                 {plan.title}
@@ -138,10 +137,10 @@ export default function AssignWorkoutPlanPage() {
               <span className="text-brand-600 dark:text-brand-300">Assign</span>
             </nav>
             <h1 className="text-3xl lg:text-4xl font-bold text-[var(--text-primary)] dark:text-[var(--text-primary)] tracking-tight">
-              Assign Workout Plan
+              Assign Nutrition Plan
             </h1>
             <p className="text-slate-500 dark:text-neutral-400 mt-2 max-w-lg text-sm">
-              Select clients to assign this workout plan to
+              Select clients to assign this nutrition plan to
             </p>
           </div>
         </div>
@@ -150,11 +149,11 @@ export default function AssignWorkoutPlanPage() {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="p-5 "
+          className="p-5"
         >
           <div className="flex items-start gap-4">
-            <div className="w-12 h-12  flex items-center justify-center flex-shrink-0">
-              <Dumbbell className="w-6 h-6 text-white" />
+            <div className="w-12 h-12 flex items-center justify-center flex-shrink-0 bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl">
+              <Salad className="w-6 h-6 text-white" />
             </div>
             <div className="flex-1">
               <h2 className="text-lg font-bold text-[var(--text-primary)] dark:text-[var(--text-primary)]">
@@ -166,12 +165,12 @@ export default function AssignWorkoutPlanPage() {
                   Week of {plan.week_start}
                 </span>
                 <span className="flex items-center gap-1">
-                  <Dumbbell size={14} />
-                  {plan.days?.length || 0} workout days
+                  <Salad size={14} />
+                  {plan.days?.length || 0} days
                 </span>
                 <span className="flex items-center gap-1">
                   <Users size={14} />
-                  {plan.plan_type}
+                  {plan.plan_type ?? "individual"}
                 </span>
               </div>
             </div>
@@ -186,13 +185,13 @@ export default function AssignWorkoutPlanPage() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.1 }}
-              className=" overflow-hidden "
+              className="overflow-hidden border border-slate-200/80 dark:border-white/[0.08] rounded-2xl bg-white dark:bg-[#121212]"
             >
               {/* Header */}
-              <div className="px-5 py-4  border-slate-100 dark:border-white/[0.06]">
+              <div className="px-5 py-4 border-b border-slate-100 dark:border-white/[0.06]">
                 <div className="flex items-center justify-between gap-3">
                   <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 flex items-center justify-center">
+                    <div className="w-8 h-8 bg-brand-600 rounded-lg flex items-center justify-center">
                       <Users className="w-4 h-4 text-white" />
                     </div>
                     <h3 className="text-base font-bold text-[var(--text-primary)] dark:text-[var(--text-primary)]">
@@ -209,7 +208,7 @@ export default function AssignWorkoutPlanPage() {
                       placeholder="Search clients..."
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
-                      className="w-48 pl-9 pr-3 py-1.5  rounded-4 text-sm bg-[var(--bg-subtle)] dark:bg-white/[0.04]  border-[var(--border)] dark:border-white/[0.08] focus:outline-none focus:ring-2 focus:ring-brand-600/20 dark:focus:ring-brand-400/20"
+                      className="w-48 pl-9 pr-3 py-1.5 rounded-lg text-sm bg-[var(--bg-subtle)] dark:bg-white/[0.04] border border-[var(--border)] dark:border-white/[0.08] focus:outline-none focus:ring-2 focus:ring-brand-600/20 dark:focus:ring-brand-400/20"
                     />
                   </div>
                 </div>
@@ -244,16 +243,24 @@ export default function AssignWorkoutPlanPage() {
                         whileHover={{ scale: 1.02 }}
                         whileTap={{ scale: 0.98 }}
                         onClick={() => toggleClient(client.id)}
-                        className={`relative p-4 border text-left transition-all ${
+                        className={`relative p-4 border text-left transition-all rounded-xl ${
                           isSelected
                             ? "bg-brand-600/5 dark:bg-brand-600/20 border-brand-500/50 ring-1 ring-brand-500/10"
                             : "bg-[var(--bg-subtle)] dark:bg-white/[0.02] border-slate-200/80 dark:border-white/[0.08] hover:border-slate-300 dark:hover:border-white/[0.15]"
                         }`}
                       >
                         <div className="flex items-start gap-3">
-                          <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white text-sm font-semibold flex-shrink-0">
-                            {client.name?.[0]?.toUpperCase() ?? "C"}
-                          </div>
+                          {client.profile_photo_url ? (
+                            <img
+                              src={client.profile_photo_url}
+                              alt={client.name}
+                              className="w-10 h-10 rounded-full object-cover flex-shrink-0"
+                            />
+                          ) : (
+                            <div className="w-10 h-10 bg-gradient-to-br from-green-500 to-emerald-600 rounded-full flex items-center justify-center text-white text-sm font-semibold flex-shrink-0">
+                              {client.name?.[0]?.toUpperCase() ?? "C"}
+                            </div>
+                          )}
                           <div className="flex-1 min-w-0">
                             <div className="text-sm font-semibold text-[var(--text-primary)] dark:text-[var(--text-primary)] truncate">
                               {client.name}
@@ -288,10 +295,10 @@ export default function AssignWorkoutPlanPage() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2 }}
-              className=" border-slate-200/80 dark:border-white/[0.08] p-5 sticky top-6"
+              className="border border-slate-200/80 dark:border-white/[0.08] rounded-2xl bg-white dark:bg-[#121212] p-5 sticky top-6"
             >
               <div className="flex items-center gap-3 mb-4">
-                <div className="w-8 h-8 flex items-center justify-center">
+                <div className="w-8 h-8 bg-brand-600 rounded-lg flex items-center justify-center">
                   <UserPlus className="w-4 h-4 text-white" />
                 </div>
                 <h3 className="text-base font-bold text-[var(--text-primary)] dark:text-[var(--text-primary)]">
@@ -320,19 +327,27 @@ export default function AssignWorkoutPlanPage() {
                         initial={{ opacity: 0, x: -10 }}
                         animate={{ opacity: 1, x: 0 }}
                         exit={{ opacity: 0, x: 10 }}
-                        className="flex items-center justify-between gap-2 p-2 bg-[var(--bg-subtle)] dark:bg-white/[0.04] "
+                        className="flex items-center justify-between gap-2 p-2 bg-[var(--bg-subtle)] dark:bg-white/[0.04] rounded-lg"
                       >
                         <div className="flex items-center gap-2 min-w-0">
-                          <div className="w-6 h-6 bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white text-[10px] font-semibold flex-shrink-0">
-                            {client.name?.[0]?.toUpperCase() ?? "C"}
-                          </div>
+                          {client.profile_photo_url ? (
+                            <img
+                              src={client.profile_photo_url}
+                              alt={client.name}
+                              className="w-6 h-6 rounded-full object-cover flex-shrink-0"
+                            />
+                          ) : (
+                            <div className="w-6 h-6 bg-gradient-to-br from-green-500 to-emerald-600 rounded-full flex items-center justify-center text-white text-[10px] font-semibold flex-shrink-0">
+                              {client.name?.[0]?.toUpperCase() ?? "C"}
+                            </div>
+                          )}
                           <span className="text-xs font-medium text-slate-700 dark:text-slate-300 truncate">
                             {client.name}
                           </span>
                         </div>
                         <button
                           onClick={() => toggleClient(clientId)}
-                          className="p-1 hover:bg-slate-200 dark:hover:bg-white/[0.08] transition-colors"
+                          className="p-1 hover:bg-slate-200 dark:hover:bg-white/[0.08] transition-colors rounded"
                         >
                           <X size={12} className="text-slate-400" />
                         </button>
@@ -348,13 +363,13 @@ export default function AssignWorkoutPlanPage() {
               </div>
 
               {/* Action buttons */}
-              <div className="space-y-2 flex-1 flex flex-col-2 gap-2">
+              <div className="space-y-2">
                 <button
                   onClick={handleAssign}
                   disabled={
                     selectedClients.length === 0 || assignMutation.isPending
                   }
-                  className="w-full py-2 rounded-4 bg-brand-600 hover:bg-brand-700 disabled:bg-slate-300 dark:disabled:bg-white/[0.1] text-white text-sm font-medium transition-colors flex items-center justify-center gap-2 disabled:cursor-not-allowed"
+                  className="w-full py-2.5 rounded-xl bg-brand-600 hover:bg-brand-700 disabled:bg-slate-300 dark:disabled:bg-white/[0.1] text-white text-sm font-medium transition-colors flex items-center justify-center gap-2 disabled:cursor-not-allowed"
                 >
                   {assignMutation.isPending ? (
                     <>
@@ -370,8 +385,8 @@ export default function AssignWorkoutPlanPage() {
                   )}
                 </button>
                 <Link
-                  href={`/workout-plans/${id}`}
-                  className="block w-full py-2.5 text-center text-sm font-medium text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-white/[0.1] bg-white dark:bg-white/[0.04] hover:bg-slate-50 dark:hover:bg-white/[0.08] transition-colors"
+                  href={`/nutrition-plans/${id}`}
+                  className="block w-full py-2.5 text-center text-sm font-medium text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-white/[0.1] bg-white dark:bg-white/[0.04] hover:bg-slate-50 dark:hover:bg-white/[0.08] transition-colors rounded-xl"
                 >
                   Cancel
                 </Link>

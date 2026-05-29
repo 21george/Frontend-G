@@ -5,6 +5,7 @@ import {
   differenceInMinutes,
   differenceInDays,
   format,
+  isValid,
 } from 'date-fns'
 
 /**
@@ -25,8 +26,10 @@ import {
  *   ≤ 7 days → "This Friday at 9:00 am"
  *   beyond   → "June 12 at 3:00 pm"
  */
-export function humanDate(date: Date | string): string {
+export function humanDate(date: Date | string | null | undefined): string {
+  if (date == null || date === '') return 'Unknown time'
   const d = typeof date === 'string' ? new Date(date) : date
+  if (!isValid(d)) return 'Unknown time'
   const now = new Date()
   const timeStr = format(d, 'h:mm aaa') // e.g. "3:00 pm"
 

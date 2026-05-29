@@ -1,6 +1,17 @@
 import api from '../client'
 import type { MediaUpload, WorkoutLogDetailed, ApiResponse, PaginatedResponse, Exercise } from '@/types'
 
+export interface StoreMeasurementPayload {
+  weight_kg: number
+  chest_cm: number
+  waist_cm: number
+  hips_cm: number
+  arms_cm: number
+  legs_cm: number
+  body_fat_pct: number
+  notes?: string
+}
+
 export const mediaApi = {
   clientMedia: (clientId: string) =>
     api.get<ApiResponse<MediaUpload[]>>(`/coach/media/${clientId}`).then(r => r.data.data),
@@ -10,6 +21,9 @@ export const mediaApi = {
 
   clientWorkoutProgress: (clientId: string) =>
     api.get<ApiResponse<ClientWorkoutProgress>>(`/coach/clients/${clientId}/workout-progress`).then(r => r.data.data),
+
+  storeMeasurement: (clientId: string, payload: StoreMeasurementPayload) =>
+    api.post<ApiResponse<{ id: string }>>(`/coach/clients/${clientId}/measurements`, payload).then(r => r.data),
 }
 
 export interface ClientWorkoutProgress {

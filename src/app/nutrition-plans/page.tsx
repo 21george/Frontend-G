@@ -95,23 +95,70 @@ function ScoreBar({ score, max = 10 }: { score: number; max?: number }) {
 
 // ── Featured plan card ────────────────────────────────────────────────────────
 
-function FeaturedPlanCard({ plan, clientName }: { plan: NutritionPlan; clientName?: string }) {
+/* ── Client avatar stack ─────────────────────────────────────────────────── */
+function ClientAvatarStack({
+  clients,
+  max = 3,
+}: {
+  clients: { id: string; name: string; profile_photo_url?: string | null }[]
+  max?: number
+}) {
+  const visible = clients.slice(0, max)
+  const remaining = clients.length - max
+  return (
+    <div className="flex items-center -space-x-2">
+      {visible.map(c => (
+        c.profile_photo_url ? (
+          <img
+            key={c.id}
+            src={c.profile_photo_url}
+            alt={c.name}
+            className="w-6 h-6 rounded-full border-2 border-white dark:border-[#121212] object-cover"
+            title={c.name}
+          />
+        ) : (
+          <div
+            key={c.id}
+            className="w-6 h-6 rounded-full border-2 border-white dark:border-[#121212] bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center text-white text-[9px] font-semibold"
+            title={c.name}
+          >
+            {c.name?.[0]?.toUpperCase() ?? 'C'}
+          </div>
+        )
+      ))}
+      {remaining > 0 && (
+        <div className="w-6 h-6 rounded-full border-2 border-white dark:border-[#121212] bg-slate-200 dark:bg-slate-700 flex items-center justify-center text-[9px] font-semibold text-slate-600 dark:text-slate-300">
+          +{remaining}
+        </div>
+      )}
+    </div>
+  )
+}
+
+function FeaturedPlanCard({
+  plan,
+  assignedClients,
+}: {
+  plan: NutritionPlan
+  assignedClients?: { id: string; name: string; profile_photo_url?: string | null }[]
+}) {
   const score = healthScore(plan)
   const { calories = 0, protein_g = 0, carbs_g = 0, fat_g = 0 } = plan.daily_totals ?? {}
   const types = getMealTypes(plan)
   const totalMeals = plan.days?.reduce((s, d) => s + d.meals.length, 0) ?? 0
+  const clientCount = assignedClients?.length ?? 0
 
   return (
-    <div>
+    <div className="border border-slate-200/80 dark:border-white/[0.08] rounded-2xl overflow-hidden bg-white dark:bg-[#121212]">
       <div className="flex flex-col sm:flex-row">
         {/* Visual gradient panel */}
         <div className="sm:w-52 flex-shrink-0 bg-gradient-to-br from-brand-600 via-brand-700 to-brand-800 p-6 flex flex-col justify-between min-h-[180px]">
           <div className="flex flex-wrap gap-1.5">
             {types.slice(0, 2).map(t => (
-              <span key={t} className="text-[11px] bg-white/20 text-white px-2 py-0.5 font-semibold">{t}</span>
+              <span key={t} className="text-[11px] bg-white/20 text-white px-2 py-0.5 font-semibold rounded">{t}</span>
             ))}
             {types.length === 0 && (
-              <span className="text-[11px] bg-white/20 text-white px-2 py-0.5 font-semibold">General</span>
+              <span className="text-[11px] bg-white/20 text-white px-2 py-0.5 font-semibold rounded">General</span>
             )}
           </div>
           <div>
@@ -133,11 +180,22 @@ function FeaturedPlanCard({ plan, clientName }: { plan: NutritionPlan; clientNam
             <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-[var(--text-secondary)] dark:text-[var(--text-secondary)]">
               <span className="flex items-center gap-1.5"><Clock size={11} />{plan.days?.length ?? 7} days</span>
               <span className="flex items-center gap-1.5"><UtensilsCrossed size={11} />{totalMeals} meals</span>
-              {clientName && <span className="flex items-center gap-1.5"><Users size={11} />{clientName}</span>}
+              {clientCount > 0 && (
+                <span className="flex items-center gap-1.5">
+                  <Users size={11} />
+                  {clientCount} client{clientCount !== 1 ? 's' : ''}
+                </span>
+              )}
               <span className={`flex items-center gap-1.5 font-semibold ${scoreColor(score)}`}>
                 <Star size={11} />{score}/10
               </span>
             </div>
+            {/* Client avatars */}
+            {assignedClients && assignedClients.length > 0 && (
+              <div className="mt-2">
+                <ClientAvatarStack clients={assignedClients} />
+              </div>
+            )}
           </div>
 
           {/* Macros + CTA */}
@@ -148,7 +206,7 @@ function FeaturedPlanCard({ plan, clientName }: { plan: NutritionPlan; clientNam
             <MacroPill icon={<Droplets size={14} />} value={fat_g}     unit="g F"  color="text-slate-500"  bg="bg-slate-100 dark:bg-slate-800/60"  />
             <Link
               href={`/nutrition-plans/${plan.id}`}
-              className="ml-auto flex items-center  rounded-s-xl gap-1.5 px-4 py-2 bg-brand-600 hover:bg-brand-700 text-white text-sm font-semibold transition-colors"
+              className="ml-auto flex items-center rounded-xl gap-1.5 px-4 py-2 bg-brand-600 hover:bg-brand-700 text-white text-sm font-semibold transition-colors"
             >
               View Plan <ChevronRight size={14} />
             </Link>
@@ -162,17 +220,26 @@ function FeaturedPlanCard({ plan, clientName }: { plan: NutritionPlan; clientNam
 
 // ── Right panel mini card ─────────────────────────────────────────────────────
 
-function MiniPlanCard({ plan, rank }: { plan: NutritionPlan; rank?: number }) {
+function MiniPlanCard({
+  plan,
+  rank,
+  assignedClients,
+}: {
+  plan: NutritionPlan
+  rank?: number
+  assignedClients?: { id: string; name: string; profile_photo_url?: string | null }[]
+}) {
   const score = healthScore(plan)
   const { calories = 0 } = plan.daily_totals ?? {}
   const types = getMealTypes(plan)
+  const clientCount = assignedClients?.length ?? 0
 
   return (
     <Link
       href={`/nutrition-plans/${plan.id}`}
-      className="flex items-center gap-3 p-2 hover:bg-[#13131314] dark:hover:bg-white/[0.04] transition-colors group"
+      className="flex items-center gap-3 p-2 hover:bg-[#13131314] dark:hover:bg-white/[0.04] transition-colors group rounded-lg"
     >
-      <div className={`w-10 h-10 flex-shrink-0 flex items-center justify-center ${
+      <div className={`w-10 h-10 flex-shrink-0 flex items-center justify-center rounded-lg ${
         types[0] === 'Breakfast' ? 'bg-orange-100 dark:bg-orange-900/30' :
         types[0] === 'Lunch'     ? 'bg-blue-100 dark:bg-blue-900/30'     :
         types[0] === 'Dinner'    ? 'bg-indigo-100 dark:bg-indigo-900/30' :
@@ -184,13 +251,16 @@ function MiniPlanCard({ plan, rank }: { plan: NutritionPlan; rank?: number }) {
         <p className="text-sm font-semibold text-[var(--text-primary)] dark:text-[var(--text-primary)] truncate group-hover:text-green-600 dark:group-hover:text-green-400 transition-colors">
           {plan.title}
         </p>
-        <div className="flex items-center gap-1 mt-0.5">
+        <div className="flex items-center gap-2 mt-0.5">
           <Star size={10} className="text-amber-400 fill-amber-400" />
           <span className="text-xs text-[var(--text-secondary)] dark:text-[var(--text-secondary)]">{score}/10 · {calories} kcal</span>
+          {clientCount > 0 && (
+            <span className="text-xs text-[var(--text-tertiary)]">· {clientCount} client{clientCount !== 1 ? 's' : ''}</span>
+          )}
         </div>
       </div>
       {rank !== undefined && rank < 3 && (
-        <span className={`text-[10px] font-semibold px-1.5 py-0.5 flex-shrink-0 ${
+        <span className={`text-[10px] font-semibold px-1.5 py-0.5 flex-shrink-0 rounded ${
           rank === 0 ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400' :
           rank === 1 ? 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400'   :
                        'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400'
@@ -239,20 +309,25 @@ export default function NutritionPlansPage() {
 
   const plans = rawPlans as NutritionPlan[]
 
-  const clientMap = useMemo(
-    () => Object.fromEntries(clients.map(c => [c.id, c.name])),
-    [clients],
-  )
+  // Resolve clients for each plan from client_ids or single client_id
+  const getPlanClients = (plan: NutritionPlan) => {
+    const ids = plan.client_ids ?? (plan.client_id ? [plan.client_id] : [])
+    return ids.map(id => {
+      const c = clients.find(client => client.id === id)
+      return c ? { id: c.id, name: c.name, profile_photo_url: c.profile_photo_url } : null
+    }).filter(Boolean) as { id: string; name: string; profile_photo_url?: string | null }[]
+  }
 
   const filtered = useMemo(() => {
     let result = plans
 
     if (search.trim()) {
       const q = search.toLowerCase()
-      result = result.filter(p =>
-        p.title.toLowerCase().includes(q) ||
-        (clientMap[p.client_id] ?? '').toLowerCase().includes(q),
-      )
+      result = result.filter(p => {
+        if (p.title.toLowerCase().includes(q)) return true
+        const planClients = getPlanClients(p)
+        return planClients.some(c => c.name.toLowerCase().includes(q))
+      })
     }
 
     if (activeTab !== 'All') {
@@ -264,7 +339,7 @@ export default function NutritionPlansPage() {
     if (sortBy === 'name')     result = [...result].sort((a, b) => a.title.localeCompare(b.title))
 
     return result
-  }, [plans, search, activeTab, sortBy, clientMap])
+  }, [plans, search, activeTab, sortBy, clients])
 
   const featured    = plans[0]
   const popular     = useMemo(() => [...plans].sort((a, b) => healthScore(b) - healthScore(a)).slice(0, 4),          [plans])
@@ -313,7 +388,7 @@ export default function NutritionPlansPage() {
             {isLoading ? (
               <Skeleton className="h-48 rounded-xl" />
             ) : featured ? (
-              <FeaturedPlanCard plan={featured} clientName={clientMap[featured.client_id]} />
+              <FeaturedPlanCard plan={featured} assignedClients={getPlanClients(featured)} />
             ) : null}
 
             {/* All plans card */}
@@ -413,7 +488,7 @@ export default function NutritionPlansPage() {
               ) : popular.length === 0 ? (
                 <p className="text-xs text-slate-400 text-center py-4">No plans yet</p>
               ) : popular.map((plan, i) => (
-                <MiniPlanCard key={plan.id} plan={plan} rank={i} />
+                <MiniPlanCard key={plan.id} plan={plan} rank={i} assignedClients={getPlanClients(plan)} />
               ))}
             </div>
 
@@ -436,7 +511,7 @@ export default function NutritionPlansPage() {
               ) : recommended.length === 0 ? (
                 <p className="text-xs text-slate-400 text-center py-4">No high-protein plans yet</p>
               ) : recommended.map(plan => (
-                <MiniPlanCard key={plan.id} plan={plan} />
+                <MiniPlanCard key={plan.id} plan={plan} assignedClients={getPlanClients(plan)} />
               ))}
             </div>
 

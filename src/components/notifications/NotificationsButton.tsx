@@ -55,9 +55,11 @@ const notificationColors: Record<string, string> = {
   checkin_scheduled: 'bg-brand-100 text-brand-700 dark:bg-brand-900/30 dark:text-brand-400',
 }
 
-function formatWhen(sentAt: string): string {
+function formatWhen(sentAt: string | null | undefined): string {
+  if (!sentAt || sentAt === 'Invalid Date') return 'Just now'
   const now = new Date()
   const sent = new Date(sentAt)
+  if (isNaN(sent.getTime())) return 'Just now'
   const diffMs = now.getTime() - sent.getTime()
   const diffMins = Math.floor(diffMs / 60000)
   const diffHours = Math.floor(diffMs / 3600000)
@@ -460,9 +462,9 @@ export default function NotificationsButton() {
                               Messages
                             </h4>
                           </div>
-                          {messageThreads.map((thread) => (
+                          {messageThreads.map((thread, idx) => (
                             <MessageThreadCard
-                              key={thread.client_id}
+                              key={thread.client_id ?? `thread-${idx}`}
                               id={thread.client_id}
                               name={thread.client_name}
                               lastMessage={thread.lastMessage}
@@ -495,7 +497,7 @@ export default function NotificationsButton() {
                         const senderName = getSenderName(notification)
                         return (
                           <Link
-                            key={notification.id}
+                            key={notification.id ?? `notif-dd-${i}`}
                             href={link}
                             onClick={() => {
                               if (!notification.read) handleMarkRead(notification.id)
@@ -706,9 +708,9 @@ export default function NotificationsButton() {
                             {unreadMessages.length}
                           </span>
                         </div>
-                        {unreadMessages.map((msg) => (
+                        {unreadMessages.map((msg, idx) => (
                           <Link
-                            key={msg.id}
+                            key={msg.id ?? `msg-${idx}`}
                             href={`/messages?client=${msg.client_id}`}
                             onClick={() => setShowAll(false)}
                             className="flex items-start gap-3 py-2 hover:bg-[var(--bg-subtle)] rounded-lg transition-colors -mx-2 px-2"
@@ -736,7 +738,7 @@ export default function NotificationsButton() {
                     )}
 
                     {/* Notifications */}
-                    {displayNotifications.map((notification) => {
+                    {displayNotifications.map((notification, idx) => {
                       const Icon = notificationIcons[notification.type] ?? Bell
                       const colorClass =
                         notificationColors[notification.type] ??
@@ -822,7 +824,7 @@ export default function NotificationsButton() {
                       if (link) {
                         return (
                           <Link
-                            key={notification.id}
+                            key={notification.id ?? `notif-modal-${idx}`}
                             href={link}
                             onClick={() => {
                               if (!notification.read) handleMarkRead(notification.id)
@@ -833,7 +835,7 @@ export default function NotificationsButton() {
                           </Link>
                         )
                       }
-                      return <div key={notification.id}>{content}</div>
+                      return <div key={notification.id ?? `notif-modal-${idx}`}>{content}</div>
                     })}
                   </div>
                 )}

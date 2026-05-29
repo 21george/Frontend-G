@@ -133,7 +133,15 @@ export interface NutritionDay {
 
 export interface NutritionPlan {
   id: string;
-  client_id: string;
+  client_id?: string;
+  client_ids?: string[];
+  assigned_client?: {
+    id: string;
+    name: string;
+    profile_photo_url: string | null;
+  };
+  plan_type?: "individual" | "group" | "team";
+  group_name?: string;
   title: string;
   week_start: string;
   daily_totals: {

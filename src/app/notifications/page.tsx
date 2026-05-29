@@ -1,19 +1,17 @@
-'use client'
+"use client";
 
-import { useState } from 'react'
-import Link from 'next/link'
+import { useState } from "react";
+import Link from "next/link";
 import {
   useNotifications,
   useMarkNotificationRead,
   useMarkAllNotificationsRead,
   useUnreadNotificationCount,
   useDeleteNotification,
-} from '@/hooks/useNotifications'
-import {
-  useUnreadMessages,
-  useMarkAllMessagesRead,
-} from '@/hooks/useMessages'
-import type { Notification } from '@/types'
+} from "@/hooks/useNotifications";
+import { useUnreadMessages, useMarkAllMessagesRead } from "@/hooks/useMessages";
+import type { Notification } from "@/types";
+import { Skeleton } from "@/components/ui/Skeleton";
 import {
   Bell,
   Check,
@@ -29,51 +27,60 @@ import {
   Clock,
   UserCircle,
   ChevronRight,
-} from 'lucide-react'
-import { humanDate } from '@/lib/formatDate'
-import { motion } from 'framer-motion'
+} from "lucide-react";
+import { humanDate } from "@/lib/formatDate";
+import { motion } from "framer-motion";
 
 /* ── Icon & colour maps ─────────────────────────────────────────────── */
 
-const notificationIcons: Record<string, React.ComponentType<{ className?: string }>> = {
+const notificationIcons: Record<
+  string,
+  React.ComponentType<{ className?: string }>
+> = {
   workout_completed: Dumbbell,
   new_message: MessageSquare,
   profile_updated: User,
   checkin_reminder: Calendar,
   live_session_reminder: Video,
   checkin_scheduled: FileText,
-}
+};
 
 const notificationColors: Record<string, string> = {
-  workout_completed: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400',
-  new_message: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
-  profile_updated: 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400',
-  checkin_reminder: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400',
-  live_session_reminder: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
-  checkin_scheduled: 'bg-brand-100 text-brand-700 dark:bg-brand-700/30 dark:text-brand-400',
-}
+  workout_completed:
+    "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400",
+  new_message:
+    "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400",
+  profile_updated:
+    "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400",
+  checkin_reminder:
+    "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400",
+  live_session_reminder:
+    "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400",
+  checkin_scheduled:
+    "bg-brand-100 text-brand-700 dark:bg-brand-700/30 dark:text-brand-400",
+};
 
 /* ── Smart relative time ─────────────────────────────────────────────── */
 
 function formatWhen(sentAt: string): string {
-  const now = new Date()
-  const sent = new Date(sentAt)
-  const diffMs = now.getTime() - sent.getTime()
-  const diffMins = Math.floor(diffMs / 60000)
-  const diffHours = Math.floor(diffMs / 3600000)
-  const diffDays = Math.floor(diffMs / 86400000)
+  const now = new Date();
+  const sent = new Date(sentAt);
+  const diffMs = now.getTime() - sent.getTime();
+  const diffMins = Math.floor(diffMs / 60000);
+  const diffHours = Math.floor(diffMs / 3600000);
+  const diffDays = Math.floor(diffMs / 86400000);
 
-  if (diffMins < 1) return 'Just now'
-  if (diffMins < 60) return `${diffMins}m ago`
-  if (diffHours < 24) return `${diffHours}h ago`
-  if (diffDays < 7) return `${diffDays}d ago`
-  return humanDate(sentAt)
+  if (diffMins < 1) return "Just now";
+  if (diffMins < 60) return `${diffMins}m ago`;
+  if (diffHours < 24) return `${diffHours}h ago`;
+  if (diffDays < 7) return `${diffDays}d ago`;
+  return humanDate(sentAt);
 }
 
 /* ── Component ────────────────────────────────────────────────────────── */
 
 export default function NotificationsPage() {
-  const [filter, setFilter] = useState<'all' | 'unread'>('all')
+  const [filter, setFilter] = useState<"all" | "unread">("all");
 
   /* ── Data ───────────────────────────────────────────────────────────── */
   const {
@@ -82,60 +89,60 @@ export default function NotificationsPage() {
     isLoading: notifLoading,
     refetch: refetchNotifs,
   } = useNotifications({
-    unreadOnly: filter === 'unread',
+    unreadOnly: filter === "unread",
     refetchInterval: 5000,
-  })
+  });
 
   const {
     data: unreadMessagesData,
     isLoading: messagesLoading,
     refetch: refetchMessages,
-  } = useUnreadMessages()
+  } = useUnreadMessages();
 
-  const unreadMessages = unreadMessagesData?.data?.messages ?? []
-  const unreadMessageCount = unreadMessagesData?.data?.count ?? 0
+  const unreadMessages = unreadMessagesData?.data?.messages ?? [];
+  const unreadMessageCount = unreadMessagesData?.data?.count ?? 0;
 
-  const { count: unreadNotificationCount } = useUnreadNotificationCount()
-  const totalUnread = unreadNotificationCount + unreadMessageCount
+  const { count: unreadNotificationCount } = useUnreadNotificationCount();
+  const totalUnread = unreadNotificationCount + unreadMessageCount;
 
   /* ── Mutations ──────────────────────────────────────────────────────── */
-  const markRead = useMarkNotificationRead()
-  const markAllRead = useMarkAllNotificationsRead()
-  const markAllMessagesRead = useMarkAllMessagesRead()
-  const deleteNotification = useDeleteNotification()
+  const markRead = useMarkNotificationRead();
+  const markAllRead = useMarkAllNotificationsRead();
+  const markAllMessagesRead = useMarkAllMessagesRead();
+  const deleteNotification = useDeleteNotification();
 
   const handleMarkRead = (id: string) => {
-    markRead.mutate(id, { onSuccess: () => refetchNotifs() })
-  }
+    markRead.mutate(id, { onSuccess: () => refetchNotifs() });
+  };
 
   const handleMarkAllRead = () => {
-    markAllRead.mutate(undefined, { onSuccess: () => refetchNotifs() })
+    markAllRead.mutate(undefined, { onSuccess: () => refetchNotifs() });
     markAllMessagesRead.mutate(undefined, {
       onSuccess: () => refetchMessages(),
-    })
-  }
+    });
+  };
 
   const handleDelete = (id: string) => {
-    deleteNotification.mutate(id, { onSuccess: () => refetchNotifs() })
-  }
+    deleteNotification.mutate(id, { onSuccess: () => refetchNotifs() });
+  };
 
   /* ── Helpers ────────────────────────────────────────────────────────── */
   const getNavigationLink = (notification: Notification) => {
-    const { type, data } = notification
-    if (type === 'new_message' && data.clientId) {
-      return `/messages?client=${data.clientId}`
+    const { type, data } = notification;
+    if (type === "new_message" && data.clientId) {
+      return `/messages?client=${data.clientId}`;
     }
-    if (type === 'workout_completed' && data.clientId) {
-      return `/clients/${data.clientId}`
+    if (type === "workout_completed" && data.clientId) {
+      return `/clients/${data.clientId}`;
     }
-    if (type === 'profile_updated' && data.clientId) {
-      return `/clients/${data.clientId}`
+    if (type === "profile_updated" && data.clientId) {
+      return `/clients/${data.clientId}`;
     }
-    return ''
-  }
+    return "";
+  };
 
-  const isLoading = notifLoading || messagesLoading
-  const hasAny = notifications.length > 0 || unreadMessages.length > 0
+  const isLoading = notifLoading || messagesLoading;
+  const hasAny = notifications.length > 0 || unreadMessages.length > 0;
 
   /* ═══════════════════════════════════════════════════════════════════════
      RENDER
@@ -158,8 +165,8 @@ export default function NotificationsPage() {
             </h1>
             <p className="text-sm text-[var(--text-secondary)] dark:text-[var(--text-secondary)]">
               {totalUnread > 0
-                ? `${totalUnread} unread${unreadMessageCount > 0 ? ` · ${unreadMessageCount} message${unreadMessageCount === 1 ? '' : 's'}` : ''}`
-                : 'Nothing new.'}
+                ? `${totalUnread} unread${unreadMessageCount > 0 ? ` · ${unreadMessageCount} message${unreadMessageCount === 1 ? "" : "s"}` : ""}`
+                : "Nothing new."}
             </p>
           </div>
         </div>
@@ -168,24 +175,24 @@ export default function NotificationsPage() {
           {/* Filter */}
           <div className="flex border border-[var(--border)] dark:border-white/[0.08] overflow-hidden rounded-lg">
             <button
-              onClick={() => setFilter('all')}
+              onClick={() => setFilter("all")}
               className={`px-3 py-1.5 text-sm font-medium transition-colors ${
-                filter === 'all'
-                  ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900'
-                  : 'bg-white text-slate-600 hover:bg-[#13131314] dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-white/[0.04]'
+                filter === "all"
+                  ? "bg-slate-900 text-white dark:bg-white dark:text-slate-900"
+                  : "bg-white text-slate-600 hover:bg-[#13131314] dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-white/[0.04]"
               }`}
             >
               All
             </button>
             <button
-              onClick={() => setFilter('unread')}
+              onClick={() => setFilter("unread")}
               className={`px-3 py-1.5 text-sm font-medium transition-colors ${
-                filter === 'unread'
-                  ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900'
-                  : 'bg-white text-slate-600 hover:bg-[#13131314] dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-white/[0.04]'
+                filter === "unread"
+                  ? "bg-slate-900 text-white dark:bg-white dark:text-slate-900"
+                  : "bg-white text-slate-600 hover:bg-[#13131314] dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-white/[0.04]"
               }`}
             >
-              Unread{totalUnread > 0 ? ` (${totalUnread})` : ''}
+              Unread{totalUnread > 0 ? ` (${totalUnread})` : ""}
             </button>
           </div>
 
@@ -203,9 +210,20 @@ export default function NotificationsPage() {
 
       {/* ── Content ────────────────────────────────────────────────────── */}
       {isLoading ? (
-        <div className="text-center py-16">
-          <div className="inline-block animate-spin h-8 w-8 border-4 border-slate-200 dark:border-white/20 border-t-slate-900 dark:border-t-white rounded-full" />
-          <p className="mt-3 text-[var(--text-secondary)] dark:text-[var(--text-secondary)]">Loading…</p>
+        <div className="space-y-3">
+          {[...Array(5)].map((_, i) => (
+            <div
+              key={i}
+              className="flex items-start gap-4 p-4 border border-[var(--border)] dark:border-white/[0.06] rounded-xl bg-white dark:bg-[#1A1A1A]"
+            >
+              <Skeleton className="w-10 h-10 rounded-lg flex-shrink-0" />
+              <div className="flex-1 space-y-2">
+                <Skeleton className="h-4 w-36" />
+                <Skeleton className="h-3 w-64" />
+                <Skeleton className="h-3 w-20" />
+              </div>
+            </div>
+          ))}
         </div>
       ) : !hasAny ? (
         <div className="text-center py-16 bg-white dark:bg-[#1A1A1A] border border-[var(--border)] dark:border-white/[0.06] rounded-xl">
@@ -214,9 +232,9 @@ export default function NotificationsPage() {
             You&apos;re all caught up!
           </h3>
           <p className="text-[var(--text-secondary)] dark:text-[var(--text-secondary)] mt-1">
-            {filter === 'unread'
-              ? 'No unread notifications or messages.'
-              : 'All clear. Nothing new.'}
+            {filter === "unread"
+              ? "No unread notifications or messages."
+              : "All clear. Nothing new."}
           </p>
         </div>
       ) : (
@@ -269,7 +287,8 @@ export default function NotificationsPage() {
                         {msg.media_url && (
                           <span className="inline-flex items-center gap-1 mt-1 text-[11px] text-blue-600 dark:text-blue-400">
                             <FileText className="w-3 h-3" />
-                            {msg.media_type === 'image' ? 'Image' : 'File'} attached
+                            {msg.media_type === "image" ? "Image" : "File"}{" "}
+                            attached
                           </span>
                         )}
                       </div>
@@ -297,26 +316,28 @@ export default function NotificationsPage() {
 
               <div className="space-y-2">
                 {notifications.map((notification, i) => {
-                  const Icon = notificationIcons[notification.type] ?? Bell
+                  const Icon = notificationIcons[notification.type] ?? Bell;
                   const colorClass =
                     notificationColors[notification.type] ??
-                    'bg-slate-100 text-slate-700'
-                  const link = getNavigationLink(notification)
+                    "bg-slate-100 text-slate-700";
+                  const link = getNavigationLink(notification);
                   const senderName =
                     notification.from ||
                     notification.data?.clientName ||
                     notification.data?.coachName ||
-                    ''
+                    "";
 
                   const card = (
                     <div
                       className={`group flex items-start gap-4 p-4 border rounded-xl transition-all ${
                         notification.read
-                          ? 'bg-white dark:bg-[#1A1A1A] border-[var(--border)] dark:border-white/[0.06]'
-                          : 'bg-blue-50/50 dark:bg-blue-900/10 border-blue-200 dark:border-blue-800/50'
+                          ? "bg-white dark:bg-[#1A1A1A] border-[var(--border)] dark:border-white/[0.06]"
+                          : "bg-blue-50/50 dark:bg-blue-900/10 border-blue-200 dark:border-blue-800/50"
                       } hover:shadow-sm`}
                     >
-                      <div className={`p-2.5 flex-shrink-0 rounded-lg ${colorClass}`}>
+                      <div
+                        className={`p-2.5 flex-shrink-0 rounded-lg ${colorClass}`}
+                      >
                         <Icon className="w-5 h-5" />
                       </div>
 
@@ -366,9 +387,9 @@ export default function NotificationsPage() {
                         {!notification.read && (
                           <button
                             onClick={(e) => {
-                              e.preventDefault()
-                              e.stopPropagation()
-                              handleMarkRead(notification.id)
+                              e.preventDefault();
+                              e.stopPropagation();
+                              handleMarkRead(notification.id);
                             }}
                             className="p-2 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 rounded-lg transition-colors"
                             title="Mark as read"
@@ -378,9 +399,9 @@ export default function NotificationsPage() {
                         )}
                         <button
                           onClick={(e) => {
-                            e.preventDefault()
-                            e.stopPropagation()
-                            handleDelete(notification.id)
+                            e.preventDefault();
+                            e.stopPropagation();
+                            handleDelete(notification.id);
                           }}
                           className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
                           title="Delete"
@@ -389,7 +410,7 @@ export default function NotificationsPage() {
                         </button>
                       </div>
                     </div>
-                  )
+                  );
 
                   return link ? (
                     <Link key={notification.id} href={link} className="block">
@@ -397,7 +418,7 @@ export default function NotificationsPage() {
                     </Link>
                   ) : (
                     <div key={notification.id}>{card}</div>
-                  )
+                  );
                 })}
               </div>
             </section>
@@ -414,5 +435,5 @@ export default function NotificationsPage() {
         </div>
       )}
     </div>
-  )
+  );
 }

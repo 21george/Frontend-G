@@ -1,11 +1,7 @@
 import axios from 'axios'
 import { parseApiError } from './errors'
-
-const resolveBaseUrl = () => {
-  const raw = process.env.NEXT_PUBLIC_API_URL?.trim() || 'http://localhost:8000/v1'
-  const normalized = raw.replace(/\/+$/, '')
-  return normalized.endsWith('/v1') ? normalized : `${normalized}/v1`
-}
+import { safeRedirect } from '@/lib/validateUrl'
+import { resolveBaseUrl } from '@/lib/env'
 
 const api = axios.create({
   baseURL: resolveBaseUrl(),
@@ -103,7 +99,7 @@ api.interceptors.response.use(
       onAuthInvalidated?.()
       // Redirect to login if not already on auth page
       if (typeof window !== 'undefined' && !window.location.pathname.startsWith('/auth')) {
-        window.location.href = '/auth/login'
+        safeRedirect('/auth/login')
       }
       return Promise.reject(error)
     }
@@ -148,7 +144,7 @@ api.interceptors.response.use(
         processQueue(refreshError)
         onAuthInvalidated?.()
         if (typeof window !== 'undefined' && !window.location.pathname.startsWith('/auth')) {
-          window.location.href = '/auth/login'
+          safeRedirect('/auth/login')
         }
         return Promise.reject(refreshError)
       }
@@ -160,7 +156,7 @@ api.interceptors.response.use(
       // Clear auth state and redirect on refresh failure
       onAuthInvalidated?.()
       if (typeof window !== 'undefined' && !window.location.pathname.startsWith('/auth')) {
-        window.location.href = '/auth/login'
+        safeRedirect('/auth/login')
       }
       return Promise.reject(err)
     } finally {

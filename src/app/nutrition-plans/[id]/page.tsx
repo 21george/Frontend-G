@@ -111,10 +111,21 @@ export default function NutritionPlanDetailPage() {
   const updatePlan = useUpdateNutritionPlan(id)
   const deletePlan = useDeleteNutritionPlan()
   const { data: clientsData } = useClients()
+  const clients = clientsData?.data ?? []
   const clientMap = useMemo(
-    () => Object.fromEntries((clientsData?.data ?? []).map(c => [c.id, c.name])),
-    [clientsData],
+    () => Object.fromEntries(clients.map(c => [c.id, c])),
+    [clients],
   )
+
+  // Resolve assigned clients from client_ids or fallback to single client_id
+  const assignedClients = useMemo(() => {
+    if (!plan) return []
+    const ids = plan.client_ids ?? (plan.client_id ? [plan.client_id] : [])
+    return ids.map(cid => {
+      const c = clientMap[cid]
+      return c ? { id: c.id, name: c.name, profile_photo_url: c.profile_photo_url } : null
+    }).filter(Boolean) as { id: string; name: string; profile_photo_url: string | null }[]
+  }, [plan, clientMap])
 
   const [title,       setTitle]       = useState('')
   const [titleEdit,   setTitleEdit]   = useState(false)
@@ -207,7 +218,7 @@ export default function NutritionPlanDetailPage() {
     </DashboardLayout>
   )
 
-  const clientName = clientMap[plan.client_id] ?? null
+  const clientName = plan.client_id ? clientMap[plan.client_id]?.name ?? null : null
 
   return (
     <DashboardLayout>
@@ -250,9 +261,15 @@ export default function NutritionPlanDetailPage() {
             </span>
           </div>
           <div className="flex items-center gap-2">
+            <Link
+              href={`/nutrition-plans/${id}/assign`}
+              className="flex items-center gap-1.5 px-3.5 py-2 border border-[var(--border)] dark:border-white/[0.08] text-[var(--text-primary)] hover:bg-[var(--bg-subtle)] text-sm font-medium transition-colors rounded-xl"
+            >
+              <Users size={14} /> Assign
+            </Link>
             <button
               onClick={() => setShowDelete(true)}
-              className="flex items-center gap-1.5 px-3.5 py-2 border border-red-200 dark:border-red-900/40 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 text-sm font-medium transition-colors"
+              className="flex items-center gap-1.5 px-3.5 py-2 border border-red-200 dark:border-red-900/40 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 text-sm font-medium transition-colors rounded-xl"
             >
               <Trash2 size={14} /> Delete
             </button>
@@ -270,10 +287,14 @@ export default function NutritionPlanDetailPage() {
         <div>
           <div className="flex flex-col sm:flex-row">
             {/* Gradient panel */}
-            <div className="sm:w-56 flex-shrink-0 bg-gradient-to-br from-brand-600 via-brand-700 to-brand-800 p-6 flex flex-col justify-between min-h-[180px]">
+            <div className="sm:w-56 flex-shrink-0 bg-gradient-to-br from-brand-600 via-brand-700 to-brand-800 p-6 flex flex-col justify-between min-h-[180px] rounded-l-2xl">
               <div className="flex gap-1.5 flex-wrap">
-                <span className="text-[11px] bg-white/20 text-white px-2 py-0.5 font-semibold">Nutrition Plan</span>
-                {clientName && <span className="text-[11px] bg-white/20 text-white px-2 py-0.5 font-semibold">{clientName}</span>}
+                <span className="text-[11px] bg-white/20 text-white px-2 py-0.5 font-semibold rounded">Nutrition Plan</span>
+                {assignedClients.length > 0 && (
+                  <span className="text-[11px] bg-white/20 text-white px-2 py-0.5 font-semibold rounded">
+                    {assignedClients.length} client{assignedClients.length !== 1 ? 's' : ''}
+                  </span>
+                )}
               </div>
               <div>
                 <Salad className="w-10 h-10 text-white/80 mb-2" />
@@ -306,11 +327,34 @@ export default function NutritionPlanDetailPage() {
                   <span className="flex items-center gap-1.5"><Calendar size={12} />Week of {formatDate(plan.week_start)}</span>
                   <span className="flex items-center gap-1.5"><Clock size={12} />{days.length} days</span>
                   <span className="flex items-center gap-1.5"><UtensilsCrossed size={12} />{totalMeals} total meals</span>
-                  {clientName && <span className="flex items-center gap-1.5"><Users size={12} />{clientName}</span>}
                   <span className={`flex items-center gap-1.5 font-semibold ${scoreColor(score)}`}>
                     <Star size={12} />Health Score {score}/10
                   </span>
                 </div>
+                {/* Assigned clients avatars */}
+                {assignedClients.length > 0 && (
+                  <div className="flex items-center gap-2 mt-2">
+                    <div className="flex -space-x-2">
+                      {assignedClients.slice(0, 4).map(c => (
+                        c.profile_photo_url ? (
+                          <img key={c.id} src={c.profile_photo_url} alt={c.name} className="w-6 h-6 rounded-full border-2 border-white dark:border-[#121212] object-cover" title={c.name} />
+                        ) : (
+                          <div key={c.id} className="w-6 h-6 rounded-full border-2 border-white dark:border-[#121212] bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center text-white text-[9px] font-semibold" title={c.name}>
+                            {c.name?.[0]?.toUpperCase() ?? 'C'}
+                          </div>
+                        )
+                      ))}
+                      {assignedClients.length > 4 && (
+                        <div className="w-6 h-6 rounded-full border-2 border-white dark:border-[#121212] bg-slate-200 dark:bg-slate-700 flex items-center justify-center text-[9px] font-semibold text-slate-600 dark:text-slate-300">
+                          +{assignedClients.length - 4}
+                        </div>
+                      )}
+                    </div>
+                    <span className="text-xs text-[var(--text-secondary)]">
+                      {assignedClients.map(c => c.name).join(', ')}
+                    </span>
+                  </div>
+                )}
               </div>
 
               {/* Macro row */}
@@ -490,14 +534,13 @@ export default function NutritionPlanDetailPage() {
             </div>
 
             {/* Plan details */}
-            <div className="p-4 ">
+            <div className="p-4">
               <h3 className="text-sm font-semibold text-[var(--text-primary)] dark:text-[var(--text-primary)]">Plan Details</h3>
               <div className="space-y-2 text-sm">
                 {[
                   { icon: <Calendar size={14} />, label: 'Week Start', value: formatDate(plan.week_start) },
                   { icon: <Clock size={14} />,    label: 'Duration',   value: `${days.length} days` },
                   { icon: <UtensilsCrossed size={14} />, label: 'Total Meals', value: `${totalMeals} meals` },
-                  ...(clientName ? [{ icon: <Users size={14} />, label: 'Client', value: clientName }] : []),
                   { icon: <Star size={14} />,     label: 'Health Score', value: `${score}/10` },
                 ].map(({ icon, label, value }) => (
                   <div key={label} className="flex items-center justify-between py-1 border-b border-slate-100 dark:border-white/[0.04] last:border-0">
@@ -506,14 +549,39 @@ export default function NutritionPlanDetailPage() {
                   </div>
                 ))}
               </div>
-              {plan.client_id && (
+
+              {/* Assigned Clients */}
+              <div className="mt-4 pt-4 border-t border-slate-100 dark:border-white/[0.06]">
+                <h4 className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider mb-2">Assigned Clients</h4>
+                <div className="space-y-2">
+                  {assignedClients.length === 0 ? (
+                    <p className="text-xs text-slate-400 dark:text-slate-500">No clients assigned</p>
+                  ) : (
+                    assignedClients.map(c => (
+                      <Link
+                        key={c.id}
+                        href={`/clients/${c.id}`}
+                        className="flex items-center gap-2 p-1.5 rounded-lg hover:bg-[var(--bg-subtle)] transition-colors"
+                      >
+                        {c.profile_photo_url ? (
+                          <img src={c.profile_photo_url} alt={c.name} className="w-6 h-6 rounded-full object-cover flex-shrink-0" />
+                        ) : (
+                          <div className="w-6 h-6 rounded-full bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center text-white text-[9px] font-semibold flex-shrink-0">
+                            {c.name?.[0]?.toUpperCase() ?? 'C'}
+                          </div>
+                        )}
+                        <span className="text-xs font-medium text-[var(--text-primary)] truncate">{c.name}</span>
+                      </Link>
+                    ))
+                  )}
+                </div>
                 <Link
-                  href={`/clients/${plan.client_id}`}
-                  className="block w-full text-center py-2 border border-green-200 dark:border-green-900/40 text-green-600 dark:text-green-400 text-sm font-semibold hover:bg-green-50 dark:hover:bg-green-900/20 transition-colors"
+                  href={`/nutrition-plans/${id}/assign`}
+                  className="mt-3 block w-full text-center py-2 border border-green-200 dark:border-green-900/40 text-green-600 dark:text-green-400 text-sm font-semibold hover:bg-green-50 dark:hover:bg-green-900/20 transition-colors rounded-lg"
                 >
-                  View Client Profile →
+                  {assignedClients.length > 0 ? 'Manage Assignments →' : 'Assign to Clients →'}
                 </Link>
-              )}
+              </div>
             </div>
 
             {/* Notes */}

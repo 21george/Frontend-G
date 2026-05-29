@@ -8,7 +8,9 @@ export {
   useBlockClient,
   useUnblockClient,
   useImportClients,
+  useAllClients,
 } from "./useClients";
+export { useTrialReminder } from "./useTrialReminder";
 export {
   useWorkoutPlans,
   useWorkoutPlan,
@@ -19,6 +21,7 @@ export {
   useImportWorkoutPlans,
   useAssignWorkoutPlan,
   useSavedWorkoutPlans,
+  useAllWorkoutPlans,
 } from "./useWorkoutPlans";
 export {
   useNutritionPlans,
@@ -26,6 +29,7 @@ export {
   useCreateNutritionPlan,
   useUpdateNutritionPlan,
   useDeleteNutritionPlan,
+  useAssignNutritionPlan,
 } from "./useNutritionPlans";
 export {
   useCheckins,
@@ -41,7 +45,7 @@ export {
   useMarkAllMessagesRead,
   useUnreadMessages,
 } from "./useMessages";
-export { useClientMedia, useWorkoutLogs, useWorkoutProgress } from "./useMedia";
+export { useClientMedia, useWorkoutLogs, useWorkoutProgress, useStoreMeasurement } from "./useMedia";
 export { useClientAnalytics, useCoachAnalytics } from "./useAnalytics";
 export { useWeather } from "./useWeather";
 export { useNearbyGyms } from "./useNearbyGyms";

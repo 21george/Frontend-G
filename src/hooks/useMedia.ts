@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import { mediaApi } from '@/lib/api'
+import { useToastMutation } from './useToastMutation'
 
 export const useClientMedia = (clientId: string) =>
   useQuery({
@@ -20,4 +21,13 @@ export const useWorkoutProgress = (clientId: string) =>
     queryKey: ['workout-progress', clientId],
     queryFn: () => mediaApi.clientWorkoutProgress(clientId),
     enabled: !!clientId,
+  })
+
+export const useStoreMeasurement = (clientId: string) =>
+  useToastMutation({
+    mutationFn: (payload: Parameters<typeof mediaApi.storeMeasurement>[1]) =>
+      mediaApi.storeMeasurement(clientId, payload),
+    successMessage: 'Measurements recorded',
+    errorMessage: 'Failed to record measurements',
+    invalidateKeys: [['analytics', clientId], ['client', clientId]],
   })

@@ -2,33 +2,30 @@
 
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import DashboardHeader from "@/components/layout/DashboardHeader";
-import { useClients, useWorkoutPlans } from "@/lib/hooks";
-import { useState, useMemo } from "react";
+import { useAllClients, useAllWorkoutPlans } from "@/lib/hooks";
+import { useState, useMemo, useEffect } from "react";
 import Link from "next/link";
 import {
-  Users,
   Plus,
   Search,
-  Filter,
+  Users,
   MessageSquare,
   MoreVertical,
-  TrendingUp,
   ChevronLeft,
   ChevronRight,
-  Activity,
-  CheckCircle2,
-  XCircle,
   UsersRound,
-  Dumbbell,
   AlertCircle,
-  Clock,
   Upload,
 } from "lucide-react";
+
 import { QueryWrapper } from "@/components/ui/QueryWrapper";
 import { Button } from "@/components/ui/button";
-import { ClientsProgressChart } from "@/components/clients/ClientsProgressChart";
 import { SegmentedProgressBar } from "@/components/ui/SegmentedProgressBar";
 import { motion } from "framer-motion";
+
+const MS_PER_DAY = 1000 * 60 * 60 * 24;
+const NEW_CLIENT_THRESHOLD_DAYS = 14;
+const DEFAULT_DAYS_SINCE_CREATED = 30;
 
 // Status badge configuration - using your app's color scheme
 const statusConfig: Record<
@@ -75,14 +72,12 @@ function getStatusForClient(client: any): string {
   if (client.is_blocked) return "blocked";
   if (!client.active) return "completed";
   const daysSinceCreated = (() => {
-    if (!client.created_at) return 30;
+    if (!client.created_at) return DEFAULT_DAYS_SINCE_CREATED;
     const createdDate = new Date(client.created_at);
-    if (isNaN(createdDate.getTime())) return 30;
-    return Math.floor(
-      (Date.now() - createdDate.getTime()) / (1000 * 60 * 60 * 24),
-    );
+    if (isNaN(createdDate.getTime())) return DEFAULT_DAYS_SINCE_CREATED;
+    return Math.floor((Date.now() - createdDate.getTime()) / MS_PER_DAY);
   })();
-  if (daysSinceCreated <= 14) return "new-client";
+  if (daysSinceCreated <= NEW_CLIENT_THRESHOLD_DAYS) return "new-client";
   if (
     client.notes?.toLowerCase().includes("urgent") ||
     client.notes?.toLowerCase().includes("attention")
@@ -107,15 +102,26 @@ type FilterKey =
 export default function ClientsPage() {
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<FilterKey>("all");
-  const query = useClients(search, { refetchInterval: 10_000 });
-  const clients = query.data?.data ?? [];
-  const total = query.data?.pagination?.total ?? clients.length;
+  const [page, setPage] = useState(1);
+  const PER_PAGE = 10;
 
-  // Fetch all workout plans to calculate real progress — polls every 10s
-  const allPlansQuery = useWorkoutPlans(undefined, undefined, undefined, {
-    refetchInterval: 10_000,
-  });
-  const allPlans = allPlansQuery.data?.data ?? [];
+  // Fetch ALL clients and plans so stats/filters are accurate across pages
+  const allClientsQuery = useAllClients();
+  const allClients = allClientsQuery.data ?? [];
+  const allPlansQuery = useAllWorkoutPlans();
+  const allPlans = allPlansQuery.data ?? [];
+
+  // Client-side search across the full client list
+  const searchedClients = useMemo(() => {
+    const term = search.trim().toLowerCase();
+    if (!term) return allClients;
+    return allClients.filter(
+      (c) =>
+        c.name?.toLowerCase().includes(term) ||
+        c.email?.toLowerCase().includes(term) ||
+        c.phone?.toLowerCase().includes(term),
+    );
+  }, [allClients, search]);
 
   // Build client progress map from actual workout plans
   const clientProgressMap = useMemo(() => {
@@ -180,13 +186,12 @@ export default function ClientsPage() {
     return map;
   }, [allPlans]);
 
-  // Fetch group workout plans to determine which clients are in group programs
-  const groupPlansQuery = useWorkoutPlans(undefined, undefined, "group");
-  const teamPlansQuery = useWorkoutPlans(undefined, undefined, "team");
-  const groupPlans = [
-    ...(groupPlansQuery.data?.data ?? []),
-    ...(teamPlansQuery.data?.data ?? []),
-  ];
+  // Derive group plans from all fetched plans (accurate across pages)
+  const groupPlans = useMemo(
+    () =>
+      allPlans.filter((p) => p.plan_type === "group" || p.plan_type === "team"),
+    [allPlans],
+  );
 
   // Build a set of client IDs that are in group programs
   const groupClientIds = useMemo(() => {
@@ -202,36 +207,61 @@ export default function ClientsPage() {
   }, [groupPlans]);
   // Filtered clients based on active filter
   const filteredClients = useMemo(() => {
-    if (filter === "all") return clients;
-    if (filter === "active") return clients.filter((c) => c.active);
-    if (filter === "new") {
-      return clients.filter((c) => {
+    let list = searchedClients;
+    if (filter === "active")
+      list = searchedClients.filter(
+        (c) => c.active && clientProgressMap.get(c.id)?.hasActivePlan,
+      );
+    else if (filter === "new") {
+      list = searchedClients.filter((c) => {
         if (!c.created_at) return false;
         const createdDate = new Date(c.created_at);
         if (isNaN(createdDate.getTime())) return false;
         const days = Math.floor(
-          (Date.now() - createdDate.getTime()) / (1000 * 60 * 60 * 24),
+          (Date.now() - createdDate.getTime()) / MS_PER_DAY,
         );
-        return days <= 14;
+        return (
+          days <= NEW_CLIENT_THRESHOLD_DAYS &&
+          clientProgressMap.get(c.id)?.hasActivePlan
+        );
       });
-    }
-    if (filter === "attention") {
-      return clients.filter(
+    } else if (filter === "attention") {
+      list = searchedClients.filter(
         (c) =>
           c.notes?.toLowerCase().includes("urgent") ||
           c.notes?.toLowerCase().includes("attention"),
       );
-    }
-    if (filter === "group")
-      return clients.filter((c) => groupClientIds.has(c.id));
-    if (filter === "needs-plan") {
-      return clients.filter((c) => {
+    } else if (filter === "group")
+      list = searchedClients.filter((c) => groupClientIds.has(c.id));
+    else if (filter === "needs-plan") {
+      list = searchedClients.filter((c) => {
         const progress = clientProgressMap.get(c.id);
         return !progress?.hasActivePlan;
       });
     }
-    return clients;
-  }, [clients, filter, groupClientIds, clientProgressMap]);
+
+    // Sort active clients to the top, then by name
+    list = [...list].sort((a, b) => {
+      const aActive = a.active ? 1 : 0;
+      const bActive = b.active ? 1 : 0;
+      if (aActive !== bActive) return bActive - aActive;
+      return (a.name || "").localeCompare(b.name || "");
+    });
+
+    return list;
+  }, [searchedClients, filter, groupClientIds, clientProgressMap]);
+
+  // Reset page when search or filter changes
+  useEffect(() => {
+    setPage(1);
+  }, [search, filter]);
+
+  const totalPages = Math.max(1, Math.ceil(filteredClients.length / PER_PAGE));
+  const startIndex = (page - 1) * PER_PAGE;
+  const paginatedClients = filteredClients.slice(
+    startIndex,
+    startIndex + PER_PAGE,
+  );
 
   const quickActions = useMemo(
     () => [
@@ -253,41 +283,48 @@ export default function ClientsPage() {
     [],
   );
 
-  // Calculate stats
+  // Calculate stats from the full client list (accurate across pages)
   const stats = useMemo(() => {
-    const activeClients = clients.filter((c) => c.active);
-    const newClients = clients.filter((c) => {
+    const activeClients = allClients.filter((c) => c.active);
+    const newClients = allClients.filter((c) => {
       if (!c.created_at) return false;
       const createdDate = new Date(c.created_at);
       if (isNaN(createdDate.getTime())) return false;
       const daysSinceCreated = Math.floor(
-        (Date.now() - createdDate.getTime()) / (1000 * 60 * 60 * 24),
+        (Date.now() - createdDate.getTime()) / MS_PER_DAY,
       );
-      return daysSinceCreated <= 14;
+      return daysSinceCreated <= NEW_CLIENT_THRESHOLD_DAYS;
     });
-    const attentionNeeded = clients.filter(
+    const attentionNeeded = allClients.filter(
       (c) =>
         c.notes?.toLowerCase().includes("urgent") ||
         c.notes?.toLowerCase().includes("attention"),
     );
 
-    const groupProgramCount = clients.filter((c) =>
+    const groupProgramCount = allClients.filter((c) =>
       groupClientIds.has(c.id),
     ).length;
-    const needsPlanCount = clients.filter((c) => {
+    const needsPlanCount = allClients.filter((c) => {
       const progress = clientProgressMap.get(c.id);
       return !progress?.hasActivePlan;
     }).length;
 
+    const activeWithPlan = activeClients.filter(
+      (c) => clientProgressMap.get(c.id)?.hasActivePlan,
+    ).length;
+    const newWithPlan = newClients.filter(
+      (c) => clientProgressMap.get(c.id)?.hasActivePlan,
+    ).length;
+
     return {
-      total: total,
-      active: activeClients.length,
-      newClients: newClients.length,
+      total: allClients.length,
+      active: activeWithPlan,
+      newClients: newWithPlan,
       attention: attentionNeeded.length,
       groupProgram: groupProgramCount,
       needsPlan: needsPlanCount,
     };
-  }, [clients, total, groupClientIds, clientProgressMap]);
+  }, [allClients, groupClientIds, clientProgressMap]);
 
   return (
     <DashboardLayout>
@@ -305,7 +342,7 @@ export default function ClientsPage() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search clients"
-            className="w-full sm:w-[12rem] py-3 pl-11 pr-4 text-sm text-[var(--text-primary)] rounded-4 placeholder-slate-400 dark:placeholder:text-neutral-500 focus:outline-none focus:border-brand-700/30 focus:ring-2 focus:ring-brand-700/20 transition-colors"
+            className="w-full sm:w-[12rem] py-3 pl-11 pr-4 text-sm text-[var(--text-primary)] bg-white dark:bg-neutral-900 border border-[var(--border)] rounded-lg placeholder-slate-400 dark:placeholder:text-neutral-500 focus:outline-none focus:border-brand-700/30 focus:ring-2 focus:ring-brand-700/20 transition-colors"
           />
         </div>
 
@@ -342,7 +379,7 @@ export default function ClientsPage() {
                     : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400"
                 }`}
               >
-                {f.count > 999 ? "999+" : f.count}
+                {f.count}
               </span>
             </button>
           ))}
@@ -350,7 +387,24 @@ export default function ClientsPage() {
 
         {/* Clients Table — Card-based grid matching server-management style */}
         <QueryWrapper
-          query={query}
+          query={allClientsQuery}
+          skeleton={
+            <div className="space-y-3">
+              {[...Array(5)].map((_, i) => (
+                <div
+                  key={i}
+                  className="flex items-center gap-4 p-5 border border-[var(--border)] rounded-xl bg-white dark:bg-neutral-900"
+                >
+                  <div className="w-10 h-10 rounded-full bg-slate-100 dark:bg-white/[0.06] animate-pulse flex-shrink-0" />
+                  <div className="flex-1 space-y-2">
+                    <div className="h-4 w-40 bg-slate-100 dark:bg-white/[0.06] animate-pulse rounded" />
+                    <div className="h-3 w-56 bg-slate-100 dark:bg-white/[0.04] animate-pulse rounded" />
+                  </div>
+                  <div className="h-6 w-20 bg-slate-100 dark:bg-white/[0.04] animate-pulse rounded-full" />
+                </div>
+              ))}
+            </div>
+          }
           emptyIcon={Users}
           emptyTitle="Add your first client to get started."
           emptyDescription="Create client profiles to manage workouts, nutrition, and progress."
@@ -370,7 +424,7 @@ export default function ClientsPage() {
           }
           isEmpty={() => filteredClients.length === 0}
         >
-          {(data) => (
+          {() => (
             <div className="relative  p-5">
               {/* Header */}
               <div className="flex items-center justify-between mb-5">
@@ -383,7 +437,7 @@ export default function ClientsPage() {
                   </div>
                   <div className="flex items-center gap-3">
                     <div className="text-sm text-[var(--text-secondary)]">
-                      {filteredClients.length} shown
+                      {paginatedClients.length} shown
                     </div>
                     <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-emerald-500/10 border border-emerald-500/20 text-[10px] font-semibold text-emerald-600 dark:text-emerald-400">
                       <span className="relative flex h-1.5 w-1.5">
@@ -421,7 +475,7 @@ export default function ClientsPage() {
                 initial="hidden"
                 animate="visible"
               >
-                {filteredClients.map((client: any) => {
+                {paginatedClients.map((client: any) => {
                   const status = getClientStatus(client);
                   const progress = clientProgressMap.get(client.id);
                   const hasActivePlan = progress?.hasActivePlan ?? false;
@@ -530,7 +584,7 @@ export default function ClientsPage() {
                                       return "Recently added";
                                     const days = Math.floor(
                                       (Date.now() - createdDate.getTime()) /
-                                        (1000 * 60 * 60 * 24),
+                                        MS_PER_DAY,
                                     );
                                     return `Joined ${days} ${days === 1 ? "day" : "days"} ago`;
                                   })()}
@@ -587,9 +641,8 @@ export default function ClientsPage() {
                                 if (isNaN(date.getTime())) return "Recently";
                                 const now = Date.now();
                                 const diff = now - date.getTime();
-                                if (diff < 1000 * 60 * 60 * 24) return "Today";
-                                if (diff < 1000 * 60 * 60 * 48)
-                                  return "Yesterday";
+                                if (diff < MS_PER_DAY) return "Today";
+                                if (diff < MS_PER_DAY * 2) return "Yesterday";
                                 return date.toLocaleDateString("en-US", {
                                   month: "short",
                                   day: "numeric",
@@ -641,19 +694,25 @@ export default function ClientsPage() {
               {/* Pagination */}
               <div className="mt-4 px-4 py-3 flex items-center justify-between">
                 <span className="text-xs text-[var(--text-secondary)]">
-                  Showing 1-{Math.min(10, filteredClients.length)} of{" "}
+                  Showing {startIndex + 1}-
+                  {Math.min(startIndex + PER_PAGE, filteredClients.length)} of{" "}
                   {filteredClients.length} clients
                 </span>
-                <div className="flex gap-2">
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-[var(--text-secondary)] mr-2">
+                    Page {page} of {totalPages}
+                  </span>
                   <button
+                    onClick={() => setPage((p) => Math.max(1, p - 1))}
                     className="p-1.5 border rounded-xl border-[var(--border)] text-[var(--text-tertiary)] hover:bg-[var(--bg-subtle)] transition-colors disabled:opacity-50"
-                    disabled
+                    disabled={page <= 1}
                   >
                     <ChevronLeft className="w-4 h-4" />
                   </button>
                   <button
+                    onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                     className="p-1.5 border rounded-xl border-[var(--border)] text-[var(--text-tertiary)] hover:bg-[var(--bg-subtle)] transition-colors disabled:opacity-50"
-                    disabled={filteredClients.length <= 10}
+                    disabled={page >= totalPages}
                   >
                     <ChevronRight className="w-4 h-4" />
                   </button>

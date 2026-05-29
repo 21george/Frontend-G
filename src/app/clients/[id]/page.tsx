@@ -2,58 +2,31 @@
 import {
   useClient, useClientAnalytics, useMessages, useSendMessage,
   useCheckins, useCreateCheckin, useUpdateCheckin, useDeleteCheckin, useWorkoutPlans, useNutritionPlans,
-  useNutritionPlan, useRegenerateCode, useClientMedia, useWorkoutLogs,
-  useUpdateNutritionPlan, useDeleteWorkoutPlan, useDeleteClient, useUpdateClient,
+  useRegenerateCode, useClientMedia, useWorkoutLogs,
+  useDeleteWorkoutPlan, useDeleteClient, useUpdateClient,
   useUploadMessageMedia, useBlockClient, useUnblockClient, useWorkoutProgress,
 } from '@/lib/hooks'
 import { useState, useMemo, useCallback, useRef, useEffect } from 'react'
 import DashboardHeader from '@/components/layout/DashboardHeader'
 import {
   ArrowLeft,
-  Copy,
   Check,
-  RefreshCw,
-  Send,
-  Video,
-  ImageIcon,
-  Dumbbell,
-  Salad,
   BarChart2,
   MessageCircle,
-  Phone,
-  FileText,
-  ExternalLink,
-  ChevronLeft,
-  ChevronRight,
-  ChevronDown,
-  Plus,
   Search,
-  MoreVertical,
-  Tag,
-  User,
   X,
   Menu,
-  CheckCircle2,
-  Clock,
-  PhoneCall,
-  Hash,
-  Wifi,
-  WifiOff,
   Loader2,
   Pencil,
   Trash2,
-  Paperclip,
-  Download,
-  Play,
 } from 'lucide-react'
 import Link from 'next/link'
 import { useParams, useRouter } from 'next/navigation'
-import { formatDate, timeAgo } from '@/lib/utils'
+import { formatDate } from '@/lib/utils'
 import { useSocketChat } from '@/lib/useSocketChat'
 import toast from 'react-hot-toast'
 import { motion } from 'framer-motion'
-import type { CheckinMeeting, NutritionPlan, WorkoutPlan, WorkoutLogDetailed } from '@/types'
-import type { WorkoutProgressPlan } from '@/lib/api/services/media'
+import type { CheckinMeeting, WorkoutPlan } from '@/types'
 import {
   ClientDetailSidebar,
   ScheduleModal,
@@ -64,40 +37,6 @@ import {
   ClientMessagesTab,
   ClientScheduleTab,
 } from '@/components/clients'
-import type { ScheduleFilter } from '@/components/clients'
-
-// Navigation handler for back button
-const goBack = (router: ReturnType<typeof useRouter>) => {
-  // Try to go back in history, fallback to clients page
-  if (window.history.length > 1) {
-    router.back()
-  } else {
-    router.push('/clients')
-  }
-}
-
-const DAYS   = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
-const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December']
-
-
-
-const DAY_MAP: Record<string, number> = {
-  monday: 0, tuesday: 1, wednesday: 2, thursday: 3,
-  friday: 4, saturday: 5, sunday: 6,
-  mon: 0, tue: 1, wed: 2, thu: 3, fri: 4, sat: 5, sun: 6,
-}
-
-function getDateForDay(weekStart: string, dayName: string): Date {
-  const start = new Date(weekStart)
-  const result = new Date(start)
-  result.setDate(start.getDate() + (DAY_MAP[dayName.toLowerCase()] ?? 0))
-  return result
-}
-
-interface DayData {
-  date: number | null; currentMonth: boolean
-  isToday: boolean; isWeekend: boolean
-}
 
 {/*function generateCalendarDays(year: number, month: number, events: CalendarEvent[]): DayData[][] {
   const firstDay        = new Date(year, month, 1)
@@ -154,16 +93,6 @@ interface ScheduleModalState {
 const DEFAULT_FORM: ScheduleForm = { date: '', time: '09:00', type: 'video', meeting_link: '', notes: '' }
 const DEFAULT_SCHEDULE_MODAL: ScheduleModalState = { open: false, date: null, checkinId: null }
 
-function calculateAge(dateOfBirth?: string): number | null {
-  if (!dateOfBirth) return null
-  const dob = new Date(dateOfBirth)
-  const now = new Date()
-  let age = now.getFullYear() - dob.getFullYear()
-  const m = now.getMonth() - dob.getMonth()
-  if (m < 0 || (m === 0 && now.getDate() < dob.getDate())) age--
-  return age >= 0 ? age : null
-}
-
 export default function ClientDetailPage() {
   const { id } = useParams<{ id: string }>()
   const router = useRouter()
@@ -214,32 +143,7 @@ export default function ClientDetailPage() {
   const updateClient                = useUpdateClient(id)
   const blockClient                 = useBlockClient(id)
   const unblockClient               = useUnblockClient(id)
-  const { connected: socketConnected, incomingMessages, relayViaSocket, clearIncoming } = useSocketChat(id)
-
-  const calendarEvents = useMemo(() => {
-    const ev: { id: string; title: string; date: Date; type: string; color: string; details?: string; planId?: string }[] = []
-    ;(checkins ?? []).forEach(c => ev.push({
-      id: `ci-${c.id}`,
-      title: c.type === 'video' ? 'Video Call' : c.type === 'call' ? 'Phone Call' : 'Check-in',
-      date: new Date(c.scheduled_at), type: 'checkin', color: '#ef4444', details: c.notes,
-    }))
-    ;(plans?.data ?? []).forEach(p => {
-      if (p.days?.length) {
-        p.days.forEach((day, i) => {
-          const n = day.exercises?.length ?? 0
-          ev.push({
-            id: `wp-${p.id}-${i}`, title: `${day.day}: ${p.title}`,
-            date: getDateForDay(p.week_start, day.day), type: 'workout', color: '#3b82f6',
-            details: n ? `${n} exercises: ${day.exercises!.slice(0,2).map(e=>e.name).join(', ')}${n>2?'...':''}` : undefined,
-            planId: p.id,
-          })
-        })
-      } else {
-        ev.push({ id: `wp-${p.id}`, title: p.title, date: new Date(p.week_start), type: 'workout', color: '#3b82f6', planId: p.id })
-      }
-    })
-    return ev
-  }, [checkins, plans])
+  const { connected: socketConnected, incomingMessages, relayViaSocket } = useSocketChat(id)
 
   const closeScheduleModal = useCallback(() => {
     setScheduleModal(DEFAULT_SCHEDULE_MODAL)
@@ -304,8 +208,10 @@ export default function ClientDetailPage() {
       setDeleteModal({ open: false, type: 'client' })
       router.push('/clients')
     } catch (err: any) {
-      console.error('Delete client error:', err)
-      const message = err?.response?.data?.message || err?.message || 'Unknown error'
+      if (process.env.NODE_ENV === "development") {
+        console.error("Delete client error:", err);
+      }
+      const message = err?.response?.data?.message || err?.message || "Unknown error"
       setDeleteError(message)
     }
   }
@@ -459,10 +365,6 @@ export default function ClientDetailPage() {
       setScheduling(false)
     }
   }
-
-  // ── Video call room URL ───────────────────────────────────────────────────
-  const getVideoRoom = (c: CheckinMeeting) =>
-    c.meeting_link || `https://meet.jit.si/CoachPro-${c.id.replace(/-/g, '')}`
 
   const allMessages = useMemo(() => {
     const rest: any[] = messagesData?.data ?? []
@@ -658,7 +560,8 @@ export default function ClientDetailPage() {
               {/* ─── Nutrition tab ──────────────────────────────── */}
               {tab === 'nutrition' && (
                 <ClientNutritionTab
-                  clientId={id} nutrition={nutrition}
+                  clientId={id} client={client} nutrition={nutrition}
+                  analytics={analytics}
                   expandedPlan={expandedPlan} setExpandedPlan={setExpandedPlan}
                 />
               )}

@@ -1,76 +1,119 @@
-import { useQuery, useMutation, useQueryClient, type UseQueryOptions } from '@tanstack/react-query'
-import { clientsApi } from '@/lib/api'
-import { useToastMutation } from './useToastMutation'
-import type { Client, PaginatedResponse } from '@/types'
+import {
+  useQuery,
+  useMutation,
+  useQueryClient,
+  type UseQueryOptions,
+} from "@tanstack/react-query";
+import { clientsApi } from "@/lib/api";
+import { useToastMutation } from "./useToastMutation";
+import type { Client, PaginatedResponse } from "@/types";
 
-export const useClients = (search?: string, options?: Omit<UseQueryOptions<PaginatedResponse<Client>>, 'queryKey' | 'queryFn'>) =>
+export const useClients = (
+  search?: string,
+  options?: Omit<
+    UseQueryOptions<PaginatedResponse<Client>>,
+    "queryKey" | "queryFn"
+  >,
+) =>
   useQuery({
-    queryKey: ['clients', search],
+    queryKey: ["clients", search],
     queryFn: () => clientsApi.list(search),
     staleTime: 2 * 60_000,
     ...options,
-  })
+  });
 
 export const useClient = (id: string) =>
   useQuery({
-    queryKey: ['client', id],
+    queryKey: ["client", id],
     queryFn: () => clientsApi.get(id),
     enabled: !!id,
     staleTime: 2 * 60_000,
-  })
+    gcTime: 10 * 60_000,
+  });
 
 export const useCreateClient = () =>
   useToastMutation({
     mutationFn: (data: Partial<Client>) => clientsApi.create(data),
-    successMessage: 'Client created successfully',
-    errorMessage: 'Failed to create client',
-    invalidateKeys: [['clients']],
-  })
+    successMessage: "Client created successfully",
+    errorMessage: "Failed to create client",
+    invalidateKeys: [["clients"]],
+  });
 
 export const useUpdateClient = (id: string) =>
   useToastMutation({
     mutationFn: (data: Partial<Client>) => clientsApi.update(id, data),
-    successMessage: 'Client updated successfully',
-    errorMessage: 'Failed to update client',
-    invalidateKeys: [['client', id], ['clients']],
-  })
+    successMessage: "Client updated successfully",
+    errorMessage: "Failed to update client",
+    invalidateKeys: [["client", id], ["clients"]],
+  });
 
 export const useDeleteClient = () =>
   useToastMutation({
     mutationFn: (id: string) => clientsApi.remove(id),
-    successMessage: 'Client permanently deleted',
-    errorMessage: 'Failed to delete client',
-    invalidateKeys: [['clients']],
-  })
+    successMessage: "Client permanently deleted",
+    errorMessage: "Failed to delete client",
+    invalidateKeys: [["clients"]],
+  });
 
 export const useRegenerateCode = (id: string) =>
   useToastMutation({
     mutationFn: () => clientsApi.regenerateCode(id),
-    successMessage: 'Login code regenerated',
-    errorMessage: 'Failed to regenerate code',
-  })
+    successMessage: "Login code regenerated",
+    errorMessage: "Failed to regenerate code",
+  });
 
 export const useBlockClient = (id: string) =>
   useToastMutation({
     mutationFn: () => clientsApi.block(id),
-    successMessage: 'Client blocked — all sessions invalidated',
-    errorMessage: 'Failed to block client',
-    invalidateKeys: [['client', id], ['clients']],
-  })
+    successMessage: "Client blocked — all sessions invalidated",
+    errorMessage: "Failed to block client",
+    invalidateKeys: [["client", id], ["clients"]],
+  });
 
 export const useUnblockClient = (id: string) =>
   useToastMutation({
     mutationFn: () => clientsApi.unblock(id),
-    successMessage: 'Client unblocked — access restored',
-    errorMessage: 'Failed to unblock client',
-    invalidateKeys: [['client', id], ['clients']],
-  })
+    successMessage: "Client unblocked — access restored",
+    errorMessage: "Failed to unblock client",
+    invalidateKeys: [["client", id], ["clients"]],
+  });
 
 export const useImportClients = () =>
   useToastMutation({
-    mutationFn: (clients: Array<{ name?: string; full_name?: string; email?: string; age?: number; location?: string; city?: string; weight?: number; height?: number; phone?: string; notes?: string }>) =>
-      clientsApi.import(clients),
-    successMessage: 'Clients imported successfully',
-    errorMessage: 'Failed to import clients',
-    invalidateKeys: [['clients']],
-  })
+    mutationFn: (
+      clients: Array<{
+        name?: string;
+        full_name?: string;
+        email?: string;
+        age?: number;
+        location?: string;
+        city?: string;
+        weight?: number;
+        height?: number;
+        phone?: string;
+        notes?: string;
+      }>,
+    ) => clientsApi.import(clients),
+    successMessage: "Clients imported successfully",
+    errorMessage: "Failed to import clients",
+    invalidateKeys: [["clients"]],
+  });
+
+export const useAllClients = () =>
+  useQuery({
+    queryKey: ["clients", "all"],
+    queryFn: async () => {
+      const all: Client[] = [];
+      let page = 1;
+      let totalPages = 1;
+      do {
+        const res = await clientsApi.list(undefined, page);
+        all.push(...(res.data ?? []));
+        totalPages = res.pagination?.total_pages ?? 1;
+        page++;
+      } while (page <= totalPages);
+      return all;
+    },
+    staleTime: 2 * 60_000,
+    gcTime: 10 * 60_000,
+  });

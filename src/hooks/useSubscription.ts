@@ -2,6 +2,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { subscriptionApi } from "@/lib/api";
 import api from "@/lib/api/client";
 import { useToastMutation } from "./useToastMutation";
+import { safeRedirect } from "@/lib/validateUrl";
 import type { SubscriptionPeriod } from "@/types";
 
 export const useSubscription = () =>
@@ -18,10 +19,10 @@ export const useCheckout = () =>
     errorMessage: "Failed to start checkout",
     onSuccess: (data) => {
       if (data.checkout_url) {
-        window.location.href = data.checkout_url;
+        safeRedirect(data.checkout_url);
       } else if (data.client_secret && data.session_id) {
         // Embedded checkout — redirect to success page with session_id for Stripe to handle
-        window.location.href = `/subscription/success?session_id=${data.session_id}`;
+        safeRedirect(`/subscription/success?session_id=${data.session_id}`);
       } else {
         throw new Error("Invalid checkout response");
       }
@@ -33,7 +34,7 @@ export const useManageBilling = () =>
     mutationFn: () => subscriptionApi.portal(),
     errorMessage: "Failed to open billing portal",
     onSuccess: (data) => {
-      window.location.href = data.portal_url;
+      safeRedirect(data.portal_url);
     },
   });
 

@@ -20,9 +20,11 @@ import { timeAgo } from '@/lib/utils'
 import toast from 'react-hot-toast'
 import { motion, AnimatePresence } from 'framer-motion'
 
-function formatWhen(sentAt: string): string {
-  const now = new Date()
+function formatWhen(sentAt: string | null | undefined): string {
+  if (!sentAt || sentAt === 'Invalid Date') return 'Just now'
   const sent = new Date(sentAt)
+  if (isNaN(sent.getTime())) return 'Just now'
+  const now = new Date()
   const diffMs = now.getTime() - sent.getTime()
   const diffMins = Math.floor(diffMs / 60000)
   const diffHours = Math.floor(diffMs / 3600000)
@@ -70,12 +72,13 @@ export default function MessagesPage() {
   const unreadMessages = unreadData?.data?.messages ?? []
   const unreadCount = unreadData?.data?.count ?? 0
 
-  const { data: clientsData } = useClients('')
+  const { data: clientsData, isLoading: clientsLoading } = useClients('')
   const allClients: Client[] = clientsData?.data ?? []
 
   const {
     data: messagesData,
     isLoading: msgLoading,
+    error: msgError,
   } = useMessages(activeClientId)
 
   const sendMsg = useSendMessage()
@@ -245,7 +248,11 @@ export default function MessagesPage() {
 
             {/* Conversations */}
             <div className="flex-1 overflow-y-auto">
-              {conversations.length === 0 ? (
+              {clientsLoading ? (
+                <div className="flex items-center justify-center py-12">
+                  <Loader2 className="w-6 h-6 animate-spin text-[var(--text-tertiary)]" />
+                </div>
+              ) : conversations.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-12 px-4 text-center">
                   <div className="w-12 h-12 rounded-full bg-[var(--bg-subtle)] flex items-center justify-center mb-3">
                     <MessageSquare className="w-6 h-6 text-[var(--text-tertiary)]" />
@@ -363,6 +370,11 @@ export default function MessagesPage() {
                       <Loader2 className="w-6 h-6 animate-spin text-[var(--text-tertiary)]" />
                     </div>
                   )}
+                  {msgError && (
+                    <div className="px-4 py-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-[13px]">
+                      Failed to load messages. {(msgError as any)?.response?.data?.message || (msgError as Error)?.message || 'Please try again.'}
+                    </div>
+                  )}
                   {allMessages.map((m: ChatMessage) => (
                     <div key={m.id} className={`flex ${m.sender_role === 'coach' ? 'justify-end' : 'justify-start'}`}>
                       {m.sender_role === 'client' && (
@@ -470,18 +482,66 @@ export default function MessagesPage() {
               </>
             ) : (
               /* Empty state when no client selected */
-              <div className="flex flex-col items-center justify-center flex-1 p-8">
-                <div className="w-16 h-16 rounded-2xl bg-[var(--bg-subtle)] border border-[var(--border)] flex items-center justify-center mb-4">
-                  <Bell className="w-8 h-8 text-[var(--text-tertiary)]" />
+              <div className="flex flex-col flex-1 overflow-y-auto p-6">
+                <div className="flex items-center gap-3 mb-5">
+                  <div className="w-10 h-10 rounded-lg bg-brand-600 flex items-center justify-center">
+                    <MessageSquare className="w-5 h-5 text-white" />
+                  </div>
+                  <div>
+                    <h3 className="text-[15px] font-semibold text-[var(--text-primary)]">
+                      {unreadCount > 0 ? `${unreadCount} unread message${unreadCount === 1 ? '' : 's'}` : 'Your inbox'}
+                    </h3>
+                    <p className="text-[12px] text-[var(--text-secondary)]">
+                      {unreadCount > 0 ? 'Jump to a conversation below to reply.' : 'Select a client to start chatting.'}
+                    </p>
+                  </div>
                 </div>
-                <h3 className="text-[15px] font-semibold text-[var(--text-primary)] mb-1">
-                  {unreadCount > 0 ? `${unreadCount} unread message${unreadCount === 1 ? '' : 's'}` : 'Your inbox'}
-                </h3>
-                <p className="text-[13px] text-[var(--text-secondary)] text-center max-w-xs">
-                  {unreadCount > 0
-                    ? 'Select a conversation from the sidebar to read and reply.'
-                    : 'Messages from your clients will appear here. Select a client to start chatting.'}
-                </p>
+
+                {/* Recent / Unread conversation cards */}
+                <div className="space-y-2">
+                  {conversations.slice(0, 6).map((conv) => (
+                    <Link
+                      key={conv.client.id}
+                      href={`/messages?client=${conv.client.id}`}
+                      className="flex items-center gap-3 p-3 bg-[var(--bg-card)] border border-[var(--border)] hover:border-brand-400 transition-colors"
+                    >
+                      <div className="relative flex-shrink-0">
+                        {conv.client.profile_photo_url ? (
+                          <img src={conv.client.profile_photo_url} alt={conv.client.name} className="w-10 h-10 rounded-lg object-cover" />
+                        ) : (
+                          <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-brand-700 to-brand-900 flex items-center justify-center text-white text-[13px] font-semibold">
+                            {conv.client.name?.[0]?.toUpperCase() ?? '?'}
+                          </div>
+                        )}
+                        {conv.unread > 0 && (
+                          <span className="absolute -top-1 -right-1 w-4 h-4 bg-danger rounded-full text-[9px] font-bold text-white flex items-center justify-center border-2 border-[var(--bg-page)]">
+                            {conv.unread}
+                          </span>
+                        )}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between gap-2">
+                          <p className={`text-[13px] truncate ${conv.unread > 0 ? 'font-semibold text-[var(--text-primary)]' : 'text-[var(--text-secondary)]'}`}>
+                            {conv.client.name}
+                          </p>
+                          {conv.lastAt && (
+                            <span className="text-[10px] text-[var(--text-tertiary)] flex-shrink-0">{formatWhen(conv.lastAt)}</span>
+                          )}
+                        </div>
+                        <p className={`text-[12px] truncate mt-0.5 ${conv.unread > 0 ? 'text-[var(--text-primary)] font-medium' : 'text-[var(--text-tertiary)]'}`}>
+                          {conv.lastMessage || 'No messages yet'}
+                        </p>
+                      </div>
+                      <ChevronLeft className="w-4 h-4 text-[var(--text-tertiary)] rotate-180 flex-shrink-0" />
+                    </Link>
+                  ))}
+                  {conversations.length === 0 && (
+                    <div className="text-center py-8">
+                      <p className="text-[13px] text-[var(--text-secondary)]">No conversations yet</p>
+                      <p className="text-[11px] text-[var(--text-tertiary)] mt-1">Messages from clients will appear here</p>
+                    </div>
+                  )}
+                </div>
               </div>
             )}
           </div>

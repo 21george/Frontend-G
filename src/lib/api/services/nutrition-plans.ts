@@ -16,4 +16,7 @@ export const nutritionPlansApi = {
 
   remove: (id: string) =>
     api.delete(`/nutrition-plans/${id}`).then(r => r.data),
+
+  assign: (id: string, client_ids: string[]) =>
+    api.post(`/nutrition-plans/${id}/assign`, { client_ids }).then(r => r.data),
 }

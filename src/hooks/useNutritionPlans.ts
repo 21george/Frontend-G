@@ -39,3 +39,11 @@ export const useDeleteNutritionPlan = () =>
     errorMessage: 'Failed to delete nutrition plan',
     invalidateKeys: [['nutrition-plans']],
   })
+
+export const useAssignNutritionPlan = (id: string) =>
+  useToastMutation({
+    mutationFn: (client_ids: string[]) => nutritionPlansApi.assign(id, client_ids),
+    successMessage: 'Nutrition plan assigned successfully',
+    errorMessage: 'Failed to assign nutrition plan',
+    invalidateKeys: [['nutrition-plans'], ['nutrition-plan', id]],
+  })

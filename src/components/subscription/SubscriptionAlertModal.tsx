@@ -14,6 +14,7 @@ import {
   X,
   Loader2,
 } from 'lucide-react';
+import { safeRedirect } from '@/lib/validateUrl';
 
 interface Props {
   alert: 'select_plan' | 'update_payment' | 'resubscribe' | 'renew_subscription';
@@ -93,7 +94,7 @@ export function SubscriptionAlertModal({ alert, onClose }: Props) {
       try {
         const data = await subscriptionApi.portal();
         if (data.portal_url) {
-          window.location.href = data.portal_url;
+          safeRedirect(data.portal_url);
         }
       } catch {
         // Portal failed — fallback to select-plan

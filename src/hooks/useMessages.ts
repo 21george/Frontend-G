@@ -59,12 +59,37 @@ export const useSendMessage = () => {
   return useMutation({
     mutationFn: (data: { client_id: string; content: string; media_url?: string; media_type?: string; media_filename?: string }) =>
       messagesApi.send(data),
-    onSuccess: (_, v) => {
-      qc.invalidateQueries({ queryKey: ['messages', v.client_id] })
-      qc.invalidateQueries({ queryKey: ['messages', 'unread-count'] })
+    onMutate: async (variables) => {
+      const queryKey = ['messages', variables.client_id]
+      await qc.cancelQueries({ queryKey })
+      const previous = qc.getQueryData<{ data: any[] }>(queryKey)
+      const optimistic = {
+        id: `optimistic-${Date.now()}`,
+        content: variables.content,
+        sender_role: 'coach',
+        read: true,
+        sent_at: new Date().toISOString(),
+        media_url: variables.media_url ?? null,
+        media_type: variables.media_type ?? null,
+        media_filename: variables.media_filename ?? null,
+      }
+      if (previous) {
+        qc.setQueryData(queryKey, {
+          ...previous,
+          data: [...previous.data, optimistic],
+        })
+      }
+      return { previous, queryKey }
     },
-    onError: (error: any) => {
+    onError: (error: any, _variables, context: any) => {
+      if (context?.previous && context?.queryKey) {
+        qc.setQueryData(context.queryKey, context.previous)
+      }
       toast.error(error?.response?.data?.message || 'Failed to send message')
+    },
+    onSettled: (_data, _error, variables) => {
+      qc.invalidateQueries({ queryKey: ['messages', variables.client_id] })
+      qc.invalidateQueries({ queryKey: ['messages', 'unread-count'] })
     },
   })
 }

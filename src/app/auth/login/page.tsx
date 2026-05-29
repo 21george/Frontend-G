@@ -112,7 +112,14 @@ export default function LoginPage() {
     if (isHydrated && isAuthenticated) router.replace('/dashboard');
   }, [isHydrated, isAuthenticated, router]);
 
-  if (!isHydrated || isAuthenticated) return null;
+  if (!isHydrated) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-[#F8FAFC] dark:bg-[#0e0e0e]">
+        <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
+      </div>
+    );
+  }
+  if (isAuthenticated) return null;
 
   const handleLogin = async (data: LoginValues) => {
     setError(null);

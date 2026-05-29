@@ -173,7 +173,9 @@ export default function ExcelImportPage() {
       const result = await parseExcelFile(f);
       setParsed(result);
     } catch (err) {
-      console.error("Failed to parse Excel:", err);
+      if (process.env.NODE_ENV === "development") {
+        console.error("Failed to parse Excel:", err);
+      }
       setError(
         "Failed to parse Excel file. Make sure it's a valid .xlsx or .xls file.",
       );
@@ -311,10 +313,12 @@ export default function ExcelImportPage() {
         return true;
       });
     } catch (err) {
-      console.error(
-        "[import] Failed to fetch existing clients for duplicate check:",
-        err,
-      );
+      if (process.env.NODE_ENV === "development") {
+        console.error(
+          "[import] Failed to fetch existing clients for duplicate check:",
+          err,
+        );
+      }
       setImportResult({
         success: false,
         message:

@@ -133,8 +133,7 @@ export const PLANS: PlanDefinition[] = [
         price: 213,
         priceLabel: "$213",
         periodLabel: "/3 mo",
-        discountPct: 10,
-      },
+        discountPct: 10,},
       semi_annual: {
         price: 402,
         priceLabel: "$402",
@@ -170,7 +169,8 @@ export function getPlanPricing(
   tier: SubscriptionTier,
   period: SubscriptionPeriod,
 ): PeriodPricing {
-  const plan = PLANS.find((p) => p.tier === tier);
+  const normalizedTier = tier === "free" ? "none" : tier;
+  const plan = PLANS.find((p) => p.tier === normalizedTier);
   if (!plan) throw new Error(`getPlanPricing: unknown tier "${tier}"`);
   return plan.periods[period] ?? plan.periods.monthly;
 }
