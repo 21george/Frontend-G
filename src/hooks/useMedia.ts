@@ -23,6 +23,15 @@ export const useWorkoutProgress = (clientId: string) =>
     enabled: !!clientId,
   })
 
+export const useLiveProgress = (clientId: string) =>
+  useQuery({
+    queryKey: ['live-progress', clientId],
+    queryFn: () => mediaApi.clientLiveProgress(clientId),
+    enabled: !!clientId,
+    refetchInterval: 5_000,
+    staleTime: 5_000,
+  })
+
 export const useStoreMeasurement = (clientId: string) =>
   useToastMutation({
     mutationFn: (payload: Parameters<typeof mediaApi.storeMeasurement>[1]) =>

@@ -5,6 +5,7 @@ export { ClientDetailSidebar } from './ClientDetailSidebar'
 export { NutritionListCard } from './NutritionListCard'
 export { DailyProtocol } from './DailyProtocol'
 export { ClientsProgressChart } from './ClientsProgressChart'
+export { ClientLiveProgress } from './ClientLiveProgress'
 
 // Tabs
 export { ClientWorkoutsTab } from './tabs/ClientWorkoutsTab'
@@ -13,6 +14,7 @@ export { ClientAnalyticsTab } from './tabs/ClientAnalyticsTab'
 export { ClientMessagesTab } from './tabs/ClientMessagesTab'
 export { ClientScheduleTab } from './tabs/ClientScheduleTab'
 export type { ScheduleFilter } from './tabs/ClientScheduleTab'
+export { PlanAnalysisTab } from './tabs/PlanAnalysisTab'
 
 // Modals
 export { ScheduleModal } from './modals/ScheduleModal'

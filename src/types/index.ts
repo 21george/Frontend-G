@@ -24,6 +24,10 @@ export interface Coach {
   trial_ends_at?: string | null;
   max_clients?: number;
   client_count?: number;
+  address?: string;
+  city?: string;
+  postal_code?: string;
+  nationality?: string;
 }
 
 export interface Client {
@@ -31,6 +35,7 @@ export interface Client {
   name: string;
   email?: string;
   phone?: string;
+  gender?: "male" | "female" | "other";
   language: "en" | "de";
   address?: string;
   city?: string;
@@ -297,6 +302,46 @@ export interface ApiResponse<T> {
   data: T;
 }
 
+export interface LiveProgressDay {
+  day: string;
+  is_completed: boolean;
+  completed_at: string | null;
+}
+
+export interface LatestLog {
+  id: string;
+  day: string;
+  exercises: Array<{
+    name: string;
+    sets_completed: Array<{
+      set_number: number;
+      reps_done?: number;
+      reps?: number;
+      kg: number;
+    }>;
+  }>;
+  notes: string | null;
+  completed_at: string | null;
+}
+
+export interface LiveProgressResponse {
+  client: {
+    id: string;
+    name: string;
+    photo: string | null;
+  };
+  active_plan: {
+    id: string;
+    title: string;
+    progress_pct: number;
+    total_days: number;
+    completed_days: number;
+    days: LiveProgressDay[];
+  } | null;
+  latest_log: LatestLog | null;
+  last_activity_at: string | null;
+}
+
 export type LiveTrainingCategory =
   | "strength"
   | "cardio"
@@ -357,6 +402,72 @@ export interface LiveTrainingChatMessage {
   sent_at: string | null;
 }
 
+// ── 1-on-1 Coaching Sessions ──────────────────────────────────────────────────
+export type CoachingSessionStatus = "upcoming" | "live" | "ended" | "cancelled";
+
+/** Coach-facing coaching session (includes client info). */
+export interface CoachingSession {
+  id: string;
+  client_id: string;
+  client_name: string;
+  client_photo: string | null;
+  title: string;
+  description: string;
+  agenda: string;
+  duration_min: number;
+  scheduled_at: string;
+  started_at: string | null;
+  ended_at: string | null;
+  status: CoachingSessionStatus;
+  livekit_room: string;
+  notes: string | null;
+  created_at: string;
+}
+
+/** Client-facing coaching session (includes coach info). */
+export interface ClientCoachingSession {
+  id: string;
+  coach_id: string;
+  coach_name: string;
+  coach_photo: string | null;
+  title: string;
+  description: string;
+  agenda: string;
+  duration_min: number;
+  scheduled_at: string;
+  started_at: string | null;
+  ended_at: string | null;
+  status: CoachingSessionStatus;
+  notes: string | null;
+}
+
+/** Response from the token endpoint. */
+export interface LiveKitTokenResponse {
+  token: string;
+  room_name: string;
+  server_url: string;
+  identity: string;
+}
+
+/** Payload for creating a coaching session. */
+export interface CreateCoachingSessionPayload {
+  client_id: string;
+  title: string;
+  description?: string;
+  agenda?: string;
+  duration_min: number;
+  scheduled_at: string;
+}
+
+/** Payload for updating a coaching session. */
+export interface UpdateCoachingSessionPayload {
+  title?: string;
+  description?: string;
+  agenda?: string;
+  duration_min?: number;
+  scheduled_at?: string;
+}
+
 // ── Subscription ──────────────────────────────────────────────────────────────
 export type SubscriptionTier = "none" | "free" | "pro" | "business";
 export type SubscriptionStatus =
@@ -402,11 +513,14 @@ export interface Invoice {
 // ── Notifications ──────────────────────────────────────────────────────────────
 export type NotificationType =
   | "workout_completed"
+  | "workout_log_updated"
+  | "plan_completed"
   | "new_message"
   | "profile_updated"
   | "checkin_reminder"
   | "live_session_reminder"
-  | "checkin_scheduled";
+  | "checkin_scheduled"
+  | "analysis_ready";
 
 export interface Notification {
   id: string;
@@ -430,3 +544,12 @@ export interface Notification {
   read: boolean;
   sent_at: string;
 }
+
+export type {
+  WorkoutMetrics,
+  PlanRecommendation,
+  AnalysisStatus,
+  WorkoutAnalysis,
+  WorkoutAnalysisListItem,
+  RecommendationsPreview,
+} from "./analysis";

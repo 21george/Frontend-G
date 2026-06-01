@@ -33,6 +33,7 @@ import {
   Loader2,
   AlertTriangle,
   Clock,
+  Trash2,
 } from "lucide-react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 
@@ -258,6 +259,12 @@ export default function SettingsPage() {
     text: string;
   } | null>(null);
 
+  // Delete account modal state
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deleteConfirmText, setDeleteConfirmText] = useState("");
+  const [deleteLoading, setDeleteLoading] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+
   useEffect(() => setImageErrored(false), [coach?.profile_photo]);
 
   const handleChangePassword = async () => {
@@ -291,6 +298,24 @@ export default function SettingsPage() {
       });
     } finally {
       setPwSaving(false);
+    }
+  };
+
+  const handleDeleteAccount = async () => {
+    if (deleteConfirmText !== "DELETE") {
+      setDeleteError('Please type "DELETE" to confirm');
+      return;
+    }
+    setDeleteLoading(true);
+    setDeleteError(null);
+    try {
+      const { settingsApi } = await import("@/lib/api/services/settings");
+      await settingsApi.deleteAccount();
+      useAuthStore.getState().logout();
+      window.location.href = "/login";
+    } catch (err: any) {
+      setDeleteError(err?.response?.data?.message ?? "Failed to delete account");
+      setDeleteLoading(false);
     }
   };
 
@@ -485,6 +510,39 @@ export default function SettingsPage() {
                     </div>
                   </div>
                   <Toggle checked={theme === "dark"} onChange={toggleTheme} />
+                </div>
+              </div>
+            </Card>
+
+            {/* Danger Zone */}
+            <Card className="border-red-200 dark:border-red-900/30">
+              <CardHeader
+                icon={<AlertTriangle className="w-5 h-5 text-red-600 dark:text-red-400" />
+                }
+                title="Danger Zone"
+              />
+              <div className="p-6">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                  <div>
+                    <p className="text-sm font-medium text-[var(--text-primary)]">
+                      Delete Account
+                    </p>
+                    <p className="text-xs text-[var(--text-secondary)] mt-0.5 max-w-md">
+                      Permanently remove your account and all associated data.
+                      This action cannot be undone.
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => {
+                      setShowDeleteModal(true);
+                      setDeleteConfirmText("");
+                      setDeleteError(null);
+                    }}
+                    className="inline-flex items-center gap-1.5 px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-medium rounded-lg transition-colors"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                    Delete Account
+                  </button>
                 </div>
               </div>
             </Card>
@@ -825,6 +883,91 @@ export default function SettingsPage() {
                       className="px-4 py-2 bg-[var(--btn-bg)] text-white text-sm font-medium hover:bg-[var(--btn-hover)] transition-colors disabled:opacity-50 rounded-lg"
                     >
                       {pwSaving ? "Saving…" : "Update Password"}
+                    </button>
+                  </div>
+                </div>
+              </motion.div>
+            </div>
+          )}
+        </AnimatePresence>
+
+        {/* Delete Account Modal */}
+        <AnimatePresence>
+          {showDeleteModal && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+                onClick={() => {
+                  if (!deleteLoading) {
+                    setShowDeleteModal(false);
+                    setDeleteConfirmText("");
+                    setDeleteError(null);
+                  }
+                }}
+              />
+              <motion.div
+                initial={{ scale: 0.95, opacity: 0, y: 20 }}
+                animate={{ scale: 1, opacity: 1, y: 0 }}
+                exit={{ scale: 0.95, opacity: 0, y: 20 }}
+                className="relative bg-[var(--bg-card)] border border-red-200 dark:border-red-900/30 w-full max-w-md rounded-xl p-6 shadow-xl"
+              >
+                <div className="flex items-center gap-3 mb-5">
+                  <div className="w-10 h-10 bg-red-100 dark:bg-red-900/30 flex items-center justify-center rounded-lg">
+                    <AlertTriangle className="w-5 h-5 text-red-600 dark:text-red-400" />
+                  </div>
+                  <div>
+                    <h3 className="text-base font-semibold text-[var(--text-primary)]">
+                      Delete Account
+                    </h3>
+                    <p className="text-xs text-[var(--text-secondary)]">
+                      This action is irreversible
+                    </p>
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <p className="text-sm text-[var(--text-secondary)]">
+                    To confirm deletion, type <strong className="text-[var(--text-primary)]">DELETE</strong> below.
+                  </p>
+                  <input
+                    type="text"
+                    value={deleteConfirmText}
+                    onChange={(e) => setDeleteConfirmText(e.target.value)}
+                    placeholder="Type DELETE"
+                    disabled={deleteLoading}
+                    className="input rounded-lg"
+                  />
+
+                  {deleteError && (
+                    <div className="p-3 text-sm rounded-lg bg-red-50 dark:bg-red-950/20 text-red-700 dark:text-red-400">
+                      {deleteError}
+                    </div>
+                  )}
+
+                  <div className="flex justify-end gap-3 pt-4 border-t border-[var(--border)]">
+                    <button
+                      onClick={() => {
+                        setShowDeleteModal(false);
+                        setDeleteConfirmText("");
+                        setDeleteError(null);
+                      }}
+                      disabled={deleteLoading}
+                      className="px-4 py-2 text-sm font-medium text-[var(--text-secondary)] border border-[var(--border)] rounded-lg hover:bg-[var(--bg-subtle)] transition-colors disabled:opacity-50"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={handleDeleteAccount}
+                      disabled={deleteLoading}
+                      className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-medium transition-colors disabled:opacity-50 rounded-lg inline-flex items-center gap-2"
+                    >
+                      {deleteLoading && (
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                      )}
+                      {deleteLoading ? "Deleting…" : "Delete Account"}
                     </button>
                   </div>
                 </div>

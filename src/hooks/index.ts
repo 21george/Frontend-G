@@ -45,11 +45,28 @@ export {
   useMarkAllMessagesRead,
   useUnreadMessages,
 } from "./useMessages";
-export { useClientMedia, useWorkoutLogs, useWorkoutProgress, useStoreMeasurement } from "./useMedia";
-export { useClientAnalytics, useCoachAnalytics } from "./useAnalytics";
+export {
+  useClientMedia,
+  useWorkoutLogs,
+  useWorkoutProgress,
+  useLiveProgress,
+  useStoreMeasurement,
+} from "./useMedia";
+export {
+  useClientAnalytics,
+  useCoachAnalytics,
+  useSessionAnalytics,
+} from "./useAnalytics";
 export { useWeather } from "./useWeather";
 export { useNearbyGyms } from "./useNearbyGyms";
 export { useToastMutation } from "./useToastMutation";
+export {
+  useNotifications,
+  useUnreadNotificationCount,
+  useMarkNotificationRead,
+  useMarkAllNotificationsRead,
+  useDeleteNotification,
+} from "./useNotifications";
 export {
   useSubscription,
   useCheckout,
@@ -84,3 +101,22 @@ export {
   useLiveTrainingChat,
   useSendLiveTrainingChat,
 } from "./useLiveTraining";
+export {
+  useCoachingSessions,
+  useCoachingSession,
+  useCreateCoachingSession,
+  useUpdateCoachingSession,
+  useDeleteCoachingSession,
+  useUpdateSessionStatus,
+  useCoachingSessionToken,
+  useSaveSessionNotes,
+} from "./useCoachingSessions";
+export {
+  useWorkoutAnalyses,
+  useWorkoutAnalysis,
+  useCreateWorkoutAnalysis,
+  useRecommendationsPreview,
+  useApproveAnalysis,
+  useRejectAnalysis,
+  useAssignPlan,
+} from "./useWorkoutAnalysis";

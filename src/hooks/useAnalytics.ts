@@ -1,16 +1,23 @@
-import { useQuery } from '@tanstack/react-query'
-import { analyticsApi } from '@/lib/api'
+import { useQuery } from "@tanstack/react-query";
+import { analyticsApi } from "@/lib/api";
 
 export const useClientAnalytics = (id: string) =>
   useQuery({
-    queryKey: ['analytics', id],
+    queryKey: ["analytics", id],
     queryFn: () => analyticsApi.client(id),
     enabled: !!id,
-  })
+  });
 
 export const useCoachAnalytics = () =>
   useQuery({
-    queryKey: ['analytics', 'coach'],
+    queryKey: ["analytics", "coach"],
     queryFn: () => analyticsApi.coach(),
     staleTime: 2 * 60_000,
-  })
+  });
+
+export const useSessionAnalytics = () =>
+  useQuery({
+    queryKey: ["analytics", "sessions"],
+    queryFn: () => analyticsApi.sessions(),
+    staleTime: 2 * 60_000,
+  });

@@ -1,0 +1,669 @@
+"use client";
+
+import { useState, useCallback } from "react";
+import { useDropzone } from "react-dropzone";
+import {
+  FileSpreadsheet,
+  CheckCircle,
+  AlertCircle,
+  Eye,
+  Loader2,
+  Sheet,
+  Database,
+  Ban,
+  X,
+} from "lucide-react";
+import Link from "next/link";
+import { useImportClients } from "@/hooks/useClients";
+import { clientsApi } from "@/lib/api";
+import { Modal } from "@/components/ui/Modal";
+import toast from "react-hot-toast";
+import { useQueryClient } from "@tanstack/react-query";
+
+// Dynamic import xlsx only when needed
+let XLSX: any = null;
+async function getXLSX() {
+  if (!XLSX) {
+    XLSX = await import("xlsx");
+  }
+  return XLSX;
+}
+
+interface SheetInfo {
+  name: string;
+  rowCount: number;
+  headers: string[];
+  preview: string[][];
+  dataRows: (string | number | null)[][];
+  detectedType: string;
+}
+
+interface ParsedExcel {
+  sheets: SheetInfo[];
+  fileName: string;
+}
+
+function detectSheetType(headers: string[]): string {
+  const h = headers.map((h) => h.toLowerCase());
+  const hStr = h.join(" ");
+
+  if (hStr.includes("exercise") && hStr.includes("sets") && hStr.includes("reps"))
+    return "Exercise Details";
+  if (hStr.includes("client") && hStr.includes("age") && hStr.includes("weight"))
+    return "Client Overview";
+  if (hStr.includes("nutrition") || hStr.includes("calories") || hStr.includes("protein"))
+    return "Nutrition Plans";
+  if (hStr.includes("schedule") || hStr.includes("monday") || hStr.includes("tuesday"))
+    return "Weekly Schedule";
+  if (hStr.includes("completed") || hStr.includes("duration") || hStr.includes("rating"))
+    return "Completed Workouts";
+  if (hStr.includes("completion") || hStr.includes("performance"))
+    return "Completion Summary";
+  if (hStr.includes("workout") && hStr.includes("program"))
+    return "Workout Plans";
+
+  return "Unknown";
+}
+
+async function parseExcelFile(file: File): Promise<ParsedExcel> {
+  const xlsx = await getXLSX();
+  const buffer = await file.arrayBuffer();
+  const workbook = xlsx.read(buffer, { type: "array" });
+
+  const sheets: SheetInfo[] = [];
+
+  for (const sheetName of workbook.SheetNames) {
+    const sheet = workbook.Sheets[sheetName];
+    const json = xlsx.utils.sheet_to_json(sheet, { header: 1 }) as any[][];
+
+    if (json.length < 2) continue;
+
+    let headerIdx = 0;
+    for (let i = 0; i < Math.min(json.length, 5); i++) {
+      const row = json[i];
+      if (!row) continue;
+      const nonEmpty = row.filter(
+        (c) => c !== undefined && c !== null && String(c).trim(),
+      );
+      if (nonEmpty.length >= 3) {
+        headerIdx = i;
+        break;
+      }
+    }
+
+    const headers = (json[headerIdx] || []).map((h) => String(h || ""));
+    const dataRows = json
+      .slice(headerIdx + 1)
+      .filter(
+        (row) =>
+          row &&
+          row.some((c) => c !== undefined && c !== null && String(c).trim()),
+      );
+
+    const detectedType = detectSheetType(headers);
+
+    sheets.push({
+      name: sheetName,
+      rowCount: dataRows.length,
+      headers,
+      preview: dataRows
+        .slice(0, 5)
+        .map((row) => row.map((c) => String(c || ""))),
+      dataRows,
+      detectedType,
+    });
+  }
+
+  return { sheets, fileName: file.name };
+}
+
+const UNSUPPORTED_TYPES = [
+  "Nutrition Plans",
+  "Weekly Schedule",
+  "Completed Workouts",
+];
+
+interface Props {
+  open: boolean;
+  onClose: () => void;
+}
+
+export function ImportClientsModal({ open, onClose }: Props) {
+  const [file, setFile] = useState<File | null>(null);
+  const [parsed, setParsed] = useState<ParsedExcel | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [selectedSheet, setSelectedSheet] = useState<number | null>(null);
+  const [importing, setImporting] = useState(false);
+  const [importResult, setImportResult] = useState<{
+    success: boolean;
+    message: string;
+    details?: {
+      created: number;
+      failed: number;
+      total: number;
+      emails_sent?: number;
+      emails_skipped?: number;
+    };
+  } | null>(null);
+  const importClients = useImportClients();
+  const queryClient = useQueryClient();
+
+  const resetState = useCallback(() => {
+    setFile(null);
+    setParsed(null);
+    setError("");
+    setSelectedSheet(null);
+    setImportResult(null);
+    setLoading(false);
+    setImporting(false);
+  }, []);
+
+  const handleClose = useCallback(() => {
+    resetState();
+    onClose();
+  }, [resetState, onClose]);
+
+  const onDrop = useCallback(
+    async (files: File[]) => {
+      const f = files[0];
+      if (!f) return;
+
+      setFile(f);
+      setError("");
+      setParsed(null);
+      setSelectedSheet(null);
+      setImportResult(null);
+      setLoading(true);
+
+      try {
+        const result = await parseExcelFile(f);
+        setParsed(result);
+      } catch (err) {
+        if (process.env.NODE_ENV === "development") {
+          console.error("Failed to parse Excel:", err);
+        }
+        setError(
+          "Failed to parse Excel file. Make sure it's a valid .xlsx or .xls file.",
+        );
+      } finally {
+        setLoading(false);
+      }
+    },
+    [],
+  );
+
+  const { getRootProps, getInputProps, isDragActive } = useDropzone({
+    onDrop,
+    accept: {
+      "application/vnd.ms-excel": [".xls"],
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": [
+        ".xlsx",
+      ],
+    },
+    maxFiles: 1,
+    maxSize: 10 * 1024 * 1024,
+  });
+
+  const handleImportSheet = async (sheetIndex: number) => {
+    if (!file || !parsed) return;
+    setImporting(true);
+    setImportResult(null);
+
+    const sheet = parsed.sheets[sheetIndex];
+
+    if (sheet.detectedType !== "Client Overview") {
+      setImportResult({
+        success: false,
+        message: `Import for "${sheet.detectedType}" is not yet supported. Only client imports are available.`,
+      });
+      setImporting(false);
+      return;
+    }
+
+    const headerMap = new Map<string, number>();
+    sheet.headers.forEach((h, i) => {
+      headerMap.set(h.toLowerCase().trim().replace(/\s+/g, "_"), i);
+    });
+
+    const getCol = (row: (string | number | null)[], ...keys: string[]) => {
+      for (const key of keys) {
+        const idx = headerMap.get(
+          key.toLowerCase().trim().replace(/\s+/g, "_"),
+        );
+        if (idx !== undefined && idx < row.length) {
+          const v = row[idx];
+          return v !== undefined && v !== null ? String(v).trim() : undefined;
+        }
+      }
+      return undefined;
+    };
+
+    const clients = sheet.dataRows
+      .map((row) => ({
+        name:
+          getCol(row, "name", "full_name", "full name", "client_name") || "",
+        email: getCol(row, "email", "email_address", "e-mail"),
+        age: (() => {
+          const v = getCol(row, "age");
+          if (!v) return undefined;
+          const n = parseInt(v, 10);
+          return isNaN(n) ? undefined : n;
+        })(),
+        location: getCol(row, "location", "city", "address", "town"),
+        weight: (() => {
+          const v = getCol(
+            row,
+            "weight",
+            "current_weight",
+            "current_weight_kg",
+            "weight_kg",
+          );
+          if (!v) return undefined;
+          const n = parseFloat(v);
+          return isNaN(n) ? undefined : n;
+        })(),
+        height: (() => {
+          const v = getCol(
+            row,
+            "height",
+            "current_height",
+            "height_cm",
+            "height_cm",
+          );
+          if (!v) return undefined;
+          const n = parseFloat(v);
+          return isNaN(n) ? undefined : Math.round(n);
+        })(),
+        phone: getCol(row, "phone", "phone_number", "mobile"),
+        notes: getCol(row, "notes", "comments", "remarks"),
+      }))
+      .filter((c) => c.name.trim().length > 0);
+
+    if (clients.length === 0) {
+      setImportResult({
+        success: false,
+        message:
+          "No valid client rows found. Ensure each row has a name column.",
+      });
+      setImporting(false);
+      return;
+    }
+
+    // Duplicate check
+    let duplicatesSkipped = 0;
+    let clientsToImport = clients;
+    try {
+      const existingEmails = new Set<string>();
+      const existingPhones = new Set<string>();
+
+      let page = 1;
+      let totalPages = 1;
+      do {
+        const res = await clientsApi.list(undefined, page);
+        for (const c of res.data ?? []) {
+          if (c.email) existingEmails.add(c.email.toLowerCase().trim());
+          if (c.phone) existingPhones.add(c.phone.trim());
+        }
+        totalPages = res.pagination?.total_pages ?? 1;
+        page++;
+      } while (page <= totalPages);
+
+      clientsToImport = clients.filter((c) => {
+        const emailDup =
+          c.email && existingEmails.has(c.email.toLowerCase().trim());
+        const phoneDup = c.phone && existingPhones.has(c.phone.trim());
+        if (emailDup || phoneDup) {
+          duplicatesSkipped++;
+          return false;
+        }
+        return true;
+      });
+    } catch (err) {
+      if (process.env.NODE_ENV === "development") {
+        console.error(
+          "[import] Failed to fetch existing clients for duplicate check:",
+          err,
+        );
+      }
+      setImportResult({
+        success: false,
+        message:
+          "Could not verify duplicates — failed to load existing clients. Please try again.",
+      });
+      setImporting(false);
+      return;
+    }
+
+    if (clientsToImport.length === 0) {
+      setImportResult({
+        success: false,
+        message: `All ${clients.length} rows are duplicates (email or phone already exists). No new clients to import.`,
+      });
+      setImporting(false);
+      return;
+    }
+
+    try {
+      const res = await importClients.mutateAsync(clientsToImport);
+      const data = res.data;
+      const dupMsg =
+        duplicatesSkipped > 0
+          ? ` (${duplicatesSkipped} duplicates skipped)`
+          : "";
+      setImportResult({
+        success: data.failed === 0,
+        message: `Imported ${data.created} of ${data.total} clients${data.failed > 0 ? ` (${data.failed} failed)` : ""}${dupMsg}.`,
+        details: {
+          created: data.created,
+          failed: data.failed,
+          total: data.total,
+          emails_sent: data.emails_sent,
+          emails_skipped: data.emails_skipped,
+        },
+      });
+
+      queryClient.invalidateQueries({ queryKey: ["clients"] });
+      queryClient.invalidateQueries({ queryKey: ["all-clients"] });
+
+      const importedWithoutEmail = clientsToImport.filter(
+        (c) => !c.email?.trim(),
+      );
+      if (importedWithoutEmail.length > 0) {
+        toast(
+          (t) => (
+            <div className="flex items-start gap-3">
+              <div>
+                <p className="text-sm font-medium">
+                  {importedWithoutEmail.length} imported client
+                  {importedWithoutEmail.length > 1 ? "s" : ""} missing email
+                </p>
+                <p className="text-xs text-slate-500 mt-0.5">
+                  Add emails so login codes can be sent automatically.
+                </p>
+                <Link
+                  href="/clients"
+                  onClick={() => toast.dismiss(t.id)}
+                  className="text-xs font-semibold text-blue-600 hover:underline mt-1 inline-block"
+                >
+                  Go to Clients →
+                </Link>
+              </div>
+            </div>
+          ),
+          { duration: 8000 },
+        );
+      }
+    } catch (e: any) {
+      const msg =
+        e?.response?.data?.message ||
+        e?.message ||
+        "Import failed. Please try again.";
+      setImportResult({
+        success: false,
+        message: msg,
+      });
+    } finally {
+      setImporting(false);
+    }
+  };
+
+  return (
+    <Modal open={open} onClose={handleClose} title="Import from Excel" size="xl">
+      <div className="max-h-[70vh] overflow-y-auto pr-1">
+        <p className="text-[var(--text-secondary)] text-sm mb-6">
+          Upload an Excel file to bulk-import clients. We auto-detect columns
+          for name, email, age, location, weight, and height.
+        </p>
+
+        {/* Dropzone */}
+        {!parsed && (
+          <div
+            {...getRootProps()}
+            className={`border-2 border-dashed rounded-lg p-10 text-center cursor-pointer transition-colors ${
+              isDragActive
+                ? "border-brand-500 bg-brand-50 dark:bg-brand-600/20"
+                : "border-[var(--border)] dark:border-white/20 hover:border-slate-400 dark:hover:border-white/30"
+            }`}
+          >
+            <input {...getInputProps()} />
+            <FileSpreadsheet className="w-10 h-10 text-[var(--text-tertiary)] mx-auto mb-3" />
+            <p className="font-medium text-[var(--text-primary)]">
+              {isDragActive
+                ? "Drop the Excel file here"
+                : "Drop your Excel file here"}
+            </p>
+            <p className="text-sm text-[var(--text-secondary)] mt-1">
+              or click to browse · .xlsx, .xls · max 10 MB
+            </p>
+          </div>
+        )}
+
+        {/* Loading */}
+        {loading && (
+          <div className="flex flex-col items-center justify-center py-10">
+            <Loader2 className="w-8 h-8 animate-spin text-brand-600 mb-3" />
+            <p className="text-[var(--text-secondary)]">
+              Parsing Excel file... This may take a moment.
+            </p>
+          </div>
+        )}
+
+        {/* Error */}
+        {error && (
+          <div className="bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800 p-4 rounded-lg flex items-start gap-3">
+            <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
+            <p className="text-red-700 dark:text-red-300">{error}</p>
+          </div>
+        )}
+
+        {/* Parsed Results */}
+        {parsed && !loading && (
+          <div className="space-y-5">
+            {/* File info */}
+            <div className="flex items-center justify-between bg-[var(--bg-subtle)] dark:bg-white/[0.03] p-3 rounded-lg">
+              <div className="flex items-center gap-3">
+                <FileSpreadsheet className="w-7 h-7 text-green-500" />
+                <div>
+                  <p className="font-medium text-[var(--text-primary)] text-sm">
+                    {parsed.fileName}
+                  </p>
+                  <p className="text-xs text-[var(--text-secondary)]">
+                    {parsed.sheets.length} sheets found
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => {
+                  setFile(null);
+                  setParsed(null);
+                  setSelectedSheet(null);
+                  setImportResult(null);
+                }}
+                className="text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)] flex items-center gap-1"
+              >
+                <X className="w-3.5 h-3.5" />
+                Remove file
+              </button>
+            </div>
+
+            {/* Import result */}
+            {importResult && (
+              <div
+                className={`p-3 rounded-lg flex items-center gap-3 ${
+                  importResult.success
+                    ? "bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-800"
+                    : "bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800"
+                }`}
+              >
+                <CheckCircle
+                  className={`w-5 h-5 ${importResult.success ? "text-green-500" : "text-red-500"}`}
+                />
+                <div>
+                  <p
+                    className={
+                      importResult.success
+                        ? "text-green-700 dark:text-green-300 text-sm"
+                        : "text-red-700 dark:text-red-300 text-sm"
+                    }
+                  >
+                    {importResult.message}
+                  </p>
+                  {importResult.success &&
+                    importResult.details?.emails_sent !== undefined && (
+                      <p className="text-xs text-green-600 dark:text-green-400 mt-0.5">
+                        {importResult.details.emails_sent} login code
+                        {importResult.details.emails_sent !== 1 ? "s" : ""}{" "}
+                        emailed
+                        {importResult.details.emails_skipped
+                          ? `, ${importResult.details.emails_skipped} skipped (no email)`
+                          : ""}
+                      </p>
+                    )}
+                </div>
+              </div>
+            )}
+
+            {/* Sheets grid */}
+            <div className="grid gap-3">
+              <h3 className="text-sm font-semibold text-[var(--text-primary)]">
+                Detected Sheets
+              </h3>
+
+              {parsed.sheets.map((sheet, idx) => (
+                <div
+                  key={idx}
+                  className={`border rounded-lg overflow-hidden transition-colors ${
+                    selectedSheet === idx
+                      ? "border-brand-500 bg-brand-50/50 dark:bg-brand-900/10"
+                      : "border-[var(--border)] dark:border-white/[0.07] hover:border-slate-300 dark:hover:border-white/20"
+                  }`}
+                >
+                  <div className="p-3">
+                    <div className="flex items-start justify-between mb-2">
+                      <div className="flex items-center gap-2.5">
+                        <div className="w-8 h-8 bg-[var(--bg-subtle)] dark:bg-white/[0.05] rounded-lg flex items-center justify-center flex-shrink-0">
+                          <Sheet className="w-4 h-4 text-[var(--text-tertiary)]" />
+                        </div>
+                        <div>
+                          <p className="font-medium text-[var(--text-primary)] text-sm">
+                            {sheet.name}
+                          </p>
+                          <div className="flex items-center gap-2 text-xs text-[var(--text-secondary)]">
+                            <span className="px-1.5 py-0.5 bg-[var(--bg-subtle)] dark:bg-white/[0.05] rounded">
+                              {sheet.detectedType}
+                            </span>
+                            {UNSUPPORTED_TYPES.includes(sheet.detectedType) && (
+                              <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-xs font-medium bg-amber-50 text-amber-700 border border-amber-200/60 dark:bg-amber-900/30 dark:text-amber-400 dark:border-amber-800">
+                                <Ban className="w-3 h-3" />
+                                Not yet supported
+                              </span>
+                            )}
+                            <span>{sheet.rowCount} rows</span>
+                            <span>{sheet.headers.length} columns</span>
+                          </div>
+                        </div>
+                      </div>
+                      <button
+                        onClick={() =>
+                          setSelectedSheet(selectedSheet === idx ? null : idx)
+                        }
+                        className="text-xs text-brand-600 hover:text-brand-700 flex items-center gap-1 flex-shrink-0"
+                      >
+                        <Eye className="w-3.5 h-3.5" />
+                        {selectedSheet === idx ? "Hide" : "Preview"}
+                      </button>
+                    </div>
+
+                    {/* Preview table */}
+                    {selectedSheet === idx && (
+                      <div className="mt-3 border-t border-[var(--border)] dark:border-white/[0.07] pt-3">
+                        <div className="overflow-x-auto">
+                          <table className="w-full text-xs">
+                            <thead className="bg-[var(--bg-subtle)] dark:bg-white/[0.05]">
+                              <tr>
+                                {sheet.headers.map((h, hi) => (
+                                  <th
+                                    key={hi}
+                                    className="px-2 py-1.5 text-left font-medium text-[var(--text-secondary)] dark:text-[var(--text-tertiary)] whitespace-nowrap"
+                                  >
+                                    {h}
+                                  </th>
+                                ))}
+                              </tr>
+                            </thead>
+                            <tbody className="divide-y divide-[var(--border)] dark:divide-white/[0.05]">
+                              {sheet.preview.map((row, ri) => (
+                                <tr key={ri}>
+                                  {row.map((cell, ci) => (
+                                    <td
+                                      key={ci}
+                                      className="px-2 py-1.5 text-[var(--text-primary)] dark:text-slate-300 whitespace-nowrap max-w-[180px] truncate"
+                                    >
+                                      {cell}
+                                    </td>
+                                  ))}
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                        <p className="text-xs text-[var(--text-secondary)] mt-1.5">
+                          Showing first {sheet.preview.length} of{" "}
+                          {sheet.rowCount} rows
+                        </p>
+                      </div>
+                    )}
+
+                    {/* Import button */}
+                    <div className="mt-3 flex items-center justify-between">
+                      <div className="flex flex-wrap gap-1">
+                        {sheet.headers.slice(0, 6).map((h, hi) => (
+                          <span
+                            key={hi}
+                            className="text-[10px] px-1.5 py-0.5 bg-[var(--bg-subtle)] dark:bg-white/[0.05] text-[var(--text-tertiary)] rounded"
+                          >
+                            {h}
+                          </span>
+                        ))}
+                        {sheet.headers.length > 6 && (
+                          <span className="text-[10px] px-1.5 py-0.5 bg-[var(--bg-subtle)] dark:bg-white/[0.05] text-[var(--text-tertiary)] rounded">
+                            +{sheet.headers.length - 6} more
+                          </span>
+                        )}
+                      </div>
+                      {UNSUPPORTED_TYPES.includes(sheet.detectedType) ? (
+                        <div className="px-3 py-1.5 bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 text-xs font-medium rounded-lg flex items-center gap-1.5 cursor-not-allowed">
+                          <Ban className="w-3.5 h-3.5" />
+                          Import unavailable
+                        </div>
+                      ) : (
+                        <button
+                          onClick={() => handleImportSheet(idx)}
+                          disabled={importing}
+                          className="px-3 py-1.5 bg-brand-600 hover:bg-brand-700 text-white text-xs font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1.5"
+                        >
+                          {importing ? (
+                            <>
+                              <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                              Importing...
+                            </>
+                          ) : (
+                            <>
+                              <Database className="w-3.5 h-3.5" />
+                              Import
+                            </>
+                          )}
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+    </Modal>
+  );
+}

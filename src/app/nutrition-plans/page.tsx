@@ -1,96 +1,142 @@
-'use client'
+"use client";
 
-import { useState, useMemo } from 'react'
-import DashboardLayout from '@/components/layout/DashboardLayout'
-import { Skeleton } from '@/components/ui/Skeleton'
-import { useNutritionPlans, useClients } from '@/lib/hooks'
-import Link from 'next/link'
+import { useState, useMemo } from "react";
+import DashboardLayout from "@/components/layout/DashboardLayout";
+import { Skeleton } from "@/components/ui/Skeleton";
+import { useNutritionPlans, useClients } from "@/lib/hooks";
+import Link from "next/link";
 import {
-  Search, SlidersHorizontal, Flame, Zap, Droplets, UtensilsCrossed,
-  Salad, Clock, ChevronRight, Star, Users, MoreHorizontal,
-} from 'lucide-react'
-import { NutritionListCard } from '@/components/clients/NutritionListCard'
-import type { NutritionPlan } from '@/types'
+  Search,
+  SlidersHorizontal,
+  Flame,
+  Zap,
+  Droplets,
+  UtensilsCrossed,
+  Salad,
+  Clock,
+  ChevronRight,
+  Star,
+  Users,
+  MoreHorizontal,
+} from "lucide-react";
+import { NutritionListCard } from "@/components/clients/NutritionListCard";
+import type { NutritionPlan } from "@/types";
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
-const MEAL_TABS = ['All', 'Breakfast', 'Lunch', 'Snack', 'Dinner'] as const
-type MealTab = typeof MEAL_TABS[number]
+const MEAL_TABS = ["All", "Breakfast", "Lunch", "Snack", "Dinner"] as const;
+type MealTab = (typeof MEAL_TABS)[number];
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 function healthScore(plan: NutritionPlan): number {
-  const { calories = 0, protein_g = 0, carbs_g = 0, fat_g = 0 } = plan.daily_totals ?? {}
-  if (calories === 0) return 0
-  const proteinRatio = (protein_g * 4) / calories
-  const carbRatio    = (carbs_g   * 4) / calories
-  const fatRatio     = (fat_g     * 9) / calories
-  const balance = 1 - Math.abs(proteinRatio - 0.30) - Math.abs(carbRatio - 0.45) - Math.abs(fatRatio - 0.25)
-  return Math.min(10, Math.max(1, Math.round(balance * 12)))
+  const {
+    calories = 0,
+    protein_g = 0,
+    carbs_g = 0,
+    fat_g = 0,
+  } = plan.daily_totals ?? {};
+  if (calories === 0) return 0;
+  const proteinRatio = (protein_g * 4) / calories;
+  const carbRatio = (carbs_g * 4) / calories;
+  const fatRatio = (fat_g * 9) / calories;
+  const balance =
+    1 -
+    Math.abs(proteinRatio - 0.3) -
+    Math.abs(carbRatio - 0.45) -
+    Math.abs(fatRatio - 0.25);
+  return Math.min(10, Math.max(1, Math.round(balance * 12)));
 }
 
 function scoreColor(score: number) {
-  return score >= 8 ? 'text-green-500' : score >= 6 ? 'text-amber-500' : 'text-red-500'
+  return score >= 8
+    ? "text-green-500"
+    : score >= 6
+      ? "text-amber-500"
+      : "text-red-500";
 }
 
 function getMealTypes(plan: NutritionPlan): MealTab[] {
-  const types = new Set<MealTab>()
-  plan.days?.forEach(day =>
-    day.meals.forEach(meal => {
-      const n = meal.meal_name.toLowerCase()
-      if (n.includes('breakfast'))                      types.add('Breakfast')
-      else if (n.includes('lunch'))                     types.add('Lunch')
-      else if (n.includes('snack'))                     types.add('Snack')
-      else if (n.includes('dinner') || n.includes('supper')) types.add('Dinner')
-    })
-  )
-  return Array.from(types)
+  const types = new Set<MealTab>();
+  plan.days?.forEach((day) =>
+    day.meals.forEach((meal) => {
+      const n = meal.meal_name.toLowerCase();
+      if (n.includes("breakfast")) types.add("Breakfast");
+      else if (n.includes("lunch")) types.add("Lunch");
+      else if (n.includes("snack")) types.add("Snack");
+      else if (n.includes("dinner") || n.includes("supper"))
+        types.add("Dinner");
+    }),
+  );
+  return Array.from(types);
 }
 
 // ── Macro pill ────────────────────────────────────────────────────────────────
 
 function MacroPill({
-  icon, value, unit, color, bg,
-}: { icon: React.ReactNode; value: number; unit: string; color: string; bg: string }) {
+  icon,
+  value,
+  unit,
+  color,
+  bg,
+}: {
+  icon: React.ReactNode;
+  value: number;
+  unit: string;
+  color: string;
+  bg: string;
+}) {
   return (
     <div className={`flex items-center gap-1.5 px-3 py-2 ${bg}`}>
       <span className={color}>{icon}</span>
       <p className={`text-sm font-semibold ${color}`}>
-        {value}<span className="text-xs font-normal ml-0.5">{unit}</span>
+        {value}
+        <span className="text-xs font-normal ml-0.5">{unit}</span>
       </p>
     </div>
-  )
+  );
 }
 
 // ── Meal type badge ───────────────────────────────────────────────────────────
 
 function MealBadge({ type }: { type: string }) {
   const BADGE: Record<string, string> = {
-    Breakfast: 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400',
-    Lunch:     'bg-blue-100   text-blue-700   dark:bg-blue-900/30   dark:text-blue-400',
-    Dinner:    'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-400',
-    Snack:     'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400',
-    Other:     'bg-slate-100  text-slate-600  dark:bg-slate-800     dark:text-slate-400',
-  }
-  const key = type in BADGE ? type : 'Other'
+    Breakfast:
+      "bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400",
+    Lunch:
+      "bg-blue-100   text-blue-700   dark:bg-blue-900/30   dark:text-blue-400",
+    Dinner:
+      "bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-400",
+    Snack:
+      "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400",
+    Other:
+      "bg-slate-100  text-slate-600  dark:bg-slate-800     dark:text-slate-400",
+  };
+  const key = type in BADGE ? type : "Other";
   return (
-    <span className={`inline-flex items-center px-2 py-0.5 text-[11px] font-semibold ${BADGE[key]}`}>
+    <span
+      className={`inline-flex items-center px-2 py-0.5 text-[11px] font-semibold ${BADGE[key]}`}
+    >
       {type}
     </span>
-  )
+  );
 }
 
 // ── Score bar (like the orange segment bar in ref UI) ────────────────────────
 
 function ScoreBar({ score, max = 10 }: { score: number; max?: number }) {
-  const filled = score >= 8 ? 'bg-green-500' : score >= 6 ? 'bg-amber-500' : 'bg-red-500'
+  const filled =
+    score >= 8 ? "bg-green-500" : score >= 6 ? "bg-amber-500" : "bg-red-500";
   return (
     <div className="flex items-center gap-0.5">
       {Array.from({ length: max }, (_, i) => (
-        <div key={i} className={`h-1.5 w-3 ${i < score ? filled : 'bg-slate-200 dark:bg-white/[0.08]'}`} />
+        <div
+          key={i}
+          className={`h-1.5 w-3 ${i < score ? filled : "bg-slate-200 dark:bg-white/[0.08]"}`}
+        />
       ))}
     </div>
-  )
+  );
 }
 
 // ── Featured plan card ────────────────────────────────────────────────────────
@@ -100,14 +146,14 @@ function ClientAvatarStack({
   clients,
   max = 3,
 }: {
-  clients: { id: string; name: string; profile_photo_url?: string | null }[]
-  max?: number
+  clients: { id: string; name: string; profile_photo_url?: string | null }[];
+  max?: number;
 }) {
-  const visible = clients.slice(0, max)
-  const remaining = clients.length - max
+  const visible = clients.slice(0, max);
+  const remaining = clients.length - max;
   return (
     <div className="flex items-center -space-x-2">
-      {visible.map(c => (
+      {visible.map((c) =>
         c.profile_photo_url ? (
           <img
             key={c.id}
@@ -122,31 +168,40 @@ function ClientAvatarStack({
             className="w-6 h-6 rounded-full border-2 border-white dark:border-[#121212] bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center text-white text-[9px] font-semibold"
             title={c.name}
           >
-            {c.name?.[0]?.toUpperCase() ?? 'C'}
+            {c.name?.[0]?.toUpperCase() ?? "C"}
           </div>
-        )
-      ))}
+        ),
+      )}
       {remaining > 0 && (
         <div className="w-6 h-6 rounded-full border-2 border-white dark:border-[#121212] bg-slate-200 dark:bg-slate-700 flex items-center justify-center text-[9px] font-semibold text-slate-600 dark:text-slate-300">
           +{remaining}
         </div>
       )}
     </div>
-  )
+  );
 }
 
 function FeaturedPlanCard({
   plan,
   assignedClients,
 }: {
-  plan: NutritionPlan
-  assignedClients?: { id: string; name: string; profile_photo_url?: string | null }[]
+  plan: NutritionPlan;
+  assignedClients?: {
+    id: string;
+    name: string;
+    profile_photo_url?: string | null;
+  }[];
 }) {
-  const score = healthScore(plan)
-  const { calories = 0, protein_g = 0, carbs_g = 0, fat_g = 0 } = plan.daily_totals ?? {}
-  const types = getMealTypes(plan)
-  const totalMeals = plan.days?.reduce((s, d) => s + d.meals.length, 0) ?? 0
-  const clientCount = assignedClients?.length ?? 0
+  const score = healthScore(plan);
+  const {
+    calories = 0,
+    protein_g = 0,
+    carbs_g = 0,
+    fat_g = 0,
+  } = plan.daily_totals ?? {};
+  const types = getMealTypes(plan);
+  const totalMeals = plan.days?.reduce((s, d) => s + d.meals.length, 0) ?? 0;
+  const clientCount = assignedClients?.length ?? 0;
 
   return (
     <div className="border border-slate-200/80 dark:border-white/[0.08] rounded-2xl overflow-hidden bg-white dark:bg-[#121212]">
@@ -154,16 +209,25 @@ function FeaturedPlanCard({
         {/* Visual gradient panel */}
         <div className="sm:w-52 flex-shrink-0 bg-gradient-to-br from-brand-600 via-brand-700 to-brand-800 p-6 flex flex-col justify-between min-h-[180px]">
           <div className="flex flex-wrap gap-1.5">
-            {types.slice(0, 2).map(t => (
-              <span key={t} className="text-[11px] bg-white/20 text-white px-2 py-0.5 font-semibold rounded">{t}</span>
+            {types.slice(0, 2).map((t) => (
+              <span
+                key={t}
+                className="text-[11px] bg-white/20 text-white px-2 py-0.5 font-semibold rounded"
+              >
+                {t}
+              </span>
             ))}
             {types.length === 0 && (
-              <span className="text-[11px] bg-white/20 text-white px-2 py-0.5 font-semibold rounded">General</span>
+              <span className="text-[11px] bg-white/20 text-white px-2 py-0.5 font-semibold rounded">
+                General
+              </span>
             )}
           </div>
           <div>
             <Salad className="w-12 h-12 text-white/80 mb-2" />
-            <p className="text-white/80 text-xs font-semibold">Health Score {score}/10</p>
+            <p className="text-white/80 text-xs font-semibold">
+              Health Score {score}/10
+            </p>
             <ScoreBar score={score} />
           </div>
         </div>
@@ -178,16 +242,25 @@ function FeaturedPlanCard({
               {plan.title}
             </h3>
             <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-[var(--text-secondary)] dark:text-[var(--text-secondary)]">
-              <span className="flex items-center gap-1.5"><Clock size={11} />{plan.days?.length ?? 7} days</span>
-              <span className="flex items-center gap-1.5"><UtensilsCrossed size={11} />{totalMeals} meals</span>
+              <span className="flex items-center gap-1.5">
+                <Clock size={11} />
+                {plan.days?.length ?? 7} days
+              </span>
+              <span className="flex items-center gap-1.5">
+                <UtensilsCrossed size={11} />
+                {totalMeals} meals
+              </span>
               {clientCount > 0 && (
                 <span className="flex items-center gap-1.5">
                   <Users size={11} />
-                  {clientCount} client{clientCount !== 1 ? 's' : ''}
+                  {clientCount} client{clientCount !== 1 ? "s" : ""}
                 </span>
               )}
-              <span className={`flex items-center gap-1.5 font-semibold ${scoreColor(score)}`}>
-                <Star size={11} />{score}/10
+              <span
+                className={`flex items-center gap-1.5 font-semibold ${scoreColor(score)}`}
+              >
+                <Star size={11} />
+                {score}/10
               </span>
             </div>
             {/* Client avatars */}
@@ -200,10 +273,34 @@ function FeaturedPlanCard({
 
           {/* Macros + CTA */}
           <div className="flex flex-wrap items-center gap-2">
-            <MacroPill icon={<Flame size={14} />}    value={calories}  unit="kcal" color="text-orange-500" bg="bg-orange-50 dark:bg-orange-900/20"  />
-            <MacroPill icon={<Zap size={14} />}      value={carbs_g}   unit="g C"  color="text-amber-500"  bg="bg-amber-50 dark:bg-amber-900/20"   />
-            <MacroPill icon={<Salad size={14} />}    value={protein_g} unit="g P"  color="text-green-600"  bg="bg-green-50 dark:bg-green-900/20"   />
-            <MacroPill icon={<Droplets size={14} />} value={fat_g}     unit="g F"  color="text-slate-500"  bg="bg-slate-100 dark:bg-slate-800/60"  />
+            <MacroPill
+              icon={<Flame size={14} />}
+              value={calories}
+              unit="kcal"
+              color="text-orange-500"
+              bg="bg-orange-50 dark:bg-orange-900/20"
+            />
+            <MacroPill
+              icon={<Zap size={14} />}
+              value={carbs_g}
+              unit="g C"
+              color="text-amber-500"
+              bg="bg-amber-50 dark:bg-amber-900/20"
+            />
+            <MacroPill
+              icon={<Salad size={14} />}
+              value={protein_g}
+              unit="g P"
+              color="text-green-600"
+              bg="bg-green-50 dark:bg-green-900/20"
+            />
+            <MacroPill
+              icon={<Droplets size={14} />}
+              value={fat_g}
+              unit="g F"
+              color="text-slate-500"
+              bg="bg-slate-100 dark:bg-slate-800/60"
+            />
             <Link
               href={`/nutrition-plans/${plan.id}`}
               className="ml-auto flex items-center rounded-xl gap-1.5 px-4 py-2 bg-brand-600 hover:bg-brand-700 text-white text-sm font-semibold transition-colors"
@@ -214,9 +311,8 @@ function FeaturedPlanCard({
         </div>
       </div>
     </div>
-  )
+  );
 }
-
 
 // ── Right panel mini card ─────────────────────────────────────────────────────
 
@@ -225,26 +321,35 @@ function MiniPlanCard({
   rank,
   assignedClients,
 }: {
-  plan: NutritionPlan
-  rank?: number
-  assignedClients?: { id: string; name: string; profile_photo_url?: string | null }[]
+  plan: NutritionPlan;
+  rank?: number;
+  assignedClients?: {
+    id: string;
+    name: string;
+    profile_photo_url?: string | null;
+  }[];
 }) {
-  const score = healthScore(plan)
-  const { calories = 0 } = plan.daily_totals ?? {}
-  const types = getMealTypes(plan)
-  const clientCount = assignedClients?.length ?? 0
+  const score = healthScore(plan);
+  const { calories = 0 } = plan.daily_totals ?? {};
+  const types = getMealTypes(plan);
+  const clientCount = assignedClients?.length ?? 0;
 
   return (
     <Link
       href={`/nutrition-plans/${plan.id}`}
-      className="flex items-center gap-3 p-2 hover:bg-[#13131314] dark:hover:bg-white/[0.04] transition-colors group rounded-lg"
+      className="flex items-center gap-3 p-2 hover:bg-[var(--bg-hover)] dark:hover:bg-white/[0.04] transition-colors group rounded-lg"
     >
-      <div className={`w-10 h-10 flex-shrink-0 flex items-center justify-center rounded-lg ${
-        types[0] === 'Breakfast' ? 'bg-orange-100 dark:bg-orange-900/30' :
-        types[0] === 'Lunch'     ? 'bg-blue-100 dark:bg-blue-900/30'     :
-        types[0] === 'Dinner'    ? 'bg-indigo-100 dark:bg-indigo-900/30' :
-                                   'bg-green-100 dark:bg-green-900/30'
-      }`}>
+      <div
+        className={`w-10 h-10 flex-shrink-0 flex items-center justify-center rounded-lg ${
+          types[0] === "Breakfast"
+            ? "bg-orange-100 dark:bg-orange-900/30"
+            : types[0] === "Lunch"
+              ? "bg-blue-100 dark:bg-blue-900/30"
+              : types[0] === "Dinner"
+                ? "bg-indigo-100 dark:bg-indigo-900/30"
+                : "bg-green-100 dark:bg-green-900/30"
+        }`}
+      >
         <Salad size={16} className="text-green-600 dark:text-green-400" />
       </div>
       <div className="flex-1 min-w-0">
@@ -253,23 +358,31 @@ function MiniPlanCard({
         </p>
         <div className="flex items-center gap-2 mt-0.5">
           <Star size={10} className="text-amber-400 fill-amber-400" />
-          <span className="text-xs text-[var(--text-secondary)] dark:text-[var(--text-secondary)]">{score}/10 · {calories} kcal</span>
+          <span className="text-xs text-[var(--text-secondary)] dark:text-[var(--text-secondary)]">
+            {score}/10 · {calories} kcal
+          </span>
           {clientCount > 0 && (
-            <span className="text-xs text-[var(--text-tertiary)]">· {clientCount} client{clientCount !== 1 ? 's' : ''}</span>
+            <span className="text-xs text-[var(--text-tertiary)]">
+              · {clientCount} client{clientCount !== 1 ? "s" : ""}
+            </span>
           )}
         </div>
       </div>
       {rank !== undefined && rank < 3 && (
-        <span className={`text-[10px] font-semibold px-1.5 py-0.5 flex-shrink-0 rounded ${
-          rank === 0 ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400' :
-          rank === 1 ? 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400'   :
-                       'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400'
-        }`}>
+        <span
+          className={`text-[10px] font-semibold px-1.5 py-0.5 flex-shrink-0 rounded ${
+            rank === 0
+              ? "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400"
+              : rank === 1
+                ? "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400"
+                : "bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400"
+          }`}
+        >
           #{rank + 1}
         </span>
       )}
     </Link>
-  )
+  );
 }
 
 // ── Skeleton row ──────────────────────────────────────────────────────────────
@@ -283,86 +396,138 @@ function SkeletonRow() {
         <div className="h-3 w-32 bg-slate-100 dark:bg-white/[0.04] animate-pulse" />
       </div>
     </div>
-  )
+  );
 }
 
 // ── Main page ─────────────────────────────────────────────────────────────────
 
 export default function NutritionPlansPage() {
-  const { data: rawPlans = [], isLoading } = useNutritionPlans()
-  const { data: clientsData }              = useClients()
-  const clients                            = clientsData?.data ?? []
+  const { data: rawPlans = [], isLoading } = useNutritionPlans();
+  const { data: clientsData } = useClients();
+  const clients = clientsData?.data ?? [];
 
-  const [activeTab, setActiveTab] = useState<MealTab>('All')
-  const [search,    setSearch]    = useState('')
-  const [sortBy,    setSortBy]    = useState<'calories' | 'score' | 'name'>('calories')
-  const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set())
+  const [activeTab, setActiveTab] = useState<MealTab>("All");
+  const [search, setSearch] = useState("");
+  const [sortBy, setSortBy] = useState<"calories" | "score" | "name">(
+    "calories",
+  );
+  const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
 
   const togglePlan = (id: string) => {
-    setExpandedIds(prev => {
-      const next = new Set(prev)
-      if (next.has(id)) next.delete(id)
-      else next.add(id)
-      return next
-    })
-  }
+    setExpandedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
 
-  const plans = rawPlans as NutritionPlan[]
+  const plans = rawPlans as NutritionPlan[];
 
   // Resolve clients for each plan from client_ids or single client_id
   const getPlanClients = (plan: NutritionPlan) => {
-    const ids = plan.client_ids ?? (plan.client_id ? [plan.client_id] : [])
-    return ids.map(id => {
-      const c = clients.find(client => client.id === id)
-      return c ? { id: c.id, name: c.name, profile_photo_url: c.profile_photo_url } : null
-    }).filter(Boolean) as { id: string; name: string; profile_photo_url?: string | null }[]
-  }
+    const ids = plan.client_ids ?? (plan.client_id ? [plan.client_id] : []);
+    return ids
+      .map((id) => {
+        const c = clients.find((client) => client.id === id);
+        return c
+          ? { id: c.id, name: c.name, profile_photo_url: c.profile_photo_url }
+          : null;
+      })
+      .filter(Boolean) as {
+      id: string;
+      name: string;
+      profile_photo_url?: string | null;
+    }[];
+  };
 
   const filtered = useMemo(() => {
-    let result = plans
+    let result = plans;
 
     if (search.trim()) {
-      const q = search.toLowerCase()
-      result = result.filter(p => {
-        if (p.title.toLowerCase().includes(q)) return true
-        const planClients = getPlanClients(p)
-        return planClients.some(c => c.name.toLowerCase().includes(q))
-      })
+      const q = search.toLowerCase();
+      result = result.filter((p) => {
+        if (p.title.toLowerCase().includes(q)) return true;
+        const planClients = getPlanClients(p);
+        return planClients.some((c) => c.name.toLowerCase().includes(q));
+      });
     }
 
-    if (activeTab !== 'All') {
-      result = result.filter(p => getMealTypes(p).includes(activeTab))
+    if (activeTab !== "All") {
+      result = result.filter((p) => getMealTypes(p).includes(activeTab));
     }
 
-    if (sortBy === 'calories') result = [...result].sort((a, b) => (b.daily_totals?.calories ?? 0) - (a.daily_totals?.calories ?? 0))
-    if (sortBy === 'score')    result = [...result].sort((a, b) => healthScore(b) - healthScore(a))
-    if (sortBy === 'name')     result = [...result].sort((a, b) => a.title.localeCompare(b.title))
+    if (sortBy === "calories")
+      result = [...result].sort(
+        (a, b) =>
+          (b.daily_totals?.calories ?? 0) - (a.daily_totals?.calories ?? 0),
+      );
+    if (sortBy === "score")
+      result = [...result].sort((a, b) => healthScore(b) - healthScore(a));
+    if (sortBy === "name")
+      result = [...result].sort((a, b) => a.title.localeCompare(b.title));
 
-    return result
-  }, [plans, search, activeTab, sortBy, clients])
+    return result;
+  }, [plans, search, activeTab, sortBy, clients]);
 
-  const featured    = plans[0]
-  const popular     = useMemo(() => [...plans].sort((a, b) => healthScore(b) - healthScore(a)).slice(0, 4),          [plans])
-  const recommended = useMemo(() => [...plans].filter(p => (p.daily_totals?.protein_g ?? 0) > 0).sort((a, b) => (b.daily_totals?.protein_g ?? 0) - (a.daily_totals?.protein_g ?? 0)).slice(0, 4), [plans])
+  const featured = plans[0];
+  const popular = useMemo(
+    () =>
+      [...plans].sort((a, b) => healthScore(b) - healthScore(a)).slice(0, 4),
+    [plans],
+  );
+  const recommended = useMemo(
+    () =>
+      [...plans]
+        .filter((p) => (p.daily_totals?.protein_g ?? 0) > 0)
+        .sort(
+          (a, b) =>
+            (b.daily_totals?.protein_g ?? 0) - (a.daily_totals?.protein_g ?? 0),
+        )
+        .slice(0, 4),
+    [plans],
+  );
 
-  const avgCalories = plans.length ? Math.round(plans.reduce((s, p) => s + (p.daily_totals?.calories ?? 0), 0) / plans.length) : 0
-  const avgProtein  = plans.length ? Math.round(plans.reduce((s, p) => s + (p.daily_totals?.protein_g ?? 0), 0) / plans.length) : 0
-  const avgCarbs    = plans.length ? Math.round(plans.reduce((s, p) => s + (p.daily_totals?.carbs_g ?? 0), 0) / plans.length) : 0
-  const avgFat      = plans.length ? Math.round(plans.reduce((s, p) => s + (p.daily_totals?.fat_g ?? 0), 0) / plans.length) : 0
+  const avgCalories = plans.length
+    ? Math.round(
+        plans.reduce((s, p) => s + (p.daily_totals?.calories ?? 0), 0) /
+          plans.length,
+      )
+    : 0;
+  const avgProtein = plans.length
+    ? Math.round(
+        plans.reduce((s, p) => s + (p.daily_totals?.protein_g ?? 0), 0) /
+          plans.length,
+      )
+    : 0;
+  const avgCarbs = plans.length
+    ? Math.round(
+        plans.reduce((s, p) => s + (p.daily_totals?.carbs_g ?? 0), 0) /
+          plans.length,
+      )
+    : 0;
+  const avgFat = plans.length
+    ? Math.round(
+        plans.reduce((s, p) => s + (p.daily_totals?.fat_g ?? 0), 0) /
+          plans.length,
+      )
+    : 0;
 
   return (
     <DashboardLayout>
       <div>
         {/* ── Page header ── */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-          
           <div className="flex items-center gap-2 flex-wrap">
             {/* Search */}
             <div className="relative">
-              <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+              <Search
+                size={14}
+                className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"
+              />
               <input
                 value={search}
-                onChange={e => setSearch(e.target.value)}
+                onChange={(e) => setSearch(e.target.value)}
                 placeholder="Search menu…"
                 className="pl-9 pr-3 py-2 w-44 border border-[var(--border)] dark:border-white/[0.08] bg-[var(--bg-card)] text-sm text-[var(--text-primary)] dark:text-[var(--text-primary)] placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-600/20 focus:border-brand-600 transition-colors"
               />
@@ -374,38 +539,43 @@ export default function NutritionPlansPage() {
             >
               <SlidersHorizontal size={14} />
             </button>
-           
           </div>
         </div>
 
         {/* ── Two-column body ── */}
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_296px] xl:grid-cols-[1fr_320px] gap-6 items-start">
-
           {/* ── Left: featured + list ── */}
           <div className="space-y-5">
-
             {/* Featured plan */}
             {isLoading ? (
               <Skeleton className="h-48 rounded-xl" />
             ) : featured ? (
-              <FeaturedPlanCard plan={featured} assignedClients={getPlanClients(featured)} />
+              <FeaturedPlanCard
+                plan={featured}
+                assignedClients={getPlanClients(featured)}
+              />
             ) : null}
 
             {/* All plans card */}
             <div className=" bg-[var(--bg-card)] ">
-
               {/* Tabs + sort */}
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-4 pt-4 pb-3 border-b border-slate-100 dark:border-white/[0.05]">
                 <div className="flex items-center gap-1 flex-wrap">
-                  <span className="text-sm font-semibold text-slate-700 dark:text-slate-200 mr-1">All Menu</span>
-                  {MEAL_TABS.map(tab => {
-                    const active = activeTab === tab
+                  <span className="text-sm font-semibold text-slate-700 dark:text-slate-200 mr-1">
+                    All Menu
+                  </span>
+                  {MEAL_TABS.map((tab) => {
+                    const active = activeTab === tab;
                     const activeCls =
-                      tab === 'All'       ? 'bg-brand-600 text-white -500/20'   :
-                      tab === 'Breakfast' ? 'bg-brand-600 text-white -500/20' :
-                      tab === 'Lunch'     ? 'bg-brand-600 text-white -500/20'     :
-                      tab === 'Snack'     ? 'bg-brand-600 text-white -500/20' :
-                                            'bg-brand-600 text-white -500/20'
+                      tab === "All"
+                        ? "bg-brand-600 text-white -500/20"
+                        : tab === "Breakfast"
+                          ? "bg-brand-600 text-white -500/20"
+                          : tab === "Lunch"
+                            ? "bg-brand-600 text-white -500/20"
+                            : tab === "Snack"
+                              ? "bg-brand-600 text-white -500/20"
+                              : "bg-brand-600 text-white -500/20";
                     return (
                       <button
                         key={tab}
@@ -413,12 +583,12 @@ export default function NutritionPlansPage() {
                         className={`px-3 py-1 text-xs font-semibold transition-all ${
                           active
                             ? activeCls
-                            : 'text-[var(--text-secondary)] dark:text-[var(--text-secondary)] hover:text-slate-700 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/[0.04]'
+                            : "text-[var(--text-secondary)] dark:text-[var(--text-secondary)] hover:text-slate-700 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/[0.04]"
                         }`}
                       >
                         {tab}
                       </button>
-                    )
+                    );
                   })}
                 </div>
                 {/* Sort */}
@@ -426,7 +596,7 @@ export default function NutritionPlansPage() {
                   <span className="text-xs hidden sm:inline">Sort by:</span>
                   <select
                     value={sortBy}
-                    onChange={e => setSortBy(e.target.value as typeof sortBy)}
+                    onChange={(e) => setSortBy(e.target.value as typeof sortBy)}
                     className="text-xs border border-[var(--border)] dark:border-white/[0.08] bg-white dark:bg-[#121212] text-slate-600 dark:text-slate-400 px-2 py-1.5 focus:outline-none cursor-pointer"
                   >
                     <option value="calories">Calories</option>
@@ -444,15 +614,22 @@ export default function NutritionPlansPage() {
                   <div className="flex flex-col items-center justify-center py-12 text-center">
                     <Salad className="w-10 h-10 text-slate-300 dark:text-slate-700 mb-3" />
                     <p className="text-sm font-medium text-[var(--text-secondary)] dark:text-[var(--text-secondary)]">
-                      {search ? 'No plans match your search' : activeTab !== 'All' ? `No ${activeTab} plans yet` : 'No nutrition plans yet'}
+                      {search
+                        ? "No plans match your search"
+                        : activeTab !== "All"
+                          ? `No ${activeTab} plans yet`
+                          : "No nutrition plans yet"}
                     </p>
-                    <Link href="/nutrition-plans/new" className="mt-3 text-xs text-brand-600 dark:text-brand-400 font-semibold hover:underline">
+                    <Link
+                      href="/nutrition-plans/new"
+                      className="mt-3 text-xs text-brand-600 dark:text-brand-400 font-semibold hover:underline"
+                    >
                       Create your first plan →
                     </Link>
                   </div>
                 ) : (
                   <div className="space-y-4">
-                    {filtered.map(plan => (
+                    {filtered.map((plan) => (
                       <NutritionListCard
                         key={plan.id}
                         plan={plan}
@@ -468,12 +645,15 @@ export default function NutritionPlansPage() {
 
           {/* ── Right column ── */}
           <div className="space-y-5">
-
             {/* Popular */}
             <div className="p-4 ">
               <div className="flex items-center justify-between mb-3">
-                <h3 className="text-sm font-semibold text-[var(--text-primary)] dark:text-[var(--text-primary)]">Popular Menu</h3>
-                <button className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors"><MoreHorizontal size={16} /></button>
+                <h3 className="text-sm font-semibold text-[var(--text-primary)] dark:text-[var(--text-primary)]">
+                  Popular Menu
+                </h3>
+                <button className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors">
+                  <MoreHorizontal size={16} />
+                </button>
               </div>
               {isLoading ? (
                 [...Array(3)].map((_, i) => (
@@ -486,17 +666,30 @@ export default function NutritionPlansPage() {
                   </div>
                 ))
               ) : popular.length === 0 ? (
-                <p className="text-xs text-slate-400 text-center py-4">No plans yet</p>
-              ) : popular.map((plan, i) => (
-                <MiniPlanCard key={plan.id} plan={plan} rank={i} assignedClients={getPlanClients(plan)} />
-              ))}
+                <p className="text-xs text-slate-400 text-center py-4">
+                  No plans yet
+                </p>
+              ) : (
+                popular.map((plan, i) => (
+                  <MiniPlanCard
+                    key={plan.id}
+                    plan={plan}
+                    rank={i}
+                    assignedClients={getPlanClients(plan)}
+                  />
+                ))
+              )}
             </div>
 
             {/* Recommended */}
             <div className="p-4 ">
               <div className="flex items-center justify-between mb-3">
-                <h3 className="text-sm font-semibold text-[var(--text-primary)] dark:text-[var(--text-primary)]">Recommended Menu</h3>
-                <button className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors"><MoreHorizontal size={16} /></button>
+                <h3 className="text-sm font-semibold text-[var(--text-primary)] dark:text-[var(--text-primary)]">
+                  Recommended Menu
+                </h3>
+                <button className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors">
+                  <MoreHorizontal size={16} />
+                </button>
               </div>
               {isLoading ? (
                 [...Array(3)].map((_, i) => (
@@ -509,27 +702,75 @@ export default function NutritionPlansPage() {
                   </div>
                 ))
               ) : recommended.length === 0 ? (
-                <p className="text-xs text-slate-400 text-center py-4">No high-protein plans yet</p>
-              ) : recommended.map(plan => (
-                <MiniPlanCard key={plan.id} plan={plan} assignedClients={getPlanClients(plan)} />
-              ))}
+                <p className="text-xs text-slate-400 text-center py-4">
+                  No high-protein plans yet
+                </p>
+              ) : (
+                recommended.map((plan) => (
+                  <MiniPlanCard
+                    key={plan.id}
+                    plan={plan}
+                    assignedClients={getPlanClients(plan)}
+                  />
+                ))
+              )}
             </div>
 
             {/* Averages overview */}
             {!isLoading && plans.length > 0 && (
               <div className="p-4 ">
-                <h3 className="text-sm font-semibold text-[var(--text-primary)] dark:text-[var(--text-primary)] mb-3">Plan Overview</h3>
+                <h3 className="text-sm font-semibold text-[var(--text-primary)] dark:text-[var(--text-primary)] mb-3">
+                  Plan Overview
+                </h3>
                 <div className="grid grid-cols-2 gap-2">
                   {[
-                    { icon: <Flame size={18} />, value: avgCalories, unit: 'kcal', label: 'Avg Calories', iconCls: 'text-orange-500', bg: 'bg-orange-50 dark:bg-orange-900/20' },
-                    { icon: <Zap size={18} />,   value: avgProtein,  unit: 'g',    label: 'Avg Protein',  iconCls: 'text-green-600',  bg: 'bg-green-50 dark:bg-green-900/20'  },
-                    { icon: <Salad size={18} />, value: avgCarbs,    unit: 'g',    label: 'Avg Carbs',    iconCls: 'text-amber-600',  bg: 'bg-amber-50 dark:bg-amber-900/20'  },
-                    { icon: <Droplets size={18}/>,value: avgFat,     unit: 'g',    label: 'Avg Fat',      iconCls: 'text-slate-500',  bg: 'bg-slate-100 dark:bg-slate-800/50' },
+                    {
+                      icon: <Flame size={18} />,
+                      value: avgCalories,
+                      unit: "kcal",
+                      label: "Avg Calories",
+                      iconCls: "text-orange-500",
+                      bg: "bg-orange-50 dark:bg-orange-900/20",
+                    },
+                    {
+                      icon: <Zap size={18} />,
+                      value: avgProtein,
+                      unit: "g",
+                      label: "Avg Protein",
+                      iconCls: "text-green-600",
+                      bg: "bg-green-50 dark:bg-green-900/20",
+                    },
+                    {
+                      icon: <Salad size={18} />,
+                      value: avgCarbs,
+                      unit: "g",
+                      label: "Avg Carbs",
+                      iconCls: "text-amber-600",
+                      bg: "bg-amber-50 dark:bg-amber-900/20",
+                    },
+                    {
+                      icon: <Droplets size={18} />,
+                      value: avgFat,
+                      unit: "g",
+                      label: "Avg Fat",
+                      iconCls: "text-slate-500",
+                      bg: "bg-slate-100 dark:bg-slate-800/50",
+                    },
                   ].map(({ icon, value, unit, label, iconCls, bg }) => (
-                    <div key={label} className={`flex flex-col items-center py-3 ${bg}`}>
+                    <div
+                      key={label}
+                      className={`flex flex-col items-center py-3 ${bg}`}
+                    >
                       <span className={iconCls}>{icon}</span>
-                      <p className={`text-base font-semibold mt-1 ${iconCls}`}>{value}<span className="text-[10px] font-normal ml-0.5">{unit}</span></p>
-                      <p className="text-[10px] text-[var(--text-secondary)] dark:text-[var(--text-secondary)] mt-0.5">{label}</p>
+                      <p className={`text-base font-semibold mt-1 ${iconCls}`}>
+                        {value}
+                        <span className="text-[10px] font-normal ml-0.5">
+                          {unit}
+                        </span>
+                      </p>
+                      <p className="text-[10px] text-[var(--text-secondary)] dark:text-[var(--text-secondary)] mt-0.5">
+                        {label}
+                      </p>
                     </div>
                   ))}
                 </div>
@@ -539,5 +780,5 @@ export default function NutritionPlansPage() {
         </div>
       </div>
     </DashboardLayout>
-  )
+  );
 }

@@ -22,6 +22,7 @@ import {
   ChevronRight,
   BarChart3,
   LifeBuoy,
+  Video,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -32,6 +33,7 @@ const NAV = [
   { href: "/nutrition-plans", label: "Nutrition", icon: Salad },
   { href: "/checkins", label: "Schedule", icon: Calendar },
   { href: "/live-training", label: "Live Training", icon: Radio },
+  { href: "/coaching-sessions", label: "1-on-1 Sessions", icon: Video },
   { href: "/analytics", label: "Analytics", icon: BarChart3 },
   { href: "/settings", label: "Settings", icon: Settings },
 ];

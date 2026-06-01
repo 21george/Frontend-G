@@ -17,6 +17,7 @@ import { motion } from "framer-motion";
 import { AISuggestionBanner } from "@/components/dashboard/AISuggestionBanner";
 import { SessionVolumeHeatmap } from "@/components/dashboard/SessionVolumeHeatmap";
 import { UpcomingSessions } from "@/components/dashboard/UpcomingSessions";
+import { UpcomingCoachingSessions } from "@/components/dashboard/UpcomingCoachingSessions";
 import { ClientWorkload } from "@/components/dashboard/ClientWorkload";
 import { KpiCard } from "@/components/dashboard/KpiCard";
 
@@ -112,6 +113,11 @@ export default function DashboardPage() {
         <div className="grid grid-cols-1 xl:grid-cols-5 gap-4 mb-4">
           <SessionVolumeHeatmap checkins={checkins} />
           <UpcomingSessions checkins={checkins} clientMap={clientMap} />
+        </div>
+
+        {/* Row 1b: Upcoming 1-on-1 Coaching Sessions */}
+        <div className="mb-4">
+          <UpcomingCoachingSessions />
         </div>
 
         {/* Row 2: Client Workload + KPI 2x2 Grid */}

@@ -1,7 +1,6 @@
 "use client";
 
 import DashboardLayout from "@/components/layout/DashboardLayout";
-import DashboardHeader from "@/components/layout/DashboardHeader";
 import { useAllClients, useAllWorkoutPlans } from "@/lib/hooks";
 import { useState, useMemo, useEffect } from "react";
 import Link from "next/link";
@@ -263,26 +262,6 @@ export default function ClientsPage() {
     startIndex + PER_PAGE,
   );
 
-  const quickActions = useMemo(
-    () => [
-      {
-        href: "/clients/new",
-        label: "Add Client",
-        icon: Plus,
-        color:
-          "bg-blue-50 text-blue-700 hover:bg-blue-100 dark:bg-blue-900/30 dark:text-blue-400 dark:hover:bg-blue-900/50",
-      },
-      {
-        href: "/import-excel",
-        label: "Import Clients",
-        icon: Upload,
-        color:
-          "bg-emerald-50 text-emerald-700 hover:bg-emerald-100 dark:bg-emerald-900/30 dark:text-emerald-400 dark:hover:bg-emerald-900/50",
-      },
-    ],
-    [],
-  );
-
   // Calculate stats from the full client list (accurate across pages)
   const stats = useMemo(() => {
     const activeClients = allClients.filter((c) => c.active);
@@ -329,12 +308,6 @@ export default function ClientsPage() {
   return (
     <DashboardLayout>
       <div className="min-h-screen">
-        <DashboardHeader
-          title="Clients"
-          subtitle="Track progress, manage relationships, and stay on top of client activity."
-          quickActions={quickActions}
-        />
-
         {/* Search Bar */}
         <div className="relative mb-4">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
@@ -524,7 +497,7 @@ export default function ClientsPage() {
                       }}
                       className="relative cursor-pointer"
                     >
-                      <div className="relative bg-[#13131314] dark:bg-white/[0.03]   p-4 overflow-hidden transition-colors hover:border-[var(--border-hover)]">
+                      <div className="relative bg-[var(--bg-card)] dark:bg-white/[0.03] p-4 overflow-hidden transition-colors hover:border-[var(--border-hover)]">
                         {/* Status gradient overlay */}
                         <div
                           className={`absolute inset-0 bg-gradient-to-l ${statusGradient} pointer-events-none`}

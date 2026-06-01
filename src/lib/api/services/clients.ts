@@ -17,7 +17,12 @@ export const clientsApi = {
   create: (data: Partial<Client>) =>
     api
       .post<
-        ApiResponse<{ id: string; login_code: string; email_sent: boolean }>
+        ApiResponse<{
+          id: string;
+          login_code: string;
+          email_sent: boolean;
+          email_error?: string | null;
+        }>
       >("/coach/clients", data)
       .then((r) => r.data),
 
@@ -69,7 +74,15 @@ export const clientsApi = {
             field: string | null;
             message: string;
           }>;
-          login_codes: Array<{ id: string; name: string; login_code: string }>;
+          emails_sent: number;
+          emails_skipped: number;
+          login_codes: Array<{
+            id: string;
+            name: string;
+            email: string | null;
+            login_code: string;
+            email_sent: boolean;
+          }>;
         }>
       >("/coach/clients/import", { clients })
       .then((r) => r.data),

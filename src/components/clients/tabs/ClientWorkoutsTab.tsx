@@ -20,6 +20,7 @@ import type {
   WorkoutPlan,
   WorkoutLogDetailed,
   Exercise,
+  LiveProgressResponse,
 } from "@/types";
 import type {
   ClientWorkoutProgress,
@@ -28,6 +29,7 @@ import type {
 } from "@/lib/api/services/media";
 import { getWorkoutCategory, CATEGORY_CONFIG } from "@/lib/workoutCategories";
 import { DailyProtocol } from "@/components/clients/DailyProtocol";
+import { ClientLiveProgress } from "@/components/clients/ClientLiveProgress";
 import { formatDate, timeAgo } from "@/lib/utils";
 
 interface Props {
@@ -35,6 +37,8 @@ interface Props {
   plans: PaginatedResponse<WorkoutPlan> | undefined;
   workoutProgress: ClientWorkoutProgress | undefined;
   workoutLogs: WorkoutLogDetailed[] | undefined;
+  liveProgress: LiveProgressResponse | undefined;
+  liveProgressLoading?: boolean;
   completedDaysMap: Record<string, boolean>;
   expandedPlan: string | null;
   setExpandedPlan: (id: string | null) => void;
@@ -611,6 +615,8 @@ export function ClientWorkoutsTab({
   plans,
   workoutProgress,
   workoutLogs,
+  liveProgress,
+  liveProgressLoading,
   completedDaysMap,
   expandedPlan,
   setExpandedPlan,
@@ -621,6 +627,7 @@ export function ClientWorkoutsTab({
 }: Props) {
   return (
     <div className="space-y-5">
+      <ClientLiveProgress liveProgress={liveProgress} isLoading={liveProgressLoading} />
       <DailyProtocol plans={plans} completedDaysMap={completedDaysMap} />
 
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">

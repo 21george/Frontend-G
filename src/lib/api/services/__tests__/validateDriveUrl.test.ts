@@ -1,76 +1,51 @@
-/**
- * Unit tests for validateDriveUrl
- *
- * Run with: npx tsx src/lib/api/services/__tests__/validateDriveUrl.test.ts
- * (or integrate into vitest/jest once a test runner is configured)
- */
-import { validateDriveUrl } from '../workout-plans'
+import { describe, it, expect } from 'vitest';
+import { validateDriveUrl } from '../workout-plans';
 
-let passed = 0
-let failed = 0
+describe('validateDriveUrl', () => {
+  describe('valid URLs', () => {
+    it('accepts Google Drive file URLs', () => {
+      expect(validateDriveUrl('https://drive.google.com/file/d/abc123/view')).toBeNull();
+    });
 
-function assert(condition: boolean, message: string) {
-  if (condition) {
-    passed++
-  } else {
-    failed++
-    console.error(`  ✗ FAIL: ${message}`)
-  }
-}
+    it('accepts Google Docs spreadsheets', () => {
+      expect(validateDriveUrl('https://docs.google.com/spreadsheets/d/xyz/export')).toBeNull();
+    });
 
-function assertValid(url: string) {
-  const err = validateDriveUrl(url)
-  assert(err === null, `Expected "${url}" to be valid, got error: ${err}`)
-}
+    it('accepts Google Drive usercontent', () => {
+      expect(validateDriveUrl('https://drive.googleusercontent.com/export?id=123')).toBeNull();
+    });
+  });
 
-function assertInvalid(url: string, expectedSubstring: string) {
-  const err = validateDriveUrl(url)
-  assert(err !== null, `Expected "${url}" to be invalid, but it passed validation`)
-  if (err) {
-    assert(
-      err.toLowerCase().includes(expectedSubstring.toLowerCase()),
-      `Expected error for "${url}" to contain "${expectedSubstring}", got: "${err}"`
-    )
-  }
-}
+  describe('invalid URLs', () => {
+    it('rejects non-URLs', () => {
+      expect(validateDriveUrl('not-a-url')).toContain('valid URL');
+      expect(validateDriveUrl('')).toContain('valid URL');
+      expect(validateDriveUrl('://missing-scheme')).toContain('valid URL');
+    });
 
-// ── Valid URLs ──────────────────────────────────────────────────────────────
-console.log('Valid URLs:')
-assertValid('https://drive.google.com/file/d/abc123/view')
-assertValid('https://docs.google.com/spreadsheets/d/xyz/export')
-assertValid('https://drive.googleusercontent.com/export?id=123')
+    it('rejects non-HTTPS schemes', () => {
+      expect(validateDriveUrl('http://drive.google.com/file/d/abc')).toContain('HTTPS');
+      expect(validateDriveUrl('ftp://drive.google.com/file')).toContain('HTTPS');
+    });
 
-// ── Invalid: not a URL ─────────────────────────────────────────────────────
-console.log('Invalid: not a URL:')
-assertInvalid('not-a-url', 'valid URL')
-assertInvalid('', 'valid URL')
-assertInvalid('://missing-scheme', 'valid URL')
+    it('rejects disallowed hostnames', () => {
+      expect(validateDriveUrl('https://evil.com/fake-drive')).toContain('Google Drive');
+      expect(validateDriveUrl('https://drive.google.com.evil.com/steal')).toContain('Google Drive');
+      expect(validateDriveUrl('https://notgoogle.com/drive')).toContain('Google Drive');
+    });
 
-// ── Invalid: non-HTTPS ─────────────────────────────────────────────────────
-console.log('Invalid: non-HTTPS:')
-assertInvalid('http://drive.google.com/file/d/abc', 'HTTPS')
-assertInvalid('ftp://drive.google.com/file', 'HTTPS')
+    it('rejects raw IP addresses', () => {
+      expect(validateDriveUrl('https://8.8.8.8/steal')).toContain('IP address');
+    });
 
-// ── Invalid: disallowed hostname ───────────────────────────────────────────
-console.log('Invalid: disallowed hostname:')
-assertInvalid('https://evil.com/fake-drive', 'Google Drive')
-assertInvalid('https://drive.google.com.evil.com/steal', 'Google Drive')
-assertInvalid('https://notgoogle.com/drive', 'Google Drive')
-
-// ── Invalid: raw IP addresses (public) ──────────────────────────────────────
-console.log('Invalid: raw IP addresses (public):')
-assertInvalid('https://8.8.8.8/steal', 'IP address')
-
-// ── Invalid: private IP addresses ──────────────────────────────────────────
-console.log('Invalid: private IP addresses:')
-assertInvalid('https://127.0.0.1/steal', 'Private')
-assertInvalid('https://10.0.0.1/steal', 'Private')
-assertInvalid('https://172.16.5.5/steal', 'Private')
-assertInvalid('https://172.20.0.1/steal', 'Private')
-assertInvalid('https://192.168.1.1/steal', 'Private')
-assertInvalid('https://192.168.0.100/steal', 'Private')
-assertInvalid('https://169.254.1.1/steal', 'Private')
-
-// ── Summary ────────────────────────────────────────────────────────────────
-console.log(`\n${passed} passed, ${failed} failed`)
-if (failed > 0) process.exit(1)
+    it('rejects private IP addresses', () => {
+      expect(validateDriveUrl('https://127.0.0.1/steal')).toContain('Private');
+      expect(validateDriveUrl('https://10.0.0.1/steal')).toContain('Private');
+      expect(validateDriveUrl('https://172.16.5.5/steal')).toContain('Private');
+      expect(validateDriveUrl('https://172.20.0.1/steal')).toContain('Private');
+      expect(validateDriveUrl('https://192.168.1.1/steal')).toContain('Private');
+      expect(validateDriveUrl('https://192.168.0.100/steal')).toContain('Private');
+      expect(validateDriveUrl('https://169.254.1.1/steal')).toContain('Private');
+    });
+  });
+});

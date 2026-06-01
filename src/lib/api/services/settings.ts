@@ -26,4 +26,7 @@ export const settingsApi = {
 
   updateNotifications: (data: Partial<NotificationSettings>) =>
     api.put('/notification-settings', data).then(r => r.data),
+
+  deleteAccount: () =>
+    api.delete('/coach/profile').then(r => r.data),
 }

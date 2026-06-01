@@ -38,6 +38,13 @@ export const mediaApi = {
       >(`/coach/clients/${clientId}/workout-progress`)
       .then((r) => r.data.data),
 
+  clientLiveProgress: (clientId: string) =>
+    api
+      .get<
+        ApiResponse<import("@/types").LiveProgressResponse>
+      >(`/coach/clients/${clientId}/live-progress`)
+      .then((r) => r.data.data),
+
   storeMeasurement: (clientId: string, payload: StoreMeasurementPayload) =>
     api
       .post<

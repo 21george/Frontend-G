@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
-const PUBLIC_PATHS = ["/auth", "/", "/_next", "/favicon.ico", "/theme-init.js"];
+const PUBLIC_PATHS = ["/auth", "/_next", "/favicon.ico", "/theme-init.js"];
 
 /**
  * Lightweight JWT validation for Edge Middleware.
@@ -41,8 +41,9 @@ function isJwtStructurallyValid(token: string | undefined): boolean {
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // Allow public paths and static assets
+  // Allow root exact match, other public prefixes, and static assets
   if (
+    pathname === "/" ||
     PUBLIC_PATHS.some((p) => pathname.startsWith(p)) ||
     pathname.match(/\.(js|css|png|jpg|jpeg|svg|ico|woff|woff2)$/)
   ) {

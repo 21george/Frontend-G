@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import Script from "next/script";
 import { Inter, JetBrains_Mono } from "next/font/google";
-import "./globals.css";
 import { Providers } from "@/app/providers";
+import "./globals.css"
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
 const jetbrainsMono = JetBrains_Mono({
@@ -21,16 +21,9 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html
-      lang="en"
-      data-scroll-behavior="smooth"
-      suppressHydrationWarning
-    >
+    <html lang="en" data-scroll-behavior="smooth" suppressHydrationWarning>
       <head>
-        <Script
-          src="/theme-init.js"
-          strategy="beforeInteractive"
-        />
+        <Script src="/theme-init.js" strategy="beforeInteractive" />
       </head>
       <body
         className={`${inter.variable} ${jetbrainsMono.variable} font-sans bg-[var(--bg-page)] text-[var(--text-primary)] antialiased`}
