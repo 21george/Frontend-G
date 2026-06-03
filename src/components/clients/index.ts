@@ -15,6 +15,7 @@ export { ClientMessagesTab } from './tabs/ClientMessagesTab'
 export { ClientScheduleTab } from './tabs/ClientScheduleTab'
 export type { ScheduleFilter } from './tabs/ClientScheduleTab'
 export { PlanAnalysisTab } from './tabs/PlanAnalysisTab'
+export { BodyAnalysisTab } from './tabs/BodyAnalysisTab'
 
 // Modals
 export { ScheduleModal } from './modals/ScheduleModal'

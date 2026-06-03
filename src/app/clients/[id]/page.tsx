@@ -50,6 +50,7 @@ import {
   ClientMessagesTab,
   ClientScheduleTab,
   PlanAnalysisTab,
+  BodyAnalysisTab,
 } from "@/components/clients";
 
 {
@@ -86,11 +87,12 @@ import {
 }*/
 }
 
-type TabKey = "workouts" | "nutrition" | "analytics" | "messages" | "checkins" | "plan-analysis";
+type TabKey = "workouts" | "nutrition" | "analytics" | "messages" | "checkins" | "plan-analysis" | "body";
 
 const TABS: { key: TabKey; label: string }[] = [
   { key: "workouts", label: "Workouts" },
   { key: "nutrition", label: "Nutrition" },
+  { key: "body", label: "Body" },
   { key: "analytics", label: "Analytics" },
   { key: "plan-analysis", label: "Plan Analysis" },
   { key: "messages", label: "Messages" },
@@ -668,17 +670,20 @@ export default function ClientDetailPage() {
               {tab === "nutrition" && (
                 <ClientNutritionTab
                   clientId={id}
-                  client={client}
                   nutrition={nutrition}
-                  analytics={analytics}
                   expandedPlan={expandedPlan}
                   setExpandedPlan={setExpandedPlan}
                 />
               )}
 
+              {/* ─── Body tab ─────────────────────────────────── */}
+              {tab === "body" && (
+                <BodyAnalysisTab clientId={id} />
+              )}
+
               {/* ─── Analytics tab ──────────────────────────────── */}
               {tab === "analytics" && (
-                <ClientAnalyticsTab analytics={analytics} />
+                <ClientAnalyticsTab analytics={analytics} client={client} />
               )}
 
               {/* ─── Plan Analysis tab ─────────────────────────── */}

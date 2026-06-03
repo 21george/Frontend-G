@@ -8,7 +8,7 @@ import { clientsApi } from "@/lib/api";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import React, { useState, useRef, useEffect, useCallback } from "react";
+import React, { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import { getCountryCallingCode, type CountryCode } from "libphonenumber-js";
 import * as AllFlags from "country-flag-icons/react/3x2";
 import { Copy, Check, AlertCircle, Loader2, CheckCircle2 } from "lucide-react";
@@ -277,6 +277,27 @@ const schema = z.object({
     .refine((val) => !val || (parseFloat(val) >= 0 && parseFloat(val) <= 300), {
       message: "Height must be between 0 and 300 cm",
     }),
+  chest_cm: z
+    .string()
+    .optional()
+    .or(z.literal(""))
+    .refine((val) => !val || (parseFloat(val) >= 0 && parseFloat(val) <= 300), {
+      message: "Chest must be between 0 and 300 cm",
+    }),
+  waist_cm: z
+    .string()
+    .optional()
+    .or(z.literal(""))
+    .refine((val) => !val || (parseFloat(val) >= 0 && parseFloat(val) <= 300), {
+      message: "Waist must be between 0 and 300 cm",
+    }),
+  body_fat_pct: z
+    .string()
+    .optional()
+    .or(z.literal(""))
+    .refine((val) => !val || (parseFloat(val) >= 0 && parseFloat(val) <= 100), {
+      message: "Body fat % must be between 0 and 100",
+    }),
   sickness: z.string().optional().or(z.literal("")),
 });
 
@@ -496,6 +517,7 @@ export function CreateClientModal({ open, onClose, onCreated }: Props) {
     handleSubmit,
     control,
     reset,
+    watch,
     formState: { errors, isSubmitting },
   } = useForm<Form>({
     resolver: zodResolver(schema),
@@ -514,9 +536,30 @@ export function CreateClientModal({ open, onClose, onCreated }: Props) {
       date_of_birth: "",
       current_weight_kg: "",
       height_cm: "",
+      chest_cm: "",
+      waist_cm: "",
+      body_fat_pct: "",
       sickness: "",
     },
   });
+
+  const weight = watch("current_weight_kg");
+  const height = watch("height_cm");
+  const bodyFat = watch("body_fat_pct");
+
+  const computedBmi = useMemo(() => {
+    const w = parseOptionalNumber(weight);
+    const h = parseOptionalNumber(height);
+    if (!w || !h || h <= 0) return undefined;
+    return parseFloat((w / Math.pow(h / 100, 2)).toFixed(1));
+  }, [weight, height]);
+
+  const computedLeanMass = useMemo(() => {
+    const w = parseOptionalNumber(weight);
+    const bf = parseOptionalNumber(bodyFat);
+    if (!w || bf === undefined) return undefined;
+    return parseFloat((w * (1 - bf / 100)).toFixed(1));
+  }, [weight, bodyFat]);
 
   useEffect(
     () => () => {
@@ -596,6 +639,11 @@ export function CreateClientModal({ open, onClose, onCreated }: Props) {
       date_of_birth: data.date_of_birth || undefined,
       current_weight_kg: parseOptionalNumber(data.current_weight_kg),
       height_cm: parseOptionalNumber(data.height_cm),
+      chest_cm: parseOptionalNumber(data.chest_cm),
+      waist_cm: parseOptionalNumber(data.waist_cm),
+      body_fat_pct: parseOptionalNumber(data.body_fat_pct),
+      bmi: computedBmi,
+      lean_mass_kg: computedLeanMass,
       sickness: data.sickness || undefined,
     };
 
@@ -902,6 +950,85 @@ export function CreateClientModal({ open, onClose, onCreated }: Props) {
                   <AlertCircle size={11} /> {errors.height_cm.message}
                 </p>
               )}
+            </div>
+          </div>
+
+          {/* Chest + Waist + Body Fat */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div>
+              <label className="label">Chest (cm)</label>
+              <input
+                {...register("chest_cm")}
+                type="number"
+                step="0.1"
+                min="0"
+                className="input"
+                placeholder="e.g. 100"
+              />
+              {errors.chest_cm && (
+                <p className="flex items-center gap-1 text-red-500 text-xs mt-1">
+                  <AlertCircle size={11} /> {errors.chest_cm.message}
+                </p>
+              )}
+            </div>
+            <div>
+              <label className="label">Waist (cm)</label>
+              <input
+                {...register("waist_cm")}
+                type="number"
+                step="0.1"
+                min="0"
+                className="input"
+                placeholder="e.g. 85"
+              />
+              {errors.waist_cm && (
+                <p className="flex items-center gap-1 text-red-500 text-xs mt-1">
+                  <AlertCircle size={11} /> {errors.waist_cm.message}
+                </p>
+              )}
+            </div>
+            <div>
+              <label className="label">Body Fat (%)</label>
+              <input
+                {...register("body_fat_pct")}
+                type="number"
+                step="0.1"
+                min="0"
+                max="100"
+                className="input"
+                placeholder="e.g. 15"
+              />
+              {errors.body_fat_pct && (
+                <p className="flex items-center gap-1 text-red-500 text-xs mt-1">
+                  <AlertCircle size={11} /> {errors.body_fat_pct.message}
+                </p>
+              )}
+            </div>
+          </div>
+
+          {/* BMI + Lean Mass (auto-calculated) */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className="label">BMI (auto)</label>
+              <input
+                type="number"
+                step="0.1"
+                readOnly
+                className="input bg-slate-50 dark:bg-slate-800/50 text-slate-500 dark:text-slate-400 cursor-default"
+                value={computedBmi ?? ""}
+                placeholder="—"
+              />
+            </div>
+            <div>
+              <label className="label">Lean Mass (kg, auto)</label>
+              <input
+                type="number"
+                step="0.1"
+                readOnly
+                className="input bg-slate-50 dark:bg-slate-800/50 text-slate-500 dark:text-slate-400 cursor-default"
+                value={computedLeanMass ?? ""}
+                placeholder="—"
+              />
             </div>
           </div>
 

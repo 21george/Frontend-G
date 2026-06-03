@@ -47,6 +47,11 @@ export interface Client {
   date_of_birth?: string;
   current_weight_kg?: number;
   height_cm?: number;
+  chest_cm?: number;
+  waist_cm?: number;
+  body_fat_pct?: number;
+  bmi?: number;
+  lean_mass_kg?: number;
   sickness?: string;
   active: boolean;
   is_blocked?: boolean;

@@ -454,13 +454,13 @@ export function PlanAnalysisTab({ clientId }: Props) {
           </div>
 
           {/* Recommendations */}
-          {latestAnalysis.recommendations.length > 0 && (
+          {(latestAnalysis.recommendations ?? []).length > 0 && (
             <div className="border border-[var(--border)] dark:border-white/[0.07] bg-[var(--bg-card)] p-5 space-y-3">
               <p className="text-[11px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
                 AI Recommendations
               </p>
               <div className="space-y-3">
-                {latestAnalysis.recommendations.map((rec, i) => (
+                {(latestAnalysis.recommendations ?? []).map((rec, i) => (
                   <RecommendationCard
                     key={i}
                     rec={rec}
