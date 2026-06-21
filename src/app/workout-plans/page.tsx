@@ -499,10 +499,6 @@ function WorkoutDetailsTable({ plans }: { plans: WorkoutPlan[] }) {
 }
 
 export default function WorkoutPlansPage() {
-  const query = useWorkoutPlans();
-  const { data: clientsData } = useClients();
-  const plans = query.data?.data ?? [];
-  const clients = clientsData?.data ?? [];
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<
     "all" | "active" | "draft" | "completed" | "saved"
@@ -511,9 +507,14 @@ export default function WorkoutPlansPage() {
     "all" | "individual" | "group" | "team"
   >("all");
 
+  const query = useWorkoutPlans(undefined, filter !== "all" ? filter : undefined, typeFilter !== "all" ? typeFilter : undefined);
+  const { data: clientsData } = useClients();
+  const plans = query.data?.data ?? [];
+  const clients = clientsData?.data ?? [];
+
   const filtered = useMemo(() => {
     let list = plans;
-    if (filter !== "all") list = list.filter((p) => p.status === filter);
+    // Status filter is now done server-side via useWorkoutPlans params
     if (typeFilter !== "all")
       list = list.filter((p) => p.plan_type === typeFilter);
     if (search.trim()) {

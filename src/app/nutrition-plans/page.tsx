@@ -409,6 +409,7 @@ export default function NutritionPlansPage() {
   const [sortBy, setSortBy] = useState<"calories" | "score" | "name">(
     "calories",
   );
+  const [statusFilter, setStatusFilter] = useState<"all" | "active" | "draft" | "completed">("all");
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
 
   const togglePlan = (id: string) => {
@@ -442,6 +443,10 @@ export default function NutritionPlansPage() {
   const filtered = useMemo(() => {
     let result = plans;
 
+    if (statusFilter !== "all") {
+      result = result.filter((p) => (p.status ?? "draft") === statusFilter);
+    }
+
     if (search.trim()) {
       const q = search.toLowerCase();
       result = result.filter((p) => {
@@ -466,7 +471,7 @@ export default function NutritionPlansPage() {
       result = [...result].sort((a, b) => a.title.localeCompare(b.title));
 
     return result;
-  }, [plans, search, activeTab, sortBy, getPlanClients]);
+  }, [plans, search, activeTab, sortBy, statusFilter, getPlanClients]);
 
   const featured = plans[0];
   const popular = useMemo(
@@ -556,6 +561,21 @@ export default function NutritionPlansPage() {
               {/* Tabs + sort */}
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-4 pt-4 pb-3 border-b border-slate-100 dark:border-white/[0.05]">
                 <div className="flex items-center gap-1 flex-wrap">
+                  {/* Status filter */}
+                  <div className="flex items-center gap-1 mr-3 pr-3 border-r border-slate-200 dark:border-white/[0.08]">
+                    {(["all", "active", "draft", "completed"] as const).map((s) => (
+                      <button
+                        key={s}
+                        onClick={() => setStatusFilter(s)}
+                        className={`px-2.5 py-1 text-xs font-semibold rounded-md transition-all capitalize ${
+                          statusFilter === s
+                            ? "bg-slate-200 dark:bg-white/[0.08] text-slate-800 dark:text-slate-200"
+                            : "text-[var(--text-secondary)] dark:text-[var(--text-secondary)] hover:bg-slate-100 dark:hover:bg-white/[0.04]"
+                        }`}>
+                        {s}
+                      </button>
+                    ))}
+                  </div>
                   <span className="text-sm font-semibold text-slate-700 dark:text-slate-200 mr-1">
                     All Menu
                   </span>
@@ -601,9 +621,11 @@ export default function NutritionPlansPage() {
                     <p className="text-sm font-medium text-[var(--text-secondary)] dark:text-[var(--text-secondary)]">
                       {search
                         ? "No plans match your search"
-                        : activeTab !== "All"
-                          ? `No ${activeTab} plans yet`
-                          : "No nutrition plans yet"}
+                        : statusFilter !== "all"
+                          ? `No ${statusFilter} plans yet`
+                          : activeTab !== "All"
+                            ? `No ${activeTab} plans yet`
+                            : "No nutrition plans yet"}
                     </p>
                     <Link
                       href="/nutrition-plans/new"

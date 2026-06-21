@@ -3,10 +3,14 @@ import { nutritionPlansApi } from '@/lib/api'
 import { useToastMutation } from './useToastMutation'
 import type { NutritionPlan } from '@/types'
 
-export const useNutritionPlans = (clientId?: string) =>
+export const useNutritionPlans = (
+  clientId?: string,
+  status?: string,
+  planType?: string,
+) =>
   useQuery({
-    queryKey: ['nutrition-plans', clientId],
-    queryFn: () => nutritionPlansApi.list(clientId),
+    queryKey: ['nutrition-plans', clientId, status, planType],
+    queryFn: () => nutritionPlansApi.list({ client_id: clientId, status, plan_type: planType }),
   })
 
 export const useNutritionPlan = (id: string) =>
