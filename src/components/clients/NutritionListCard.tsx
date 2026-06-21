@@ -46,6 +46,14 @@ function DayRow({ day }: { day: NutritionDay }) {
     (sum, m) => sum + m.foods.reduce((s, f) => s + (f.protein_g ?? 0), 0),
     0,
   );
+  const totalCarbs = day.meals.reduce(
+    (sum, m) => sum + m.foods.reduce((s, f) => s + (f.carbs_g ?? 0), 0),
+    0,
+  );
+  const totalFat = day.meals.reduce(
+    (sum, m) => sum + m.foods.reduce((s, f) => s + (f.fat_g ?? 0), 0),
+    0,
+  );
 
   return (
     <div className="p-4 sm:p-5 space-y-3">
@@ -56,6 +64,8 @@ function DayRow({ day }: { day: NutritionDay }) {
         <div className="flex items-center gap-4 text-[11px] text-[var(--text-tertiary)]">
           <span>{Math.round(totalCal)} kcal</span>
           <span>{Math.round(totalProt)}g protein</span>
+          <span>{Math.round(totalCarbs)}g carbs</span>
+          <span>{Math.round(totalFat)}g fat</span>
         </div>
       </div>
       {day.meals.map((meal, mi) => (
@@ -75,7 +85,16 @@ function DayRow({ day }: { day: NutritionDay }) {
                 {food.name}{" "}
                 <span className="text-slate-400">· {food.quantity}</span>
               </span>
-              <span className="flex-shrink-0">{food.calories} kcal</span>
+              <span className="flex-shrink-0 flex items-center gap-2 text-[10px]">
+                {(food.protein_g != null || food.carbs_g != null || food.fat_g != null) ? (
+                  <>
+                    {food.protein_g != null && <span className="text-blue-500">P {food.protein_g}g</span>}
+                    {food.carbs_g != null && <span className="text-emerald-500">C {food.carbs_g}g</span>}
+                    {food.fat_g != null && <span className="text-amber-500">F {food.fat_g}g</span>}
+                  </>
+                ) : null}
+                <span className="text-orange-500">{food.calories} kcal</span>
+              </span>
             </div>
           ))}
         </div>

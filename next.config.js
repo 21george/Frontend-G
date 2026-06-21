@@ -66,9 +66,14 @@ const nextConfig = {
 
     // Dev-friendly CSP: eval is required for Next.js Fast Refresh/HMR.
     // connect-src must include localhost API and websocket origins.
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL?.trim() || "http://localhost:8000/v1";
+    const apiUrl =
+      process.env.NEXT_PUBLIC_API_URL?.trim() || "http://localhost:8000/v1";
     const apiOrigin = (() => {
-      try { return new URL(apiUrl).origin; } catch { return ""; }
+      try {
+        return new URL(apiUrl).origin;
+      } catch {
+        return "";
+      }
     })();
 
     const connectSrc = [

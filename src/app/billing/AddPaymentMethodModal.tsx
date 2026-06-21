@@ -46,7 +46,7 @@ function getStripeAppearance(isDark: boolean) {
       colorDanger: "#ef4444",
       colorIcon: isDark ? "#a1a1aa" : "#64748b",
       borderRadius: "8px",
-      fontFamily: '"Geist", system-ui, sans-serif',
+      fontFamily: 'DBScreenSans, "Helvetica Neue", arial, sans-serif',
       fontSizeBase: "14px",
       spacingUnit: "4px",
     },

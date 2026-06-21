@@ -141,7 +141,7 @@ export default function ClientDetailPage() {
   const [activeChatId, setActiveChatId] = useState<string | null>(null);
   const [expandedPlan, setExpandedPlan] = useState<string | null>(null);
   const [scheduleFilter, setScheduleFilter] = useState<
-    "Upcoming" | "Ongoing" | "Rescheduled" | "Cancelled"
+    "Upcoming" | "Ongoing" | "Rescheduled" | "Cancelled" | "Completed"
   >("Upcoming");
   // Delete confirmation modal
   const [deleteModal, setDeleteModal] = useState<{

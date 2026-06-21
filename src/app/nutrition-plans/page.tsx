@@ -1,12 +1,11 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback } from "react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { Skeleton } from "@/components/ui/Skeleton";
-import { useNutritionPlans, useClients } from "@/lib/hooks";
+import { useNutritionPlans, useAllClients } from "@/lib/hooks";
 import Link from "next/link";
 import {
-  Search,
   SlidersHorizontal,
   Flame,
   Zap,
@@ -19,6 +18,7 @@ import {
   Users,
   MoreHorizontal,
 } from "lucide-react";
+import { AnimatedSearch } from "@/components/ui/AnimatedSearch";
 import { NutritionListCard } from "@/components/clients/NutritionListCard";
 import type { NutritionPlan } from "@/types";
 
@@ -60,12 +60,11 @@ function getMealTypes(plan: NutritionPlan): MealTab[] {
   const types = new Set<MealTab>();
   plan.days?.forEach((day) =>
     day.meals.forEach((meal) => {
-      const n = meal.meal_name.toLowerCase();
-      if (n.includes("breakfast")) types.add("Breakfast");
-      else if (n.includes("lunch")) types.add("Lunch");
-      else if (n.includes("snack")) types.add("Snack");
-      else if (n.includes("dinner") || n.includes("supper"))
-        types.add("Dinner");
+      const n = meal.meal_name.toLowerCase().trim();
+      if (n.includes("breakfast") || n.includes("morning")) types.add("Breakfast");
+      else if (n.includes("lunch") || n.includes("midday")) types.add("Lunch");
+      else if (n.includes("snack") || n.includes("bite")) types.add("Snack");
+      else if (n.includes("dinner") || n.includes("supper") || n.includes("evening")) types.add("Dinner");
     }),
   );
   return Array.from(types);
@@ -337,7 +336,7 @@ function MiniPlanCard({
   return (
     <Link
       href={`/nutrition-plans/${plan.id}`}
-      className="flex items-center gap-3 p-2 hover:bg-[var(--bg-hover)] dark:hover:bg-white/[0.04] transition-colors group rounded-lg"
+      className="flex items-center gap-3 p-2 hover:bg-[#d0d5dd36] dark:hover:bg-white/[0.04] transition-colors group rounded-lg"
     >
       <div
         className={`w-10 h-10 flex-shrink-0 flex items-center justify-center rounded-lg ${
@@ -403,8 +402,7 @@ function SkeletonRow() {
 
 export default function NutritionPlansPage() {
   const { data: rawPlans = [], isLoading } = useNutritionPlans();
-  const { data: clientsData } = useClients();
-  const clients = clientsData?.data ?? [];
+  const { data: clients = [], isLoading: clientsLoading } = useAllClients();
 
   const [activeTab, setActiveTab] = useState<MealTab>("All");
   const [search, setSearch] = useState("");
@@ -425,7 +423,7 @@ export default function NutritionPlansPage() {
   const plans = rawPlans as NutritionPlan[];
 
   // Resolve clients for each plan from client_ids or single client_id
-  const getPlanClients = (plan: NutritionPlan) => {
+  const getPlanClients = useCallback((plan: NutritionPlan) => {
     const ids = plan.client_ids ?? (plan.client_id ? [plan.client_id] : []);
     return ids
       .map((id) => {
@@ -439,7 +437,7 @@ export default function NutritionPlansPage() {
       name: string;
       profile_photo_url?: string | null;
     }[];
-  };
+  }, [clients]);
 
   const filtered = useMemo(() => {
     let result = plans;
@@ -468,7 +466,7 @@ export default function NutritionPlansPage() {
       result = [...result].sort((a, b) => a.title.localeCompare(b.title));
 
     return result;
-  }, [plans, search, activeTab, sortBy, clients]);
+  }, [plans, search, activeTab, sortBy, getPlanClients]);
 
   const featured = plans[0];
   const popular = useMemo(
@@ -520,22 +518,19 @@ export default function NutritionPlansPage() {
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
           <div className="flex items-center gap-2 flex-wrap">
             {/* Search */}
-            <div className="relative">
-              <Search
-                size={14}
-                className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"
-              />
+            <AnimatedSearch className="relative" active={search.length > 0}>
               <input
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Search menu…"
                 className="pl-9 pr-3 py-2 w-44 border border-[var(--border)] dark:border-white/[0.08] bg-[var(--bg-card)] text-sm text-[var(--text-primary)] dark:text-[var(--text-primary)] placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-600/20 focus:border-brand-600 transition-colors"
               />
-            </div>
-            {/* Filter icon */}
+            </AnimatedSearch>
+            {/* Reset filters */}
             <button
-              className="w-9 h-9 border border-[var(--border)] dark:border-white/[0.08] flex items-center justify-center text-[var(--text-secondary)] dark:text-[var(--text-secondary)] hover:bg-slate-50 dark:hover:bg-white/[0.05] transition-colors bg-[var(--bg-card)] "
-              title="Filter"
+              onClick={() => { setSearch(""); setActiveTab("All"); setSortBy("calories"); }}
+              className="w-9 h-9 rounded-md border border-[var(--border)] dark:border-white/[0.08] flex items-center justify-center text-[var(--text-secondary)] dark:text-[var(--text-secondary)] hover:bg-slate-50 dark:hover:bg-white/[0.05] transition-colors bg-[var(--bg-card)]"
+              title="Reset filters"
             >
               <SlidersHorizontal size={14} />
             </button>
@@ -566,23 +561,13 @@ export default function NutritionPlansPage() {
                   </span>
                   {MEAL_TABS.map((tab) => {
                     const active = activeTab === tab;
-                    const activeCls =
-                      tab === "All"
-                        ? "bg-brand-600 text-white -500/20"
-                        : tab === "Breakfast"
-                          ? "bg-brand-600 text-white -500/20"
-                          : tab === "Lunch"
-                            ? "bg-brand-600 text-white -500/20"
-                            : tab === "Snack"
-                              ? "bg-brand-600 text-white -500/20"
-                              : "bg-brand-600 text-white -500/20";
                     return (
                       <button
                         key={tab}
                         onClick={() => setActiveTab(tab)}
-                        className={`px-3 py-1 text-xs font-semibold transition-all ${
+                        className={`px-3 py-1 text-xs font-semibold rounded-md transition-all ${
                           active
-                            ? activeCls
+                            ? "bg-brand-600 text-white shadow-sm"
                             : "text-[var(--text-secondary)] dark:text-[var(--text-secondary)] hover:text-slate-700 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/[0.04]"
                         }`}
                       >

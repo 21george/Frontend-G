@@ -122,7 +122,7 @@ export function Modal({ open, onClose, title, children, size = 'md' }: Props) {
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       {/* Backdrop */}
       <div
-        className="absolute inset-0 bg-black/40 backdrop-blur-[2px] animate-fade-in"
+        className="absolute inset-0 bg-black/50 backdrop-blur-sm animate-fade-in"
         onClick={onClose}
         aria-hidden="true"
       />
@@ -133,25 +133,30 @@ export function Modal({ open, onClose, title, children, size = 'md' }: Props) {
         aria-modal="true"
         aria-labelledby={title ? titleId : undefined}
         className={cn(
-          'relative w-full animate-scale-in',
-          'bg-[var(--bg-card)] border border-[var(--border)] shadow-elevated dark:shadow-dark-elevated',
+          'relative w-full animate-scale-in rounded-2xl overflow-hidden',
+          'bg-[var(--bg-card)] border border-[var(--border)] shadow-2xl dark:shadow-dark-elevated',
           sizes[size]
         )}
       >
-        {/* Close button — always visible, positioned absolutely in top-right */}
+        {/* Top accent gradient */}
+        <div className="absolute inset-x-0 top-0 h-[3px] bg-gradient-to-r from-brand-600 via-energy-400 to-brand-600 z-10" />
+
+        {/* Close button */}
         <button
           onClick={onClose}
           aria-label="Close"
-          className="absolute top-3 right-3 p-1.5 text-[var(--text-tertiary)] hover:text-[var(--text-secondary)] hover:bg-[var(--bg-subtle)] transition-colors z-10"
+          className="absolute top-4 right-4 p-2 rounded-full text-[var(--text-tertiary)] hover:text-[var(--text-secondary)] hover:bg-black/5 dark:hover:bg-white/10 transition-colors z-10"
         >
-          <X className="w-4 h-4" />
+          <X className="w-5 h-5" />
         </button>
+
         {title && (
-          <div className="flex items-center justify-between px-6 py-4 pr-10 border-b border-[var(--border)] ">
-            <h2 id={titleId} className="text-lg font-semibold text-[var(--text-primary)] ">{title}</h2>
+          <div className="flex items-center justify-between px-6 py-5 pr-14">
+            <h2 id={titleId} className="text-xl font-semibold tracking-tight text-[var(--text-primary)]">{title}</h2>
           </div>
         )}
-        <div className="p-6">{children}</div>
+
+        <div className={cn("px-6", title ? "pb-6" : "p-6")}>{children}</div>
       </div>
     </div>
   )

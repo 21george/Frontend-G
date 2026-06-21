@@ -8,13 +8,14 @@ import {
 import type { CheckinMeeting, Client } from '@/types'
 import { formatDate, timeAgo } from '@/lib/utils'
 
-export type ScheduleFilter = 'Upcoming' | 'Ongoing' | 'Rescheduled' | 'Cancelled'
-const FILTER_TABS: ScheduleFilter[] = ['Upcoming', 'Ongoing', 'Rescheduled', 'Cancelled']
+export type ScheduleFilter = 'Upcoming' | 'Ongoing' | 'Rescheduled' | 'Cancelled' | 'Completed'
+const FILTER_TABS: ScheduleFilter[] = ['Upcoming', 'Ongoing', 'Rescheduled', 'Cancelled', 'Completed']
 
 function getStatusFilter(f: ScheduleFilter) {
-  if (f === 'Upcoming')    return (c: CheckinMeeting) => c.status === 'scheduled' && c.client_response !== 'reschedule_requested'
-  if (f === 'Ongoing')     return (c: CheckinMeeting) => c.status === 'completed'
+  if (f === 'Upcoming')    return (c: CheckinMeeting) => c.status === 'scheduled' && c.client_response !== 'reschedule_requested' && new Date(c.scheduled_at).getTime() > Date.now()
+  if (f === 'Ongoing')     return (c: CheckinMeeting) => c.status === 'scheduled' && new Date(c.scheduled_at).getTime() <= Date.now()
   if (f === 'Rescheduled') return (c: CheckinMeeting) => c.client_response === 'reschedule_requested'
+  if (f === 'Completed')   return (c: CheckinMeeting) => c.status === 'completed'
   return (c: CheckinMeeting) => c.status === 'cancelled'
 }
 
@@ -276,7 +277,6 @@ export function ClientScheduleTab({
                               </div>
                               <div className="flex-1 overflow-y-auto p-3 space-y-2 bg-[var(--bg-page)] dark:bg-[var(--bg-page)]">
                                 {allMessages
-                                  .filter((m: any) => Math.abs(new Date(c.scheduled_at).getTime() - new Date(m.sent_at).getTime()) < 2 * 60 * 60 * 1000)
                                   .filter((m: any, i: number, arr: any[]) => arr.findIndex((x: any) => x.id === m.id) === i)
                                   .sort((a: any, b: any) => new Date(a.sent_at).getTime() - new Date(b.sent_at).getTime())
                                   .map((m: any) => (

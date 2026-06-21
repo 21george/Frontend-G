@@ -1,292 +1,145 @@
-'use client';
+'use client'
 
-import React from 'react';
-import { useRouter } from 'next/navigation';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import * as z from 'zod';
-import { motion } from 'framer-motion';
-import { Loader2, Eye, EyeOff } from 'lucide-react';
-import Link from 'next/link';
-import apiClient from '@/lib/api';
-import { useAuthStore } from '@/store/auth';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/Input';
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from '@/components/ui/form';
+import React from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
+import Link from 'next/link'
+import { useAuthStore } from '@/store/auth'
+import { useSignupStore } from '@/store/signup'
+import { StepIndicator } from '@/components/auth/signup/StepIndicator'
+import { ProfileStep } from '@/components/auth/signup/ProfileStep'
+import { PlanStep } from '@/components/auth/signup/PlanStep'
+import { PaymentStep } from '@/components/auth/signup/PaymentStep'
 
-const registerSchema = z
-  .object({
-    name: z.string().trim().min(2, 'Name must be at least 2 characters').max(255),
-    email: z.string().trim().email('Please enter a valid email').max(255),
-    password: z.string().min(8, 'Password must be at least 8 characters').max(128),
-    confirmPassword: z.string(),
-  })
-  .refine((d) => d.password === d.confirmPassword, {
-    message: 'Passwords do not match',
-    path: ['confirmPassword'],
-  });
-
-type RegisterValues = z.infer<typeof registerSchema>;
-
-function getPasswordStrength(pw: string): { label: string; color: string; width: string } {
-  if (!pw) return { label: '', color: 'bg-[var(--bg-subtle)]', width: 'w-0' };
-  let score = 0;
-  if (pw.length >= 8) score++;
-  if (pw.length >= 12) score++;
-  if (/[A-Z]/.test(pw)) score++;
-  if (/[0-9]/.test(pw)) score++;
-  if (/[^A-Za-z0-9]/.test(pw)) score++;
-
-  if (score <= 2) return { label: 'Weak', color: 'bg-red-500', width: 'w-1/3' };
-  if (score <= 3) return { label: 'Medium', color: 'bg-amber-500', width: 'w-2/3' };
-  return { label: 'Strong', color: 'bg-emerald-500', width: 'w-full' };
-}
-
-const containerVariants = {
-  hidden: { opacity: 0 },
-  visible: { opacity: 1, transition: { staggerChildren: 0.08 } },
-};
-const itemVariants = {
-  hidden: { y: 20, opacity: 0 },
-  visible: { y: 0, opacity: 1 },
-};
-
-export default function RegisterPage() {
-  const router = useRouter();
-  const clearAuth = useAuthStore((s) => s.clearAuth);
-  const [error, setError] = React.useState<string | null>(null);
-  const [isLoading, setIsLoading] = React.useState(false);
-  const [showPassword, setShowPassword] = React.useState(false);
-  const [showConfirm, setShowConfirm] = React.useState(false);
-
-  // Clear any stale auth state on mount
-  React.useEffect(() => {
-    clearAuth();
-  }, [clearAuth]);
-
-  const form = useForm<RegisterValues>({
-    resolver: zodResolver(registerSchema),
-    defaultValues: { name: '', email: '', password: '', confirmPassword: '' },
-  });
-
-  const passwordValue = form.watch('password');
-  const strength = getPasswordStrength(passwordValue);
-
-  const handleRegister = async (data: RegisterValues) => {
-    setError(null);
-    setIsLoading(true);
-    try {
-      const res = await apiClient.post('/auth/coach/register', {
-        name: data.name,
-        email: data.email,
-        password: data.password,
-      });
-      const { id, setup_token } = res.data.data;
-      // Redirect to plan selection with setup token
-      router.push(`/subscription/select-plan?coach_id=${id}&token=${setup_token}`);
-    } catch (e: any) {
-      const msg = e?.response?.data?.message || 'Registration failed. Please try again.';
-      setError(msg);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+/* ── Circuit corner decoration ─────────────────────────────────────────── */
+function CircuitCorner({ pos }: { pos: 'tl' | 'tr' | 'bl' | 'br' }) {
+  const right = pos.endsWith('r')
+  const bottom = pos.startsWith('b')
+  const bx = right ? 104 : 12
+  const by = bottom ? 82 : 14
+  const cx = right ? 90 : 110
+  const cy = bottom ? 104 : 36
+  const tyEnd = 70
 
   return (
-    <div className="relative flex min-h-[100dvh] w-full flex-col md:flex-row">
-      {/* Error toast */}
-      {error && (
-        <div className="fixed top-4 left-1/2 -translate-x-1/2 bg-red-500/90 text-white px-4 py-2 z-50 text-sm max-w-[90vw] text-center">
-          {error}
-        </div>
-      )}
+    <div
+      className={`absolute pointer-events-none select-none ${bottom ? 'bottom-0' : 'top-0'} ${right ? 'right-0' : 'left-0'}`}
+      aria-hidden
+    >
+      <svg width="200" height="140" viewBox="0 0 200 140" fill="none" style={{ opacity: 0.45 }}>
+        <rect x={bx} y={by} width="84" height="44" rx="3" fill="var(--bg-subtle)" stroke="var(--border)" strokeWidth="1" />
+        {[0, 1, 2, 3, 4].flatMap((col) =>
+          [0, 1, 2].map((row) => (
+            <circle key={`${pos}-${col}-${row}`} cx={bx + 14 + col * 14} cy={by + 14 + row * 10} r="1.5" fill="var(--border-hover)" />
+          ))
+        )}
+        <circle cx={cx} cy={cy} r="4.5" fill="var(--border-hover)" stroke="var(--text-tertiary)" strokeWidth="1" />
+        <circle cx={cx} cy={cy} r="2" fill="var(--text-secondary)" />
+        <line x1={right ? bx : bx + 84} y1={cy} x2={cx} y2={cy} stroke="var(--border)" strokeWidth="1" />
+        <line x1={cx} y1={bottom ? cy - 1 : cy + 1} x2={cx} y2={tyEnd} stroke="var(--border)" strokeWidth="1" />
+      </svg>
+    </div>
+  )
+}
 
-      {/* Left Panel: Form */}
-      <div className="flex w-full flex-col items-center justify-center bg-background px-5 py-10 sm:p-8 md:w-1/2 min-h-[100dvh] md:min-h-0">
-        <div className="w-full max-w-md">
-          <motion.div
-            variants={containerVariants}
-            initial="hidden"
-            animate="visible"
-            className="flex flex-col gap-5"
-          >
-            <motion.div variants={itemVariants}>
-              <h1 className="text-xl font-semibold text-blue-600 tracking-wider">CoachPro</h1>
-            </motion.div>
+const STEP_TITLES: Record<number, { heading: string; sub: string }> = {
+  1: { heading: 'Create your account', sub: 'Fill in your details to get started' },
+  2: { heading: 'Choose your plan', sub: 'Select the billing period that works for you' },
+  3: { heading: 'Complete payment', sub: 'Review your order and proceed to checkout' },
+}
 
-            <motion.div variants={itemVariants} className="text-left">
-              <h2 className="text-2xl font-semibold tracking-tight">Create your account</h2>
-              <p className="text-sm text-muted-foreground mt-1">
-                Start your 14-day free Pro trial — no credit card required
-              </p>
-            </motion.div>
+const slideVariants = {
+  enter: (dir: number) => ({ x: dir > 0 ? 40 : -40, opacity: 0 }),
+  center: { x: 0, opacity: 1 },
+  exit: (dir: number) => ({ x: dir > 0 ? -40 : 40, opacity: 0 }),
+}
 
-            <Form {...form}>
-              <form onSubmit={form.handleSubmit(handleRegister)} className="space-y-4">
-                <motion.div variants={itemVariants}>
-                  <FormField
-                    control={form.control}
-                    name="name"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Full Name</FormLabel>
-                        <FormControl>
-                          <Input
-                            style={{ borderRadius: '8px' }}
-                            placeholder="John Doe"
-                            maxLength={255}
-                            {...field}
-                            disabled={isLoading}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </motion.div>
+export default function RegisterPage() {
+  const clearAuth = useAuthStore((s) => s.clearAuth)
+  const { step } = useSignupStore()
+  const prevStep = React.useRef<number>(step)
+  const direction = step > prevStep.current ? 1 : -1
 
-                <motion.div variants={itemVariants}>
-                  <FormField
-                    control={form.control}
-                    name="email"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Email Address</FormLabel>
-                        <FormControl>
-                          <Input
-                            style={{ borderRadius: '8px' }}
-                            placeholder="email@example.com"
-                            maxLength={255}
-                            {...field}
-                            disabled={isLoading}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </motion.div>
+  React.useEffect(() => {
+    clearAuth()
+  }, [clearAuth])
 
-                <motion.div variants={itemVariants}>
-                  <FormField
-                    control={form.control}
-                    name="password"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Password</FormLabel>
-                        <FormControl>
-                          <div className="relative">
-                            <Input
-                              style={{ borderRadius: '8px' }}
-                              type={showPassword ? 'text' : 'password'}
-                              placeholder="••••••••"
-                              maxLength={128}
-                              {...field}
-                              disabled={isLoading}
-                            />
-                            <button
-                              type="button"
-                              tabIndex={-1}
-                              onClick={() => setShowPassword((v) => !v)}
-                              className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--text-tertiary)] hover:text-[var(--text-secondary)]"
-                            >
-                              {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-                            </button>
-                          </div>
-                        </FormControl>
-                        {/* Password strength bar */}
-                        {passwordValue && (
-                          <div className="mt-2">
-                            <div className="h-1.5 w-full bg-[var(--bg-subtle)] overflow-hidden">
-                              <div
-                                className={`h-full transition-all duration-300 ${strength.color} ${strength.width}`}
-                              />
-                            </div>
-                            <p className="text-xs text-[var(--text-secondary)] mt-1">{strength.label}</p>
-                          </div>
-                        )}
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </motion.div>
+  React.useEffect(() => {
+    prevStep.current = step
+  }, [step])
 
-                <motion.div variants={itemVariants}>
-                  <FormField
-                    control={form.control}
-                    name="confirmPassword"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Confirm Password</FormLabel>
-                        <FormControl>
-                          <div className="relative">
-                            <Input
-                              style={{ borderRadius: '8px' }}
-                              type={showConfirm ? 'text' : 'password'}
-                              placeholder="••••••••"
-                              maxLength={128}
-                              {...field}
-                              disabled={isLoading}
-                            />
-                            <button
-                              type="button"
-                              tabIndex={-1}
-                              onClick={() => setShowConfirm((v) => !v)}
-                              className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--text-tertiary)] hover:text-[var(--text-secondary)]"
-                            >
-                              {showConfirm ? <EyeOff size={16} /> : <Eye size={16} />}
-                            </button>
-                          </div>
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </motion.div>
+  const { heading, sub } = STEP_TITLES[step] ?? STEP_TITLES[1]
 
-                <motion.div variants={itemVariants}>
-                  <Button type="submit" className="w-full" disabled={isLoading}>
-                    {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                    Create Account
-                  </Button>
-                </motion.div>
+  return (
+    <div className="relative min-h-[100dvh] flex items-start justify-center bg-[#F8FAFC] dark:bg-[#0e0e0e] overflow-x-hidden">
+      <CircuitCorner pos="tl" />
+      <CircuitCorner pos="tr" />
+      <CircuitCorner pos="bl" />
+      <CircuitCorner pos="br" />
 
-                <motion.div variants={itemVariants} className="text-center">
-                  <p className="text-sm text-[var(--text-secondary)]">
-                    Already have an account?{' '}
-                    <Link href="/auth/login" className="text-blue-600 font-medium hover:underline">
-                      Sign in
-                    </Link>
-                  </p>
-                </motion.div>
-              </form>
-            </Form>
-          </motion.div>
-        </div>
-      </div>
+      <div
+        className="absolute inset-0 pointer-events-none"
+        style={{ background: 'radial-gradient(ellipse 60% 50% at 50% 30%, rgba(19,46,53,0.07) 0%, transparent 70%)' }}
+        aria-hidden
+      />
 
-      {/* Right Panel: Image */}
-      <div className="relative hidden md:block md:w-1/2">
-        <img
-          src="https://images.unsplash.com/photo-1534438327276-14e5300c3a48?auto=format&fit=crop&q=80&w=900"
-          alt="Fitness coaching in a modern gym"
-          className="h-full w-full object-cover"
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent" />
-        <div className="absolute bottom-12 left-8 right-8">
-          <div className="bg-white/10 backdrop-blur-lg p-6 text-white border border-white/20">
-            <p className="text-lg font-semibold">&ldquo;CoachPro saved me 10+ hours a week managing clients.&rdquo;</p>
-            <p className="text-sm mt-2 text-white/80">— Sarah M., Certified Personal Trainer</p>
+      <div className="relative z-10 w-full max-w-lg mx-4 my-10 bg-white dark:bg-[#181818] border border-[#E2E8F0] dark:border-[#252525] rounded-2xl shadow-xl dark:shadow-2xl overflow-hidden">
+        {/* Header */}
+        <div className="px-8 pt-8 pb-5 border-b border-[var(--border)]">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="w-9 h-9 rounded-full bg-[#F1F5F9] dark:bg-[#111] border border-[#E2E8F0] dark:border-[#2a2a2a] flex items-center justify-center">
+              <svg width="18" height="18" viewBox="0 0 22 22" fill="none">
+                <circle cx="11" cy="11" r="7" stroke="#3b82f6" strokeWidth="1.8" strokeDasharray="22 12" strokeLinecap="round" />
+                <circle cx="11" cy="11" r="3.5" stroke="#3b82f6" strokeWidth="1.5" />
+              </svg>
+            </div>
+            <span className="text-sm font-bold text-[var(--text-primary)] tracking-wide">CoachPro</span>
           </div>
+
+          <StepIndicator currentStep={step as 1 | 2 | 3} />
+
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={step}
+              initial={{ opacity: 0, y: 6 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -6 }}
+              transition={{ duration: 0.2 }}
+            >
+              <h1 className="text-xl font-semibold text-[var(--text-primary)]">{heading}</h1>
+              <p className="text-sm text-[var(--text-secondary)] mt-0.5">{sub}</p>
+            </motion.div>
+          </AnimatePresence>
+        </div>
+
+        {/* Step content */}
+        <div className="px-8 py-7">
+          <AnimatePresence mode="wait" custom={direction}>
+            <motion.div
+              key={step}
+              custom={direction}
+              variants={slideVariants}
+              initial="enter"
+              animate="center"
+              exit="exit"
+              transition={{ duration: 0.25, ease: 'easeInOut' }}
+            >
+              {step === 1 && <ProfileStep />}
+              {step === 2 && <PlanStep />}
+              {step === 3 && <PaymentStep />}
+            </motion.div>
+          </AnimatePresence>
+        </div>
+
+        {/* Footer */}
+        <div className="px-8 pb-7 text-center">
+          <p className="text-xs text-[var(--text-tertiary)]">
+            Already have an account?{' '}
+            <Link href="/auth/login" className="text-teal-600 hover:underline underline-offset-2 font-medium">
+              Sign in
+            </Link>
+          </p>
         </div>
       </div>
     </div>
-  );
+  )
 }

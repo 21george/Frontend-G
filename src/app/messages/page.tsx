@@ -26,9 +26,9 @@ import {
   WifiOff,
   MessageSquare,
   ChevronLeft,
-  Search,
   Bell,
 } from "lucide-react";
+import { AnimatedSearch } from "@/components/ui/AnimatedSearch";
 import { timeAgo } from "@/lib/utils";
 import toast from "react-hot-toast";
 import { motion, AnimatePresence } from "framer-motion";
@@ -269,15 +269,14 @@ export default function MessagesPage() {
           >
             {/* Search */}
             <div className="p-3 border-b border-[var(--border)]">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--text-tertiary)]" />
+              <AnimatedSearch active={search.length > 0}>
                 <input
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                   placeholder="Search clients…"
                   className="w-full pl-9 pr-3 py-2 bg-[var(--bg-card)] border border-[var(--border)] rounded-lg text-[13px] text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20"
                 />
-              </div>
+              </AnimatedSearch>
             </div>
 
             {/* Conversations */}

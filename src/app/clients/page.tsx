@@ -6,7 +6,6 @@ import { useState, useMemo, useEffect } from "react";
 import Link from "next/link";
 import {
   Plus,
-  Search,
   Users,
   MessageSquare,
   MoreVertical,
@@ -16,6 +15,7 @@ import {
   AlertCircle,
   Upload,
 } from "lucide-react";
+import { AnimatedSearch } from "@/components/ui/AnimatedSearch";
 
 import { QueryWrapper } from "@/components/ui/QueryWrapper";
 import { Button } from "@/components/ui/button";
@@ -309,15 +309,14 @@ export default function ClientsPage() {
     <DashboardLayout>
       <div className="min-h-screen">
         {/* Search Bar */}
-        <div className="relative mb-4">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+        <AnimatedSearch className="relative mb-4" iconClassName="left-4 w-4 h-4" active={search.length > 0}>
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search clients"
             className="w-full sm:w-[12rem] py-3 pl-11 pr-4 text-sm text-[var(--text-primary)] bg-white dark:bg-neutral-900 border border-[var(--border)] rounded-lg placeholder-slate-400 dark:placeholder:text-neutral-500 focus:outline-none focus:border-brand-700/30 focus:ring-2 focus:ring-brand-700/20 transition-colors"
           />
-        </div>
+        </AnimatedSearch>
 
         {/* Filter Pills — count display */}
         <div className="flex flex-wrap items-center gap-2 mb-6">

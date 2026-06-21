@@ -1,12 +1,9 @@
 "use client";
 
 import DashboardLayout from "@/components/layout/DashboardLayout";
-import Link from "next/link";
 import { useState, useMemo } from "react";
 import { format } from "date-fns";
 import {
-  Plus,
-  Search,
   Video,
   Clock,
   CheckCircle2,
@@ -15,12 +12,16 @@ import {
   CalendarDays,
   User,
 } from "lucide-react";
+import { AnimatedSearch } from "@/components/ui/AnimatedSearch";
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import {
   useCoachingSessions,
   useUpdateSessionStatus,
   useDeleteCoachingSession,
+  useUpdateCoachingSession,
 } from "@/lib/hooks";
 import { parseDateValue } from "@/lib/utils";
+import { useSessionDetailModal } from "@/components/coaching";
 import type { CoachingSession, CoachingSessionStatus } from "@/types";
 
 /* ── Status config ───────────────────────────────────────────────────────── */
@@ -74,10 +75,16 @@ function SkeletonRow() {
 export default function CoachingSessionsPage() {
   const { data: sessions = [], isLoading } = useCoachingSessions();
   const updateStatus = useUpdateSessionStatus();
+  const updateSession = useUpdateCoachingSession();
   const deleteMut = useDeleteCoachingSession();
+  const { open, Modal, isOpen } = useSessionDetailModal();
 
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [rescheduleId, setRescheduleId] = useState<string | null>(null);
+  const [rescheduleAt, setRescheduleAt] = useState("");
+  const [rescheduleDuration, setRescheduleDuration] = useState(60);
+  const [deleteTarget, setDeleteTarget] = useState<CoachingSession | null>(null);
 
   /* ── Stats ── */
   const stats = useMemo(
@@ -112,8 +119,37 @@ export default function CoachingSessionsPage() {
   const handleEnd = (s: CoachingSession) =>
     updateStatus.mutate({ id: s.id, status: "ended" });
 
-  const handleDelete = (s: CoachingSession) => {
-    if (confirm(`Delete "${s.title}"?`)) deleteMut.mutate(s.id);
+  const handleCancel = (s: CoachingSession) => {
+    if (confirm(`Cancel "${s.title}"? The session will be marked as cancelled.`))
+      updateStatus.mutate({ id: s.id, status: "cancelled" });
+  };
+
+  const openDeleteConfirm = (s: CoachingSession) => setDeleteTarget(s);
+  const closeDeleteConfirm = () => setDeleteTarget(null);
+  const confirmDelete = () => {
+    if (!deleteTarget) return;
+    deleteMut.mutate(deleteTarget.id, { onSuccess: closeDeleteConfirm });
+  };
+
+  const openReschedule = (s: CoachingSession) => {
+    setRescheduleId(s.id);
+    const dt = parseDateValue(s.scheduled_at);
+    setRescheduleAt(dt ? new Date(dt.getTime() - dt.getTimezoneOffset() * 60000).toISOString().slice(0, 16) : "");
+    setRescheduleDuration(s.duration_min);
+  };
+
+  const closeReschedule = () => {
+    setRescheduleId(null);
+    setRescheduleAt("");
+    setRescheduleDuration(60);
+  };
+
+  const submitReschedule = () => {
+    if (!rescheduleId || !rescheduleAt) return;
+    updateSession.mutate(
+      { id: rescheduleId, payload: { scheduled_at: new Date(rescheduleAt).toISOString(), duration_min: rescheduleDuration } },
+      { onSuccess: closeReschedule }
+    );
   };
 
   return (
@@ -127,22 +163,20 @@ export default function CoachingSessionsPage() {
               clients.
             </p>
           </div>
-          {/* Header action removed — use the "New 1-on-1" quick action in the dashboard header */}
         </div>
 
         {/* ── KPI cards ── */}
 
         {/* ── Filters ── */}
         <div className="flex flex-col sm:flex-row gap-3">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[var(--text-tertiary)]" />
+          <AnimatedSearch className="relative flex-1" active={search.length > 0}>
             <input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search by title or client…"
               className=" pl-9 pr-4 py-2  rounded-8 border border-slate-200 dark:border-white/[0.1] bg-white dark:bg-white/[0.04] text-sm text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-cyan-500/20"
             />
-          </div>
+          </AnimatedSearch>
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
@@ -207,7 +241,7 @@ export default function CoachingSessionsPage() {
                     return (
                       <tr
                         key={s.id}
-                        className="border-b border-slate-100 dark:border-white/[0.06] hover:bg-slate-50/50 dark:hover:bg-white/[0.02] transition-colors"
+                        className="border-b border-slate-100 dark:border-white/[0.06] hover:bg-[#d0d5dd36] dark:hover:bg-white/[0.02] transition-colors"
                       >
                         {/* Client */}
                         <td className="px-4 py-3">
@@ -269,36 +303,52 @@ export default function CoachingSessionsPage() {
                         {/* Actions */}
                         <td className="px-4 py-3">
                           <div className="flex items-center gap-2">
-                            <Link
-                              href={`/coaching-sessions/${s.id}`}
+                            <button
+                              onClick={() => open(s.id)}
                               className="px-2.5 py-1 text-xs rounded-lg border border-slate-200 dark:border-white/[0.1] text-[var(--text-secondary)] hover:bg-slate-50 dark:hover:bg-white/[0.05] transition-colors"
                             >
                               View
-                            </Link>
+                            </button>
                             {s.status === "upcoming" && (
-                              <button
-                                onClick={() => handleGoLive(s)}
-                                disabled={updateStatus.isPending}
-                                className="px-2.5 py-1 text-xs rounded-lg bg-green-500 hover:bg-green-600 text-white font-medium transition-colors"
-                              >
-                                Go Live
-                              </button>
+                              <>
+                                <button
+                                  onClick={() => handleGoLive(s)}
+                                  disabled={updateStatus.isPending}
+                                  className="px-2.5 py-1 text-xs rounded-lg bg-green-500 hover:bg-green-600 text-white font-medium transition-colors"
+                                >
+                                  Go Live
+                                </button>
+                                <button
+                                  onClick={() => openReschedule(s)}
+                                  disabled={updateSession.isPending}
+                                  className="px-2.5 py-1 text-xs rounded-lg border border-amber-200 dark:border-amber-500/20 text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-500/10 transition-colors"
+                                >
+                                  Reschedule
+                                </button>
+                                <button
+                                  onClick={() => handleCancel(s)}
+                                  disabled={updateStatus.isPending}
+                                  className="px-2.5 py-1 text-xs rounded-lg border border-orange-200 dark:border-orange-500/20 text-orange-600 hover:bg-orange-50 dark:hover:bg-orange-500/10 transition-colors"
+                                >
+                                  Cancel
+                                </button>
+                              </>
                             )}
                             {s.status === "live" && (
-                              <Link
-                                href={`/coaching-sessions/${s.id}`}
+                              <button
+                                onClick={() => open(s.id)}
                                 className="px-2.5 py-1 text-xs rounded-lg bg-cyan-500 hover:bg-cyan-600 text-white font-medium transition-colors"
                               >
                                 Join
-                              </Link>
+                              </button>
                             )}
-                            {s.status !== "live" && (
+                            {(s.status === "ended" || s.status === "cancelled") && (
                               <button
-                                onClick={() => handleDelete(s)}
-                                disabled={deleteMut.isPending}
-                                className="px-2.5 py-1 text-xs rounded-lg border border-red-200 dark:border-red-500/20 text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors"
+                                onClick={() => openDeleteConfirm(s)}
+                                disabled={deleteMut.isPending && deleteTarget?.id === s.id}
+                                className="px-2.5 py-1 text-xs rounded-lg border border-red-200 dark:border-red-500/20 text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors disabled:opacity-50"
                               >
-                                Delete
+                                {deleteMut.isPending && deleteTarget?.id === s.id ? "Deleting…" : "Delete"}
                               </button>
                             )}
                           </div>
@@ -311,6 +361,68 @@ export default function CoachingSessionsPage() {
           </div>
         </div>
       </div>
+
+      {/* Session Detail Modal */}
+      {isOpen && <Modal />}
+
+      {/* Reschedule Modal */}
+      {rescheduleId && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
+          <div className="bg-white dark:bg-[#181818] border border-[var(--border)] rounded-2xl shadow-xl w-full max-w-sm mx-4 p-6 space-y-4">
+            <h3 className="text-lg font-semibold text-[var(--text-primary)]">Reschedule Session</h3>
+            <div className="space-y-3">
+              <div>
+                <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">New Date & Time</label>
+                <input
+                  type="datetime-local"
+                  value={rescheduleAt}
+                  onChange={(e) => setRescheduleAt(e.target.value)}
+                  className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-white/[0.1] bg-white dark:bg-white/[0.04] text-sm text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-cyan-500/30"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">Duration (minutes)</label>
+                <select
+                  value={rescheduleDuration}
+                  onChange={(e) => setRescheduleDuration(Number(e.target.value))}
+                  className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-white/[0.1] bg-white dark:bg-white/[0.04] text-sm text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-cyan-500/30"
+                >
+                  {[15, 30, 45, 60, 75, 90, 120].map((m) => (
+                    <option key={m} value={m}>{m} minutes</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+            <div className="flex gap-3 pt-2">
+              <button
+                onClick={closeReschedule}
+                className="flex-1 py-2.5 rounded-xl border border-slate-200 dark:border-white/[0.1] text-sm font-medium text-[var(--text-secondary)] hover:bg-slate-50 dark:hover:bg-white/[0.04] transition-colors"
+              >
+                Close
+              </button>
+              <button
+                onClick={submitReschedule}
+                disabled={updateSession.isPending || !rescheduleAt}
+                className="flex-1 py-2.5 rounded-xl bg-cyan-500 hover:bg-cyan-600 disabled:opacity-60 text-white text-sm font-semibold transition-colors shadow-lg shadow-cyan-500/20"
+              >
+                {updateSession.isPending ? "Saving…" : "Reschedule"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirm Dialog */}
+      <ConfirmDialog
+        open={!!deleteTarget}
+        onClose={closeDeleteConfirm}
+        onConfirm={confirmDelete}
+        title="Delete Session"
+        message={deleteTarget ? `Permanently delete "${deleteTarget.title}"? This cannot be undone.` : ""}
+        confirmLabel="Delete"
+        variant="danger"
+        loading={deleteMut.isPending}
+      />
     </DashboardLayout>
   );
 }

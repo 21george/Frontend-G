@@ -77,7 +77,7 @@ const config: Config = {
         },
       },
       fontFamily: {
-        sans: ['Inter', 'var(--font-sans)', 'system-ui', '-apple-system', 'sans-serif'],
+        sans: ['DBScreenSans', '"Helvetica Neue"', 'arial', 'sans-serif'],
         mono: ['var(--font-mono)', 'ui-monospace', 'SFMono-Regular', 'monospace'],
       },
       fontSize: {

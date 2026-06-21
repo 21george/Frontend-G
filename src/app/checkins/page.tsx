@@ -3,7 +3,8 @@
 import DashboardLayout from '@/components/layout/DashboardLayout'
 import { useCheckins, useClients, useCreateCheckin, useUpdateCheckin, useDeleteCheckin } from '@/lib/hooks'
 import { useState, useMemo } from 'react'
-import { Plus, Search } from 'lucide-react'
+import { Plus } from 'lucide-react'
+import { AnimatedSearch } from '@/components/ui/AnimatedSearch'
 import { format } from 'date-fns'
 import type { CheckinMeeting } from '@/types'
 import { motion } from 'framer-motion'
@@ -148,8 +149,7 @@ export default function SchedulePage() {
               className="flex items-center gap-3"
             >
               {/* Search */}
-              <div className="relative">
-                <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+              <AnimatedSearch className="relative" active={searchQuery.length > 0}>
                 <input
                   type="text"
                   placeholder="Search..."
@@ -157,7 +157,7 @@ export default function SchedulePage() {
                   onChange={e => setSearchQuery(e.target.value)}
                   className="w-full sm:w-44 pl-9 pr-3 py-2 bg-transparent border border-[var(--border)] dark:border-white/[0.08] text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 transition-colors rounded-lg"
                 />
-              </div>
+              </AnimatedSearch>
 
               {/* Create button */}
              

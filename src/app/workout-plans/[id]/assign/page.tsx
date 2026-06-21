@@ -16,10 +16,10 @@ import {
   Dumbbell,
   Calendar,
   Loader2,
-  Search,
   X,
   UserPlus,
 } from "lucide-react";
+import { AnimatedSearch } from "@/components/ui/AnimatedSearch";
 import { motion, AnimatePresence } from "framer-motion";
 import { Skeleton } from "@/components/ui/Skeleton";
 
@@ -199,11 +199,7 @@ export default function AssignWorkoutPlanPage() {
                       Select Clients
                     </h3>
                   </div>
-                  <div className="relative">
-                    <Search
-                      size={14}
-                      className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
-                    />
+                  <AnimatedSearch className="relative w-48" active={searchQuery.length > 0}>
                     <input
                       type="text"
                       placeholder="Search clients..."
@@ -211,7 +207,7 @@ export default function AssignWorkoutPlanPage() {
                       onChange={(e) => setSearchQuery(e.target.value)}
                       className="w-48 pl-9 pr-3 py-1.5  rounded-4 text-sm bg-[var(--bg-subtle)] dark:bg-white/[0.04]  border-[var(--border)] dark:border-white/[0.08] focus:outline-none focus:ring-2 focus:ring-brand-600/20 dark:focus:ring-brand-400/20"
                     />
-                  </div>
+                  </AnimatedSearch>
                 </div>
               </div>
 

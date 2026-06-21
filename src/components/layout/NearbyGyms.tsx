@@ -3,10 +3,11 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import {
   MapPin, Dumbbell, X, Loader2, RefreshCw, Navigation,
-  Search, SlidersHorizontal, Building2, Trees,
+  SlidersHorizontal, Building2, Trees,
   Bookmark, Star, Phone, Clock, ArrowUpRight,
   LocateFixed, Filter,
 } from 'lucide-react'
+import { AnimatedSearch } from '@/components/ui/AnimatedSearch'
 import { useNearbyGyms, Gym, GymType } from '@/hooks/useNearbyGyms'
 import { motion, AnimatePresence } from 'framer-motion'
 
@@ -570,8 +571,7 @@ export function NearbyGymsButton() {
 
               {/* Search */}
               <div className="flex-1 max-w-lg">
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#6B7B75] dark:text-[#A1A1AA]" />
+                <AnimatedSearch active={searchQuery.length > 0}>
                   <input
                     type="text"
                     value={searchQuery}
@@ -579,7 +579,7 @@ export function NearbyGymsButton() {
                     placeholder="Search by name or address..."
                     className="w-full pl-10 pr-4 py-2 bg-[#F5F7F6] dark:bg-white/[0.04] border border-[#E2E8E4] dark:border-white/[0.06] rounded-xl text-sm text-[#1A3C34] dark:text-[#FAFAFA] placeholder:text-[#9BA8A2] dark:placeholder:text-[#71717A] focus:outline-none focus:ring-2 focus:ring-[#2A96AD]/30 focus:border-[#2A96AD]/50 transition-all"
                   />
-                </div>
+                </AnimatedSearch>
               </div>
 
               {/* Results count */}

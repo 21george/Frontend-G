@@ -8,7 +8,7 @@ import Link from 'next/link'
 import { DAYS } from '@/lib/utils'
 
 const emptyFood = { name: '', quantity: '', calories: 0, protein_g: 0, carbs_g: 0, fat_g: 0 }
-const emptyMeal = { meal_name: 'Breakfast', time: '08:00', foods: [{ ...emptyFood }] }
+const emptyMeal = { meal_name: '', time: '08:00', foods: [{ ...emptyFood }] }
 
 export default function NewNutritionPlanPage() {
   const router       = useRouter()
@@ -82,8 +82,8 @@ export default function NewNutritionPlanPage() {
               {day.meals.map((meal, mi) => (
                 <div key={mi} className="bg-[var(--bg-page)] dark:bg-[var(--bg-page)] p-3 mb-3">
                   <div className="flex gap-2 mb-2">
-                    <input value={meal.meal_name} className="input text-sm w-32" placeholder="Meal" readOnly />
-                    <input value={meal.time} className="input text-sm w-28" type="time" readOnly />
+                    <input value={meal.meal_name} onChange={e => setDays(days.map((d, i) => i === di ? { ...d, meals: d.meals.map((m, j) => j === mi ? { ...m, meal_name: e.target.value } : m) } : d))} className="input text-sm w-32" placeholder="Meal" />
+                    <input value={meal.time} onChange={e => setDays(days.map((d, i) => i === di ? { ...d, meals: d.meals.map((m, j) => j === mi ? { ...m, time: e.target.value } : m) } : d))} className="input text-sm w-28" type="time" />
                   </div>
                   <div className="grid grid-cols-6 gap-2 mb-1 px-1">
                     <span className="text-[10px] text-slate-400 dark:text-slate-600 uppercase tracking-wide font-semibold col-span-2">Name</span>

@@ -40,13 +40,13 @@ export const useCreateCoachingSession = () =>
     invalidateKeys: [KEYS.all],
   });
 
-export const useUpdateCoachingSession = (id: string) =>
+export const useUpdateCoachingSession = () =>
   useToastMutation({
-    mutationFn: (payload: UpdateCoachingSessionPayload) =>
+    mutationFn: ({ id, payload }: { id: string; payload: UpdateCoachingSessionPayload }) =>
       coachingSessionsApi.update(id, payload),
     successMessage: "Session updated",
     errorMessage: "Failed to update session",
-    invalidateKeys: [KEYS.all, KEYS.detail(id)],
+    invalidateKeys: [KEYS.all],
   });
 
 export const useDeleteCoachingSession = () =>

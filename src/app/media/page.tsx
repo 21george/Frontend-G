@@ -5,9 +5,10 @@ import { useState, useMemo } from 'react'
 import api from '@/lib/api'
 import { useQuery } from '@tanstack/react-query'
 import {
-  Image as ImageIcon, Video, Upload, Search, Filter, ChevronRight,
+  Image as ImageIcon, Video, Upload, Filter, ChevronRight,
   Download, Trash2, Eye, Calendar, HardDrive
 } from 'lucide-react'
+import { AnimatedSearch } from '@/components/ui/AnimatedSearch'
 import { motion } from 'framer-motion'
 
 const FILE_TYPE_CONFIG: Record<string, { label: string; icon: typeof ImageIcon; gradient: string }> = {
@@ -204,8 +205,7 @@ export default function MediaPage() {
                   </button>
                 ))}
               </div>
-              <div className="relative">
-                <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+              <AnimatedSearch active={search.length > 0}>
                 <input
                   type="text"
                   placeholder="Search files..."
@@ -213,7 +213,7 @@ export default function MediaPage() {
                   onChange={e => setSearch(e.target.value)}
                   className="w-full sm:w-64 pl-9 pr-3 py-1.5 border border-slate-200 dark:border-white/[0.1] bg-white dark:bg-white/[0.04] text-[12px] font-medium text-slate-600 dark:text-slate-300 focus:outline-none focus:ring-2 focus:ring-brand-600/20 dark:focus:ring-brand-400/20"
                 />
-              </div>
+              </AnimatedSearch>
             </div>
 
             {/* ── MEDIA GRID ── */}

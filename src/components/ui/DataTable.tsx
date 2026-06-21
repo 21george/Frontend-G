@@ -1,8 +1,9 @@
 'use client'
 
 import { useState, useMemo } from 'react'
-import { Search, ChevronUp, ChevronDown, ChevronsUpDown } from 'lucide-react'
+import { ChevronUp, ChevronDown, ChevronsUpDown } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { AnimatedSearch } from './AnimatedSearch'
 
 export interface Column<T> {
   key: string
@@ -78,15 +79,14 @@ export function DataTable<T>({
       {(searchable || headerActions) && (
         <div className="flex items-center justify-between gap-3 px-4 py-3 border-b border-[var(--border)] dark:border-white/[0.06]">
           {searchable && (
-            <div className="relative flex-1 max-w-xs">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--text-tertiary)]" />
+            <AnimatedSearch className="flex-1 max-w-xs" active={search.length > 0}>
               <input
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder={searchPlaceholder}
                 className="w-full pl-9 pr-3 py-1.5 text-sm bg-[var(--bg-subtle)] dark:bg-white/[0.04] border border-[var(--border)] focus:outline-none focus:ring-2 focus:ring-brand-700/30 text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)]"
               />
-            </div>
+            </AnimatedSearch>
           )}
           {headerActions && <div className="flex items-center gap-2">{headerActions}</div>}
         </div>

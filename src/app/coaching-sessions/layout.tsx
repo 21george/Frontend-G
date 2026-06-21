@@ -2,11 +2,13 @@
 
 import { AuthLayout } from '@/components/layout/AuthLayout'
 import { Modal } from '@/components/ui/Modal'
-import { Video, User, CalendarDays, Clock } from 'lucide-react'
-import { useState } from 'react'
+import { Video, User, CalendarDays, Clock, AlertCircle, Sparkles } from 'lucide-react'
+import { useState, useMemo } from 'react'
 import { useAllClients, useCreateCoachingSession } from '@/lib/hooks'
 import { useQueryClient } from '@tanstack/react-query'
 import { useRouter } from 'next/navigation'
+import { motion, AnimatePresence } from 'framer-motion'
+import { format } from 'date-fns'
 import type { Client } from '@/types'
 
 export default function Layout({ children }: { children: React.ReactNode }) {
@@ -69,6 +71,21 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     }
   }
 
+  const selectedClient = useMemo(
+    () => clients.find((c: Client) => c.id === form.client_id),
+    [clients, form.client_id]
+  )
+
+  const scheduledDate = useMemo(() => {
+    if (!form.scheduled_at) return null
+    try {
+      const d = new Date(form.scheduled_at)
+      return isNaN(d.getTime()) ? null : d
+    } catch {
+      return null
+    }
+  }, [form.scheduled_at])
+
   const quickActions = [
     {
       label: 'New 1-on-1',
@@ -88,73 +105,176 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         title="New 1-on-1 Session"
         size="lg"
       >
-        <form onSubmit={handleCreateSubmit} className="space-y-5">
-          {/* Client */}
-          <div className="space-y-1.5">
-            <label className="block text-sm font-medium text-[var(--text-secondary)]">
-              <User className="h-3.5 w-3.5 inline mr-1.5 opacity-70" />
-              Client
-            </label>
+        <form onSubmit={handleCreateSubmit} className="space-y-6">
+          {/* Live Preview Card */}
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.35 }}
+            className="relative overflow-hidden rounded-xl bg-gradient-to-br from-brand-800 to-brand-950 p-5 text-white shadow-lg"
+          >
+            <div className="absolute -top-6 -right-6 h-24 w-24 rounded-full bg-energy/20 blur-2xl" />
+            <div className="absolute -bottom-4 -left-4 h-16 w-16 rounded-full bg-brand-400/20 blur-xl" />
             <div className="relative">
-              <select
-                value={form.client_id}
-                onChange={(e) => setFormField('client_id', e.target.value)}
-                disabled={clientsLoading}
-                className="w-full appearance-none px-3 pr-10 py-2.5 rounded-xl border border-slate-200 dark:border-white/[0.1] bg-white dark:bg-white/[0.04] text-sm text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-cyan-500/30"
-              >
-                <option value="">
-                  {clientsLoading ? 'Loading clients…' : 'Select a client…'}
-                </option>
-                {clients.map((c: Client) => (
-                  <option key={c.id} value={c.id}>
-                    {c.name}
-                  </option>
-                ))}
-              </select>
-              {/* Custom chevron */}
-              <svg
-                className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--text-tertiary)] pointer-events-none"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-              </svg>
+              <div className="flex items-start gap-3 mb-3">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white/10 backdrop-blur-sm ring-1 ring-white/20">
+                  <Sparkles className="h-5 w-5 text-energy" />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-[11px] font-semibold uppercase tracking-wider text-white/50">
+                    Session Preview
+                  </p>
+                  <p className="text-lg font-semibold leading-tight truncate">
+                    {form.title.trim() || 'Untitled Session'}
+                  </p>
+                </div>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {selectedClient && (
+                  <span className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-2.5 py-1 text-xs text-white/90 backdrop-blur-sm ring-1 ring-white/10">
+                    <User className="h-3 w-3" />
+                    {selectedClient.name}
+                  </span>
+                )}
+                {scheduledDate && (
+                  <span className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-2.5 py-1 text-xs text-white/90 backdrop-blur-sm ring-1 ring-white/10">
+                    <CalendarDays className="h-3 w-3" />
+                    {format(scheduledDate, 'MMM d, h:mm a')}
+                  </span>
+                )}
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-2.5 py-1 text-xs text-white/90 backdrop-blur-sm ring-1 ring-white/10">
+                  <Clock className="h-3 w-3" />
+                  {form.duration_min} min
+                </span>
+              </div>
+            </div>
+          </motion.div>
+
+          {/* Section: Session Details */}
+          <div className="space-y-4">
+            <h3 className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-[var(--text-tertiary)]">
+              <span className="h-px flex-1 bg-[var(--border)]" />
+              Session Details
+              <span className="h-px flex-1 bg-[var(--border)]" />
+            </h3>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {/* Client */}
+              <div className="space-y-1.5">
+                <label className="label">
+                  <User className="h-3.5 w-3.5 inline mr-1.5 opacity-70" />
+                  Client
+                </label>
+                <div className="relative">
+                  <select
+                    value={form.client_id}
+                    onChange={(e) => setFormField('client_id', e.target.value)}
+                    disabled={clientsLoading}
+                    className="input w-full appearance-none rounded-xl pr-10"
+                  >
+                    <option value="">
+                      {clientsLoading ? 'Loading clients…' : 'Select a client…'}
+                    </option>
+                    {clients.map((c: Client) => (
+                      <option key={c.id} value={c.id}>
+                        {c.name}
+                      </option>
+                    ))}
+                  </select>
+                  <svg
+                    className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--text-tertiary)] pointer-events-none"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </div>
+              </div>
+
+              {/* Title */}
+              <div className="space-y-1.5">
+                <label className="label">Session Title</label>
+                <input
+                  type="text"
+                  value={form.title}
+                  onChange={(e) => setFormField('title', e.target.value)}
+                  placeholder="e.g. Monthly Progress Review"
+                  className="input rounded-xl"
+                />
+              </div>
+            </div>
+
+            {/* Description */}
+            <div className="space-y-1.5">
+              <label className="label">
+                Description{' '}
+                <span className="text-[var(--text-tertiary)] font-normal">(optional)</span>
+              </label>
+              <textarea
+                rows={2}
+                value={form.description}
+                onChange={(e) => setFormField('description', e.target.value)}
+                placeholder="Brief overview of the session…"
+                className="input rounded-xl resize-none"
+              />
             </div>
           </div>
 
-          {/* Title */}
-          <div className="space-y-1.5">
-            <label className="block text-sm font-medium text-[var(--text-secondary)]">
-              Session Title
-            </label>
-            <input
-              type="text"
-              value={form.title}
-              onChange={(e) => setFormField('title', e.target.value)}
-              placeholder="e.g. Monthly Progress Review"
-              className="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-white/[0.1] bg-white dark:bg-white/[0.04] text-sm text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-cyan-500/30"
-            />
-          </div>
+          {/* Section: Schedule */}
+          <div className="space-y-4">
+            <h3 className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-[var(--text-tertiary)]">
+              <span className="h-px flex-1 bg-[var(--border)]" />
+              Schedule
+              <span className="h-px flex-1 bg-[var(--border)]" />
+            </h3>
 
-          {/* Description */}
-          <div className="space-y-1.5">
-            <label className="block text-sm font-medium text-[var(--text-secondary)]">
-              Description{' '}
-              <span className="text-[var(--text-tertiary)] font-normal">(optional)</span>
-            </label>
-            <textarea
-              rows={2}
-              value={form.description}
-              onChange={(e) => setFormField('description', e.target.value)}
-              placeholder="Brief overview of the session…"
-              className="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-white/[0.1] bg-white dark:bg-white/[0.04] text-sm text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-cyan-500/30 resize-none"
-            />
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <label className="label">
+                  <CalendarDays className="h-3.5 w-3.5 inline mr-1.5 opacity-70" />
+                  Date & Time
+                </label>
+                <input
+                  type="datetime-local"
+                  value={form.scheduled_at}
+                  onChange={(e) => setFormField('scheduled_at', e.target.value)}
+                  className="input rounded-xl"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <label className="label">
+                  <Clock className="h-3.5 w-3.5 inline mr-1.5 opacity-70" />
+                  Duration
+                </label>
+                <div className="relative">
+                  <select
+                    value={form.duration_min}
+                    onChange={(e) => setFormField('duration_min', Number(e.target.value))}
+                    className="input w-full appearance-none rounded-xl pr-10"
+                  >
+                    {[15, 30, 45, 60, 75, 90, 120].map((m) => (
+                      <option key={m} value={m}>
+                        {m} minutes
+                      </option>
+                    ))}
+                  </select>
+                  <svg
+                    className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--text-tertiary)] pointer-events-none"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </div>
+              </div>
+            </div>
           </div>
 
           {/* Agenda */}
           <div className="space-y-1.5">
-            <label className="block text-sm font-medium text-[var(--text-secondary)]">
+            <label className="label">
               Agenda{' '}
               <span className="text-[var(--text-tertiary)] font-normal">(optional)</span>
             </label>
@@ -163,63 +283,38 @@ export default function Layout({ children }: { children: React.ReactNode }) {
               value={form.agenda}
               onChange={(e) => setFormField('agenda', e.target.value)}
               placeholder={"1. Warm-up review\n2. Progress assessment\n3. Nutrition check-in\n4. Set next week's goals"}
-              className="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-white/[0.1] bg-white dark:bg-white/[0.04] text-sm text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-cyan-500/30 resize-none"
+              className="input rounded-xl resize-none"
             />
           </div>
 
-          {/* Date / Duration row */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="space-y-1.5">
-              <label className="block text-sm font-medium text-[var(--text-secondary)]">
-                <CalendarDays className="h-3.5 w-3.5 inline mr-1.5 opacity-70" />
-                Date & Time
-              </label>
-              <input
-                type="datetime-local"
-                value={form.scheduled_at}
-                onChange={(e) => setFormField('scheduled_at', e.target.value)}
-                className="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-white/[0.1] bg-white dark:bg-white/[0.04] text-sm text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-cyan-500/30"
-              />
-            </div>
-            <div className="space-y-1.5">
-              <label className="block text-sm font-medium text-[var(--text-secondary)]">
-                <Clock className="h-3.5 w-3.5 inline mr-1.5 opacity-70" />
-                Duration (minutes)
-              </label>
-              <select
-                value={form.duration_min}
-                onChange={(e) => setFormField('duration_min', Number(e.target.value))}
-                className="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-white/[0.1] bg-white dark:bg-white/[0.04] text-sm text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-cyan-500/30"
-              >
-                {[15, 30, 45, 60, 75, 90, 120].map((m) => (
-                  <option key={m} value={m}>
-                    {m} minutes
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
-
           {/* Error */}
-          {formError && (
-            <p className="text-sm text-red-500 bg-red-50 dark:bg-red-500/10 rounded-xl px-3 py-2">
-              {formError}
-            </p>
-          )}
+          <AnimatePresence>
+            {formError && (
+              <motion.p
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                exit={{ opacity: 0, height: 0 }}
+                className="flex items-center gap-2 text-sm text-red-600 bg-red-50 dark:bg-red-500/10 dark:text-red-400 rounded-xl px-3 py-2.5 overflow-hidden"
+              >
+                <AlertCircle className="h-4 w-4 flex-shrink-0" />
+                {formError}
+              </motion.p>
+            )}
+          </AnimatePresence>
 
-          {/* Submit */}
-          <div className="flex gap-3 pt-2">
+          {/* Actions */}
+          <div className="flex gap-3 pt-1">
             <button
               type="button"
               onClick={() => { setShowCreate(false); resetForm(); }}
-              className="flex-1 py-2.5 rounded-xl border border-slate-200 dark:border-white/[0.1] text-sm font-medium text-[var(--text-secondary)] hover:bg-slate-50 dark:hover:bg-white/[0.04] transition-colors"
+              className="btn-secondary flex-1 rounded-xl"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={createSession.isPending}
-              className="flex-1 py-2.5 rounded-xl bg-cyan-500 hover:bg-cyan-600 disabled:opacity-60 text-white text-sm font-semibold transition-colors shadow-lg shadow-cyan-500/20"
+              className="flex-1 py-2.5 rounded-xl bg-energy-500 hover:bg-energy-600 disabled:opacity-50 text-white text-sm font-semibold transition-all shadow-energy-glow hover:shadow-energy-glow active:scale-[0.98]"
             >
               {createSession.isPending ? 'Scheduling…' : 'Schedule Session'}
             </button>

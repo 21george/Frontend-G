@@ -32,7 +32,7 @@
     --energy-glow: rgba(163, 230, 53, 0.35);
 
     /* Light */
-    --bg-page: #f8fafc;
+    --bg-page: #f0f3f5;
     --bg-card: #ffffff;
     --bg-subtle: #f1f5f9;
     --bg-hover: #eff2f5;
@@ -104,10 +104,11 @@
   body {
     background-color: var(--bg-page);
     color: var(--text-primary);
-    font-family: "Geist", system-ui, sans-serif;
+    font-family: DBScreenSans, "Helvetica Neue", arial, sans-serif;
     text-rendering: optimizeLegibility;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    -webkit-text-size-adjust: 100;
     line-height: 1.6;
     font-weight: 400;
     letter-spacing: -0.01em;
@@ -160,7 +161,7 @@
       monospace;
   }
 
-  /* ── Custom scrollbar ──────────────────────────────────────────────────── */
+  /* ── Focus ring ─────────────────────────────────────────────────────────── */
   ::-webkit-scrollbar {
     width: 6px;
     height: 6px;

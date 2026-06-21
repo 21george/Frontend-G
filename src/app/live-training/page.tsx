@@ -3,10 +3,11 @@ import DashboardLayout from '@/components/layout/DashboardLayout'
 import Link from 'next/link'
 import { useState, useMemo } from 'react'
 import {
- Plus, Search, Radio, Clock, CheckCircle2, Users, Play,
+ Plus, Radio, Clock, CheckCircle2, Users, Play,
  Flame, Heart, Zap, Dumbbell, Filter,
  ArrowUpRight, Sparkles, Timer, Signal, TrendingUp,
 } from 'lucide-react'
+import { AnimatedSearch } from '@/components/ui/AnimatedSearch'
 import { useLiveTrainingSessions, useGoLive, useEndSession, useDeleteLiveTraining } from '@/lib/hooks'
 import { parseDateValue } from '@/lib/utils'
 import { format } from 'date-fns'
@@ -126,11 +127,10 @@ export default function LiveTrainingPage() {
  </select>
  ))}
  </div>
- <div className="relative">
- <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-tertiary)]" />
+ <AnimatedSearch active={search.length > 0}>
  <input type="text" placeholder="Search sessions…" value={search} onChange={e => setSearch(e.target.value)}
  className={`w-full sm:w-52 pl-9 pr-3 ${FILTER_CLS}`} />
- </div>
+ </AnimatedSearch>
  </div>
 
  {/* ── SESSIONS TABLE ── */}

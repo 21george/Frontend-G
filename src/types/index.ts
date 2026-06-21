@@ -26,8 +26,12 @@ export interface Coach {
   client_count?: number;
   address?: string;
   city?: string;
+  country?: string;
   postal_code?: string;
   nationality?: string;
+  date_of_birth?: string;
+  bio?: string;
+  years_of_profession?: number;
 }
 
 export interface Client {

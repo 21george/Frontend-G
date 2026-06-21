@@ -26,13 +26,13 @@ import {
   ArrowLeft,
   Download,
   ExternalLink,
-  Search,
   X,
   Users,
   AlertTriangle,
   Receipt,
   Zap,
 } from "lucide-react";
+import { AnimatedSearch } from "@/components/ui/AnimatedSearch";
 import type { Invoice, SubscriptionPeriod } from "@/types";
 
 /* ── Currency formatter ─────────────────────────────────────────────────── */
@@ -380,8 +380,7 @@ export default function BillingManagePage() {
                 </span>
               )}
             </div>
-            <div className="relative max-w-xs">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--text-tertiary)]" />
+            <AnimatedSearch className="max-w-xs" active={invoiceSearch.length > 0}>
               <input
                 type="text"
                 placeholder="Search invoices…"
@@ -392,12 +391,12 @@ export default function BillingManagePage() {
               {invoiceSearch && (
                 <button
                   onClick={() => setInvoiceSearch("")}
-                  className="absolute right-3 top-1/2 -translate-y-1/2"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 z-10"
                 >
                   <X className="w-3.5 h-3.5 text-[var(--text-tertiary)]" />
                 </button>
               )}
-            </div>
+            </AnimatedSearch>
           </div>
 
           <div className="overflow-x-auto">

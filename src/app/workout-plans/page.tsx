@@ -15,7 +15,7 @@ import UploadFileIcon from "@mui/icons-material/UploadFile";
 import FitnessCenterIcon from "@mui/icons-material/FitnessCenter";
 import GroupIcon from "@mui/icons-material/Group";
 import SecurityIcon from "@mui/icons-material/Security";
-import SearchIcon from "@mui/icons-material/Search";
+import { AnimatedSearch } from "@/components/ui/AnimatedSearch";
 import FilterListIcon from "@mui/icons-material/FilterList";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import TrendingUpIcon from "@mui/icons-material/TrendingUp";
@@ -73,8 +73,8 @@ const STATUS_CONFIG: Record<
     badge:
       "bg-blue-500/15 text-blue-600 dark:text-blue-400 border border-blue-500/20",
   },
-  archived: {
-    label: "Archived",
+  saved: {
+    label: "Saved",
     dot: "bg-slate-400",
     badge:
       "bg-slate-500/15 text-slate-600 dark:text-slate-400 border border-slate-500/20",
@@ -505,7 +505,7 @@ export default function WorkoutPlansPage() {
   const clients = clientsData?.data ?? [];
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<
-    "all" | "active" | "draft" | "completed" | "archived"
+    "all" | "active" | "draft" | "completed" | "saved"
   >("all");
   const [typeFilter, setTypeFilter] = useState<
     "all" | "individual" | "group" | "team"
@@ -537,7 +537,7 @@ export default function WorkoutPlansPage() {
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-2 flex-wrap">
             <FilterListIcon className="w-3.5 h-3.5 text-slate-400" />
-            {(["all", "active", "draft", "completed", "archived"] as const).map(
+            {(["all", "active", "draft", "completed", "saved"] as const).map(
               (s) => (
                 <button
                   key={s}
@@ -553,8 +553,7 @@ export default function WorkoutPlansPage() {
               ),
             )}
           </div>
-          <div className="relative">
-            <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" />
+          <AnimatedSearch className="relative" active={search.length > 0}>
             <input
               type="text"
               placeholder="Search plans..."
@@ -562,7 +561,7 @@ export default function WorkoutPlansPage() {
               onChange={(e) => setSearch(e.target.value)}
               className="w-full sm:w-64 pl-9 pr-3 py-1.5 border border-slate-200 dark:border-white/[0.1] bg-white dark:bg-white/[0.04] text-[12px] font-medium text-slate-600 dark:text-slate-300 focus:outline-none focus:ring-2 focus:ring-cyan-950/20 dark:focus:ring-cyan-400/20"
             />
-          </div>
+          </AnimatedSearch>
         </div>
 
         {/* ── PLANS LIST ── */}
