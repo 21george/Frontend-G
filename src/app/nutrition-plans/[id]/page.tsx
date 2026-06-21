@@ -1,48 +1,96 @@
-'use client'
+"use client";
 
-import DashboardLayout from '@/components/layout/DashboardLayout'
-import { useNutritionPlan, useUpdateNutritionPlan, useDeleteNutritionPlan, useClients } from '@/lib/hooks'
-import { useParams, useRouter } from 'next/navigation'
-import { useState, useMemo, useCallback, useRef, useEffect } from 'react'
-import Link from 'next/link'
+import DashboardLayout from "@/components/layout/DashboardLayout";
 import {
-  ArrowLeft, Plus, Trash2, Save, ChevronDown, ChevronRight,
-  Salad, Flame, Zap, Droplets, Edit3, Check, X, Clock,
-  Users, Calendar, Star, AlertTriangle, UtensilsCrossed,
-} from 'lucide-react'
-import { formatDate } from '@/lib/utils'
-import { DAYS } from '@/lib/utils'
-import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
-import type { NutritionPlan, NutritionDay, Meal } from '@/types'
+  useNutritionPlan,
+  useUpdateNutritionPlan,
+  useDeleteNutritionPlan,
+  useClients,
+} from "@/lib/hooks";
+import { useParams, useRouter } from "next/navigation";
+import { useState, useMemo, useCallback, useRef, useEffect } from "react";
+import Link from "next/link";
+import {
+  ArrowLeft,
+  Plus,
+  Trash2,
+  Save,
+  ChevronDown,
+  ChevronRight,
+  Salad,
+  Flame,
+  Zap,
+  Droplets,
+  Edit3,
+  Check,
+  X,
+  Clock,
+  Users,
+  Calendar,
+  Star,
+  AlertTriangle,
+  UtensilsCrossed,
+} from "lucide-react";
+import { formatDate } from "@/lib/utils";
+import { DAYS } from "@/lib/utils";
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
+import type { NutritionPlan, NutritionDay, Meal } from "@/types";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
-const emptyFood = () => ({ name: '', quantity: '', calories: 0, protein_g: 0, carbs_g: 0, fat_g: 0 })
-const emptyMeal = (): Meal => ({ meal_name: 'Meal', time: '08:00', foods: [emptyFood()] })
+const emptyFood = () => ({
+  name: "",
+  quantity: "",
+  calories: 0,
+  protein_g: 0,
+  carbs_g: 0,
+  fat_g: 0,
+});
+const emptyMeal = (): Meal => ({
+  meal_name: "Meal",
+  time: "08:00",
+  foods: [emptyFood()],
+});
 
 function dayTotals(day: NutritionDay) {
-  let cal = 0, pro = 0, carb = 0, fat = 0
-  day.meals.forEach(m => m.foods.forEach(f => {
-    cal  += Number(f.calories)
-    pro  += Number(f.protein_g)
-    carb += Number(f.carbs_g)
-    fat  += Number(f.fat_g)
-  }))
-  return { cal: Math.round(cal), pro: Math.round(pro), carb: Math.round(carb), fat: Math.round(fat) }
+  let cal = 0,
+    pro = 0,
+    carb = 0,
+    fat = 0;
+  day.meals.forEach((m) =>
+    m.foods.forEach((f) => {
+      cal += Number(f.calories);
+      pro += Number(f.protein_g);
+      carb += Number(f.carbs_g);
+      fat += Number(f.fat_g);
+    }),
+  );
+  return {
+    cal: Math.round(cal),
+    pro: Math.round(pro),
+    carb: Math.round(carb),
+    fat: Math.round(fat),
+  };
 }
 
 function healthScore(plan: NutritionPlan): number {
-  const { calories = 0, protein_g = 0, carbs_g = 0, fat_g = 0 } = plan.daily_totals ?? {}
-  if (calories === 0) return 0
-  const pR = (protein_g * 4) / calories
-  const cR = (carbs_g   * 4) / calories
-  const fR = (fat_g     * 9) / calories
-  const bal = 1 - Math.abs(pR - 0.30) - Math.abs(cR - 0.45) - Math.abs(fR - 0.25)
-  return Math.min(10, Math.max(1, Math.round(bal * 12)))
+  const {
+    calories = 0,
+    protein_g = 0,
+    carbs_g = 0,
+    fat_g = 0,
+  } = plan.daily_totals ?? {};
+  if (calories === 0) return 0;
+  const pR = (protein_g * 4) / calories;
+  const cR = (carbs_g * 4) / calories;
+  const fR = (fat_g * 9) / calories;
+  const bal =
+    1 - Math.abs(pR - 0.3) - Math.abs(cR - 0.45) - Math.abs(fR - 0.25);
+  return Math.min(10, Math.max(1, Math.round(bal * 12)));
 }
 
 function scoreColor(s: number) {
-  return s >= 8 ? 'text-green-500' : s >= 6 ? 'text-amber-500' : 'text-red-500'
+  return s >= 8 ? "text-green-500" : s >= 6 ? "text-amber-500" : "text-red-500";
 }
 
 // ── Input style ───────────────────────────────────────────────────────────────
@@ -55,35 +103,68 @@ const inputCls = `
   placeholder:text-slate-400 dark:placeholder:text-slate-700
   outline-none focus:border-green-400 dark:focus:border-green-500/60
   transition-colors w-full
-`
+`;
 
 // ── Macro pill ────────────────────────────────────────────────────────────────
 
 function MacroPill({
-  icon, label, value, unit, iconCls, bg,
-}: { icon: React.ReactNode; label: string; value: number; unit: string; iconCls: string; bg: string }) {
+  icon,
+  label,
+  value,
+  unit,
+  iconCls,
+  bg,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  value: number;
+  unit: string;
+  iconCls: string;
+  bg: string;
+}) {
   return (
     <div className={`flex flex-col items-center py-3 px-4 ${bg}`}>
       <span className={iconCls}>{icon}</span>
       <p className={`text-lg font-semibold mt-1 ${iconCls}`}>
-        {value}<span className="text-xs font-normal ml-0.5">{unit}</span>
+        {value}
+        <span className="text-xs font-normal ml-0.5">{unit}</span>
       </p>
-      <p className="text-[10px] text-[var(--text-secondary)] dark:text-[var(--text-secondary)] mt-0.5 uppercase tracking-wide">{label}</p>
+      <p className="text-[10px] text-[var(--text-secondary)] dark:text-[var(--text-secondary)] mt-0.5 uppercase tracking-wide">
+        {label}
+      </p>
     </div>
-  )
+  );
 }
 
 // ── NutritionFact row ─────────────────────────────────────────────────────────
 
-function NutrFact({ label, value, unit, bold }: { label: string; value: number; unit?: string; bold?: boolean }) {
+function NutrFact({
+  label,
+  value,
+  unit,
+  bold,
+}: {
+  label: string;
+  value: number;
+  unit?: string;
+  bold?: boolean;
+}) {
   return (
-    <div className={`flex items-center justify-between py-1.5 border-b border-slate-100 dark:border-white/[0.04] last:border-0 ${bold ? 'font-semibold' : ''}`}>
-      <span className={`text-sm ${bold ? 'text-[var(--text-primary)]' : 'text-slate-600 dark:text-slate-400'}`}>{label}</span>
-      <span className={`text-sm ${bold ? 'text-[var(--text-primary)] dark:text-[var(--text-primary)] font-semibold' : 'text-slate-700 dark:text-slate-300'}`}>
-        {value} {unit ?? 'g'}
+    <div
+      className={`flex items-center justify-between py-1.5 border-b border-slate-100 dark:border-white/[0.04] last:border-0 ${bold ? "font-semibold" : ""}`}
+    >
+      <span
+        className={`text-sm ${bold ? "text-[var(--text-primary)]" : "text-slate-600 dark:text-slate-400"}`}
+      >
+        {label}
+      </span>
+      <span
+        className={`text-sm ${bold ? "text-[var(--text-primary)] dark:text-[var(--text-primary)] font-semibold" : "text-slate-700 dark:text-slate-300"}`}
+      >
+        {value} {unit ?? "g"}
       </span>
     </div>
-  )
+  );
 }
 
 // ── Delete confirm modal ── replaced by ConfirmDialog component ───────────────
@@ -91,134 +172,276 @@ function NutrFact({ label, value, unit, bold }: { label: string; value: number; 
 // ── Score dots ────────────────────────────────────────────────────────────────
 
 function ScoreDots({ score }: { score: number }) {
-  const col = score >= 8 ? 'bg-green-500' : score >= 6 ? 'bg-amber-500' : 'bg-red-400'
+  const col =
+    score >= 8 ? "bg-green-500" : score >= 6 ? "bg-amber-500" : "bg-red-400";
   return (
     <div className="flex items-center gap-0.5">
       {Array.from({ length: 10 }, (_, i) => (
-        <div key={i} className={`h-1.5 w-2.5 ${i < score ? col : 'bg-slate-200 dark:bg-white/[0.1]'}`} />
+        <div
+          key={i}
+          className={`h-1.5 w-2.5 ${i < score ? col : "bg-slate-200 dark:bg-white/[0.1]"}`}
+        />
       ))}
     </div>
-  )
+  );
 }
 
 // ── Main page ─────────────────────────────────────────────────────────────────
 
 export default function NutritionPlanDetailPage() {
-  const { id } = useParams<{ id: string }>()
-  const router  = useRouter()
+  const { id } = useParams<{ id: string }>();
+  const router = useRouter();
 
-  const { data: plan, isLoading } = useNutritionPlan(id)
-  const updatePlan = useUpdateNutritionPlan(id)
-  const deletePlan = useDeleteNutritionPlan()
-  const { data: clientsData } = useClients()
-  const clients = clientsData?.data ?? []
+  const { data: plan, isLoading } = useNutritionPlan(id);
+  const updatePlan = useUpdateNutritionPlan(id);
+  const deletePlan = useDeleteNutritionPlan();
+  const { data: clientsData } = useClients();
+  const clients = clientsData?.data ?? [];
   const clientMap = useMemo(
-    () => Object.fromEntries(clients.map(c => [c.id, c])),
+    () => Object.fromEntries(clients.map((c) => [c.id, c])),
     [clients],
-  )
+  );
 
   // Resolve assigned clients from client_ids or fallback to single client_id
   const assignedClients = useMemo(() => {
-    if (!plan) return []
-    const ids = plan.client_ids ?? (plan.client_id ? [plan.client_id] : [])
-    return ids.map(cid => {
-      const c = clientMap[cid]
-      return c ? { id: c.id, name: c.name, profile_photo_url: c.profile_photo_url } : null
-    }).filter(Boolean) as { id: string; name: string; profile_photo_url: string | null }[]
-  }, [plan, clientMap])
+    if (!plan) return [];
+    const ids = plan.client_ids ?? (plan.client_id ? [plan.client_id] : []);
+    return ids
+      .map((cid) => {
+        const c = clientMap[cid];
+        return c
+          ? { id: c.id, name: c.name, profile_photo_url: c.profile_photo_url }
+          : null;
+      })
+      .filter(Boolean) as {
+      id: string;
+      name: string;
+      profile_photo_url: string | null;
+    }[];
+  }, [plan, clientMap]);
 
-  const [title,       setTitle]       = useState('')
-  const [titleEdit,   setTitleEdit]   = useState(false)
-  const [days,        setDays]        = useState<NutritionDay[]>([])
-  const [openDays,    setOpenDays]    = useState<Record<string, boolean>>({})
-  const [saving,      setSaving]      = useState(false)
-  const [saved,       setSaved]       = useState(false)
-  const savedTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const [deleting,    setDeleting]    = useState(false)
+  const [title, setTitle] = useState("");
+  const [titleEdit, setTitleEdit] = useState(false);
+  const [days, setDays] = useState<NutritionDay[]>([]);
+  const [openDays, setOpenDays] = useState<Record<string, boolean>>({});
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
+  const savedTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
-  useEffect(() => () => { if (savedTimeoutRef.current) clearTimeout(savedTimeoutRef.current) }, [])
-  const [showDelete,  setShowDelete]  = useState(false)
-  const [initialised, setInitialised] = useState(false)
+  useEffect(
+    () => () => {
+      if (savedTimeoutRef.current) clearTimeout(savedTimeoutRef.current);
+    },
+    [],
+  );
+  const [showDelete, setShowDelete] = useState(false);
+  const [initialised, setInitialised] = useState(false);
 
   useMemo(() => {
     if (plan && !initialised) {
-      setTitle(plan.title)
-      const merged = DAYS.map(dayName => {
-        const existing = plan.days?.find(d => d.day.toLowerCase() === dayName)
-        return existing ?? { day: dayName, meals: [emptyMeal()] }
-      })
-      setDays(merged)
-      setOpenDays({ [DAYS[0]]: true })
-      setInitialised(true)
+      setTitle(plan.title);
+      const merged = DAYS.map((dayName) => {
+        const existing = plan.days?.find(
+          (d) => d.day.toLowerCase() === dayName,
+        );
+        return existing ?? { day: dayName, meals: [emptyMeal()] };
+      });
+      setDays(merged);
+      setOpenDays({ [DAYS[0]]: true });
+      setInitialised(true);
     }
-  }, [plan, initialised])
+  }, [plan, initialised]);
 
   const weeklyAvg = useMemo(() => {
-    let cal = 0, pro = 0, carb = 0, fat = 0
-    days.forEach(d => { const t = dayTotals(d); cal += t.cal; pro += t.pro; carb += t.carb; fat += t.fat })
-    const n = days.length || 1
-    return { calories: Math.round(cal / n), protein_g: Math.round(pro / n), carbs_g: Math.round(carb / n), fat_g: Math.round(fat / n) }
-  }, [days])
+    let cal = 0,
+      pro = 0,
+      carb = 0,
+      fat = 0;
+    days.forEach((d) => {
+      const t = dayTotals(d);
+      cal += t.cal;
+      pro += t.pro;
+      carb += t.carb;
+      fat += t.fat;
+    });
+    const n = days.length || 1;
+    return {
+      calories: Math.round(cal / n),
+      protein_g: Math.round(pro / n),
+      carbs_g: Math.round(carb / n),
+      fat_g: Math.round(fat / n),
+    };
+  }, [days]);
 
-  const totalMeals = useMemo(() => days.reduce((s, d) => s + d.meals.length, 0), [days])
-  const score = plan ? healthScore(plan) : 0
+  const totalMeals = useMemo(
+    () => days.reduce((s, d) => s + d.meals.length, 0),
+    [days],
+  );
+  const score = plan ? healthScore(plan) : 0;
 
   const toggleDay = useCallback((day: string) => {
-    setOpenDays(prev => ({ ...prev, [day]: !prev[day] }))
-  }, [])
+    setOpenDays((prev) => ({ ...prev, [day]: !prev[day] }));
+  }, []);
 
-  const addMeal = (di: number) => setDays(d => d.map((day, i) => i === di ? { ...day, meals: [...day.meals, emptyMeal()] } : day))
-  const removeMeal = (di: number, mi: number) => setDays(d => d.map((day, i) => i === di ? { ...day, meals: day.meals.filter((_, j) => j !== mi) } : day))
-  const updateMeal = (di: number, mi: number, field: keyof Meal, value: string) =>
-    setDays(d => d.map((day, i) => i !== di ? day : { ...day, meals: day.meals.map((m, j) => j !== mi ? m : { ...m, [field]: value }) }))
-  const addFood = (di: number, mi: number) => setDays(d => d.map((day, i) => i !== di ? day : { ...day, meals: day.meals.map((m, j) => j !== mi ? m : { ...m, foods: [...m.foods, emptyFood()] }) }))
-  const removeFood = (di: number, mi: number, fi: number) => setDays(d => d.map((day, i) => i !== di ? day : { ...day, meals: day.meals.map((m, j) => j !== mi ? m : { ...m, foods: m.foods.filter((_, k) => k !== fi) }) }))
-  const updateFood = (di: number, mi: number, fi: number, field: string, value: string | number) =>
-    setDays(d => d.map((day, i) => i !== di ? day : { ...day, meals: day.meals.map((m, j) => j !== mi ? m : { ...m, foods: m.foods.map((f, k) => k !== fi ? f : { ...f, [field]: value }) }) }))
+  const addMeal = (di: number) =>
+    setDays((d) =>
+      d.map((day, i) =>
+        i === di ? { ...day, meals: [...day.meals, emptyMeal()] } : day,
+      ),
+    );
+  const removeMeal = (di: number, mi: number) =>
+    setDays((d) =>
+      d.map((day, i) =>
+        i === di
+          ? { ...day, meals: day.meals.filter((_, j) => j !== mi) }
+          : day,
+      ),
+    );
+  const updateMeal = (
+    di: number,
+    mi: number,
+    field: keyof Meal,
+    value: string,
+  ) =>
+    setDays((d) =>
+      d.map((day, i) =>
+        i !== di
+          ? day
+          : {
+              ...day,
+              meals: day.meals.map((m, j) =>
+                j !== mi ? m : { ...m, [field]: value },
+              ),
+            },
+      ),
+    );
+  const addFood = (di: number, mi: number) =>
+    setDays((d) =>
+      d.map((day, i) =>
+        i !== di
+          ? day
+          : {
+              ...day,
+              meals: day.meals.map((m, j) =>
+                j !== mi ? m : { ...m, foods: [...m.foods, emptyFood()] },
+              ),
+            },
+      ),
+    );
+  const removeFood = (di: number, mi: number, fi: number) =>
+    setDays((d) =>
+      d.map((day, i) =>
+        i !== di
+          ? day
+          : {
+              ...day,
+              meals: day.meals.map((m, j) =>
+                j !== mi
+                  ? m
+                  : { ...m, foods: m.foods.filter((_, k) => k !== fi) },
+              ),
+            },
+      ),
+    );
+  const updateFood = (
+    di: number,
+    mi: number,
+    fi: number,
+    field: string,
+    value: string | number,
+  ) =>
+    setDays((d) =>
+      d.map((day, i) =>
+        i !== di
+          ? day
+          : {
+              ...day,
+              meals: day.meals.map((m, j) =>
+                j !== mi
+                  ? m
+                  : {
+                      ...m,
+                      foods: m.foods.map((f, k) =>
+                        k !== fi ? f : { ...f, [field]: value },
+                      ),
+                    },
+              ),
+            },
+      ),
+    );
 
   const handleSave = async () => {
-    setSaving(true)
+    setSaving(true);
     try {
-      await updatePlan.mutateAsync({ title, days, daily_totals: weeklyAvg } as Partial<NutritionPlan>)
-      setSaved(true)
-      if (savedTimeoutRef.current) clearTimeout(savedTimeoutRef.current)
-      savedTimeoutRef.current = setTimeout(() => { setSaved(false); savedTimeoutRef.current = null }, 2500)
-    } finally { setSaving(false) }
-  }
+      await updatePlan.mutateAsync({
+        title,
+        days,
+        daily_totals: weeklyAvg,
+      } as Partial<NutritionPlan>);
+      setSaved(true);
+      if (savedTimeoutRef.current) clearTimeout(savedTimeoutRef.current);
+      savedTimeoutRef.current = setTimeout(() => {
+        setSaved(false);
+        savedTimeoutRef.current = null;
+      }, 2500);
+    } finally {
+      setSaving(false);
+    }
+  };
 
   const handleDelete = async () => {
-    setDeleting(true)
+    setDeleting(true);
     try {
-      await deletePlan.mutateAsync(id)
-      router.push('/nutrition-plans')
-    } finally { setDeleting(false); setShowDelete(false) }
-  }
+      await deletePlan.mutateAsync(id);
+      router.push("/nutrition-plans");
+    } finally {
+      setDeleting(false);
+      setShowDelete(false);
+    }
+  };
 
   // ── Loading ──────────────────────────────────────────────────────────────────
-  if (isLoading) return (
-    <DashboardLayout>
-      <div className="space-y-4 animate-pulse">
-        <div className="h-8 w-48 bg-slate-200 dark:bg-white/[0.06] " />
-        <div className="h-48 bg-slate-100 dark:bg-white/[0.04] " />
-        <div className="grid grid-cols-4 gap-3">
-          {[...Array(4)].map((_, i) => <div key={i} className="h-24 bg-slate-100 dark:bg-white/[0.04] " />)}
+  if (isLoading)
+    return (
+      <DashboardLayout>
+        <div className="space-y-4 animate-pulse">
+          <div className="h-8 w-48 bg-slate-200 dark:bg-white/[0.06] " />
+          <div className="h-48 bg-slate-100 dark:bg-white/[0.04] " />
+          <div className="grid grid-cols-4 gap-3">
+            {[...Array(4)].map((_, i) => (
+              <div
+                key={i}
+                className="h-24 bg-slate-100 dark:bg-white/[0.04] "
+              />
+            ))}
+          </div>
+          <div className="h-40 bg-slate-100 dark:bg-white/[0.04] " />
         </div>
-        <div className="h-40 bg-slate-100 dark:bg-white/[0.04] " />
-      </div>
-    </DashboardLayout>
-  )
+      </DashboardLayout>
+    );
 
-  if (!plan) return (
-    <DashboardLayout>
-      <div className="flex flex-col items-center justify-center py-24">
-        <Salad className="w-12 h-12 text-slate-300 dark:text-slate-700 mb-3" />
-        <p className="text-[var(--text-secondary)] dark:text-[var(--text-secondary)] text-sm mb-4">Nutrition plan not found.</p>
-        <Link href="/nutrition-plans" className="text-sm text-green-600 dark:text-green-400 font-semibold hover:underline">← Back to plans</Link>
-      </div>
-    </DashboardLayout>
-  )
+  if (!plan)
+    return (
+      <DashboardLayout>
+        <div className="flex flex-col items-center justify-center py-24">
+          <Salad className="w-12 h-12 text-slate-300 dark:text-slate-700 mb-3" />
+          <p className="text-[var(--text-secondary)] dark:text-[var(--text-secondary)] text-sm mb-4">
+            Nutrition plan not found.
+          </p>
+          <Link
+            href="/nutrition-plans"
+            className="text-sm text-green-600 dark:text-green-400 font-semibold hover:underline"
+          >
+            ← Back to plans
+          </Link>
+        </div>
+      </DashboardLayout>
+    );
 
-  const clientName = plan.client_id ? clientMap[plan.client_id]?.name ?? null : null
+  const clientName = plan.client_id
+    ? (clientMap[plan.client_id]?.name ?? null)
+    : null;
 
   return (
     <DashboardLayout>
@@ -234,11 +457,13 @@ export default function NutritionPlanDetailPage() {
       />
 
       <div className="space-y-5">
-
         {/* ── Breadcrumb + actions ── */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div className="flex items-center gap-2 text-sm">
-            <Link href="/nutrition-plans" className="flex items-center gap-1.5 text-[var(--text-secondary)] dark:text-[var(--text-secondary)] hover:text-slate-700 dark:hover:text-slate-200 transition-colors font-medium">
+            <Link
+              href="/nutrition-plans"
+              className="flex items-center gap-1.5 text-[var(--text-secondary)] dark:text-[var(--text-secondary)] hover:text-slate-700 dark:hover:text-slate-200 transition-colors font-medium"
+            >
               <ArrowLeft size={14} /> Back to Menu
             </Link>
             <span className="text-slate-300 dark:text-slate-700">/</span>
@@ -247,15 +472,21 @@ export default function NutritionPlanDetailPage() {
                 <input
                   autoFocus
                   value={title}
-                  onChange={e => setTitle(e.target.value)}
+                  onChange={(e) => setTitle(e.target.value)}
                   onBlur={() => setTitleEdit(false)}
-                  onKeyDown={e => e.key === 'Enter' && setTitleEdit(false)}
+                  onKeyDown={(e) => e.key === "Enter" && setTitleEdit(false)}
                   className="bg-transparent border-b border-green-500 text-slate-700 dark:text-slate-300 outline-none pb-0.5 min-w-[160px] text-sm"
                 />
               ) : (
-                <button onClick={() => setTitleEdit(true)} className="flex items-center gap-1 hover:text-slate-700 dark:hover:text-white transition-colors group">
+                <button
+                  onClick={() => setTitleEdit(true)}
+                  className="flex items-center gap-1 hover:text-slate-700 dark:hover:text-white transition-colors group"
+                >
                   {title || plan.title}
-                  <Edit3 size={11} className="opacity-0 group-hover:opacity-100 transition-opacity" />
+                  <Edit3
+                    size={11}
+                    className="opacity-0 group-hover:opacity-100 transition-opacity"
+                  />
                 </button>
               )}
             </span>
@@ -278,7 +509,15 @@ export default function NutritionPlanDetailPage() {
               disabled={saving}
               className="ml-auto flex items-center gap-1.5 px-4 py-2 bg-brand-600 hover:bg-brand-700 text-white text-sm font-semibold transition-colors disabled:opacity-50 -600/20"
             >
-              {saved ? <><Check size={14} /> Saved</> : <><Save size={14} /> {saving ? 'Saving…' : 'Save Changes'}</>}
+              {saved ? (
+                <>
+                  <Check size={14} /> Saved
+                </>
+              ) : (
+                <>
+                  <Save size={14} /> {saving ? "Saving…" : "Save Changes"}
+                </>
+              )}
             </button>
           </div>
         </div>
@@ -289,16 +528,21 @@ export default function NutritionPlanDetailPage() {
             {/* Gradient panel */}
             <div className="sm:w-56 flex-shrink-0 bg-gradient-to-br from-brand-600 via-brand-700 to-brand-800 p-6 flex flex-col justify-between min-h-[180px] rounded-l-2xl">
               <div className="flex gap-1.5 flex-wrap">
-                <span className="text-[11px] bg-white/20 text-white px-2 py-0.5 font-semibold rounded">Nutrition Plan</span>
+                <span className="text-[11px] bg-white/20 text-white px-2 py-0.5 font-semibold rounded">
+                  Nutrition Plan
+                </span>
                 {assignedClients.length > 0 && (
                   <span className="text-[11px] bg-white/20 text-white px-2 py-0.5 font-semibold rounded">
-                    {assignedClients.length} client{assignedClients.length !== 1 ? 's' : ''}
+                    {assignedClients.length} client
+                    {assignedClients.length !== 1 ? "s" : ""}
                   </span>
                 )}
               </div>
               <div>
                 <Salad className="w-10 h-10 text-white/80 mb-2" />
-                <p className="text-white/70 text-[11px] font-semibold mb-1">Health Score {score}/10</p>
+                <p className="text-white/70 text-[11px] font-semibold mb-1">
+                  Health Score {score}/10
+                </p>
                 <ScoreDots score={score} />
               </div>
             </div>
@@ -311,39 +555,69 @@ export default function NutritionPlanDetailPage() {
                     <input
                       autoFocus
                       value={title}
-                      onChange={e => setTitle(e.target.value)}
+                      onChange={(e) => setTitle(e.target.value)}
                       onBlur={() => setTitleEdit(false)}
-                      onKeyDown={e => e.key === 'Enter' && setTitleEdit(false)}
+                      onKeyDown={(e) =>
+                        e.key === "Enter" && setTitleEdit(false)
+                      }
                       className="bg-transparent border-b-2 border-green-500 text-[var(--text-primary)] dark:text-[var(--text-primary)] outline-none w-full pb-0.5 text-xl font-semibold"
                     />
                   ) : (
-                    <button onClick={() => setTitleEdit(true)} className="flex items-center gap-2 text-left group">
+                    <button
+                      onClick={() => setTitleEdit(true)}
+                      className="flex items-center gap-2 text-left group"
+                    >
                       {title || plan.title}
-                      <Edit3 size={14} className="text-slate-400 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0" />
+                      <Edit3
+                        size={14}
+                        className="text-slate-400 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0"
+                      />
                     </button>
                   )}
                 </h1>
                 <div className="flex flex-wrap gap-x-5 gap-y-1.5 text-xs text-[var(--text-secondary)] dark:text-[var(--text-secondary)] mt-2">
-                  <span className="flex items-center gap-1.5"><Calendar size={12} />Week of {formatDate(plan.week_start)}</span>
-                  <span className="flex items-center gap-1.5"><Clock size={12} />{days.length} days</span>
-                  <span className="flex items-center gap-1.5"><UtensilsCrossed size={12} />{totalMeals} total meals</span>
-                  <span className={`flex items-center gap-1.5 font-semibold ${scoreColor(score)}`}>
-                    <Star size={12} />Health Score {score}/10
+                  <span className="flex items-center gap-1.5">
+                    <Calendar size={12} />
+                    Week of {formatDate(plan.week_start)}
+                  </span>
+                  <span className="flex items-center gap-1.5">
+                    <Clock size={12} />
+                    {days.length} days
+                  </span>
+                  <span className="flex items-center gap-1.5">
+                    <UtensilsCrossed size={12} />
+                    {totalMeals} total meals
+                  </span>
+                  <span
+                    className={`flex items-center gap-1.5 font-semibold ${scoreColor(score)}`}
+                  >
+                    <Star size={12} />
+                    Health Score {score}/10
                   </span>
                 </div>
                 {/* Assigned clients avatars */}
                 {assignedClients.length > 0 && (
                   <div className="flex items-center gap-2 mt-2">
                     <div className="flex -space-x-2">
-                      {assignedClients.slice(0, 4).map(c => (
+                      {assignedClients.slice(0, 4).map((c) =>
                         c.profile_photo_url ? (
-                          <img key={c.id} src={c.profile_photo_url} alt={c.name} className="w-6 h-6 rounded-full border-2 border-white dark:border-[#121212] object-cover" title={c.name} />
+                          <img
+                            key={c.id}
+                            src={c.profile_photo_url}
+                            alt={c.name}
+                            className="w-6 h-6 rounded-full border-2 border-white dark:border-[#121212] object-cover"
+                            title={c.name}
+                          />
                         ) : (
-                          <div key={c.id} className="w-6 h-6 rounded-full border-2 border-white dark:border-[#121212] bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center text-white text-[9px] font-semibold" title={c.name}>
-                            {c.name?.[0]?.toUpperCase() ?? 'C'}
+                          <div
+                            key={c.id}
+                            className="w-6 h-6 rounded-full border-2 border-white dark:border-[#121212] bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center text-white text-[9px] font-semibold"
+                            title={c.name}
+                          >
+                            {c.name?.[0]?.toUpperCase() ?? "C"}
                           </div>
-                        )
-                      ))}
+                        ),
+                      )}
                       {assignedClients.length > 4 && (
                         <div className="w-6 h-6 rounded-full border-2 border-white dark:border-[#121212] bg-slate-200 dark:bg-slate-700 flex items-center justify-center text-[9px] font-semibold text-slate-600 dark:text-slate-300">
                           +{assignedClients.length - 4}
@@ -351,7 +625,7 @@ export default function NutritionPlanDetailPage() {
                       )}
                     </div>
                     <span className="text-xs text-[var(--text-secondary)]">
-                      {assignedClients.map(c => c.name).join(', ')}
+                      {assignedClients.map((c) => c.name).join(", ")}
                     </span>
                   </div>
                 )}
@@ -360,16 +634,54 @@ export default function NutritionPlanDetailPage() {
               {/* Macro row */}
               <div className="flex flex-wrap gap-2">
                 {[
-                  { icon: <Flame size={15} />, label: 'Calories', value: weeklyAvg.calories, unit: 'kcal', iconCls: 'text-orange-500', bg: 'bg-orange-50 dark:bg-orange-900/20' },
-                  { icon: <Zap size={15} />,   label: 'Carbs',    value: weeklyAvg.carbs_g,   unit: 'g',    iconCls: 'text-amber-500',  bg: 'bg-amber-50 dark:bg-amber-900/20'  },
-                  { icon: <Salad size={15} />, label: 'Protein',  value: weeklyAvg.protein_g, unit: 'g',    iconCls: 'text-green-600',  bg: 'bg-green-50 dark:bg-green-900/20'  },
-                  { icon: <Droplets size={15}/>,label: 'Fat',     value: weeklyAvg.fat_g,     unit: 'g',    iconCls: 'text-slate-500',  bg: 'bg-slate-100 dark:bg-slate-800/60' },
-                ].map(m => (
-                  <div key={m.label} className={`flex items-center gap-2 px-3 py-2 ${m.bg}`}>
+                  {
+                    icon: <Flame size={15} />,
+                    label: "Calories",
+                    value: weeklyAvg.calories,
+                    unit: "kcal",
+                    iconCls: "text-orange-500",
+                    bg: "bg-orange-50 dark:bg-orange-900/20",
+                  },
+                  {
+                    icon: <Zap size={15} />,
+                    label: "Carbs",
+                    value: weeklyAvg.carbs_g,
+                    unit: "g",
+                    iconCls: "text-amber-500",
+                    bg: "bg-amber-50 dark:bg-amber-900/20",
+                  },
+                  {
+                    icon: <Salad size={15} />,
+                    label: "Protein",
+                    value: weeklyAvg.protein_g,
+                    unit: "g",
+                    iconCls: "text-green-600",
+                    bg: "bg-green-50 dark:bg-green-900/20",
+                  },
+                  {
+                    icon: <Droplets size={15} />,
+                    label: "Fat",
+                    value: weeklyAvg.fat_g,
+                    unit: "g",
+                    iconCls: "text-slate-500",
+                    bg: "bg-slate-100 dark:bg-slate-800/60",
+                  },
+                ].map((m) => (
+                  <div
+                    key={m.label}
+                    className={`flex items-center gap-2 px-3 py-2 ${m.bg}`}
+                  >
                     <span className={m.iconCls}>{m.icon}</span>
                     <div>
-                      <p className="text-[10px] text-slate-200 dark:text-slate-400 leading-none">{m.label}</p>
-                      <p className={`text-sm font-semibold ${m.iconCls}`}>{m.value}<span className="text-[10px] font-normal ml-0.5">{m.unit}</span></p>
+                      <p className="text-[10px] text-slate-500 dark:text-slate-400 leading-none">
+                        {m.label}
+                      </p>
+                      <p className={`text-sm font-semibold ${m.iconCls}`}>
+                        {m.value}
+                        <span className="text-[10px] font-normal ml-0.5">
+                          {m.unit}
+                        </span>
+                      </p>
                     </div>
                   </div>
                 ))}
@@ -388,33 +700,70 @@ export default function NutritionPlanDetailPage() {
 
         {/* ── Two-column body ── */}
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_300px] xl:grid-cols-[1fr_320px] gap-5 items-start">
-
           {/* ── Left: Days editor ── */}
           <div className="space-y-3">
-            <h2 className="text-sm font-semibold text-slate-700 dark:text-slate-200 px-1">Daily Meal Plan</h2>
+            <h2 className="text-sm font-semibold text-slate-700 dark:text-slate-200 px-1">
+              Daily Meal Plan
+            </h2>
 
             {days.map((day, di) => {
-              const totals = dayTotals(day)
-              const isOpen = !!openDays[day.day]
+              const totals = dayTotals(day);
+              const isOpen = !!openDays[day.day];
               return (
-                <div key={day.day} className="border border-slate-200/80 dark:border-white/[0.07] overflow-hidden bg-[var(--bg-card)] ">
+                <div
+                  key={day.day}
+                  className="border border-slate-200/80 dark:border-white/[0.07] overflow-hidden bg-[var(--bg-card)] "
+                >
                   {/* Day header */}
                   <button
                     onClick={() => toggleDay(day.day)}
                     className="w-full flex items-center justify-between px-5 py-3.5 bg-[var(--bg-card)] hover:bg-[#13131314] dark:hover:bg-white/[0.03] transition-colors text-left"
                   >
                     <div className="flex items-center gap-3">
-                      {isOpen
-                        ? <ChevronDown size={15} className="text-green-500 dark:text-green-400" />
-                        : <ChevronRight size={15} className="text-slate-400 dark:text-slate-600" />}
-                      <span className="text-sm font-semibold text-[var(--text-primary)] capitalize">{day.day}</span>
-                      <span className="text-xs text-slate-400 dark:text-slate-600">{day.meals.length} meal{day.meals.length !== 1 ? 's' : ''}</span>
+                      {isOpen ? (
+                        <ChevronDown
+                          size={15}
+                          className="text-green-500 dark:text-green-400"
+                        />
+                      ) : (
+                        <ChevronRight
+                          size={15}
+                          className="text-slate-400 dark:text-slate-600"
+                        />
+                      )}
+                      <span className="text-sm font-semibold text-[var(--text-primary)] capitalize">
+                        {day.day}
+                      </span>
+                      <span className="text-xs text-slate-400 dark:text-slate-600">
+                        {day.meals.length} meal
+                        {day.meals.length !== 1 ? "s" : ""}
+                      </span>
                     </div>
-                    <div className="flex items-center gap-4 text-xs text-slate-200 dark:text-slate-500">
-                      <span><span className="font-semibold text-slate-700 dark:text-slate-200">{totals.cal}</span> kcal</span>
-                      <span className="hidden sm:inline">P <span className="font-medium text-slate-700 dark:text-slate-200">{totals.pro}g</span></span>
-                      <span className="hidden sm:inline">C <span className="font-medium text-slate-700 dark:text-slate-200">{totals.carb}g</span></span>
-                      <span className="hidden sm:inline">F <span className="font-medium text-slate-700 dark:text-slate-200">{totals.fat}g</span></span>
+                    <div className="flex items-center gap-4 text-xs text-slate-500 dark:text-slate-500">
+                      <span>
+                        <span className="font-semibold text-slate-700 dark:text-slate-200">
+                          {totals.cal}
+                        </span>{" "}
+                        kcal
+                      </span>
+                      <span className="hidden sm:inline">
+                        P{" "}
+                        <span className="font-medium text-slate-700 dark:text-slate-200">
+                          {totals.pro}g
+                        </span>
+                      </span>
+                      <span className="hidden sm:inline">
+                        C{" "}
+                        <span className="font-medium text-slate-700 dark:text-slate-200">
+                          {totals.carb}g
+                        </span>
+                      </span>
+                      <span className="hidden sm:inline">
+                        F{" "}
+                        <span className="font-medium text-slate-700 dark:text-slate-200">
+                          {totals.fat}g
+                        </span>
+                      </span>
                     </div>
                   </button>
 
@@ -427,19 +776,26 @@ export default function NutritionPlanDetailPage() {
                             <div className="w-2 h-2 bg-green-500 flex-shrink-0" />
                             <input
                               value={meal.meal_name}
-                              onChange={e => updateMeal(di, mi, 'meal_name', e.target.value)}
+                              onChange={(e) =>
+                                updateMeal(di, mi, "meal_name", e.target.value)
+                              }
                               className="bg-transparent text-sm font-semibold text-[var(--text-primary)] outline-none border-b border-transparent focus:border-green-400 pb-0.5 w-36"
                               placeholder="Meal name"
                             />
                             <input
                               type="time"
                               value={meal.time}
-                              onChange={e => updateMeal(di, mi, 'time', e.target.value)}
+                              onChange={(e) =>
+                                updateMeal(di, mi, "time", e.target.value)
+                              }
                               className="bg-transparent text-xs text-slate-400 outline-none border-b border-transparent focus:border-green-400 pb-0.5 w-24"
                             />
                             <div className="flex-1" />
                             {day.meals.length > 1 && (
-                              <button onClick={() => removeMeal(di, mi)} className="text-slate-300 dark:text-slate-700 hover:text-red-500 dark:hover:text-red-400 transition-colors">
+                              <button
+                                onClick={() => removeMeal(di, mi)}
+                                className="text-slate-300 dark:text-slate-700 hover:text-red-500 dark:hover:text-red-400 transition-colors"
+                              >
                                 <Trash2 size={13} />
                               </button>
                             )}
@@ -449,20 +805,125 @@ export default function NutritionPlanDetailPage() {
                           <div className="p-3 space-y-2">
                             {/* Column headers */}
                             <div className="grid grid-cols-[2fr_1fr_1fr_1fr_1fr_1fr_auto] gap-2 px-1">
-                              {['Food', 'Qty', 'kcal', 'P (g)', 'C (g)', 'F (g)', ''].map((h, i) => (
-                                <span key={i} className="text-[10px] text-slate-400 dark:text-slate-600 uppercase tracking-wide font-semibold">{h}</span>
+                              {[
+                                "Food",
+                                "Qty",
+                                "kcal",
+                                "P (g)",
+                                "C (g)",
+                                "F (g)",
+                                "",
+                              ].map((h, i) => (
+                                <span
+                                  key={i}
+                                  className="text-[10px] text-slate-400 dark:text-slate-600 uppercase tracking-wide font-semibold"
+                                >
+                                  {h}
+                                </span>
                               ))}
                             </div>
 
                             {meal.foods.map((food, fi) => (
-                              <div key={fi} className="group grid grid-cols-[2fr_1fr_1fr_1fr_1fr_1fr_auto] gap-2 items-center">
-                                <input value={food.name}       onChange={e => updateFood(di, mi, fi, 'name',      e.target.value)} className={inputCls} placeholder="e.g. Chicken breast" />
-                                <input value={food.quantity}   onChange={e => updateFood(di, mi, fi, 'quantity',  e.target.value)} className={inputCls} placeholder="200g" />
-                                <input type="number" min="0" value={food.calories}  onChange={e => updateFood(di, mi, fi, 'calories',  +e.target.value)} className={inputCls} placeholder="0" />
-                                <input type="number" min="0" value={food.protein_g} onChange={e => updateFood(di, mi, fi, 'protein_g', +e.target.value)} className={inputCls} placeholder="0" />
-                                <input type="number" min="0" value={food.carbs_g}   onChange={e => updateFood(di, mi, fi, 'carbs_g',   +e.target.value)} className={inputCls} placeholder="0" />
-                                <input type="number" min="0" value={food.fat_g}     onChange={e => updateFood(di, mi, fi, 'fat_g',     +e.target.value)} className={inputCls} placeholder="0" />
-                                <button onClick={() => removeFood(di, mi, fi)} className="text-slate-200 dark:text-slate-800 hover:text-red-500 dark:hover:text-red-400 transition-colors flex-shrink-0 opacity-0 group-hover:opacity-100">
+                              <div
+                                key={fi}
+                                className="group grid grid-cols-[2fr_1fr_1fr_1fr_1fr_1fr_auto] gap-2 items-center"
+                              >
+                                <input
+                                  value={food.name}
+                                  onChange={(e) =>
+                                    updateFood(
+                                      di,
+                                      mi,
+                                      fi,
+                                      "name",
+                                      e.target.value,
+                                    )
+                                  }
+                                  className={inputCls}
+                                  placeholder="e.g. Chicken breast"
+                                />
+                                <input
+                                  value={food.quantity}
+                                  onChange={(e) =>
+                                    updateFood(
+                                      di,
+                                      mi,
+                                      fi,
+                                      "quantity",
+                                      e.target.value,
+                                    )
+                                  }
+                                  className={inputCls}
+                                  placeholder="200g"
+                                />
+                                <input
+                                  type="number"
+                                  min="0"
+                                  value={food.calories}
+                                  onChange={(e) =>
+                                    updateFood(
+                                      di,
+                                      mi,
+                                      fi,
+                                      "calories",
+                                      +e.target.value,
+                                    )
+                                  }
+                                  className={inputCls}
+                                  placeholder="0"
+                                />
+                                <input
+                                  type="number"
+                                  min="0"
+                                  value={food.protein_g}
+                                  onChange={(e) =>
+                                    updateFood(
+                                      di,
+                                      mi,
+                                      fi,
+                                      "protein_g",
+                                      +e.target.value,
+                                    )
+                                  }
+                                  className={inputCls}
+                                  placeholder="0"
+                                />
+                                <input
+                                  type="number"
+                                  min="0"
+                                  value={food.carbs_g}
+                                  onChange={(e) =>
+                                    updateFood(
+                                      di,
+                                      mi,
+                                      fi,
+                                      "carbs_g",
+                                      +e.target.value,
+                                    )
+                                  }
+                                  className={inputCls}
+                                  placeholder="0"
+                                />
+                                <input
+                                  type="number"
+                                  min="0"
+                                  value={food.fat_g}
+                                  onChange={(e) =>
+                                    updateFood(
+                                      di,
+                                      mi,
+                                      fi,
+                                      "fat_g",
+                                      +e.target.value,
+                                    )
+                                  }
+                                  className={inputCls}
+                                  placeholder="0"
+                                />
+                                <button
+                                  onClick={() => removeFood(di, mi, fi)}
+                                  className="text-slate-200 dark:text-slate-800 hover:text-red-500 dark:hover:text-red-400 transition-colors flex-shrink-0 opacity-0 group-hover:opacity-100"
+                                >
                                   <X size={13} />
                                 </button>
                               </div>
@@ -487,7 +948,7 @@ export default function NutritionPlanDetailPage() {
                     </div>
                   )}
                 </div>
-              )
+              );
             })}
 
             {/* Bottom save */}
@@ -497,80 +958,169 @@ export default function NutritionPlanDetailPage() {
                 disabled={saving}
                 className="flex items-center gap-2 px-6 py-2.5 rounded-s-xl bg-brand-600 hover:bg-brand-700 text-white text-sm font-semibold transition-colors disabled:opacity-50 -600/20"
               >
-                {saved ? <><Check size={14} /> Saved!</> : <><Save size={14} /> {saving ? 'Saving…' : 'Save Changes'}</>}
+                {saved ? (
+                  <>
+                    <Check size={14} /> Saved!
+                  </>
+                ) : (
+                  <>
+                    <Save size={14} /> {saving ? "Saving…" : "Save Changes"}
+                  </>
+                )}
               </button>
             </div>
           </div>
 
           {/* ── Right: info panels ── */}
           <div className="space-y-4">
-
             {/* Macro summary tiles */}
             <div className="p-4 ">
-              <h3 className="text-sm font-semibold text-[var(--text-primary)] dark:text-[var(--text-primary)] mb-3">Daily Averages</h3>
+              <h3 className="text-sm font-semibold text-[var(--text-primary)] dark:text-[var(--text-primary)] mb-3">
+                Daily Averages
+              </h3>
               <div className="grid grid-cols-2 gap-2">
-                <MacroPill icon={<Flame size={18} />}    label="Calories" value={weeklyAvg.calories}  unit="kcal" iconCls="text-orange-500" bg="bg-orange-50 dark:bg-orange-900/20" />
-                <MacroPill icon={<Zap size={18} />}      label="Protein"  value={weeklyAvg.protein_g} unit="g"    iconCls="text-green-600"  bg="bg-green-50 dark:bg-green-900/20"  />
-                <MacroPill icon={<Salad size={18} />}    label="Carbs"    value={weeklyAvg.carbs_g}   unit="g"    iconCls="text-amber-600"  bg="bg-amber-50 dark:bg-amber-900/20"  />
-                <MacroPill icon={<Droplets size={18} />} label="Fat"      value={weeklyAvg.fat_g}     unit="g"    iconCls="text-slate-500"  bg="bg-slate-100 dark:bg-slate-800/50" />
+                <MacroPill
+                  icon={<Flame size={18} />}
+                  label="Calories"
+                  value={weeklyAvg.calories}
+                  unit="kcal"
+                  iconCls="text-orange-500"
+                  bg="bg-orange-50 dark:bg-orange-900/20"
+                />
+                <MacroPill
+                  icon={<Zap size={18} />}
+                  label="Protein"
+                  value={weeklyAvg.protein_g}
+                  unit="g"
+                  iconCls="text-green-600"
+                  bg="bg-green-50 dark:bg-green-900/20"
+                />
+                <MacroPill
+                  icon={<Salad size={18} />}
+                  label="Carbs"
+                  value={weeklyAvg.carbs_g}
+                  unit="g"
+                  iconCls="text-amber-600"
+                  bg="bg-amber-50 dark:bg-amber-900/20"
+                />
+                <MacroPill
+                  icon={<Droplets size={18} />}
+                  label="Fat"
+                  value={weeklyAvg.fat_g}
+                  unit="g"
+                  iconCls="text-slate-500"
+                  bg="bg-slate-100 dark:bg-slate-800/50"
+                />
               </div>
             </div>
 
             {/* Nutrition Facts */}
             <div className="p-4 ">
               <div className="flex items-center justify-between mb-3">
-                <h3 className="text-sm font-semibold text-[var(--text-primary)] dark:text-[var(--text-primary)]">Nutrition Facts</h3>
-                <span className="text-[10px] text-slate-400 dark:text-slate-500 font-medium">Per Day (avg)</span>
+                <h3 className="text-sm font-semibold text-[var(--text-primary)] dark:text-[var(--text-primary)]">
+                  Nutrition Facts
+                </h3>
+                <span className="text-[10px] text-slate-400 dark:text-slate-500 font-medium">
+                  Per Day (avg)
+                </span>
               </div>
               <div className="space-y-0">
-                <NutrFact label="Calories"      value={weeklyAvg.calories}  unit="kcal" bold />
-                <NutrFact label="Carbohydrates" value={weeklyAvg.carbs_g}   />
-                <NutrFact label="Protein"       value={weeklyAvg.protein_g} />
-                <NutrFact label="Total Fat"     value={weeklyAvg.fat_g}     />
+                <NutrFact
+                  label="Calories"
+                  value={weeklyAvg.calories}
+                  unit="kcal"
+                  bold
+                />
+                <NutrFact label="Carbohydrates" value={weeklyAvg.carbs_g} />
+                <NutrFact label="Protein" value={weeklyAvg.protein_g} />
+                <NutrFact label="Total Fat" value={weeklyAvg.fat_g} />
                 {/* Estimated values based on macros */}
-                <NutrFact label="Fiber"         value={Math.round(weeklyAvg.carbs_g * 0.08)} />
-                <NutrFact label="Sodium"        value={Math.round(weeklyAvg.calories * 0.7)} unit="mg" />
+                <NutrFact
+                  label="Fiber"
+                  value={Math.round(weeklyAvg.carbs_g * 0.08)}
+                />
+                <NutrFact
+                  label="Sodium"
+                  value={Math.round(weeklyAvg.calories * 0.7)}
+                  unit="mg"
+                />
               </div>
             </div>
 
             {/* Plan details */}
             <div className="p-4">
-              <h3 className="text-sm font-semibold text-[var(--text-primary)] dark:text-[var(--text-primary)]">Plan Details</h3>
+              <h3 className="text-sm font-semibold text-[var(--text-primary)] dark:text-[var(--text-primary)]">
+                Plan Details
+              </h3>
               <div className="space-y-2 text-sm">
                 {[
-                  { icon: <Calendar size={14} />, label: 'Week Start', value: formatDate(plan.week_start) },
-                  { icon: <Clock size={14} />,    label: 'Duration',   value: `${days.length} days` },
-                  { icon: <UtensilsCrossed size={14} />, label: 'Total Meals', value: `${totalMeals} meals` },
-                  { icon: <Star size={14} />,     label: 'Health Score', value: `${score}/10` },
+                  {
+                    icon: <Calendar size={14} />,
+                    label: "Week Start",
+                    value: formatDate(plan.week_start),
+                  },
+                  {
+                    icon: <Clock size={14} />,
+                    label: "Duration",
+                    value: `${days.length} days`,
+                  },
+                  {
+                    icon: <UtensilsCrossed size={14} />,
+                    label: "Total Meals",
+                    value: `${totalMeals} meals`,
+                  },
+                  {
+                    icon: <Star size={14} />,
+                    label: "Health Score",
+                    value: `${score}/10`,
+                  },
                 ].map(({ icon, label, value }) => (
-                  <div key={label} className="flex items-center justify-between py-1 border-b border-slate-100 dark:border-white/[0.04] last:border-0">
-                    <span className="flex items-center gap-2 text-[var(--text-secondary)] dark:text-[var(--text-secondary)]">{icon}{label}</span>
-                    <span className="font-semibold text-[var(--text-primary)] text-xs">{value}</span>
+                  <div
+                    key={label}
+                    className="flex items-center justify-between py-1 border-b border-slate-100 dark:border-white/[0.04] last:border-0"
+                  >
+                    <span className="flex items-center gap-2 text-[var(--text-secondary)] dark:text-[var(--text-secondary)]">
+                      {icon}
+                      {label}
+                    </span>
+                    <span className="font-semibold text-[var(--text-primary)] text-xs">
+                      {value}
+                    </span>
                   </div>
                 ))}
               </div>
 
               {/* Assigned Clients */}
               <div className="mt-4 pt-4 border-t border-slate-100 dark:border-white/[0.06]">
-                <h4 className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider mb-2">Assigned Clients</h4>
+                <h4 className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider mb-2">
+                  Assigned Clients
+                </h4>
                 <div className="space-y-2">
                   {assignedClients.length === 0 ? (
-                    <p className="text-xs text-slate-400 dark:text-slate-500">No clients assigned</p>
+                    <p className="text-xs text-slate-400 dark:text-slate-500">
+                      No clients assigned
+                    </p>
                   ) : (
-                    assignedClients.map(c => (
+                    assignedClients.map((c) => (
                       <Link
                         key={c.id}
                         href={`/clients/${c.id}`}
                         className="flex items-center gap-2 p-1.5 rounded-lg hover:bg-[var(--bg-subtle)] transition-colors"
                       >
                         {c.profile_photo_url ? (
-                          <img src={c.profile_photo_url} alt={c.name} className="w-6 h-6 rounded-full object-cover flex-shrink-0" />
+                          <img
+                            src={c.profile_photo_url}
+                            alt={c.name}
+                            className="w-6 h-6 rounded-full object-cover flex-shrink-0"
+                          />
                         ) : (
                           <div className="w-6 h-6 rounded-full bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center text-white text-[9px] font-semibold flex-shrink-0">
-                            {c.name?.[0]?.toUpperCase() ?? 'C'}
+                            {c.name?.[0]?.toUpperCase() ?? "C"}
                           </div>
                         )}
-                        <span className="text-xs font-medium text-[var(--text-primary)] truncate">{c.name}</span>
+                        <span className="text-xs font-medium text-[var(--text-primary)] truncate">
+                          {c.name}
+                        </span>
                       </Link>
                     ))
                   )}
@@ -579,7 +1129,9 @@ export default function NutritionPlanDetailPage() {
                   href={`/nutrition-plans/${id}/assign`}
                   className="mt-3 block w-full text-center py-2 border border-green-200 dark:border-green-900/40 text-green-600 dark:text-green-400 text-sm font-semibold hover:bg-green-50 dark:hover:bg-green-900/20 transition-colors rounded-lg"
                 >
-                  {assignedClients.length > 0 ? 'Manage Assignments →' : 'Assign to Clients →'}
+                  {assignedClients.length > 0
+                    ? "Manage Assignments →"
+                    : "Assign to Clients →"}
                 </Link>
               </div>
             </div>
@@ -587,15 +1139,23 @@ export default function NutritionPlanDetailPage() {
             {/* Notes */}
             {plan.notes && (
               <div className="border border-slate-200/80 dark:border-white/[0.07] bg-[var(--bg-card)] p-4 ">
-                <h3 className="text-sm font-semibold text-[var(--text-primary)] dark:text-[var(--text-primary)] mb-2">Notes</h3>
-                <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">{plan.notes}</p>
+                <h3 className="text-sm font-semibold text-[var(--text-primary)] dark:text-[var(--text-primary)] mb-2">
+                  Notes
+                </h3>
+                <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
+                  {plan.notes}
+                </p>
               </div>
             )}
 
             {/* Danger zone */}
             <div className="border border-red-100 dark:border-red-900/30 bg-red-50/50 dark:bg-red-900/10 p-4">
-              <h3 className="text-sm font-semibold text-red-700 dark:text-red-400 mb-1">Danger Zone</h3>
-              <p className="text-xs text-red-500 dark:text-red-400/80 mb-3">Permanently delete this nutrition plan. This cannot be undone.</p>
+              <h3 className="text-sm font-semibold text-red-700 dark:text-red-400 mb-1">
+                Danger Zone
+              </h3>
+              <p className="text-xs text-red-500 dark:text-red-400/80 mb-3">
+                Permanently delete this nutrition plan. This cannot be undone.
+              </p>
               <button
                 onClick={() => setShowDelete(true)}
                 className="flex items-center gap-1.5 px-4 py-2 bg-red-500 hover:bg-red-600 text-white text-sm font-semibold transition-colors w-full justify-center"
@@ -603,10 +1163,9 @@ export default function NutritionPlanDetailPage() {
                 <Trash2 size={14} /> Delete Plan
               </button>
             </div>
-
           </div>
         </div>
       </div>
     </DashboardLayout>
-  )
+  );
 }

@@ -3,6 +3,7 @@
 import React from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import Link from 'next/link'
+import RegistrationNav from '@/components/layout/RegistrationNav'
 import { useAuthStore } from '@/store/auth'
 import { useSignupStore } from '@/store/signup'
 import { StepIndicator } from '@/components/auth/signup/StepIndicator'
@@ -70,7 +71,9 @@ export default function RegisterPage() {
   const { heading, sub } = STEP_TITLES[step] ?? STEP_TITLES[1]
 
   return (
-    <div className="relative min-h-[100dvh] flex items-start justify-center bg-[#F8FAFC] dark:bg-[#0e0e0e] overflow-x-hidden">
+    <>
+      <RegistrationNav />
+      <div className="relative min-h-[100dvh] flex items-start justify-center bg-[#F8FAFC] dark:bg-[#050505] overflow-x-hidden pt-20">
       <CircuitCorner pos="tl" />
       <CircuitCorner pos="tr" />
       <CircuitCorner pos="bl" />
@@ -141,5 +144,6 @@ export default function RegisterPage() {
         </div>
       </div>
     </div>
+    </>
   )
 }

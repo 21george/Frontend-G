@@ -1,12 +1,18 @@
 import type { Metadata } from "next";
 import Script from "next/script";
-import { JetBrains_Mono } from "next/font/google";
+import { JetBrains_Mono, Unbounded } from "next/font/google";
 import "./globals.css";
 import { Providers } from "@/app/providers";
 
 const jetbrainsMono = JetBrains_Mono({
   subsets: ["latin"],
   variable: "--font-mono",
+});
+
+const unbounded = Unbounded({
+  subsets: ["latin"],
+  weight: ["400", "700"],
+  variable: "--font-display",
 });
 
 export const metadata: Metadata = {
@@ -22,7 +28,7 @@ export default function RootLayout({
   return (
     <html lang="en" className="scroll-smooth" suppressHydrationWarning>
       <body
-        className={`${jetbrainsMono.variable} font-sans bg-[var(--bg-page)] text-[var(--text-primary)] antialiased`}
+        className={`${jetbrainsMono.variable} ${unbounded.variable} font-sans bg-[var(--bg-page)] text-[var(--text-primary)] antialiased`}
       >
         <Script src="/theme-init.js" strategy="beforeInteractive" />
         <Providers>{children}</Providers>
