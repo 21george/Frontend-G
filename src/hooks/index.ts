@@ -4,6 +4,8 @@ export {
   useCreateClient,
   useUpdateClient,
   useDeleteClient,
+  usePermanentlyDeleteClient,
+  useUploadClientPhoto,
   useRegenerateCode,
   useBlockClient,
   useUnblockClient,

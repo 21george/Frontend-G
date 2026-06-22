@@ -423,7 +423,7 @@ export default function BillingHubPage() {
                 Country
               </span>
               <span className="text-sm font-medium text-[var(--text-primary)]">
-                {coach?.nationality ?? "—"}
+                {coach?.country ?? coach?.nationality ?? "—"}
               </span>
             </div>
           </div>

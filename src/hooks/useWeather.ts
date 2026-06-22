@@ -108,9 +108,8 @@ export function useWeather() {
       },
       (err) => {
         if (!mounted) return
-        // Fallback to Munich, Germany for demo/development
-        setError('Using demo location (Munich)')
-        fetchWeatherFallback(48.1351, 11.5820, 'Munich', abortCtrl.signal)
+        setError('Location access denied. Please enable location services to see local weather.')
+        setLoading(false)
       },
       { timeout: 8000 }
     )
@@ -120,44 +119,6 @@ export function useWeather() {
       abortCtrl.abort()
     }
   }, [])
-
-  async function fetchWeatherFallback(lat: number, lon: number, city: string, signal?: AbortSignal) {
-    try {
-      const wtRes = await fetch(
-        `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true&daily=weather_code,temperature_2m_max,temperature_2m_min&timezone=auto`,
-        { signal }
-      )
-      const wtJson = await wtRes.json()
-      const cw = wtJson.current_weather
-      const { condition, icon } = decodeWMO(cw.weathercode)
-
-      // Skip any day missing wmo or tempMax
-      const forecast = wtJson.daily?.time?.slice(1, 6).flatMap((date: string, i: number) => {
-        const wmo = wtJson.daily?.weather_code?.[i + 1]
-        const tempMax = wtJson.daily?.temperature_2m_max?.[i + 1]
-        if (wmo === undefined || wmo === null || tempMax === undefined || tempMax === null) return []
-        const decoded = decodeWMO(wmo)
-        return [{
-          day: getDayName(date),
-          temp: Math.round(tempMax),
-          icon: decoded.icon,
-          condition: decoded.condition,
-        }]
-      }) ?? []
-
-      setWeather({
-        temp: Math.round(cw.temperature),
-        condition,
-        icon,
-        city,
-        forecast,
-      })
-    } catch (e: any) {
-      if (e.name !== 'AbortError') setError('Failed to load weather data')
-    } finally {
-      setLoading(false)
-    }
-  }
 
   return { weather, loading, error }
 }

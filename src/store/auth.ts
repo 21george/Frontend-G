@@ -5,6 +5,21 @@ import { setAuthInvalidationCallback, setAuthTokenGetter, setTokenRefreshCallbac
 import api from '@/lib/api/client'
 import { resolveBaseUrl } from '@/lib/env'
 
+/* ── Logout callbacks ─────────────────────────────────────────────────────── */
+const logoutCallbacks = new Set<() => void>()
+
+export function onLogout(callback: () => void) {
+  logoutCallbacks.add(callback)
+  return () => {
+    logoutCallbacks.delete(callback)
+  }
+}
+
+function runLogoutCallbacks() {
+  logoutCallbacks.forEach((cb) => cb())
+}
+
+/* ── Store ────────────────────────────────────────────────────────────────── */
 interface AuthState {
   coach: Coach | null
   isAuthenticated: boolean
@@ -39,10 +54,12 @@ export const useAuthStore = create<AuthState>()(
           credentials: 'include',
           headers: token ? { Authorization: `Bearer ${token}` } : undefined,
         }).catch(() => {})
+        runLogoutCallbacks()
         set({ coach: null, isAuthenticated: false, accessToken: null })
       },
       clearAuth: () => {
         // Clear local state only (e.g., when session expires or 401/403 received)
+        runLogoutCallbacks()
         set({ coach: null, isAuthenticated: false, accessToken: null })
       },
       refreshAccessToken: async () => {

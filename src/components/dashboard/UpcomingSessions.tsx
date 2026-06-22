@@ -12,7 +12,7 @@ import {
 import Link from "next/link";
 import { parseDateValue } from "@/lib/utils";
 import type { Client, CheckinMeeting } from "@/types";
-import { isAfter } from "date-fns";
+import { isBefore } from "date-fns";
 import { humanDate } from "@/lib/formatDate";
 import { motion } from "framer-motion";
 import { type LucideIcon } from "lucide-react";
@@ -45,7 +45,7 @@ export function UpcomingSessions({
     return checkins
       .filter((c) => {
         const d = parseDateValue(c.scheduled_at);
-        return d && isAfter(d, now);
+        return d && !isBefore(d, now);
       })
       .sort((a, b) => {
         const da = parseDateValue(a.scheduled_at)?.getTime() ?? 0;

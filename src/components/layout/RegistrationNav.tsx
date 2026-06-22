@@ -41,6 +41,7 @@ export default function RegistrationNav() {
         {/* LEFT: Logo */}
         <Link
           href="/"
+          aria-label="Go to CoachPro home page"
           className="flex items-center gap-2.5 pl-4 group"
           style={{ textDecoration: "none" }}
         >

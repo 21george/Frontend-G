@@ -354,7 +354,7 @@ export default function SettingsPage() {
               />
               <div className="p-6">
                 <div className="flex items-start gap-5 mb-6">
-                  <div className="relative h-20 w-20 rounded-full flex-shrink-0">
+                  <div key={coach?.id ?? 'no-user'} className="relative h-20 w-20 rounded-full flex-shrink-0">
                     {coach?.profile_photo ? (
                       <>
                         {!imageErrored ? (

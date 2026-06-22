@@ -268,6 +268,9 @@ export function ClientDetailSidebar({
         <section>
           <SectionHeader icon={User} label="Details" />
           <div className="space-y-2.5">
+            {client.gender && (
+              <InfoRow label="Gender" value={client.gender.charAt(0).toUpperCase() + client.gender.slice(1)} />
+            )}
             {client.date_of_birth && (
               <InfoRow label="Date of Birth" value={
                 <>
@@ -283,6 +286,11 @@ export function ClientDetailSidebar({
             )}
             {client.current_weight_kg != null && <InfoRow label="Weight" value={`${client.current_weight_kg} kg`} />}
             {client.height_cm != null && <InfoRow label="Height" value={`${client.height_cm} cm`} />}
+            {client.chest_cm != null && <InfoRow label="Chest" value={`${client.chest_cm} cm`} />}
+            {client.waist_cm != null && <InfoRow label="Waist" value={`${client.waist_cm} cm`} />}
+            {client.body_fat_pct != null && <InfoRow label="Body Fat" value={`${client.body_fat_pct}%`} />}
+            {client.bmi != null && <InfoRow label="BMI" value={String(client.bmi)} />}
+            {client.lean_mass_kg != null && <InfoRow label="Lean Mass" value={`${client.lean_mass_kg} kg`} />}
             {client.nationality && <InfoRow label="Nationality" value={client.nationality} />}
             {client.occupation && <InfoRow label="Occupation" value={client.occupation} />}
             {client.sickness && (

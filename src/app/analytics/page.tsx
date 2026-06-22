@@ -257,7 +257,7 @@ export default function AnalyticsDashboardPage() {
             icon={TrendingUp}
             delay={0.2}
           >
-            {coachData?.top_clients?.length > 0 ? (
+            {!!coachData?.top_clients?.length ? (
               <div className="divide-y divide-[var(--border)]">
                 {coachData.top_clients.map((client: any, i: number) => (
                   <Link
@@ -298,7 +298,7 @@ export default function AnalyticsDashboardPage() {
             icon={Video}
             delay={0.3}
           >
-            {sessionData?.top_clients?.length > 0 ? (
+            {!!sessionData?.top_clients?.length ? (
               <div className="divide-y divide-[var(--border)]">
                 {sessionData.top_clients.map((client: any, i: number) => (
                   <Link
@@ -336,7 +336,7 @@ export default function AnalyticsDashboardPage() {
 
         {/* ── Recent 1-on-1 sessions ── */}
         <Panel title="Recent 1-on-1 Sessions" icon={Clock} delay={0.4}>
-          {sessionData?.recent?.length > 0 ? (
+          {!!sessionData?.recent?.length ? (
             <div className="divide-y divide-[var(--border)]">
               {sessionData.recent.map((s: any) => (
                 <Link

@@ -32,6 +32,9 @@ export interface Coach {
   date_of_birth?: string;
   bio?: string;
   years_of_profession?: number;
+  job_title?: string;
+  function?: string;
+  responsibilities?: string;
 }
 
 export interface Client {

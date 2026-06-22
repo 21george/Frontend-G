@@ -294,10 +294,6 @@ function GymCard({
 
         {/* Badges */}
         <div className="absolute top-3 left-3 flex gap-2">
-          <span className="px-2.5 py-1 bg-white/90 backdrop-blur-sm rounded-md text-[11px] font-semibold text-[#1A3C34] flex items-center gap-1">
-            <Star className="w-3 h-3 text-[#D4A574] fill-[#D4A574]" />
-            4.{(index % 5) + 5}
-          </span>
           {gym.distance < 500 && (
             <span className="px-2 py-1 bg-[#2A96AD]/90 backdrop-blur-sm rounded-md text-[10px] font-medium text-white">
               Nearby

@@ -1,5 +1,5 @@
 import api from "../client";
-import type { PaginatedResponse } from "@/types";
+import type { ApiResponse, PaginatedResponse } from "@/types";
 
 interface UnreadMessage {
   id: string;
@@ -41,42 +41,39 @@ export const messagesApi = {
     media_url?: string;
     media_type?: string;
     media_filename?: string;
-  }) => api.post("/messages", data).then((r) => r.data),
+  }) => api.post<ApiResponse<null>>("/messages", data).then((r) => r.data),
 
   uploadMedia: (file: File) => {
     const formData = new FormData();
     formData.append("file", file);
     return api
-      .post("/messages/upload-media", formData)
-      .then(
-        (r) =>
-          r.data.data as {
-            media_url: string;
-            media_type: string;
-            media_filename: string;
-          },
-      );
+      .post<
+        ApiResponse<{
+          media_url: string;
+          media_type: string;
+          media_filename: string;
+        }>
+      >("/messages/upload-media", formData)
+      .then((r) => r.data.data);
   },
 
   /** Fetch actual unread messages with client details and content preview */
   getUnreadMessages: () =>
     api
-      .get<{
-        data: { messages: UnreadMessage[]; count: number };
-      }>("/messages/unread")
+      .get<ApiResponse<{ messages: UnreadMessage[]; count: number }>>("/messages/unread")
       .then((r) => r.data),
 
   /** Mark all client messages as read for the coach */
   markAllRead: () =>
     api
-      .post<{ data: { marked: number } }>("/messages/read-all")
+      .post<ApiResponse<{ marked: number }>>("/messages/read-all")
       .then((r) => r.data),
 
   /** Get unread messages count from clients (for notification badge) */
   getUnreadCount: () =>
     api
-      .get<{
-        data: { count: number; clients: UnreadClientMessage[] };
-      }>("/messages/unread-count")
+      .get<
+        ApiResponse<{ count: number; clients: UnreadClientMessage[] }>
+      >("/messages/unread-count")
       .then((r) => r.data),
 };

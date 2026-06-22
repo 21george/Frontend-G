@@ -46,7 +46,7 @@ export default function NewCoachingSessionPage() {
         duration_min: Number(form.duration_min),
         scheduled_at: new Date(form.scheduled_at).toISOString(),
       });
-      const id = (res as { data: { data: { id: string } } }).data?.data?.id;
+      const id = res.data?.id;
       router.push(id ? `/coaching-sessions/${id}` : "/coaching-sessions");
     } catch {
       setError("Failed to create session. Please try again.");

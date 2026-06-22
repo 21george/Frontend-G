@@ -98,8 +98,8 @@ export default function EditProfilePage() {
   // Profile state
   const [name, setName] = useState(coach?.name ?? '')
   const [surname, setSurname] = useState(coach?.surname ?? '')
-  const [title, setTitle] = useState('')
-  const [role, setRole] = useState('General Practitioner (GP)')
+  const [title, setTitle] = useState(coach?.job_title ?? '')
+  const [role, setRole] = useState(coach?.function ?? '')
   const [phone, setPhone] = useState(coach?.phone ?? '')
   const [language, setLanguage] = useState<'en' | 'de'>(coach?.language as 'en' | 'de' ?? 'en')
   const [linkedin, setLinkedin] = useState(coach?.social_media?.linkedin ?? '')
@@ -133,25 +133,35 @@ export default function EditProfilePage() {
       surname !== (coach.surname ?? '') ||
       phone !== (coach.phone ?? '') ||
       language !== (coach.language ?? 'en') ||
+      title !== (coach.job_title ?? '') ||
+      role !== (coach.function ?? '') ||
       linkedin !== (coach.social_media?.linkedin ?? '') ||
       instagram !== (coach.social_media?.instagram ?? '') ||
       website !== (coach.social_media?.website ?? '')
     setDirty(changed)
-  }, [name, surname, phone, language, linkedin, instagram, website, coach])
+  }, [name, surname, phone, language, title, role, linkedin, instagram, website, coach])
 
   const handleSave = async () => {
     setSaving(true)
     try {
       const payload = {
         name, surname, phone, language,
+        job_title: title,
+        function: role,
         social_media: { linkedin, instagram, website },
       }
       const { data: res } = await api.put('/coach/profile', payload)
-      if (res.success && res.data) updateCoach(res.data)
+      if (res.success && res.data) {
+        updateCoach(res.data)
+        // Sync local title/role states in case backend sanitized them
+        setTitle(res.data.job_title ?? '')
+        setRole(res.data.function ?? '')
+      }
       setDirty(false)
       showToast('Settings saved successfully')
-    } catch {
-      showToast('Failed to save settings', 'error')
+    } catch (err: any) {
+      const msg = err?.response?.data?.message || 'Failed to save settings'
+      showToast(msg, 'error')
     } finally {
       setSaving(false)
     }
@@ -163,6 +173,8 @@ export default function EditProfilePage() {
     setSurname(coach.surname ?? '')
     setPhone(coach.phone ?? '')
     setLanguage(coach.language ?? 'en')
+    setTitle(coach.job_title ?? '')
+    setRole(coach.function ?? '')
     setLinkedin(coach.social_media?.linkedin ?? '')
     setInstagram(coach.social_media?.instagram ?? '')
     setWebsite(coach.social_media?.website ?? '')
@@ -190,19 +202,32 @@ export default function EditProfilePage() {
       const { data: res } = await api.post(`/coach/profile/photo?ext=${ext}`, formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
       })
-      const { upload_url, profile_photo } = res.data
+      const { upload_url, profile_photo } = res.data ?? {}
       if (upload_url) {
+        // Use the same MIME mapping as the backend so S3 signature matches
+        const mimeMap: Record<string, string> = {
+          jpg: 'image/jpeg',
+          jpeg: 'image/jpeg',
+          png: 'image/png',
+          webp: 'image/webp',
+        }
+        const contentType = mimeMap[ext] ?? 'image/jpeg'
         const uploadResponse = await fetch(upload_url, {
           method: 'PUT',
           body: file,
-          headers: { 'Content-Type': file.type },
+          headers: { 'Content-Type': contentType },
         })
-        if (!uploadResponse.ok) throw new Error('Failed to upload photo')
+        if (!uploadResponse.ok) {
+          const s3Text = await uploadResponse.text().catch(() => '')
+          throw new Error(s3Text || `S3 upload failed (${uploadResponse.status})`)
+        }
       }
-      if (coach) updateCoach({ ...coach, profile_photo })
+      if (coach && profile_photo) {
+        updateCoach({ ...coach, profile_photo })
+      }
       showToast('Photo uploaded successfully')
     } catch (err: any) {
-      const errorMsg = err?.response?.data?.message || 'Upload failed'
+      const errorMsg = err?.response?.data?.message || err?.message || 'Upload failed'
       showToast(errorMsg, 'error')
     } finally {
       setPhotoUploading(false)
@@ -216,8 +241,9 @@ export default function EditProfilePage() {
       await api.delete('/coach/profile/photo')
       if (coach) updateCoach({ ...coach, profile_photo: undefined })
       showToast('Photo removed')
-    } catch {
-      showToast('Failed to remove photo', 'error')
+    } catch (err: any) {
+      const msg = err?.response?.data?.message || 'Failed to remove photo'
+      showToast(msg, 'error')
     } finally {
       setPhotoUploading(false)
     }

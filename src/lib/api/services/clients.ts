@@ -2,11 +2,11 @@ import api from "../client";
 import type { Client, PaginatedResponse, ApiResponse } from "@/types";
 
 export const clientsApi = {
-  list: (search?: string, page?: number) =>
+  list: (search?: string, page?: number, sort?: string) =>
     api
       .get<
         PaginatedResponse<Client>
-      >("/coach/clients", { params: { search, page } })
+      >("/coach/clients", { params: { search, page, sort } })
       .then((r) => r.data),
 
   get: (id: string) =>
@@ -31,6 +31,26 @@ export const clientsApi = {
 
   remove: (id: string) =>
     api.delete(`/coach/clients/${id}`).then((r) => r.data),
+
+  permanentDelete: (id: string) =>
+    api.delete(`/coach/clients/${id}/permanent`).then((r) => r.data),
+
+  uploadClientPhoto: (id: string, file: File) => {
+    const ext = file.name.split('.').pop() || 'jpg';
+    const form = new FormData();
+    form.append('photo', file);
+    return api
+      .post<
+        ApiResponse<{
+          upload_url?: string;
+          profile_photo: string;
+          key?: string;
+        }>
+      >(`/coach/clients/${id}/photo?ext=${ext}`, form, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      })
+      .then((r) => r.data);
+  },
 
   regenerateCode: (id: string) =>
     api
@@ -61,6 +81,21 @@ export const clientsApi = {
       height?: number;
       phone?: string;
       notes?: string;
+      gender?: string;
+      date_of_birth?: string;
+      current_weight_kg?: number;
+      height_cm?: number;
+      chest_cm?: number;
+      waist_cm?: number;
+      body_fat_pct?: number;
+      bmi?: number;
+      lean_mass_kg?: number;
+      sickness?: string;
+      nationality?: string;
+      occupation?: string;
+      postal_code?: string;
+      address?: string;
+      language?: string;
     }>,
   ) =>
     api

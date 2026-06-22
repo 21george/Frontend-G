@@ -238,7 +238,7 @@ export default function NutritionPlanDetailPage() {
   const [showDelete, setShowDelete] = useState(false);
   const [initialised, setInitialised] = useState(false);
 
-  useMemo(() => {
+  useEffect(() => {
     if (plan && !initialised) {
       setTitle(plan.title);
       const merged = DAYS.map((dayName) => {

@@ -321,6 +321,7 @@ export default function DashboardHeader({
           className="flex items-center gap-2.5 pl-1 border-l border-slate-200 rounded-sm dark:border-white/[0.1] hover:opacity-80 transition-opacity"
         >
           <CoachAvatar
+            key={coach?.id ?? 'no-user'}
             name={coach?.name}
             surname={coach?.surname}
             photo={coach?.profile_photo}

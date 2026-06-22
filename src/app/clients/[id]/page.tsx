@@ -19,6 +19,7 @@ import {
   useUploadMessageMedia,
   useBlockClient,
   useUnblockClient,
+  useUploadClientPhoto,
   useWorkoutProgress,
   useLiveProgress,
 } from "@/lib/hooks";
@@ -168,6 +169,8 @@ export default function ClientDetailPage() {
     sickness: "",
   });
   const [editSaving, setEditSaving] = useState(false);
+  const [editPhotoFile, setEditPhotoFile] = useState<File | null>(null);
+  const [editPhotoPreview, setEditPhotoPreview] = useState<string | null>(null);
   const chatEndRef = useRef<HTMLDivElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -198,6 +201,7 @@ export default function ClientDetailPage() {
   const updateClient = useUpdateClient(id);
   const blockClient = useBlockClient(id);
   const unblockClient = useUnblockClient(id);
+  const uploadClientPhoto = useUploadClientPhoto(id);
   const {
     connected: socketConnected,
     incomingMessages,
@@ -347,6 +351,8 @@ export default function ClientDetailPage() {
       occupation: client.occupation ?? "",
       sickness: client.sickness ?? "",
     });
+    setEditPhotoFile(null);
+    setEditPhotoPreview(client.profile_photo_url ?? null);
     setEditModal(true);
   };
 
@@ -357,6 +363,11 @@ export default function ClientDetailPage() {
     }
     setEditSaving(true);
     try {
+      // Upload new photo first if selected
+      if (editPhotoFile) {
+        await uploadClientPhoto.mutateAsync(editPhotoFile);
+      }
+
       const payload: Record<string, any> = {
         name: editForm.name.trim(),
         email: editForm.email.trim() || undefined,
@@ -380,6 +391,8 @@ export default function ClientDetailPage() {
       }
       await updateClient.mutateAsync(payload);
       setEditModal(false);
+      setEditPhotoFile(null);
+      setEditPhotoPreview(null);
     } catch {
       toast.error("Failed to update client");
     } finally {
@@ -794,6 +807,40 @@ export default function ClientDetailPage() {
             </div>
 
             <div className="space-y-4">
+              {/* Profile Photo */}
+              <div className="flex items-center gap-4">
+                <div className="relative">
+                  {(editPhotoPreview || client?.profile_photo_url) ? (
+                    <img
+                      src={editPhotoPreview || client?.profile_photo_url}
+                      alt="Profile"
+                      className="w-16 h-16 rounded-full object-cover border border-[var(--border)]"
+                    />
+                  ) : (
+                    <div className="w-16 h-16 rounded-full bg-[var(--bg-subtle)] border border-[var(--border)] flex items-center justify-center text-[var(--text-tertiary)] text-xs font-semibold">
+                      {editForm.name?.charAt(0)?.toUpperCase() || "?"}
+                    </div>
+                  )}
+                </div>
+                <div className="flex-1">
+                  <label className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider">
+                    Profile Photo
+                  </label>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) {
+                        setEditPhotoFile(file);
+                        setEditPhotoPreview(URL.createObjectURL(file));
+                      }
+                    }}
+                    className="mt-1 block w-full text-xs text-[var(--text-secondary)] file:mr-3 file:px-3 file:py-1.5 file:rounded-lg file:border-0 file:bg-[var(--bg-subtle)] file:text-[var(--text-primary)] hover:file:bg-[var(--border)] cursor-pointer"
+                  />
+                </div>
+              </div>
+
               <div>
                 <label className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider">
                   Name *

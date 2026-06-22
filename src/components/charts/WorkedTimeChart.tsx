@@ -7,21 +7,19 @@ interface TimeData {
   hours: number
 }
 
-const MOCK_DATA: TimeData[] = [
-  { day: 'Mon', hours: 6.5 },
-  { day: 'Tue', hours: 7.2 },
-  { day: 'Wed', hours: 5.8 },
-  { day: 'Thu', hours: 8.1 },
-  { day: 'Fri', hours: 7.5 },
-  { day: 'Sat', hours: 4.2 },
-  { day: 'Sun', hours: 2.0 },
-]
-
 interface Props {
-  data?: TimeData[]
+  data: TimeData[]
 }
 
-export default function WorkedTimeChart({ data = MOCK_DATA }: Props) {
+export default function WorkedTimeChart({ data }: Props) {
+  if (!data || data.length === 0) {
+    return (
+      <div className="flex items-center justify-center h-[180px] text-sm text-[var(--text-tertiary)]">
+        No data available
+      </div>
+    )
+  }
+
   return (
     <ResponsiveContainer width="100%" height={180}>
       <LineChart data={data}>

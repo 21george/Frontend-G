@@ -20,7 +20,6 @@ export const useCoachingSessions = (params?: {
   useQuery({
     queryKey: [...KEYS.all, params],
     queryFn: () => coachingSessionsApi.list(params),
-    select: (res) => res.data.data,
   });
 
 export const useCoachingSession = (id: string) =>
@@ -28,7 +27,6 @@ export const useCoachingSession = (id: string) =>
     queryKey: KEYS.detail(id),
     queryFn: () => coachingSessionsApi.get(id),
     enabled: !!id,
-    select: (res) => res.data.data,
   });
 
 export const useCreateCoachingSession = () =>
@@ -76,7 +74,7 @@ export const useCoachingSessionToken = (
     queryKey: [...KEYS.detail(id), "token"],
     queryFn: async () => {
       const res = await coachingSessionsApi.getToken(id);
-      return res.data.data;
+      return res;
     },
     enabled: !!id && enabled,
     staleTime: 5 * 60 * 1000, // token is valid for 6 h; refetch every 5 min is fine

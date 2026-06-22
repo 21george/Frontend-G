@@ -61,7 +61,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         duration_min: Number(form.duration_min),
         scheduled_at: new Date(form.scheduled_at).toISOString(),
       })
-      const id = (res as { data: { data: { id: string } } }).data?.data?.id
+      const id = res.data?.id
       setShowCreate(false)
       resetForm()
       queryClient.invalidateQueries({ queryKey: ['coaching-sessions'] })

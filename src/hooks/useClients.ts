@@ -50,9 +50,25 @@ export const useUpdateClient = (id: string) =>
 export const useDeleteClient = () =>
   useToastMutation({
     mutationFn: (id: string) => clientsApi.remove(id),
-    successMessage: "Client permanently deleted",
-    errorMessage: "Failed to delete client",
+    successMessage: "Client deactivated",
+    errorMessage: "Failed to deactivate client",
     invalidateKeys: [["clients"]],
+  });
+
+export const usePermanentlyDeleteClient = () =>
+  useToastMutation({
+    mutationFn: (id: string) => clientsApi.permanentDelete(id),
+    successMessage: "Client permanently deleted",
+    errorMessage: "Failed to permanently delete client",
+    invalidateKeys: [["clients"]],
+  });
+
+export const useUploadClientPhoto = (id: string) =>
+  useToastMutation({
+    mutationFn: (file: File) => clientsApi.uploadClientPhoto(id, file),
+    successMessage: "Profile photo updated",
+    errorMessage: "Failed to upload profile photo",
+    invalidateKeys: [["client", id]],
   });
 
 export const useRegenerateCode = (id: string) =>
@@ -92,6 +108,21 @@ export const useImportClients = () =>
         height?: number;
         phone?: string;
         notes?: string;
+        gender?: string;
+        date_of_birth?: string;
+        current_weight_kg?: number;
+        height_cm?: number;
+        chest_cm?: number;
+        waist_cm?: number;
+        body_fat_pct?: number;
+        bmi?: number;
+        lean_mass_kg?: number;
+        sickness?: string;
+        nationality?: string;
+        occupation?: string;
+        postal_code?: string;
+        address?: string;
+        language?: string;
       }>,
     ) => clientsApi.import(clients),
     successMessage: "Clients imported successfully",

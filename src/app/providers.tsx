@@ -4,8 +4,10 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { Provider as ReduxProvider } from "react-redux";
 import { useState, useEffect } from "react";
-import { uiStore } from "@/store/ui";
+import { uiStore, closeModal } from "@/store/ui";
 import { useThemeStore } from "@/store/theme";
+import { useSubscriptionStore } from "@/store/subscription";
+import { onLogout } from "@/store/auth";
 import { TrialReminderModal } from "@/components/subscription/TrialReminderModal";
 
 function ThemeSync() {
@@ -39,6 +41,20 @@ export function Providers({ children }: { children: React.ReactNode }) {
         },
       }),
   );
+
+  useEffect(() => {
+    const unsubscribe = onLogout(() => {
+      // Clear React Query cache (server state / memory)
+      queryClient.clear();
+      // Close any open Redux modals
+      uiStore.dispatch(closeModal());
+      // Clear subscription onboarding state
+      useSubscriptionStore.getState().clearState();
+      // Remove trial-reminder timestamp so next user sees it fresh
+      localStorage.removeItem("trial_reminder_dismissed_until");
+    });
+    return unsubscribe;
+  }, [queryClient]);
 
   return (
     <ReduxProvider store={uiStore}>

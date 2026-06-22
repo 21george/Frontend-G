@@ -168,6 +168,7 @@ function SidebarContent({ onClose, collapsed = false }: SidebarContentProps) {
           )}
         >
           <div
+            key={coach?.id ?? 'no-user'}
             className="w-9 h-9 flex items-center justify-center text-[var(--sidebar-text)] text-sm font-semibold flex-shrink-0 ring-2 ring-[var(--sidebar-bdr)] rounded-lg"
             style={{ background: "var(--bg-subtle)" }}
           >

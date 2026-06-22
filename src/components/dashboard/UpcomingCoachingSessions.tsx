@@ -4,7 +4,7 @@ import { useMemo } from "react";
 import { Video, CalendarDays, Radio, ChevronRight, Clock } from "lucide-react";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { format, isAfter } from "date-fns";
+import { format, isBefore } from "date-fns";
 import { parseDateValue } from "@/lib/utils";
 import { useCoachingSessions } from "@/lib/hooks";
 import { useSessionDetailModal } from "@/components/coaching";
@@ -19,8 +19,9 @@ export function UpcomingCoachingSessions() {
     return sessions
       .filter(
         (s: CoachingSession) =>
-          (s.status === "upcoming" || s.status === "live") &&
-          isAfter(new Date(s.scheduled_at), now),
+          s.status === "live" ||
+          (s.status === "upcoming" &&
+            !isBefore(new Date(s.scheduled_at), now)),
       )
       .sort(
         (a: CoachingSession, b: CoachingSession) =>
