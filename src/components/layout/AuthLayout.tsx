@@ -30,17 +30,26 @@ function AuthLayout({
   // making any routing decisions. Without this, the first render always sees
   // isAuthenticated=false (initial state) and immediately redirects to /auth/login,
   // which then bounces back once hydration completes — causing an infinite loop.
-  const [isHydrated, setIsHydrated] = useState(() =>
-    useAuthStore.persist.hasHydrated(),
-  );
+  //
+  // IMPORTANT: the initial useState value runs on the server during prerender,
+  // where zustand's persist middleware isn't initialized and `.persist` is
+  // undefined. We must guard the call or the build crashes with
+  // "Cannot read properties of undefined (reading 'hasHydrated')".
+  const [isHydrated, setIsHydrated] = useState(false);
 
   useEffect(() => {
-    if (isHydrated) return;
-    const unsub = useAuthStore.persist.onFinishHydration(() =>
+    // After mount, the store is fully wired. Check the current hydration
+    // state, or subscribe to the finish-hydration event for the first
+    // paint after a fresh page load.
+    if (useAuthStore.persist?.hasHydrated?.()) {
+      setIsHydrated(true);
+      return;
+    }
+    const unsub = useAuthStore.persist?.onFinishHydration?.(() =>
       setIsHydrated(true),
     );
-    return unsub;
-  }, [isHydrated]);
+    return () => unsub?.();
+  }, []);
 
   useEffect(() => {
     if (!isHydrated) return;
