@@ -8,6 +8,7 @@ import {
   CheckCircle2, XCircle, Video, VideoOff, Mic, MicOff, PhoneOff,
   Volume2, Maximize2, Settings, Sparkles, UserPlus, User,
 } from 'lucide-react'
+import { safeHref } from '@/lib/safeHref'
 import {
   useLiveTrainingSession,
   useGoLive,
@@ -131,7 +132,7 @@ export default function LiveTrainingDetailPage() {
             </div>
 
             {session.meeting_link && (
-              <a href={session.meeting_link} target="_blank" rel="noopener noreferrer"
+              <a href={safeHref(session.meeting_link) ?? '#'} target="_blank" rel="noopener noreferrer"
                 className="hidden md:flex items-center gap-1.5 px-3 py-1.5 text-[12px] font-semibold border border-slate-200 dark:border-white/[0.1] rounded-lg text-[var(--text-secondary)] dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-white/[0.06] transition-colors">
                 <ExternalLink size={13} /> Meeting Link
               </a>

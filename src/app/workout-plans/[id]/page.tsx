@@ -9,6 +9,7 @@ import { ChevronRight, Edit, Dumbbell, Clock, Calendar, ArrowLeft, ChevronDown, 
 import { addDays, format, parseISO, startOfWeek } from 'date-fns'
 import { motion } from 'framer-motion'
 import type { Exercise } from '@/types'
+import { safeHref } from '@/lib/safeHref'
 
 const BOARD_DAYS = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'] as const
 
@@ -64,7 +65,25 @@ function getYouTubeId(url: string): string | null {
 
 function isValidVideoUrl(url: string): boolean {
   if (!url) return false
-  return /youtube\.com|youtu\.be|vimeo\.com|dailymotion\.com/.test(url)
+  // Anchor the regex to the URL's hostname. A bare substring match
+  // would let `javascript:alert(1)//youtube.com` pass.
+  try {
+    const u = new URL(url)
+    const host = u.hostname.toLowerCase()
+    return (
+      host === "youtube.com" ||
+      host === "www.youtube.com" ||
+      host === "m.youtube.com" ||
+      host === "youtu.be" ||
+      host === "vimeo.com" ||
+      host === "www.vimeo.com" ||
+      host === "player.vimeo.com" ||
+      host === "dailymotion.com" ||
+      host === "www.dailymotion.com"
+    )
+  } catch {
+    return false
+  }
 }
 
 function VideoPreview({ url }: { url: string }) {
@@ -86,9 +105,11 @@ function VideoPreview({ url }: { url: string }) {
     )
   }
 
+  const safeUrl = safeHref(url);
+  if (!safeUrl) return null;
   return (
     <a
-      href={url}
+      href={safeUrl}
       target="_blank"
       rel="noopener noreferrer"
       className="inline-flex items-center gap-2 px-3 py-2 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800/30 text-blue-600 dark:text-blue-400 text-xs rounded hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors"
@@ -97,7 +118,7 @@ function VideoPreview({ url }: { url: string }) {
       <span className="truncate max-w-[200px]">{url}</span>
       <ExternalLink className="w-3 h-3 flex-shrink-0" />
     </a>
-  )
+  );
 }
 
 function getWeekStartDate(value: string) {

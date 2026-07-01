@@ -2,11 +2,11 @@
 import DashboardLayout from '@/components/layout/DashboardLayout'
 import { useCreateWorkoutPlan, useClients } from '@/lib/hooks'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { useForm, useFieldArray } from 'react-hook-form'
 import { useState } from 'react'
 import { ArrowLeft, Plus, Trash2, Save, Send, Video as VideoIcon, ExternalLink } from 'lucide-react'
 import Link from 'next/link'
 import { DAYS } from '@/lib/utils'
+import { safeHref } from '@/lib/safeHref'
 
 /* ═══════════════════════════════════════════════════════════════════
    VIDEO EMBED HELPERS
@@ -19,7 +19,26 @@ function getYouTubeId(url: string): string | null {
 
 function isValidVideoUrl(url: string): boolean {
   if (!url) return false
-  return /youtube\.com|youtu\.be|vimeo\.com|dailymotion\.com/.test(url)
+  // Anchor the regex: only accept a URL whose host (or first label
+  // for youtu.be) IS the video domain. A bare substring match would
+  // let `javascript:alert(1)//youtube.com` pass.
+  try {
+    const u = new URL(url)
+    const host = u.hostname.toLowerCase()
+    return (
+      host === "youtube.com" ||
+      host === "www.youtube.com" ||
+      host === "m.youtube.com" ||
+      host === "youtu.be" ||
+      host === "vimeo.com" ||
+      host === "www.vimeo.com" ||
+      host === "player.vimeo.com" ||
+      host === "dailymotion.com" ||
+      host === "www.dailymotion.com"
+    )
+  } catch {
+    return false
+  }
 }
 
 function VideoEmbed({ url }: { url: string }) {
@@ -39,10 +58,14 @@ function VideoEmbed({ url }: { url: string }) {
     )
   }
 
-  // Generic video link fallback
+  // Generic video link fallback. The href is gated through safeHref
+  // so a coach who somehow bypasses isValidVideoUrl (e.g. via a video
+  // URL on a redirector domain) still cannot XSS via javascript:.
+  const safeUrl = safeHref(url);
+  if (!safeUrl) return null;
   return (
     <a
-      href={url}
+      href={safeUrl}
       target="_blank"
       rel="noopener noreferrer"
       className="flex items-center gap-2 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800/30 text-blue-600 dark:text-blue-400 text-xs hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors"
@@ -51,7 +74,7 @@ function VideoEmbed({ url }: { url: string }) {
       <span className="truncate flex-1">{url}</span>
       <ExternalLink className="w-3 h-3 flex-shrink-0" />
     </a>
-  )
+  );
 }
 
 /* ═══════════════════════════════════════════════════════════════════

@@ -11,6 +11,7 @@ import {
 } from "@/hooks/useMessages";
 import { useAllClients } from "@/lib/hooks";
 import { useSocketChat } from "@/lib/useSocketChat";
+import { safeHref } from "@/lib/safeHref";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { useState, useMemo, useRef, useEffect, useCallback } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
@@ -487,24 +488,26 @@ export default function MessagesPage() {
                             : "bg-[var(--bg-card)] border border-[var(--border)] text-[var(--text-primary)] rounded-bl-none"
                         }`}
                       >
-                        {/* Media attachment */}
-                        {m.media_url && m.media_type === "image" && (
+                        {/* Media attachment. Backend validates media_url
+                            is http(s) on upload, but we route through
+                            safeHref here as defense-in-depth. */}
+                        {m.media_url && m.media_type === "image" && safeHref(m.media_url) && (
                           <a
-                            href={m.media_url}
+                            href={safeHref(m.media_url)!}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="block mb-2"
                           >
                             <img
-                              src={m.media_url}
+                              src={safeHref(m.media_url)!}
                               alt=""
                               className="max-w-full max-h-48 object-cover rounded-lg"
                             />
                           </a>
                         )}
-                        {m.media_url && m.media_type === "file" && (
+                        {m.media_url && m.media_type === "file" && safeHref(m.media_url) && (
                           <a
-                            href={m.media_url}
+                            href={safeHref(m.media_url)!}
                             target="_blank"
                             rel="noopener noreferrer"
                             className={`flex items-center gap-2 mb-2 px-3 py-2 rounded-lg ${

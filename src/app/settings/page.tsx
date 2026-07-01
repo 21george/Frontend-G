@@ -9,6 +9,7 @@ import {
   useNotificationSettings,
   useUpdateNotificationSettings,
 } from "@/lib/hooks";
+import { safeHref } from "@/lib/safeHref";
 import Image from "next/image";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
@@ -314,7 +315,9 @@ export default function SettingsPage() {
       useAuthStore.getState().logout();
       window.location.href = "/login";
     } catch (err: any) {
-      setDeleteError(err?.response?.data?.message ?? "Failed to delete account");
+      setDeleteError(
+        err?.response?.data?.message ?? "Failed to delete account",
+      );
       setDeleteLoading(false);
     }
   };
@@ -354,7 +357,10 @@ export default function SettingsPage() {
               />
               <div className="p-6">
                 <div className="flex items-start gap-5 mb-6">
-                  <div key={coach?.id ?? 'no-user'} className="relative h-20 w-20 rounded-full flex-shrink-0">
+                  <div
+                    key={coach?.id ?? "no-user"}
+                    className="relative h-20 w-20 rounded-full flex-shrink-0"
+                  >
                     {coach?.profile_photo ? (
                       <>
                         {!imageErrored ? (
@@ -428,9 +434,9 @@ export default function SettingsPage() {
                       Social Links
                     </p>
                     <div className="flex flex-wrap gap-3">
-                      {coach.social_media.linkedin && (
+                      {coach.social_media.linkedin && safeHref(coach.social_media.linkedin) && (
                         <a
-                          href={coach.social_media.linkedin}
+                          href={safeHref(coach.social_media.linkedin)!}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="inline-flex items-center gap-1.5 text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
@@ -438,9 +444,9 @@ export default function SettingsPage() {
                           <Globe className="w-3.5 h-3.5" /> LinkedIn
                         </a>
                       )}
-                      {coach.social_media.instagram && (
+                      {coach.social_media.instagram && safeHref(coach.social_media.instagram) && (
                         <a
-                          href={coach.social_media.instagram}
+                          href={safeHref(coach.social_media.instagram)!}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="inline-flex items-center gap-1.5 text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
@@ -448,9 +454,9 @@ export default function SettingsPage() {
                           <Globe className="w-3.5 h-3.5" /> Instagram
                         </a>
                       )}
-                      {coach.social_media.website && (
+                      {coach.social_media.website && safeHref(coach.social_media.website) && (
                         <a
-                          href={coach.social_media.website}
+                          href={safeHref(coach.social_media.website)!}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="inline-flex items-center gap-1.5 text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
@@ -517,7 +523,8 @@ export default function SettingsPage() {
             {/* Danger Zone */}
             <Card className="border-red-200 dark:border-red-900/30">
               <CardHeader
-                icon={<AlertTriangle className="w-5 h-5 text-red-600 dark:text-red-400" />
+                icon={
+                  <AlertTriangle className="w-5 h-5 text-red-600 dark:text-red-400" />
                 }
                 title="Danger Zone"
               />
@@ -930,7 +937,11 @@ export default function SettingsPage() {
 
                 <div className="space-y-4">
                   <p className="text-sm text-[var(--text-secondary)]">
-                    To confirm deletion, type <strong className="text-[var(--text-primary)]">DELETE</strong> below.
+                    To confirm deletion, type{" "}
+                    <strong className="text-[var(--text-primary)]">
+                      DELETE
+                    </strong>{" "}
+                    below.
                   </p>
                   <input
                     type="text"
