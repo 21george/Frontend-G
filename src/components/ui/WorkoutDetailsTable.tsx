@@ -1,14 +1,12 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useMemo } from 'react'
 import { Dumbbell, BarChart3 } from 'lucide-react'
 import { motion } from 'framer-motion'
 import type { WorkoutPlan } from '@/types'
 
 /* ── Professional Workout Details Table ──────────────────────────────────── */
 export function WorkoutDetailsTable({ plans }: { plans: WorkoutPlan[] }) {
-  const [expandedPlan, setExpandedPlan] = useState<string | null>(null)
-
   // Flatten all exercises from all plans
   const allExercises = useMemo(() => {
     const exercises: Array<{
@@ -49,17 +47,17 @@ export function WorkoutDetailsTable({ plans }: { plans: WorkoutPlan[] }) {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: 0.1 }}
-      className="bg-[var(--bg-card)] dark:bg-[#1A1A1A] border border-[var(--border)] dark:border-white/[0.08] overflow-hidden "
+      className="bg-[var(--bg-card)] dark:bg-[#1A1A1A] border border-[var(--border)] dark:border-white/[0.08] overflow-hidden"
     >
       {/* Header */}
       <div className="px-6 py-5 border-b border-[var(--border)] dark:border-white/[0.06]">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-pink-600 flex items-center justify-center ">
+            <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-pink-600 flex items-center justify-center">
               <BarChart3 className="w-5 h-5 text-white" />
             </div>
             <div>
-              <h2 className="text-base font-bold text-[var(--text-primary)] ">
+              <h2 className="text-base font-bold text-[var(--text-primary)]">
                 Professional Fitness Details
               </h2>
               <p className="text-xs text-[var(--text-tertiary)] mt-0.5">
@@ -68,9 +66,9 @@ export function WorkoutDetailsTable({ plans }: { plans: WorkoutPlan[] }) {
             </div>
           </div>
           <div className="flex items-center gap-2 text-xs">
-            <div className="flex items-center gap-1.5 px-3 py-1.5 bg-[var(--bg-subtle)] dark:bg-white/[0.04] ">
+            <div className="flex items-center gap-1.5 px-3 py-1.5 bg-[var(--bg-subtle)] dark:bg-white/[0.04]">
               <Dumbbell size={12} className="text-[var(--text-tertiary)]" />
-              <span className="font-semibold text-[var(--text-secondary)] ">{allExercises.length} Total Exercises</span>
+              <span className="font-semibold text-[var(--text-secondary)]">{allExercises.length} Total Exercises</span>
             </div>
           </div>
         </div>
@@ -104,36 +102,36 @@ export function WorkoutDetailsTable({ plans }: { plans: WorkoutPlan[] }) {
                       {ex.order + 1}
                     </div>
                     <div>
-                      <div className="text-sm font-semibold text-[var(--text-primary)] ">{ex.exerciseName}</div>
-                      <div className="text-xs text-[var(--text-tertiary)] ">{ex.planTitle}</div>
+                      <div className="text-sm font-semibold text-[var(--text-primary)]">{ex.exerciseName}</div>
+                      <div className="text-xs text-[var(--text-tertiary)]">{ex.planTitle}</div>
                     </div>
                   </div>
                 </td>
                 <td className="px-5 py-4">
                   <div className="flex items-center gap-2">
-                    <div className="px-2.5 py-1 bg-[var(--bg-subtle)] dark:bg-white/[0.04] ">
+                    <div className="px-2.5 py-1 bg-[var(--bg-subtle)] dark:bg-white/[0.04]">
                       <span className="text-xs font-medium text-[var(--text-secondary)] capitalize">{ex.dayName}</span>
                     </div>
                   </div>
                 </td>
                 <td className="px-5 py-4">
                   <div className="text-center">
-                    <div className="inline-flex items-center justify-center w-10 h-8 bg-[var(--bg-subtle)] dark:bg-white/[0.04] ">
-                      <span className="text-sm font-bold text-[var(--text-primary)] ">{ex.sets}</span>
+                    <div className="inline-flex items-center justify-center w-10 h-8 bg-[var(--bg-subtle)] dark:bg-white/[0.04]">
+                      <span className="text-sm font-bold text-[var(--text-primary)]">{ex.sets}</span>
                     </div>
                   </div>
                 </td>
                 <td className="px-5 py-4">
                   <div className="text-center">
-                    <div className="inline-flex items-center justify-center w-10 h-8 bg-[var(--bg-subtle)] dark:bg-white/[0.04] ">
-                      <span className="text-sm font-bold text-[var(--text-primary)] ">{ex.reps}</span>
+                    <div className="inline-flex items-center justify-center w-10 h-8 bg-[var(--bg-subtle)] dark:bg-white/[0.04]">
+                      <span className="text-sm font-bold text-[var(--text-primary)]">{ex.reps}</span>
                     </div>
                   </div>
                 </td>
                 <td className="px-5 py-4">
                   <div className="text-center">
-                    <div className="inline-flex items-center justify-center w-10 h-8 bg-[var(--bg-subtle)] dark:bg-white/[0.04] ">
-                      <span className="text-sm font-bold text-[var(--text-primary)] ">{ex.restSeconds}s</span>
+                    <div className="inline-flex items-center justify-center w-10 h-8 bg-[var(--bg-subtle)] dark:bg-white/[0.04]">
+                      <span className="text-sm font-bold text-[var(--text-primary)]">{ex.restSeconds}s</span>
                     </div>
                   </div>
                 </td>

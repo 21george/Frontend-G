@@ -3,7 +3,6 @@ import DashboardLayout from "@/components/layout/DashboardLayout";
 import { useWorkoutPlans, useClients } from "@/lib/hooks";
 import { QueryWrapper } from "@/components/ui/QueryWrapper";
 import { Skeleton } from "@/components/ui/Skeleton";
-import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { useState, useMemo, useRef, useEffect } from "react";
 import { motion } from "framer-motion";
@@ -18,15 +17,10 @@ import SecurityIcon from "@mui/icons-material/Security";
 import { AnimatedSearch } from "@/components/ui/AnimatedSearch";
 import FilterListIcon from "@mui/icons-material/FilterList";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
-import TrendingUpIcon from "@mui/icons-material/TrendingUp";
 import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
 import WarningAmberIcon from "@mui/icons-material/WarningAmber";
 import BarChartIcon from "@mui/icons-material/BarChart";
-import TrackChangesIcon from "@mui/icons-material/TrackChanges";
-import FlashOnIcon from "@mui/icons-material/FlashOn";
-import EmojiEventsIcon from "@mui/icons-material/EmojiEvents";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
-import InsertDriveFileIcon from "@mui/icons-material/InsertDriveFile";
 import NavigateNextIcon from "@mui/icons-material/NavigateNext";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
 
@@ -312,187 +306,6 @@ function UnassignedPlansCard({
             </div>
           )}
         </>
-      )}
-    </motion.div>
-  );
-}
-
-/* ── Professional Workout Details Table ──────────────────────────────────── */
-function WorkoutDetailsTable({ plans }: { plans: WorkoutPlan[] }) {
-  const allExercises = useMemo(() => {
-    const exercises: Array<{
-      planId: string;
-      planTitle: string;
-      dayName: string;
-      exerciseName: string;
-      sets: number;
-      reps: string;
-      restSeconds: number;
-      notes?: string;
-      order: number;
-    }> = [];
-
-    plans.forEach((plan) => {
-      plan.days?.forEach((day, dayIndex) => {
-        day.exercises?.forEach((ex, exIndex) => {
-          exercises.push({
-            planId: plan.id,
-            planTitle: plan.title,
-            dayName: day.day,
-            exerciseName: ex.name,
-            sets: ex.sets,
-            reps: ex.reps,
-            restSeconds: ex.rest_seconds,
-            notes: ex.notes,
-            order: exIndex,
-          });
-        });
-      });
-    });
-
-    return exercises;
-  }, [plans]);
-
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: 0.1 }}
-      className="bg-white dark:bg-[#171717] overflow-hidden"
-    >
-      {/* Header */}
-      <div className="px-6 py-5 border-b border-slate-100 dark:border-white/[0.06]">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <BarChartIcon className="w-6 h-6 text-purple-500" />
-            <div>
-              <h2 className="text-base font-bold text-[var(--text-primary)]">
-                Professional Fitness Details
-              </h2>
-              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                Comprehensive workout breakdown across all plans
-              </p>
-            </div>
-          </div>
-          <div className="flex items-center gap-2 text-xs">
-            <div className="flex items-center gap-1.5 px-3 py-1.5">
-              <FitnessCenterIcon className="w-3 h-3 text-slate-400" />
-              <span className="font-semibold text-slate-700 dark:text-slate-300">
-                {allExercises.length} Total Exercises
-              </span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Exercise Table */}
-      <div className="overflow-x-auto">
-        <table className="w-full">
-          <thead>
-            <tr className="bg-[#13131314] dark:bg-white/[0.04] border-b border-slate-200/80 dark:border-white/[0.08]">
-              <th className="text-left text-[10px] font-bold text-slate-500 dark:text-neutral-400 uppercase tracking-wider px-5 py-4">
-                Exercise
-              </th>
-              <th className="text-left text-[10px] font-bold text-slate-500 dark:text-neutral-400 uppercase tracking-wider px-5 py-4">
-                Plan / Day
-              </th>
-              <th className="text-center text-[10px] font-bold text-slate-500 dark:text-neutral-400 uppercase tracking-wider px-5 py-4">
-                Sets
-              </th>
-              <th className="text-center text-[10px] font-bold text-slate-500 dark:text-neutral-400 uppercase tracking-wider px-5 py-4">
-                Reps
-              </th>
-              <th className="text-center text-[10px] font-bold text-slate-500 dark:text-neutral-400 uppercase tracking-wider px-5 py-4">
-                Rest
-              </th>
-              <th className="text-left text-[10px] font-bold text-slate-500 dark:text-neutral-400 uppercase tracking-wider px-5 py-4">
-                Notes
-              </th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-slate-100 dark:divide-white/[0.05]">
-            {allExercises.slice(0, 20).map((ex, index) => (
-              <motion.tr
-                key={`${ex.planId}-${ex.dayName}-${ex.exerciseName}-${index}`}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.02 }}
-                className="hover:bg-[#13131314] dark:hover:bg-white/[0.02] transition-colors"
-              >
-                <td className="px-5 py-4">
-                  <div className="flex items-center gap-3">
-                    <span className="text-xs font-bold text-slate-400 w-5">
-                      {ex.order + 1}
-                    </span>
-                    <div>
-                      <div className="text-sm font-semibold text-[var(--text-primary)]">
-                        {ex.exerciseName}
-                      </div>
-                      <div className="text-xs text-slate-500 dark:text-slate-400">
-                        {ex.planTitle}
-                      </div>
-                    </div>
-                  </div>
-                </td>
-                <td className="px-5 py-4">
-                  <span className="text-xs font-medium text-slate-700 dark:text-slate-300 capitalize">
-                    {ex.dayName}
-                  </span>
-                </td>
-                <td className="px-5 py-4">
-                  <span className="text-sm font-bold text-[var(--text-primary)]">
-                    {ex.sets}
-                  </span>
-                </td>
-                <td className="px-5 py-4">
-                  <span className="text-sm font-bold text-[var(--text-primary)]">
-                    {ex.reps}
-                  </span>
-                </td>
-                <td className="px-5 py-4">
-                  <span className="text-sm font-bold text-[var(--text-primary)]">
-                    {ex.restSeconds}s
-                  </span>
-                </td>
-                <td className="px-5 py-4">
-                  {ex.notes ? (
-                    <div
-                      className="text-xs text-slate-600 dark:text-slate-400 max-w-xs truncate"
-                      title={ex.notes}
-                    >
-                      {ex.notes}
-                    </div>
-                  ) : (
-                    <span className="text-xs text-slate-400 dark:text-slate-500">
-                      —
-                    </span>
-                  )}
-                </td>
-              </motion.tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-
-      {allExercises.length === 0 && (
-        <div className="p-12 text-center">
-          <FitnessCenterIcon className="w-12 h-12 text-slate-300 dark:text-slate-600 mx-auto mb-3" />
-          <p className="text-sm font-medium text-slate-600 dark:text-slate-400">
-            No exercises configured
-          </p>
-          <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">
-            Add exercises to your workout plans to see them here
-          </p>
-        </div>
-      )}
-
-      {allExercises.length > 20 && (
-        <div className="px-6 py-4 bg-slate-50 dark:bg-white/[0.02] border-t border-slate-100 dark:border-white/[0.06]">
-          <p className="text-xs text-slate-500 dark:text-slate-400 text-center">
-            Showing 20 of {allExercises.length} exercises. View individual plans
-            for complete details.
-          </p>
-        </div>
       )}
     </motion.div>
   );

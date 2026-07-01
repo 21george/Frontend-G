@@ -1,6 +1,6 @@
 'use client'
 
-import { CheckCircle2, Check } from 'lucide-react'
+import { Check } from 'lucide-react'
 import { getWorkoutCategory, CATEGORY_CONFIG } from '@/lib/workoutCategories'
 import type { PaginatedResponse, WorkoutPlan } from '@/types'
 

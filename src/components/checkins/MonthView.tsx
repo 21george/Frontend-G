@@ -5,7 +5,7 @@ import { format, isToday, startOfWeek, endOfWeek, eachDayOfInterval } from 'date
 import { motion } from 'framer-motion'
 import type { CheckinMeeting, Client } from '@/types'
 import { parseDateValue } from '@/lib/utils'
-import { EVENT_TYPES, TEXT, SURFACE, ANIMATION } from '@/lib/constants'
+import { EVENT_TYPES, ANIMATION } from '@/lib/constants'
 
 interface MonthViewProps {
   selectedDate: Date

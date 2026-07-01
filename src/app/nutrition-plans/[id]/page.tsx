@@ -439,10 +439,6 @@ export default function NutritionPlanDetailPage() {
       </DashboardLayout>
     );
 
-  const clientName = plan.client_id
-    ? (clientMap[plan.client_id]?.name ?? null)
-    : null;
-
   return (
     <DashboardLayout>
       <ConfirmDialog
@@ -507,7 +503,7 @@ export default function NutritionPlanDetailPage() {
             <button
               onClick={handleSave}
               disabled={saving}
-              className="ml-auto flex items-center gap-1.5 px-4 py-2 bg-brand-600 hover:bg-brand-700 text-white text-sm font-semibold transition-colors disabled:opacity-50 -600/20"
+              className="ml-auto flex items-center gap-1.5 px-4 py-2 bg-brand-600 hover:bg-brand-700 text-white text-sm font-semibold transition-colors disabled:opacity-50"
             >
               {saved ? (
                 <>
@@ -956,7 +952,7 @@ export default function NutritionPlanDetailPage() {
               <button
                 onClick={handleSave}
                 disabled={saving}
-                className="flex items-center gap-2 px-6 py-2.5 rounded-s-xl bg-brand-600 hover:bg-brand-700 text-white text-sm font-semibold transition-colors disabled:opacity-50 -600/20"
+                className="flex items-center gap-2 px-6 py-2.5 rounded-s-xl bg-brand-600 hover:bg-brand-700 text-white text-sm font-semibold transition-colors disabled:opacity-50"
               >
                 {saved ? (
                   <>

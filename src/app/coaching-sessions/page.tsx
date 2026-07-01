@@ -86,17 +86,6 @@ export default function CoachingSessionsPage() {
   const [rescheduleDuration, setRescheduleDuration] = useState(60);
   const [deleteTarget, setDeleteTarget] = useState<CoachingSession | null>(null);
 
-  /* ── Stats ── */
-  const stats = useMemo(
-    () => ({
-      total: sessions.length,
-      live: sessions.filter((s) => s.status === "live").length,
-      upcoming: sessions.filter((s) => s.status === "upcoming").length,
-      ended: sessions.filter((s) => s.status === "ended").length,
-    }),
-    [sessions],
-  );
-
   /* ── Filtered rows ── */
   const filtered = useMemo(() => {
     const q = search.toLowerCase();

@@ -4,7 +4,6 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/store/auth";
-import { useThemeStore } from "@/store/theme";
 import { useSubscription } from "@/hooks/useSubscription";
 import {
   LayoutDashboard,
@@ -21,7 +20,6 @@ import {
   ChevronLeft,
   ChevronRight,
   BarChart3,
-  LifeBuoy,
   Video,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -46,8 +44,6 @@ interface SidebarContentProps {
 function SidebarContent({ onClose, collapsed = false }: SidebarContentProps) {
   const path = usePathname();
   const { coach, logout } = useAuthStore();
-  const { theme, toggle } = useThemeStore();
-  const isDark = theme === "dark";
   const { data: subscription } = useSubscription();
 
   const TIER_LABEL: Record<string, { label: string; color: string }> = {

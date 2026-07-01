@@ -19,5 +19,4 @@ export { BodyAnalysisTab } from './tabs/BodyAnalysisTab'
 
 // Modals
 export { ScheduleModal } from './modals/ScheduleModal'
-export type { ScheduleForm, ScheduleMeetingType } from './modals/ScheduleModal'
 export { DeleteConfirmModal } from './modals/DeleteConfirmModal'

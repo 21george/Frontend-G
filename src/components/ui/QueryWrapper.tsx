@@ -2,7 +2,6 @@
 
 import { type UseQueryResult } from '@tanstack/react-query'
 import { LoadingSpinner } from './LoadingSpinner'
-import { Skeleton } from './Skeleton'
 import { EmptyState } from './EmptyState'
 import { AlertCircle } from 'lucide-react'
 

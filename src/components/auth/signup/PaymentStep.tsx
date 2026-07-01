@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import { useState } from "react";
 import { Loader2, AlertCircle, ChevronLeft, CreditCard } from "lucide-react";
 import api from "@/lib/api";
 import { useSignupStore } from "@/store/signup";

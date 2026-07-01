@@ -4,7 +4,7 @@ import { useMemo } from 'react'
 import { MoreHorizontal } from 'lucide-react'
 import { parseDateValue } from '@/lib/utils'
 import type { CheckinMeeting } from '@/types'
-import { startOfWeek, endOfWeek, eachDayOfInterval, addDays } from 'date-fns'
+import { startOfWeek, addDays, eachDayOfInterval } from 'date-fns'
 import { motion } from 'framer-motion'
 
 const HEATMAP_CLS = [

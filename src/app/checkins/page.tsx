@@ -1,114 +1,95 @@
-'use client'
+"use client";
 
-import DashboardLayout from '@/components/layout/DashboardLayout'
-import { useCheckins, useClients, useCreateCheckin, useUpdateCheckin, useDeleteCheckin } from '@/lib/hooks'
-import { useState, useMemo } from 'react'
-import { Plus } from 'lucide-react'
-import { AnimatedSearch } from '@/components/ui/AnimatedSearch'
-import { format } from 'date-fns'
-import type { CheckinMeeting } from '@/types'
-import { motion } from 'framer-motion'
-import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
+import DashboardLayout from "@/components/layout/DashboardLayout";
 import {
-  MiniCalendar, EventTypeFilter, TodaysSchedule,
+  useCheckins,
+  useClients,
+  useUpdateCheckin,
+  useDeleteCheckin,
+} from "@/lib/hooks";
+import { useState, useMemo } from "react";
+import { format } from "date-fns";
+import type { CheckinMeeting } from "@/types";
+import { motion } from "framer-motion";
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
+import {
+  MiniCalendar,
+  EventTypeFilter,
+  TodaysSchedule,
   MonthView,
-  EventDetailModal, CreateEventModal, RescheduleModal,
-} from '@/components/checkins'
-import { BRAND } from '@/lib/constants'
-
-const ACCENT = BRAND.DEFAULT
-const ACCENT_HOVER = BRAND.dark
+  EventDetailModal,
+  CreateEventModal,
+  RescheduleModal,
+} from "@/components/checkins";
 
 export default function SchedulePage() {
-  const { data: checkins } = useCheckins()
-  const { data: clientsData } = useClients()
-  const createCheckin = useCreateCheckin()
-  const updateCheckin = useUpdateCheckin()
-  const deleteCheckin = useDeleteCheckin()
-  const clients = clientsData?.data ?? []
-  const clientMap = useMemo(() => new Map(clients.map(c => [c.id, c])), [clients])
+  const { data: checkins } = useCheckins();
+  const { data: clientsData } = useClients();
+  const updateCheckin = useUpdateCheckin();
+  const deleteCheckin = useDeleteCheckin();
+  const clients = clientsData?.data ?? [];
+  const clientMap = useMemo(
+    () => new Map(clients.map((c) => [c.id, c])),
+    [clients],
+  );
 
-  const [selectedDate, setSelectedDate] = useState(new Date())
-  const [selected, setSelected] = useState<CheckinMeeting | null>(null)
-  const [searchQuery, setSearchQuery] = useState('')
-  const [showModal, setShowModal] = useState(false)
-  const [selectedTypes, setSelectedTypes] = useState<Set<string>>(new Set(['video', 'call', 'chat']))
+  const [selectedDate, setSelectedDate] = useState(new Date());
+  const [selected, setSelected] = useState<CheckinMeeting | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [showModal, setShowModal] = useState(false);
+  const [selectedTypes, setSelectedTypes] = useState<Set<string>>(
+    new Set(["video", "call", "chat"]),
+  );
 
-  const [formLoading, setFormLoading] = useState(false)
-  const [rescheduling, setRescheduling] = useState(false)
-  const [showCancelConfirm, setShowCancelConfirm] = useState(false)
-  const [showRescheduleModal, setShowRescheduleModal] = useState(false)
+  const [rescheduling, setRescheduling] = useState(false);
+  const [showCancelConfirm, setShowCancelConfirm] = useState(false);
+  const [showRescheduleModal, setShowRescheduleModal] = useState(false);
 
   const filteredEvents = useMemo(() => {
-    let list = checkins ?? []
+    let list = checkins ?? [];
     if (searchQuery.trim()) {
-      const q = searchQuery.toLowerCase()
-      list = list.filter(c => {
-        const client = clientMap.get(c.client_id)
+      const q = searchQuery.toLowerCase();
+      list = list.filter((c) => {
+        const client = clientMap.get(c.client_id);
         return (
           client?.name?.toLowerCase().includes(q) ||
           c.type?.toLowerCase().includes(q) ||
           c.notes?.toLowerCase().includes(q)
-        )
-      })
+        );
+      });
     }
     if (selectedTypes.size > 0 && selectedTypes.size < 3) {
-      list = list.filter(c => selectedTypes.has(c.type))
+      list = list.filter((c) => selectedTypes.has(c.type));
     }
-    return list
-  }, [checkins, searchQuery, clientMap, selectedTypes])
+    return list;
+  }, [checkins, searchQuery, clientMap, selectedTypes]);
 
   const handleToggleType = (type: string) => {
-    const newTypes = new Set(selectedTypes)
+    const newTypes = new Set(selectedTypes);
     if (newTypes.has(type)) {
-      if (newTypes.size > 1) newTypes.delete(type)
+      if (newTypes.size > 1) newTypes.delete(type);
     } else {
-      newTypes.add(type)
+      newTypes.add(type);
     }
-    setSelectedTypes(newTypes)
-  }
-
-  const handleCreate = async (data: {
-    client_id: string
-    scheduled_at: string
-    type: 'video' | 'call' | 'chat'
-    meeting_link: string
-    notes: string
-  }) => {
-    setFormLoading(true)
-    try {
-      await createCheckin.mutateAsync({
-        client_id: data.client_id,
-        scheduled_at: data.scheduled_at,
-        type: data.type,
-        meeting_link: data.meeting_link,
-        notes: data.notes,
-      })
-      setShowModal(false)
-    } catch {
-      // Error is already logged by the API interceptor; surface via React Query error state
-    } finally {
-      setFormLoading(false)
-    }
-  }
+    setSelectedTypes(newTypes);
+  };
 
   const handleReschedule = async (id: string, scheduled_at: string) => {
-    setRescheduling(true)
+    setRescheduling(true);
     try {
-      await updateCheckin.mutateAsync({ id, scheduled_at })
-      setSelected(null)
-      setShowRescheduleModal(false)
+      await updateCheckin.mutateAsync({ id, scheduled_at });
+      setSelected(null);
+      setShowRescheduleModal(false);
     } catch {
       // Error is already logged by the API interceptor; surface via React Query error state
     } finally {
-      setRescheduling(false)
+      setRescheduling(false);
     }
-  }
+  };
 
   return (
     <DashboardLayout>
       <div className="flex flex-col min-h-screen bg-[var(--bg-page)]">
-
         {/* ═══════════ HEADER ═══════════ */}
         <header className="relative px-6 sm:px-10 pt-8 pb-6 bg-[var(--bg-page)]">
           <div className="absolute top-0 left-0 right-0 h-px bg-slate-200 dark:bg-white/[0.08]" />
@@ -120,7 +101,7 @@ export default function SchedulePage() {
                 animate={{ opacity: 1, y: 0 }}
                 className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--text-secondary)] dark:text-[var(--text-secondary)]"
               >
-                {format(selectedDate, 'EEEE')}
+                {format(selectedDate, "EEEE")}
               </motion.p>
               <motion.h1
                 initial={{ opacity: 0, y: 12 }}
@@ -128,8 +109,10 @@ export default function SchedulePage() {
                 transition={{ delay: 0.05 }}
                 className="text-4xl sm:text-5xl font-serif font-medium text-slate-900 dark:text-slate-100 tracking-tight leading-none"
               >
-                {format(selectedDate, 'MMMM')}{' '}
-                <span className="italic text-brand-600 dark:text-brand-400">{format(selectedDate, 'yyyy')}</span>
+                {format(selectedDate, "MMMM")}{" "}
+                <span className="italic text-brand-600 dark:text-brand-400">
+                  {format(selectedDate, "yyyy")}
+                </span>
               </motion.h1>
               <motion.p
                 initial={{ opacity: 0 }}
@@ -137,7 +120,8 @@ export default function SchedulePage() {
                 transition={{ delay: 0.12 }}
                 className="text-sm text-slate-600 dark:text-slate-400 pt-1"
               >
-                {format(selectedDate, 'd MMMM yyyy')} &mdash; {filteredEvents.length} scheduled
+                {format(selectedDate, "d MMMM yyyy")} &mdash;{" "}
+                {filteredEvents.length} scheduled
               </motion.p>
             </div>
 
@@ -149,18 +133,6 @@ export default function SchedulePage() {
               className="flex items-center gap-3"
             >
               {/* Search */}
-              <AnimatedSearch className="relative" active={searchQuery.length > 0}>
-                <input
-                  type="text"
-                  placeholder="Search..."
-                  value={searchQuery}
-                  onChange={e => setSearchQuery(e.target.value)}
-                  className="w-full sm:w-44 pl-9 pr-3 py-2 bg-transparent border border-[var(--border)] dark:border-white/[0.08] text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 transition-colors rounded-lg"
-                />
-              </AnimatedSearch>
-
-              {/* Create button */}
-             
             </motion.div>
           </div>
         </header>
@@ -172,7 +144,10 @@ export default function SchedulePage() {
               <div className="flex-shrink-0">
                 <MiniCalendar
                   selectedDate={selectedDate}
-                  onSelectDate={(date) => { setSelectedDate(date); setSelected(null) }}
+                  onSelectDate={(date) => {
+                    setSelectedDate(date);
+                    setSelected(null);
+                  }}
                   checkins={checkins ?? []}
                 />
               </div>
@@ -197,7 +172,10 @@ export default function SchedulePage() {
             <div className="flex-1">
               <MonthView
                 selectedDate={selectedDate}
-                onSelectDate={(date) => { setSelectedDate(date); setSelected(null) }}
+                onSelectDate={(date) => {
+                  setSelectedDate(date);
+                  setSelected(null);
+                }}
                 checkins={checkins ?? []}
                 clientMap={clientMap}
                 filteredEvents={filteredEvents}
@@ -212,7 +190,7 @@ export default function SchedulePage() {
           onClose={() => setSelected(null)}
           onReschedule={() => {
             if (selected?.scheduled_at) {
-              setShowRescheduleModal(true)
+              setShowRescheduleModal(true);
             }
           }}
           onCancel={() => setShowCancelConfirm(true)}
@@ -222,10 +200,6 @@ export default function SchedulePage() {
         <CreateEventModal
           isOpen={showModal}
           onClose={() => setShowModal(false)}
-          selectedDate={selectedDate}
-          clients={clients}
-          onSubmit={handleCreate}
-          isLoading={formLoading}
         />
 
         <RescheduleModal
@@ -240,16 +214,16 @@ export default function SchedulePage() {
           open={showCancelConfirm}
           onClose={() => setShowCancelConfirm(false)}
           onConfirm={() => {
-            if (!selected?.id) return
+            if (!selected?.id) return;
             deleteCheckin.mutate(selected.id, {
               onSuccess: () => {
-                setShowCancelConfirm(false)
-                setSelected(null)
+                setShowCancelConfirm(false);
+                setSelected(null);
               },
               onError: () => {
-                setShowCancelConfirm(false)
+                setShowCancelConfirm(false);
               },
-            })
+            });
           }}
           title="Cancel check-in?"
           message="Are you sure you want to cancel this check-in? This action cannot be undone."
@@ -259,5 +233,5 @@ export default function SchedulePage() {
         />
       </div>
     </DashboardLayout>
-  )
+  );
 }

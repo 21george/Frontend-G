@@ -4,7 +4,7 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import {
   MapPin, Dumbbell, X, Loader2, RefreshCw, Navigation,
   SlidersHorizontal, Building2, Trees,
-  Bookmark, Star, Phone, Clock, ArrowUpRight,
+  Bookmark, Phone, Clock, ArrowUpRight,
   LocateFixed, Filter,
 } from 'lucide-react'
 import { AnimatedSearch } from '@/components/ui/AnimatedSearch'

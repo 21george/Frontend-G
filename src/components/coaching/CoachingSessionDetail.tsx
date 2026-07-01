@@ -10,7 +10,6 @@ import {
   User,
   FileText,
   Radio,
-  CheckCircle2,
   XCircle,
   Edit3,
   Save,
@@ -30,27 +29,23 @@ import type { CoachingSessionStatus } from "@/types";
 /* ── Status config ── */
 const STATUS_CFG: Record<
   CoachingSessionStatus,
-  { label: string; badge: string; icon: typeof Radio }
+  { label: string; badge: string }
 > = {
   live: {
     label: "Live Now",
     badge: "bg-green-500/15 text-green-400 border-green-500/20",
-    icon: Radio,
   },
   upcoming: {
     label: "Upcoming",
     badge: "bg-amber-500/15 text-amber-400 border-amber-500/20",
-    icon: CalendarDays,
   },
   ended: {
     label: "Ended",
     badge: "bg-slate-500/15 text-[var(--text-tertiary)] border-slate-500/20",
-    icon: CheckCircle2,
   },
   cancelled: {
     label: "Cancelled",
     badge: "bg-red-500/15 text-red-400 border-red-500/20",
-    icon: XCircle,
   },
 };
 

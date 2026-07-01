@@ -2,11 +2,9 @@
 
 import { useState } from 'react'
 import { X, Calendar, Clock, Video, Phone, MessageCircle, User } from 'lucide-react'
-import { format } from 'date-fns'
 import { motion, AnimatePresence } from 'framer-motion'
 import type { CheckinMeeting, Client } from '@/types'
 import { formatDate } from '@/lib/utils'
-import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { EVENT_TYPES, STATUS, BRAND } from '@/lib/constants'
 
 interface EventDetailModalProps {
@@ -133,39 +131,10 @@ export function EventDetailModal({ selected, clientMap, onClose, onReschedule, o
 interface CreateEventModalProps {
   isOpen: boolean
   onClose: () => void
-  selectedDate: Date
-  clients: Client[]
-  onSubmit: (data: {
-    client_id: string
-    scheduled_at: string
-    type: 'video' | 'call' | 'chat'
-    meeting_link: string
-    notes: string
-  }) => Promise<void>
-  isLoading: boolean
+  calLink?: string
 }
 
-export function CreateEventModal({ isOpen, onClose, selectedDate, clients, onSubmit, isLoading }: CreateEventModalProps) {
-  const [formClient, setFormClient] = useState('')
-  const [formDate, setFormDate] = useState(format(selectedDate, 'yyyy-MM-dd'))
-  const [formTime, setFormTime] = useState('09:00')
-  const [formType, setFormType] = useState<'video' | 'call' | 'chat'>('video')
-  const [formLink, setFormLink] = useState('')
-  const [formNotes, setFormNotes] = useState('')
-
-  const handleCreate = async (e: React.FormEvent) => {
-    e.preventDefault()
-    const date = new Date(`${formDate}T${formTime}`)
-    await onSubmit({
-      client_id: formClient,
-      scheduled_at: date.toISOString(),
-      type: formType,
-      meeting_link: formLink,
-      notes: formNotes,
-    })
-    onClose()
-  }
-
+export function CreateEventModal({ isOpen, onClose, calLink = 'dean-n89nvg/30min' }: CreateEventModalProps) {
   return (
     <AnimatePresence>
       {isOpen && (
@@ -181,111 +150,32 @@ export function CreateEventModal({ isOpen, onClose, selectedDate, clients, onSub
             animate={{ scale: 1, opacity: 1, y: 0 }}
             exit={{ scale: 0.94, opacity: 0, y: 16 }}
             transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-            className="relative w-full max-w-md bg-[var(--bg-card)] dark:bg-slate-900 overflow-hidden border border-[var(--border)] dark:border-white/[0.08] rounded-xl shadow-elevated"
+            className="relative w-full max-w-2xl bg-white dark:bg-[#1A1A1A] overflow-hidden rounded-2xl shadow-2xl"
             onClick={e => e.stopPropagation()}
           >
-            <div className="h-1.5 w-full" style={{ backgroundColor: BRAND.DEFAULT }} />
-
-            <div className="flex items-center justify-between px-7 pt-7 pb-5 border-b border-[var(--border)] dark:border-white/[0.06]">
-              <div>
-                <h2 className="text-lg font-semibold text-[var(--text-primary)] dark:text-slate-100">New Event</h2>
-                <p className="text-sm text-[var(--text-tertiary)] dark:text-slate-400">Schedule a session</p>
-              </div>
-              <button onClick={onClose} className="p-2 hover:bg-[#13131314] dark:hover:bg-white/[0.06] transition-colors rounded-lg">
-                <X size={18} className="text-[var(--text-tertiary)]" />
+            {/* Circular close button — reference: bg rgb(242,242,242), border-radius 90px */}
+            <div className="absolute top-4 right-4 z-10">
+              <button
+                onClick={onClose}
+                aria-label="Close"
+                className="flex items-center justify-center w-10 h-10 rounded-full transition-transform hover:scale-105 active:scale-95"
+                style={{ backgroundColor: 'rgb(242, 242, 242)' }}
+              >
+                <X size={18} className="text-black dark:text-black" />
               </button>
             </div>
 
-            <form onSubmit={handleCreate} className="px-7 py-5 space-y-4">
-              <div>
-                <label className="block text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--text-tertiary)] dark:text-slate-400 mb-2">Client</label>
-                <select
-                  value={formClient}
-                  onChange={e => setFormClient(e.target.value)}
-                  required
-                  className="w-full px-4 py-3 bg-[var(--bg-subtle)] dark:bg-white/[0.03] border border-[var(--border)] dark:border-white/[0.08] text-sm text-[var(--text-primary)] dark:text-slate-100 focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 transition-colors rounded-lg"
-                >
-                  <option value="">Select a client...</option>
-                  {clients.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-                </select>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--text-tertiary)] dark:text-slate-400 mb-2">Date</label>
-                  <input
-                    type="date"
-                    value={formDate}
-                    onChange={e => setFormDate(e.target.value)}
-                    required
-                    className="w-full px-4 py-3 bg-[var(--bg-subtle)] dark:bg-white/[0.03] border border-[var(--border)] dark:border-white/[0.08] text-sm text-[var(--text-primary)] dark:text-slate-100 focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 transition-colors rounded-lg"
-                  />
-                </div>
-                <div>
-                  <label className="block text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--text-tertiary)] dark:text-slate-400 mb-2">Time</label>
-                  <input
-                    type="time"
-                    value={formTime}
-                    onChange={e => setFormTime(e.target.value)}
-                    required
-                    className="w-full px-4 py-3 bg-[var(--bg-subtle)] dark:bg-white/[0.03] border border-[var(--border)] dark:border-white/[0.08] text-sm text-[var(--text-primary)] dark:text-slate-100 focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 transition-colors rounded-lg"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--text-tertiary)] dark:text-slate-400 mb-2">Type</label>
-                <select
-                  value={formType}
-                  onChange={e => setFormType(e.target.value as 'video' | 'call' | 'chat')}
-                  className="w-full px-4 py-3 bg-[var(--bg-subtle)] dark:bg-white/[0.03] border border-[var(--border)] dark:border-white/[0.08] text-sm text-[var(--text-primary)] dark:text-slate-100 focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 transition-colors rounded-lg"
-                >
-                  <option value="video">Video Call</option>
-                  <option value="call">Phone Call</option>
-                  <option value="chat">Chat</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--text-tertiary)] dark:text-slate-400 mb-2">Meeting Link</label>
-                <input
-                  type="url"
-                  value={formLink}
-                  onChange={e => setFormLink(e.target.value)}
-                  placeholder="https://meet.google.com/..."
-                  className="w-full px-4 py-3 bg-[var(--bg-subtle)] dark:bg-white/[0.03] border border-[var(--border)] dark:border-white/[0.08] text-sm text-[var(--text-primary)] dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 transition-colors rounded-lg"
-                />
-              </div>
-
-              <div>
-                <label className="block text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--text-tertiary)] dark:text-slate-400 mb-2">Notes</label>
-                <textarea
-                  value={formNotes}
-                  onChange={e => setFormNotes(e.target.value)}
-                  rows={3}
-                  placeholder="Agenda, topics to discuss..."
-                  className="w-full px-4 py-3 bg-[var(--bg-subtle)] dark:bg-white/[0.03] border border-[var(--border)] dark:border-white/[0.08] text-sm text-[var(--text-primary)] dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 transition-colors resize-none rounded-lg"
-                />
-              </div>
-
-              <div className="flex items-center justify-end gap-3 pt-4 border-t border-[var(--border)] dark:border-white/[0.06]">
-                <button
-                  type="button"
-                  onClick={onClose}
-                  className="px-5 py-2.5 text-sm font-semibold text-[var(--text-secondary)] hover:bg-[#13131314] dark:text-slate-400 dark:hover:bg-white/[0.06] transition-colors rounded-lg"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={isLoading}
-                  className="px-6 py-2.5 text-sm font-semibold text-white transition-colors rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-brand-700"
-                  style={{ backgroundColor: BRAND.DEFAULT }}
-                >
-                  {isLoading ? 'Saving...' : 'Save Event'}
-                </button>
-              </div>
-            </form>
+            {/* Cal.com inline embed */}
+            <div className="w-full h-full overflow-auto scrollbar-hide" style={{ maxHeight: '80vh' }}>
+              <iframe
+                className="cal-embed"
+                name="cal-embed"
+                title="Book a call"
+                allow="payment"
+                src={`https://app.cal.com/${calLink}/embed?layout=month_view&theme=auto&embedType=inline&ui.color-scheme=light`}
+                style={{ height: '570px', width: '100%', border: 'none' }}
+              />
+            </div>
           </motion.div>
         </motion.div>
       )}

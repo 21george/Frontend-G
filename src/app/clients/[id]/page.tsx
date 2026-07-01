@@ -5,8 +5,6 @@ import {
   useMessages,
   useSendMessage,
   useCheckins,
-  useCreateCheckin,
-  useUpdateCheckin,
   useDeleteCheckin,
   useWorkoutPlans,
   useNutritionPlans,
@@ -38,6 +36,7 @@ import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { formatDate } from "@/lib/utils";
 import { useSocketChat } from "@/lib/useSocketChat";
+import { diffChanged } from "@/lib/diffChanged";
 import toast from "react-hot-toast";
 import { motion } from "framer-motion";
 import type { CheckinMeeting, WorkoutPlan } from "@/types";
@@ -88,7 +87,14 @@ import {
 }*/
 }
 
-type TabKey = "workouts" | "nutrition" | "analytics" | "messages" | "checkins" | "plan-analysis" | "body";
+type TabKey =
+  | "workouts"
+  | "nutrition"
+  | "analytics"
+  | "messages"
+  | "checkins"
+  | "plan-analysis"
+  | "body";
 
 const TABS: { key: TabKey; label: string }[] = [
   { key: "workouts", label: "Workouts" },
@@ -100,31 +106,6 @@ const TABS: { key: TabKey; label: string }[] = [
   { key: "checkins", label: "Schedule" },
 ];
 
-interface ScheduleForm {
-  date: string;
-  time: string;
-  type: "call" | "video" | "chat";
-  meeting_link: string;
-  notes: string;
-}
-interface ScheduleModalState {
-  open: boolean;
-  date: Date | null;
-  checkinId: string | null;
-}
-const DEFAULT_FORM: ScheduleForm = {
-  date: "",
-  time: "09:00",
-  type: "video",
-  meeting_link: "",
-  notes: "",
-};
-const DEFAULT_SCHEDULE_MODAL: ScheduleModalState = {
-  open: false,
-  date: null,
-  checkinId: null,
-};
-
 export default function ClientDetailPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
@@ -133,11 +114,7 @@ export default function ClientDetailPage() {
   const [copied, setCopied] = useState(false);
   const [newCode, setNewCode] = useState<string | null>(null);
   const [tab, setTab] = useState<TabKey>("workouts");
-  const [scheduleModal, setScheduleModal] = useState<ScheduleModalState>(
-    DEFAULT_SCHEDULE_MODAL,
-  );
-  const [scheduleForm, setScheduleForm] = useState<ScheduleForm>(DEFAULT_FORM);
-  const [scheduling, setScheduling] = useState(false);
+  const [showScheduleModal, setShowScheduleModal] = useState(false);
   // Check-in chat panel (which check-in ID has chat open)
   const [activeChatId, setActiveChatId] = useState<string | null>(null);
   const [expandedPlan, setExpandedPlan] = useState<string | null>(null);
@@ -183,7 +160,8 @@ export default function ClientDetailPage() {
   const { data: media } = useClientMedia(id);
   const { data: workoutLogs } = useWorkoutLogs(id);
   const { data: workoutProgress } = useWorkoutProgress(id);
-  const { data: liveProgress, isLoading: liveProgressLoading } = useLiveProgress(id);
+  const { data: liveProgress, isLoading: liveProgressLoading } =
+    useLiveProgress(id);
   const sendMsg = useSendMessage();
   const uploadMedia = useUploadMessageMedia();
   const regenerateCode = useRegenerateCode(id);
@@ -193,8 +171,6 @@ export default function ClientDetailPage() {
     media_filename: string;
   } | null>(null);
   const [expandedLog, setExpandedLog] = useState<string | null>(null);
-  const createCheckin = useCreateCheckin();
-  const updateCheckin = useUpdateCheckin();
   const deleteCheckin = useDeleteCheckin();
   const deleteWorkoutPlan = useDeleteWorkoutPlan();
   const deleteClient = useDeleteClient();
@@ -208,18 +184,31 @@ export default function ClientDetailPage() {
     relayViaSocket,
   } = useSocketChat(id);
 
-  const closeScheduleModal = useCallback(() => {
-    setScheduleModal(DEFAULT_SCHEDULE_MODAL);
-    setScheduleForm(DEFAULT_FORM);
+  const revokeBlobUrl = useCallback((url: string | null) => {
+    if (url?.startsWith("blob:")) {
+      URL.revokeObjectURL(url);
+    }
   }, []);
 
-  const formatScheduleFormDate = useCallback((value: string) => {
-    const date = new Date(value);
-    const pad = (n: number) => String(n).padStart(2, "0");
-    return {
-      date: `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`,
-      time: `${pad(date.getHours())}:${pad(date.getMinutes())}`,
+  const resetEditPhotoState = useCallback(() => {
+    revokeBlobUrl(editPhotoPreview);
+    setEditPhotoFile(null);
+    setEditPhotoPreview(null);
+  }, [editPhotoPreview, revokeBlobUrl]);
+
+  const closeEditModal = useCallback(() => {
+    resetEditPhotoState();
+    setEditModal(false);
+  }, [resetEditPhotoState]);
+
+  useEffect(() => {
+    return () => {
+      revokeBlobUrl(editPhotoPreview);
     };
+  }, [editPhotoPreview, revokeBlobUrl]);
+
+  const closeScheduleModal = useCallback(() => {
+    setShowScheduleModal(false);
   }, []);
 
   const handleSend = async () => {
@@ -351,6 +340,7 @@ export default function ClientDetailPage() {
       occupation: client.occupation ?? "",
       sickness: client.sickness ?? "",
     });
+    revokeBlobUrl(editPhotoPreview);
     setEditPhotoFile(null);
     setEditPhotoPreview(client.profile_photo_url ?? null);
     setEditModal(true);
@@ -361,6 +351,46 @@ export default function ClientDetailPage() {
       toast.error("Name is required");
       return;
     }
+
+    // Build the payload as before
+    const payload: Record<string, any> = {
+      name: editForm.name.trim(),
+      email: editForm.email.trim() || undefined,
+      phone: editForm.phone.trim() || undefined,
+      gender: (editForm.gender as "male" | "female" | "other") || undefined,
+      date_of_birth: editForm.date_of_birth || undefined,
+      city: editForm.city.trim() || undefined,
+      address: editForm.address.trim() || undefined,
+      notes: editForm.notes.trim() || undefined,
+      nationality: editForm.nationality.trim() || undefined,
+      occupation: editForm.occupation.trim() || undefined,
+      sickness: editForm.sickness.trim() || undefined,
+    };
+    if (editForm.current_weight_kg.trim()) {
+      const w = parseFloat(editForm.current_weight_kg);
+      if (!isNaN(w)) payload.current_weight_kg = w;
+    }
+    if (editForm.height_cm.trim()) {
+      const h = parseInt(editForm.height_cm, 10);
+      if (!isNaN(h)) payload.height_cm = h;
+    }
+
+    // Client-side diff: if the form is identical to the original
+    // record, skip the network call entirely. The backend would
+    // also no-op (no changed fields -> no notification), but this
+    // is cheaper and gives a cleaner "no changes" toast.
+    const editableFields = Object.keys(payload);
+    const clientBefore = client as unknown as Record<string, unknown> | undefined;
+    const changedKeys = diffChanged(payload, clientBefore, {
+      fields: editableFields,
+    });
+
+    if (changedKeys.length === 0 && !editPhotoFile) {
+      toast("No changes to save", { icon: "ℹ️" });
+      closeEditModal();
+      return;
+    }
+
     setEditSaving(true);
     try {
       // Upload new photo first if selected
@@ -368,31 +398,17 @@ export default function ClientDetailPage() {
         await uploadClientPhoto.mutateAsync(editPhotoFile);
       }
 
-      const payload: Record<string, any> = {
-        name: editForm.name.trim(),
-        email: editForm.email.trim() || undefined,
-        phone: editForm.phone.trim() || undefined,
-        gender: (editForm.gender as 'male' | 'female' | 'other') || undefined,
-        date_of_birth: editForm.date_of_birth || undefined,
-        city: editForm.city.trim() || undefined,
-        address: editForm.address.trim() || undefined,
-        notes: editForm.notes.trim() || undefined,
-        nationality: editForm.nationality.trim() || undefined,
-        occupation: editForm.occupation.trim() || undefined,
-        sickness: editForm.sickness.trim() || undefined,
-      };
-      if (editForm.current_weight_kg.trim()) {
-        const w = parseFloat(editForm.current_weight_kg);
-        if (!isNaN(w)) payload.current_weight_kg = w;
-      }
-      if (editForm.height_cm.trim()) {
-        const h = parseInt(editForm.height_cm, 10);
-        if (!isNaN(h)) payload.height_cm = h;
-      }
       await updateClient.mutateAsync(payload);
-      setEditModal(false);
-      setEditPhotoFile(null);
-      setEditPhotoPreview(null);
+      // useUpdateClient already shows "Client updated successfully".
+      // If the backend reports zero actual changes (e.g. we sent
+      // trimmed strings that stringify to the same value as the DB
+      // stored), downgrade to an info toast.
+      const resultData = (updateClient.data as { data?: { changed_fields?: string[] } } | undefined)?.data;
+      const resultChanged = resultData?.changed_fields;
+      if (Array.isArray(resultChanged) && resultChanged.length === 0) {
+        toast("No fields actually changed", { icon: "ℹ️" });
+      }
+      closeEditModal();
     } catch {
       toast.error("Failed to update client");
     } finally {
@@ -401,27 +417,13 @@ export default function ClientDetailPage() {
   };
 
   // ── Schedule from calendar ────────────────────────────────────────────────
-  const openScheduleModal = useCallback((date: Date) => {
-    const pad = (n: number) => String(n).padStart(2, "0");
-    const dateStr = `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
-    setScheduleForm({ ...DEFAULT_FORM, date: dateStr });
-    setScheduleModal({ open: true, date, checkinId: null });
+  const openScheduleModal = useCallback(() => {
+    setShowScheduleModal(true);
   }, []);
 
-  const handleRescheduleCheckin = useCallback(
-    (meeting: CheckinMeeting) => {
-      const nextDate = new Date(meeting.scheduled_at);
-      setScheduleForm({
-        ...DEFAULT_FORM,
-        ...formatScheduleFormDate(meeting.scheduled_at),
-        type: meeting.type,
-        meeting_link: meeting.meeting_link ?? "",
-        notes: meeting.notes ?? "",
-      });
-      setScheduleModal({ open: true, date: nextDate, checkinId: meeting.id });
-    },
-    [formatScheduleFormDate],
-  );
+  const handleRescheduleCheckin = useCallback(() => {
+    setShowScheduleModal(true);
+  }, []);
 
   const handleCancelCheckin = useCallback(
     async (meeting: CheckinMeeting) => {
@@ -443,33 +445,6 @@ export default function ClientDetailPage() {
     },
     [activeChatId, deleteCheckin],
   );
-
-  const handleScheduleSubmit = async () => {
-    if (!scheduleForm.date || !scheduleForm.time) return;
-    setScheduling(true);
-    try {
-      const payload = {
-        scheduled_at: `${scheduleForm.date}T${scheduleForm.time}:00`,
-        type: scheduleForm.type,
-        meeting_link: scheduleForm.meeting_link || undefined,
-        notes: scheduleForm.notes || undefined,
-        status: "scheduled",
-      } as const;
-
-      if (scheduleModal.checkinId) {
-        await updateCheckin.mutateAsync({
-          id: scheduleModal.checkinId,
-          ...payload,
-        });
-      } else {
-        await createCheckin.mutateAsync({ client_id: id, ...payload });
-      }
-
-      closeScheduleModal();
-    } finally {
-      setScheduling(false);
-    }
-  };
 
   const allMessages = useMemo(() => {
     const rest: any[] = messagesData?.data ?? [];
@@ -674,8 +649,6 @@ export default function ClientDetailPage() {
                   setExpandedPlan={setExpandedPlan}
                   expandedLog={expandedLog}
                   setExpandedLog={setExpandedLog}
-                  onDeleteWorkout={handleDeleteWorkout}
-                  isDeleteWorkoutPending={deleteWorkoutPlan.isPending}
                 />
               )}
 
@@ -690,9 +663,7 @@ export default function ClientDetailPage() {
               )}
 
               {/* ─── Body tab ─────────────────────────────────── */}
-              {tab === "body" && (
-                <BodyAnalysisTab clientId={id} />
-              )}
+              {tab === "body" && <BodyAnalysisTab clientId={id} />}
 
               {/* ─── Analytics tab ──────────────────────────────── */}
               {tab === "analytics" && (
@@ -700,9 +671,7 @@ export default function ClientDetailPage() {
               )}
 
               {/* ─── Plan Analysis tab ─────────────────────────── */}
-              {tab === "plan-analysis" && (
-                <PlanAnalysisTab clientId={id} />
-              )}
+              {tab === "plan-analysis" && <PlanAnalysisTab clientId={id} />}
 
               {/* ─── Messages tab ───────────────────────────────── */}
               {tab === "messages" && (
@@ -751,15 +720,8 @@ export default function ClientDetailPage() {
 
       {/* Schedule modal */}
       <ScheduleModal
-        open={scheduleModal.open}
+        open={showScheduleModal}
         onClose={closeScheduleModal}
-        checkinId={scheduleModal.checkinId}
-        form={scheduleForm}
-        onFormChange={(updates) =>
-          setScheduleForm((f) => ({ ...f, ...updates }))
-        }
-        onSubmit={handleScheduleSubmit}
-        isSubmitting={scheduling}
       />
 
       {/* Delete confirmation modal */}
@@ -786,7 +748,7 @@ export default function ClientDetailPage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div
             className="absolute inset-0 bg-black/50 backdrop-blur-sm"
-            onClick={() => !editSaving && setEditModal(false)}
+            onClick={() => !editSaving && closeEditModal()}
           />
           <motion.div
             initial={{ scale: 0.95, opacity: 0, y: 20 }}
@@ -799,7 +761,7 @@ export default function ClientDetailPage() {
                 Edit Client
               </h3>
               <button
-                onClick={() => setEditModal(false)}
+                onClick={closeEditModal}
                 className="p-1 text-[var(--text-tertiary)] hover:text-[var(--text-primary)]"
               >
                 <X size={16} />
@@ -810,7 +772,7 @@ export default function ClientDetailPage() {
               {/* Profile Photo */}
               <div className="flex items-center gap-4">
                 <div className="relative">
-                  {(editPhotoPreview || client?.profile_photo_url) ? (
+                  {editPhotoPreview || client?.profile_photo_url ? (
                     <img
                       src={editPhotoPreview || client?.profile_photo_url}
                       alt="Profile"
@@ -832,6 +794,7 @@ export default function ClientDetailPage() {
                     onChange={(e) => {
                       const file = e.target.files?.[0];
                       if (file) {
+                        revokeBlobUrl(editPhotoPreview);
                         setEditPhotoFile(file);
                         setEditPhotoPreview(URL.createObjectURL(file));
                       }

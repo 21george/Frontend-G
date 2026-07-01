@@ -402,7 +402,7 @@ function SkeletonRow() {
 
 export default function NutritionPlansPage() {
   const { data: rawPlans = [], isLoading } = useNutritionPlans();
-  const { data: clients = [], isLoading: clientsLoading } = useAllClients();
+  const { data: clients = [] } = useAllClients();
 
   const [activeTab, setActiveTab] = useState<MealTab>("All");
   const [search, setSearch] = useState("");

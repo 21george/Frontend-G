@@ -14,6 +14,21 @@ export interface Column<T> {
   className?: string
 }
 
+function SortIcon({
+  colKey,
+  sortKey,
+  sortDir,
+}: {
+  colKey: string
+  sortKey: string | null
+  sortDir: 'asc' | 'desc'
+}) {
+  if (sortKey !== colKey) return <ChevronsUpDown className="w-3.5 h-3.5 text-slate-300" />
+  return sortDir === 'asc'
+    ? <ChevronUp className="w-3.5 h-3.5 text-brand-700" />
+    : <ChevronDown className="w-3.5 h-3.5 text-brand-700" />
+}
+
 interface DataTableProps<T> {
   data: T[]
   columns: Column<T>[]
@@ -66,15 +81,8 @@ export function DataTable<T>({
     }
   }
 
-  const SortIcon = ({ colKey }: { colKey: string }) => {
-    if (sortKey !== colKey) return <ChevronsUpDown className="w-3.5 h-3.5 text-slate-300" />
-    return sortDir === 'asc'
-      ? <ChevronUp className="w-3.5 h-3.5 text-brand-700" />
-      : <ChevronDown className="w-3.5 h-3.5 text-brand-700" />
-  }
-
   return (
-    <div className={cn('bg-[var(--bg-card)]  border border-[var(--border)]  overflow-hidden', className)}>
+    <div className={cn('bg-[var(--bg-card)] border border-[var(--border)] overflow-hidden', className)}>
       {/* Toolbar */}
       {(searchable || headerActions) && (
         <div className="flex items-center justify-between gap-3 px-4 py-3 border-b border-[var(--border)] dark:border-white/[0.06]">
@@ -101,7 +109,7 @@ export function DataTable<T>({
                 <th
                   key={col.key}
                   className={cn(
-                    'px-4 py-2.5 text-left text-[11px] font-semibold text-[var(--text-tertiary)]  uppercase tracking-wider',
+                    'px-4 py-2.5 text-left text-[11px] font-semibold text-[var(--text-tertiary)] uppercase tracking-wider',
                     col.sortable && 'cursor-pointer select-none hover:text-[var(--text-secondary)] dark:hover:text-slate-200',
                     col.className,
                   )}
@@ -109,7 +117,7 @@ export function DataTable<T>({
                 >
                   <span className="inline-flex items-center gap-1.5">
                     {col.header}
-                    {col.sortable && <SortIcon colKey={col.key} />}
+                    {col.sortable && <SortIcon colKey={col.key} sortKey={sortKey} sortDir={sortDir} />}
                   </span>
                 </th>
               ))}
@@ -133,7 +141,7 @@ export function DataTable<T>({
                   )}
                 >
                   {columns.map((col) => (
-                    <td key={col.key} className={cn('px-4 py-3 text-sm text-[var(--text-secondary)] ', col.className)}>
+                    <td key={col.key} className={cn('px-4 py-3 text-sm text-[var(--text-secondary)]', col.className)}>
                       {col.render(item)}
                     </td>
                   ))}

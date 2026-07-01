@@ -63,35 +63,71 @@ frontend/
 │   ├── app/                       # Next.js App Router pages
 │   │   ├── auth/login/            # Login page
 │   │   ├── dashboard/             # Main dashboard
-│   │   ├── clients/               # Client management
-│   │   ├── workout-plans/         # Workout plan builder
+│   │   ├── clients/[id]/          # Client detail (workouts, nutrition, analytics, messages, body, plan)
+│   │   ├── clients/               # Client list & management
+│   │   ├── workout-plans/         # Workout plan builder + assignment
+│   │   ├── import-excel/          # Bulk XLSX/CSV workout import
 │   │   ├── nutrition-plans/       # Nutrition plan manager
 │   │   ├── checkins/              # Check-in scheduling
 │   │   ├── messages/              # Coach–client messaging
-│   │   ├── coaching-sessions/     # 1:1 session management
+│   │   ├── coaching-sessions/     # 1-on-1 video session management
 │   │   ├── live-training/         # Live group training sessions
-│   │   ├── analytics/             # Client analytics & reports
+│   │   ├── analytics/             # Platform-wide analytics & reports
 │   │   ├── media/                 # Media library
-│   │   ├── notifications/         # Notification center
-│   │   ├── billing/               # Subscription & invoices
-│   │   ├── settings/              # Profile, integrations, notifications
-│   │   └── providers.tsx          # QueryClient + Redux + theme providers
-│   ├── components/                # Shared UI components
-│   ├── hooks/                     # React Query data hooks (per domain)
+│   │   ├── notifications/         # Notification centre
+│   │   ├── billing/               # Subscription, invoices & payment methods
+│   │   ├── subscription/          # Subscription onboarding flow
+│   │   ├── settings/              # Profile, integrations, notification prefs
+│   │   ├── api/                   # Next.js route handlers (server-side helpers)
+│   │   └── providers.tsx          # QueryClient + theme providers
+│   ├── components/
+│   │   ├── auth/                  # Login form, protected-route guard
+│   │   ├── billing/               # Plan cards, payment method UI
+│   │   ├── charts/                # Recharts wrappers (progress, analytics)
+│   │   ├── clients/               # Client list, edit modal, block/delete dialogs
+│   │   ├── coaching/              # Coaching session cards, LiveKit video call
+│   │   ├── dashboard/             # Stats overview, upcoming events widget
+│   │   ├── layout/                # Sidebar, topbar, mobile nav
+│   │   ├── messages/              # Chat thread, message bubble, media upload
+│   │   ├── notifications/         # Notification bell, dropdown, list
+│   │   ├── subscription/          # Trial reminder banner, upgrade prompt
+│   │   ├── ui/                    # Headless primitives (Button, Modal, Badge…)
+│   │   ├── weather/               # Weather card widget
+│   │   ├── workout-plans/         # Plan builder, exercise drag-and-drop
+│   │   └── Background/            # Animated page background
+│   ├── hooks/                     # TanStack Query data hooks (one file per domain)
+│   │   ├── useClients.ts          # CRUD + block/unblock/photo/analytics/measurements
+│   │   ├── useWorkoutPlans.ts     # Plan CRUD, import, assignment
+│   │   ├── useWorkoutAnalysis.ts  # AI analysis generation + approve/reject/assign
+│   │   ├── useNutritionPlans.ts   # Nutrition plan CRUD + assignment
+│   │   ├── useCheckins.ts         # Check-in scheduling
+│   │   ├── useMessages.ts         # Message threads + polling
+│   │   ├── useCoachingSessions.ts # 1-on-1 session CRUD + LiveKit tokens
+│   │   ├── useLiveTraining.ts     # Live training sessions
+│   │   ├── useAnalytics.ts        # Coach + client analytics
+│   │   ├── useInvoices.ts         # Invoice listing + download
+│   │   ├── useSubscription.ts     # Subscription status + checkout
+│   │   ├── useSettings.ts         # Profile, notification, integration settings
+│   │   ├── useNotifications.ts    # In-app notifications
+│   │   ├── useMedia.ts            # Media upload/listing
+│   │   ├── useTrialReminder.ts    # 14-day free trial countdown banner
+│   │   ├── useNearbyGyms.ts       # Geolocation gym search
+│   │   ├── useWeather.ts          # OpenWeather widget
+│   │   └── useToastMutation.ts    # Generic toast-on-mutation helper
 │   ├── lib/
 │   │   ├── api/
-│   │   │   ├── client.ts          # Axios instance (auth interceptors, 401 refresh)
+│   │   │   ├── client.ts          # Axios instance — auth interceptors, 401 auto-refresh
 │   │   │   ├── index.ts           # Barrel export
-│   │   │   └── services/          # Domain API functions (clients, workouts, etc.)
+│   │   │   └── services/          # Domain API functions (one file per domain)
 │   │   ├── env.ts                 # Resolves NEXT_PUBLIC_API_URL
 │   │   ├── validateUrl.ts         # Safe redirect helper (SSRF prevention)
-│   │   └── useSocketChat.ts       # Polling-based real-time chat
-│   ├── middleware.ts               # Edge middleware: JWT cookie guard → /auth/login
+│   │   └── useSocketChat.ts       # Polling-based real-time chat hook
+│   ├── middleware.ts               # Edge: JWT cookie guard → redirects to /auth/login
 │   ├── store/
-│   │   ├── auth.ts                # Zustand: coach session + token refresh
-│   │   ├── subscription.ts        # Zustand: subscription state
+│   │   ├── auth.ts                # Zustand: coach session, token refresh, logout callbacks
+│   │   ├── subscription.ts        # Zustand: subscription tier + status
 │   │   ├── theme.ts               # Zustand: dark / light mode
-│   │   └── ui.ts                  # Redux: UI side-effects
+│   │   └── ui.ts                  # Zustand: UI side-effects
 │   └── types/                     # TypeScript type definitions
 ├── e2e/                           # Playwright end-to-end tests
 ├── .env.local.example
@@ -104,10 +140,11 @@ frontend/
 
 ## Auth Flow
 
-1. Coach logs in at `/auth/login` → backend sets `access_token` + `refresh_token` httpOnly cookies and returns tokens in response body.
+1. Coach logs in at `/auth/login` → backend sets `access_token` + `refresh_token` httpOnly cookies and returns tokens in the response body.
 2. Axios request interceptor attaches `Authorization: Bearer <token>` from Zustand store on every request.
-3. On 401, the interceptor calls `POST /auth/refresh` (cookie-based), updates Zustand state, and retries the original request.
-4. Edge middleware (`middleware.ts`) validates JWT expiry on every navigation — expired/missing cookies redirect to `/auth/login`.
+3. On 401, the interceptor calls `POST /auth/refresh` (cookie-based), updates the Zustand store, and retries the original request.
+4. Edge middleware (`middleware.ts`) validates JWT expiry on every navigation — expired or missing cookies redirect to `/auth/login`.
+5. `auth.ts` exposes `onLogout(callback)` so other modules can register cleanup functions. Each callback is wrapped in try-catch so one failing callback never blocks the others from running.
 
 ---
 

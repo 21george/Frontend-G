@@ -1,35 +1,45 @@
-import { create } from 'zustand'
-import { persist } from 'zustand/middleware'
-import type { Coach } from '@/types'
-import { setAuthInvalidationCallback, setAuthTokenGetter, setTokenRefreshCallback } from '@/lib/api/client'
-import api from '@/lib/api/client'
-import { resolveBaseUrl } from '@/lib/env'
+import { create } from "zustand";
+import { persist } from "zustand/middleware";
+import type { Coach } from "@/types";
+import {
+  setAuthInvalidationCallback,
+  setAuthTokenGetter,
+  setTokenRefreshCallback,
+} from "@/lib/api/client";
+import api from "@/lib/api/client";
+import { resolveBaseUrl } from "@/lib/env";
 
 /* ── Logout callbacks ─────────────────────────────────────────────────────── */
-const logoutCallbacks = new Set<() => void>()
+const logoutCallbacks = new Set<() => void>();
 
 export function onLogout(callback: () => void) {
-  logoutCallbacks.add(callback)
+  logoutCallbacks.add(callback);
   return () => {
-    logoutCallbacks.delete(callback)
-  }
+    logoutCallbacks.delete(callback);
+  };
 }
 
 function runLogoutCallbacks() {
-  logoutCallbacks.forEach((cb) => cb())
+  logoutCallbacks.forEach((cb) => {
+    try {
+      cb();
+    } catch (error) {
+      console.error("Logout callback failed", error);
+    }
+  });
 }
 
 /* ── Store ────────────────────────────────────────────────────────────────── */
 interface AuthState {
-  coach: Coach | null
-  isAuthenticated: boolean
-  accessToken: string | null
-  setCoach: (coach: Coach, token?: string) => void
-  updateCoach: (coach: Coach) => void
-  logout: () => void
-  clearAuth: () => void
-  setToken: (token: string) => void
-  refreshAccessToken: () => Promise<string | null>
+  coach: Coach | null;
+  isAuthenticated: boolean;
+  accessToken: string | null;
+  setCoach: (coach: Coach, token?: string) => void;
+  updateCoach: (coach: Coach) => void;
+  logout: () => void;
+  clearAuth: () => void;
+  setToken: (token: string) => void;
+  refreshAccessToken: () => Promise<string | null>;
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -39,57 +49,63 @@ export const useAuthStore = create<AuthState>()(
       isAuthenticated: false,
       accessToken: null,
       setCoach: (coach, token) => {
-        set({ coach, isAuthenticated: true, accessToken: token ?? null })
+        set({ coach, isAuthenticated: true, accessToken: token ?? null });
       },
       updateCoach: (coach) => {
-        set({ coach, isAuthenticated: true })
+        set({ coach, isAuthenticated: true });
       },
       setToken: (token) => {
-        set({ accessToken: token })
+        set({ accessToken: token });
       },
       logout: () => {
-        const token = get().accessToken
+        const token = get().accessToken;
         fetch(`${resolveBaseUrl()}/auth/logout`, {
-          method: 'POST',
-          credentials: 'include',
+          method: "POST",
+          credentials: "include",
           headers: token ? { Authorization: `Bearer ${token}` } : undefined,
-        }).catch(() => {})
-        runLogoutCallbacks()
-        set({ coach: null, isAuthenticated: false, accessToken: null })
+        }).catch(() => {});
+        runLogoutCallbacks();
+        set({ coach: null, isAuthenticated: false, accessToken: null });
       },
       clearAuth: () => {
         // Clear local state only (e.g., when session expires or 401/403 received)
-        runLogoutCallbacks()
-        set({ coach: null, isAuthenticated: false, accessToken: null })
+        runLogoutCallbacks();
+        set({ coach: null, isAuthenticated: false, accessToken: null });
       },
       refreshAccessToken: async () => {
         try {
-          const res = await api.post('/auth/refresh')
-          const token = res.data?.data?.access_token ?? null
+          const res = await api.post("/auth/refresh");
+          const token = res.data?.data?.access_token ?? null;
           if (token) {
-            set({ accessToken: token })
+            set({ accessToken: token });
           }
-          return token
+          return token;
         } catch {
           // Refresh failed — clear auth so the user is redirected to login
-          get().clearAuth()
-          return null
+          get().clearAuth();
+          return null;
         }
       },
     }),
-    { name: 'coach-auth', partialize: (s) => ({ coach: s.coach, isAuthenticated: s.isAuthenticated }) }
-  )
-)
+    {
+      name: "coach-auth",
+      partialize: (s) => ({
+        coach: s.coach,
+        isAuthenticated: s.isAuthenticated,
+      }),
+    },
+  ),
+);
 
 // Register callback for API client to clear auth on 403/refresh failure
 setAuthInvalidationCallback(() => {
-  useAuthStore.getState().clearAuth()
-})
+  useAuthStore.getState().clearAuth();
+});
 
 // Register token getter for API client request interceptor
-setAuthTokenGetter(() => useAuthStore.getState().accessToken)
+setAuthTokenGetter(() => useAuthStore.getState().accessToken);
 
 // Register callback so interceptor can update token after refresh
 setTokenRefreshCallback((token) => {
-  useAuthStore.getState().setToken(token)
-})
+  useAuthStore.getState().setToken(token);
+});

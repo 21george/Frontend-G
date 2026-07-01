@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useCallback } from 'react'
+import { useCallback } from 'react'
 import { format, isToday, isSameDay } from 'date-fns'
 import { motion } from 'framer-motion'
 import { Video, Phone, MessageCircle, ArrowRight } from 'lucide-react'

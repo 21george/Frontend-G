@@ -5,7 +5,7 @@ import DashboardLayout from '@/components/layout/DashboardLayout'
 import { useIntegrations, useUpdateIntegrations } from '@/lib/hooks'
 import { Skeleton } from '@/components/ui/Skeleton'
 import { Button } from '@/components/ui/button'
-import { Link2, Key, Copy, Check, Globe, ArrowLeft } from 'lucide-react'
+import { Key, Copy, Check, Globe, ArrowLeft } from 'lucide-react'
 import Link from 'next/link'
 
 function IntegrationsSkeleton() {

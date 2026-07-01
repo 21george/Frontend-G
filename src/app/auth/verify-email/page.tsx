@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useCallback, useEffect, useRef } from 'react';
+import { useCallback, useEffect, useRef, useState, type KeyboardEvent, type ClipboardEvent } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { Loader2, Mail, RotateCcw } from 'lucide-react';
@@ -27,12 +27,12 @@ export default function VerifyEmailPage() {
   const coachId = searchParams.get('id');
   const setCoach = useAuthStore((s) => s.setCoach);
 
-  const [digits, setDigits] = React.useState<string[]>(Array(CODE_LENGTH).fill(''));
-  const [error, setError] = React.useState<string | null>(null);
-  const [isVerifying, setIsVerifying] = React.useState(false);
-  const [isResending, setIsResending] = React.useState(false);
-  const [resendCooldown, setResendCooldown] = React.useState(0);
-  const [success, setSuccess] = React.useState(false);
+  const [digits, setDigits] = useState<string[]>(Array(CODE_LENGTH).fill(''));
+  const [error, setError] = useState<string | null>(null);
+  const [isVerifying, setIsVerifying] = useState(false);
+  const [isResending, setIsResending] = useState(false);
+  const [resendCooldown, setResendCooldown] = useState(0);
+  const [success, setSuccess] = useState(false);
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
   // Redirect if no coach_id
@@ -67,7 +67,7 @@ export default function VerifyEmailPage() {
   );
 
   const handleKeyDown = useCallback(
-    (index: number, e: React.KeyboardEvent<HTMLInputElement>) => {
+    (index: number, e: KeyboardEvent<HTMLInputElement>) => {
       if (e.key === 'Backspace' && !digits[index] && index > 0) {
         inputRefs.current[index - 1]?.focus();
       }
@@ -75,7 +75,7 @@ export default function VerifyEmailPage() {
     [digits]
   );
 
-  const handlePaste = useCallback((e: React.ClipboardEvent) => {
+  const handlePaste = useCallback((e: ClipboardEvent) => {
     e.preventDefault();
     const pasted = e.clipboardData.getData('text').replace(/\D/g, '').slice(0, CODE_LENGTH);
     if (!pasted) return;

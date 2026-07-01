@@ -10,8 +10,6 @@ import {
   ImageIcon,
   Clock,
   ChevronDown,
-  Trash2,
-  Loader2,
   Play,
 } from "lucide-react";
 import Link from "next/link";
@@ -44,8 +42,6 @@ interface Props {
   setExpandedPlan: (id: string | null) => void;
   expandedLog: string | null;
   setExpandedLog: (id: string | null) => void;
-  onDeleteWorkout: (plan: WorkoutPlan) => void;
-  isDeleteWorkoutPending: boolean;
 }
 
 function ExerciseBadge({ ex, color }: { ex: Exercise; color: string }) {
@@ -82,12 +78,10 @@ function DayBlock({
   day,
   planId,
   completedDaysMap,
-  idx,
 }: {
   day: WorkoutProgressDay;
   planId: string;
   completedDaysMap: Record<string, boolean>;
-  idx: number;
 }) {
   const dayCategory = getWorkoutCategory(day.exercises ?? []);
   const dayCfg = CATEGORY_CONFIG[dayCategory];
@@ -138,253 +132,6 @@ function DayBlock({
           ))}
         </div>
       ) : null}
-    </div>
-  );
-}
-
-function WorkoutPlanCard({
-  plan,
-  completedDaysMap,
-  expandedPlan,
-  setExpandedPlan,
-  onDeleteWorkout,
-  isDeleteWorkoutPending,
-}: {
-  plan: WorkoutPlan;
-  completedDaysMap: Record<string, boolean>;
-  expandedPlan: string | null;
-  setExpandedPlan: (id: string | null) => void;
-  onDeleteWorkout: (plan: WorkoutPlan) => void;
-  isDeleteWorkoutPending: boolean;
-}) {
-  const allExercises = plan.days?.flatMap((d) => d.exercises ?? []) ?? [];
-  const planCategory = getWorkoutCategory(allExercises);
-  const catCfg = CATEGORY_CONFIG[planCategory];
-  const isExpanded = expandedPlan === plan.id;
-  const totalExercises = allExercises.length;
-  const completedDays =
-    plan.days?.filter(
-      (d) => completedDaysMap[`${plan.id}-${d.day.toLowerCase()}`],
-    ).length ?? 0;
-  const totalDays = plan.days?.length ?? 0;
-
-  return (
-    <div
-      className={`transition-all overflow-hidden ${isExpanded ? "border-blue-300 dark:border-blue-700/50" : "border-[var(--border)] dark:border-white/[0.07]"} bg-[var(--bg-card)]`}
-    >
-      <div className="flex flex-col gap-3 p-4 sm:p-5 bg-[var(--bg-card)]">
-        <div className="flex items-start gap-3 sm:gap-4">
-          <div
-            className="w-10 h-10 flex items-center justify-center flex-shrink-0 text-xl"
-            style={{ background: catCfg.bg }}
-          >
-            {catCfg.icon}
-          </div>
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 flex-wrap">
-              <p className="text-[14px] font-semibold text-[var(--text-primary)] dark:text-[var(--text-primary)] leading-snug">
-                {plan.title}
-              </p>
-              <span
-                className="text-[10px] font-semibold px-1.5 py-0.5"
-                style={{ color: catCfg.color, background: catCfg.bg }}
-              >
-                {catCfg.label}
-              </span>
-            </div>
-            <p className="text-[12px] text-[var(--text-secondary)] dark:text-[var(--text-secondary)] mt-0.5 line-clamp-1">
-              Week of {formatDate(plan.week_start, "MMM d, yyyy")} · {totalDays}{" "}
-              days · {totalExercises} exercises
-              {completedDays > 0 &&
-                ` · ${completedDays}/${totalDays} completed`}
-            </p>
-          </div>
-          <div className="flex items-center gap-2 flex-shrink-0 flex-wrap justify-end">
-            <span
-              className={`inline-flex rounded-8 items-center gap-1 px-2.5 py-1 text-[11px] font-semibold ${
-                plan.status === "active"
-                  ? "bg-emerald-100 dark:bg-emerald-900/25 text-emerald-700 dark:text-emerald-400"
-                  : plan.status === "completed"
-                    ? "bg-blue-100 dark:bg-blue-900/25 text-blue-700 dark:text-blue-400"
-                    : "bg-[var(--bg-subtle)] dark:bg-white/[0.06] text-[var(--text-secondary)] dark:text-[var(--text-tertiary)]"
-              }`}
-            >
-              <span
-                className={`w-1.5 h-1.5 rounded-full ${plan.status === "active" ? "bg-emerald-500" : plan.status === "completed" ? "bg-blue-500" : "bg-slate-400"}`}
-              />
-              {plan.status}
-            </span>
-            <button
-              onClick={() => setExpandedPlan(isExpanded ? null : plan.id)}
-              className="hidden sm:flex items-center rounded-s-xl gap-1 px-3 py-1.5 border border-[var(--border)] dark:border-white/[0.08] bg-[var(--bg-card)] dark:bg-white/[0.03] text-[11px] font-semibold text-[var(--text-secondary)] dark:text-[var(--text-tertiary)] hover:bg-[#13131314] dark:hover:bg-white/[0.06] transition-colors"
-            >
-              View Details
-              <ChevronDown
-                size={12}
-                className={`transition-transform ${isExpanded ? "rotate-180" : ""}`}
-              />
-            </button>
-            <button
-              onClick={() => onDeleteWorkout(plan)}
-              disabled={isDeleteWorkoutPending}
-              className="w-8 h-8  border-[var(--border)] dark:border-white/[0.08] flex items-center justify-center text-[var(--text-tertiary)] hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors disabled:opacity-50"
-            >
-              {isDeleteWorkoutPending ? (
-                <Loader2 size={14} className="animate-spin" />
-              ) : (
-                <Trash2 size={14} />
-              )}
-            </button>
-          </div>
-        </div>
-        <button
-          onClick={() => setExpandedPlan(isExpanded ? null : plan.id)}
-          className="sm:hidden flex items-center justify-center gap-1 px-3 py-1.5 rounded-s-xl border border-[var(--border)] dark:border-white/[0.08] bg-[var(--bg-card)] dark:bg-white/[0.03] text-[11px] font-semibold text-[var(--text-secondary)] dark:text-[var(--text-tertiary)]"
-        >
-          {isExpanded ? "Hide Details" : "View Details"}
-          <ChevronDown
-            size={12}
-            className={`transition-transform ${isExpanded ? "rotate-180" : ""}`}
-          />
-        </button>
-      </div>
-
-      {isExpanded && (
-        <div className="border-t border-[var(--border)] dark:border-white/[0.06]">
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 p-4 sm:p-5 bg-[var(--bg-card)]">
-            {[
-              {
-                label: "Week",
-                value: formatDate(plan.week_start, "MMM d, yyyy"),
-              },
-              { label: "Days", value: `${totalDays} training days` },
-              { label: "Exercises", value: `${totalExercises} total` },
-              {
-                label: "Progress",
-                value: `${completedDays}/${totalDays} completed`,
-              },
-            ].map(({ label, value }) => (
-              <div key={label}>
-                <p className="text-[11px] font-semibold text-[var(--text-tertiary)] dark:text-[var(--text-tertiary)] uppercase tracking-wider">
-                  {label}
-                </p>
-                <p className="text-[13px] font-medium text-[var(--text-primary)] dark:text-white mt-0.5">
-                  {value}
-                </p>
-              </div>
-            ))}
-          </div>
-          {plan.notes && (
-            <div className="mx-4 sm:mx-5 mb-4 p-3 ">
-              <p className="text-[12px] font-semibold ">{plan.notes}</p>
-            </div>
-          )}
-          {plan.days?.length ? (
-            <div className="divide-y divide-slate-100 dark:divide-white/[0.04] bg-[var(--bg-card)]">
-              {plan.days.map((day, idx) => {
-                const dayCategory = getWorkoutCategory(day.exercises ?? []);
-                const dayCfg = CATEGORY_CONFIG[dayCategory];
-                const isCompleted =
-                  completedDaysMap[`${plan.id}-${day.day.toLowerCase()}`] ??
-                  false;
-                return (
-                  <div key={idx} className="p-4 sm:px-5">
-                    <div className="flex items-center gap-3 mb-3">
-                      <div
-                        className="w-9 h-9 flex items-center justify-center text-lg flex-shrink-0"
-                        style={{ background: dayCfg.bg }}
-                      >
-                        {dayCfg.icon}
-                      </div>
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2">
-                          <p className="text-[13px] font-medium text-[var(--text-primary)] dark:text-[var(--text-primary)]">
-                            {day.day}
-                          </p>
-                          <span
-                            className="text-[10px] font-medium px-1.5 py-0.5 rounded-s-xl"
-                            style={{
-                              color: dayCfg.color,
-                              background: dayCfg.bg,
-                            }}
-                          >
-                            {dayCfg.label}
-                          </span>
-                          {isCompleted && (
-                            <span className="flex items-center gap-1 text-[10px] font-semibold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-1.5 py-0.5">
-                              <CheckCircle2 size={9} /> Completed
-                            </span>
-                          )}
-                        </div>
-                        <p className="text-[11px] text-[var(--text-secondary)] dark:text-[var(--text-secondary)]">
-                          {day.exercises?.length ?? 0} exercises
-                        </p>
-                      </div>
-                      <div
-                        className={`w-5 h-5 border-2 flex items-center justify-center flex-shrink-0 ${isCompleted ? "border-emerald-400 bg-emerald-400/10" : "border-[var(--border)] dark:border-white/10"}`}
-                      >
-                        {isCompleted && (
-                          <Check size={10} className="text-emerald-400" />
-                        )}
-                      </div>
-                    </div>
-                    {day.exercises?.length ? (
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 ml-12">
-                        {day.exercises.map((ex, ei) => (
-                          <div
-                            key={ei}
-                            className="flex items-center gap-2 p-2 bg-[var(--bg-subtle)] dark:bg-white/[0.02] border border-[var(--border)] dark:border-white/[0.05]"
-                          >
-                            <div
-                              className="w-1.5 h-1.5 flex-shrink-0"
-                              style={{ background: dayCfg.color }}
-                            />
-                            <div className="min-w-0 flex-1">
-                              <p className="text-[12px] text-[var(--text-secondary)] dark:text-[var(--text-tertiary)] truncate">
-                                {ex.name}
-                              </p>
-                              <p className="text-[10px] text-[var(--text-secondary)] dark:text-[var(--text-secondary)]">
-                                {ex.sets}×{ex.reps}
-                                {ex.rest_seconds
-                                  ? ` · ${ex.rest_seconds}s`
-                                  : ""}
-                              </p>
-                            </div>
-                            {ex.demo_video_url && (
-                              <a
-                                href={ex.demo_video_url}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="flex-shrink-0 text-blue-500 hover:text-blue-300 transition-colors"
-                              >
-                                <Video size={11} />
-                              </a>
-                            )}
-                          </div>
-                        ))}
-                      </div>
-                    ) : null}
-                  </div>
-                );
-              })}
-            </div>
-          ) : (
-            <div className="p-6 text-center bg-[var(--bg-card)]">
-              <p className="text-[12px] text-[var(--text-secondary)] dark:text-[var(--text-secondary)]">
-                No workout days defined
-              </p>
-            </div>
-          )}
-          <div className="border-t border-[var(--border)] dark:border-white/[0.06] p-4 sm:px-5 flex items-center justify-end gap-2 bg-[var(--bg-card)]">
-            <Link
-              href={`/workout-plans/${plan.id}`}
-              className="inline-flex items-center gap-1.5 px-4 py-2 text-[12px] rounded-s-xl font-semibold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/15 hover:bg-blue-100 dark:hover:bg-blue-900/25 transition-colors"
-            >
-              <ExternalLink size={12} /> Open Plan
-            </Link>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
@@ -622,8 +369,6 @@ export function ClientWorkoutsTab({
   setExpandedPlan,
   expandedLog,
   setExpandedLog,
-  onDeleteWorkout,
-  isDeleteWorkoutPending,
 }: Props) {
   return (
     <div className="space-y-5">
@@ -649,37 +394,6 @@ export function ClientWorkoutsTab({
         </Link>
       </div>
 
-      {/*  {(plans?.data ?? []).length === 0 ? (
-        <div className="border-2 border-dashed border-[var(--border)] dark:border-white/[0.08] bg-[var(--bg-card)] dark:bg-transparent p-12 text-center">
-          <Dumbbell className="w-10 h-10 mx-auto mb-3 text-[var(--text-tertiary)] dark:text-[var(--text-secondary)]" />
-          <p className="text-[14px] font-medium text-[var(--text-secondary)] dark:text-[var(--text-secondary)] mb-1">
-            No workout plans yet
-          </p>
-          <p className="text-[12px] text-[var(--text-tertiary)] dark:text-[var(--text-tertiary)] mb-5">
-            Create a new plan to get started
-          </p>
-          <Link
-            href={`/workout-plans/new?client=${clientId}`}
-            className="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-s-xl text-[12px] font-semibold bg-brand-600 hover:bg-brand-700 text-white transition-colors"
-          >
-            <Plus size={14} /> Create First Plan
-          </Link>
-        </div>
-      ) : (
-        <div className="space-y-3">
-          {(plans?.data ?? []).map((plan) => (
-            <WorkoutPlanCard
-              key={plan.id}
-              plan={plan}
-              completedDaysMap={completedDaysMap}
-              expandedPlan={expandedPlan}
-              setExpandedPlan={setExpandedPlan}
-              onDeleteWorkout={onDeleteWorkout}
-              isDeleteWorkoutPending={isDeleteWorkoutPending}
-            />
-          ))}
-        </div>
-    )}*/}
 
       {/* In Progress */}
       {workoutProgress && workoutProgress.in_progress.length > 0 && (
@@ -793,7 +507,6 @@ export function ClientWorkoutsTab({
                               day={day}
                               planId={plan.id}
                               completedDaysMap={completedDaysMap}
-                              idx={idx}
                             />
                           ))}
                         </div>
@@ -927,7 +640,6 @@ export function ClientWorkoutsTab({
                               day={day}
                               planId={plan.id}
                               completedDaysMap={completedDaysMap}
-                              idx={idx}
                             />
                           ))}
                         </div>

@@ -1,15 +1,25 @@
-'use client'
+"use client";
 
-import { useState, useRef, useEffect, useCallback } from 'react'
-import { useAuthStore } from '@/store/auth'
-import api from '@/lib/api'
-import Image from 'next/image'
-import Link from 'next/link'
-import { motion, AnimatePresence } from 'framer-motion'
+import { useState, useRef, useEffect, useCallback, useMemo } from "react";
+import { useAuthStore } from "@/store/auth";
+import api from "@/lib/api";
+import { diffChanged } from "@/lib/diffChanged";
+import Image from "next/image";
+import Link from "next/link";
+import { motion, AnimatePresence } from "framer-motion";
 import {
-  User, Mail, Phone, Globe, Link as LinkIcon, ChevronLeft,
-  Camera, Check, X, Loader2, Save
-} from 'lucide-react'
+  User,
+  Mail,
+  Phone,
+  Globe,
+  Link as LinkIcon,
+  ChevronLeft,
+  Camera,
+  Check,
+  X,
+  Loader2,
+  Save,
+} from "lucide-react";
 
 /* ═══════════════════════════════════════════════════════════════════════════
    UI Primitives
@@ -21,20 +31,22 @@ function InputField({
   onChange,
   placeholder,
   disabled,
-  type = 'text',
+  type = "text",
   icon,
 }: {
-  label: string
-  value: string
-  onChange: (v: string) => void
-  placeholder?: string
-  disabled?: boolean
-  type?: string
-  icon?: React.ReactNode
+  label: string;
+  value: string;
+  onChange: (v: string) => void;
+  placeholder?: string;
+  disabled?: boolean;
+  type?: string;
+  icon?: React.ReactNode;
 }) {
   return (
     <div className="space-y-1.5">
-      <label className="text-xs font-medium text-[var(--text-secondary)] uppercase tracking-wide">{label}</label>
+      <label className="text-xs font-medium text-[var(--text-secondary)] uppercase tracking-wide">
+        {label}
+      </label>
       <div className="relative">
         <input
           type={type}
@@ -44,14 +56,18 @@ function InputField({
           placeholder={placeholder}
           className={`w-full px-4 py-2.5 pr-10 text-sm border border-[var(--border)] rounded-lg transition-all focus:outline-none focus:ring-2 focus:ring-brand-500/20 ${
             disabled
-              ? 'bg-[var(--bg-subtle)] text-[var(--text-tertiary)] cursor-not-allowed'
-              : 'bg-[var(--bg-card)] text-[var(--text-primary)] focus:border-brand-500 hover:border-[var(--border-hover)]'
+              ? "bg-[var(--bg-subtle)] text-[var(--text-tertiary)] cursor-not-allowed"
+              : "bg-[var(--bg-card)] text-[var(--text-primary)] focus:border-brand-500 hover:border-[var(--border-hover)]"
           }`}
         />
-        {icon && <div className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--text-tertiary)]">{icon}</div>}
+        {icon && (
+          <div className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--text-tertiary)]">
+            {icon}
+          </div>
+        )}
       </div>
     </div>
-  )
+  );
 }
 
 function SelectField({
@@ -60,14 +76,16 @@ function SelectField({
   onChange,
   options,
 }: {
-  label: string
-  value: string
-  onChange: (v: string) => void
-  options: { value: string; label: string }[]
+  label: string;
+  value: string;
+  onChange: (v: string) => void;
+  options: { value: string; label: string }[];
 }) {
   return (
     <div className="space-y-1.5">
-      <label className="text-xs font-medium text-[var(--text-secondary)] uppercase tracking-wide">{label}</label>
+      <label className="text-xs font-medium text-[var(--text-secondary)] uppercase tracking-wide">
+        {label}
+      </label>
       <div className="relative">
         <select
           value={value}
@@ -83,7 +101,7 @@ function SelectField({
         <ChevronLeft className="w-4 h-4 absolute right-3 top-1/2 -translate-y-1/2 text-[var(--text-tertiary)] -rotate-90 pointer-events-none" />
       </div>
     </div>
-  )
+  );
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -91,163 +109,226 @@ function SelectField({
    ═══════════════════════════════════════════════════════════════════════════ */
 
 export default function EditProfilePage() {
-  const { coach, updateCoach } = useAuthStore()
-  const fileInputRef = useRef<HTMLInputElement>(null)
-  const toastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const { coach, updateCoach } = useAuthStore();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const toastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Profile state
-  const [name, setName] = useState(coach?.name ?? '')
-  const [surname, setSurname] = useState(coach?.surname ?? '')
-  const [title, setTitle] = useState(coach?.job_title ?? '')
-  const [role, setRole] = useState(coach?.function ?? '')
-  const [phone, setPhone] = useState(coach?.phone ?? '')
-  const [language, setLanguage] = useState<'en' | 'de'>(coach?.language as 'en' | 'de' ?? 'en')
-  const [linkedin, setLinkedin] = useState(coach?.social_media?.linkedin ?? '')
-  const [instagram, setInstagram] = useState(coach?.social_media?.instagram ?? '')
-  const [website, setWebsite] = useState(coach?.social_media?.website ?? '')
+  const [name, setName] = useState(coach?.name ?? "");
+  const [surname, setSurname] = useState(coach?.surname ?? "");
+  const [title, setTitle] = useState(coach?.job_title ?? "");
+  const [role, setRole] = useState(coach?.function ?? "");
+  const [phone, setPhone] = useState(coach?.phone ?? "");
+  const [language, setLanguage] = useState<"en" | "de">(
+    (coach?.language as "en" | "de") ?? "en",
+  );
+  const [linkedin, setLinkedin] = useState(coach?.social_media?.linkedin ?? "");
+  const [instagram, setInstagram] = useState(
+    coach?.social_media?.instagram ?? "",
+  );
+  const [website, setWebsite] = useState(coach?.social_media?.website ?? "");
 
   // UI state
-  const [saving, setSaving] = useState(false)
-  const [photoUploading, setPhotoUploading] = useState(false)
-  const [toast, setToast] = useState<{ type: 'success' | 'error'; message: string } | null>(null)
-  const [dirty, setDirty] = useState(false)
-  const [imageErrored, setImageErrored] = useState(false)
+  const [saving, setSaving] = useState(false);
+  const [photoUploading, setPhotoUploading] = useState(false);
+  const [toast, setToast] = useState<{
+    type: "success" | "error";
+    message: string;
+  } | null>(null);
+  const [imageErrored, setImageErrored] = useState(false);
 
-  useEffect(() => setImageErrored(false), [coach?.profile_photo])
+  useEffect(() => setImageErrored(false), [coach?.profile_photo]);
 
-  const showToast = useCallback((msg: string, type: 'success' | 'error' = 'success') => {
-    setToast({ type, message: msg })
-    if (toastTimeoutRef.current) clearTimeout(toastTimeoutRef.current)
-    toastTimeoutRef.current = setTimeout(() => { setToast(null); toastTimeoutRef.current = null }, 2500)
-  }, [])
+  const showToast = useCallback(
+    (msg: string, type: "success" | "error" = "success") => {
+      setToast({ type, message: msg });
+      if (toastTimeoutRef.current) clearTimeout(toastTimeoutRef.current);
+      toastTimeoutRef.current = setTimeout(() => {
+        setToast(null);
+        toastTimeoutRef.current = null;
+      }, 2500);
+    },
+    [],
+  );
 
   useEffect(() => {
-    return () => { if (toastTimeoutRef.current) clearTimeout(toastTimeoutRef.current) }
-  }, [])
+    return () => {
+      if (toastTimeoutRef.current) clearTimeout(toastTimeoutRef.current);
+    };
+  }, []);
 
-  // Check for changes
-  useEffect(() => {
-    if (!coach) return
-    const changed =
-      name !== (coach.name ?? '') ||
-      surname !== (coach.surname ?? '') ||
-      phone !== (coach.phone ?? '') ||
-      language !== (coach.language ?? 'en') ||
-      title !== (coach.job_title ?? '') ||
-      role !== (coach.function ?? '') ||
-      linkedin !== (coach.social_media?.linkedin ?? '') ||
-      instagram !== (coach.social_media?.instagram ?? '') ||
-      website !== (coach.social_media?.website ?? '')
-    setDirty(changed)
-  }, [name, surname, phone, language, title, role, linkedin, instagram, website, coach])
+  // Track which fields are part of the editable payload. Used by the
+  // dirty check AND by the no-op-skip in handleSave. Centralized so
+  // the two stay in sync (forgetting to update both is the bug class
+  // this PR is fixing).
+  const editableKeys = [
+    "name",
+    "surname",
+    "phone",
+    "language",
+    "job_title",
+    "function",
+    "social_media",
+  ] as const;
+
+  // Build the payload that PUT /coach/profile will receive. Pure
+  // function of the form state — no I/O, easy to diff.
+  const buildPayload = useCallback(
+    () => ({
+      name,
+      surname,
+      phone,
+      language,
+      job_title: title,
+      function: role,
+      social_media: { linkedin, instagram, website },
+    }),
+    [name, surname, phone, language, title, role, linkedin, instagram, website],
+  );
+
+  // Diff the current form state against the persisted coach record.
+  // Replaces the previous hand-rolled 9-field boolean comparison,
+  // which was both error-prone and unsynchronized with the payload
+  // shape sent to the server. The frontend is LENIENT (default
+  // normalizeEmpty=true): null and "" are treated as the same, so
+  // an "I cleared this field" submit doesn't look like a change
+  // here. The backend decides whether the change is real for
+  // notification purposes.
+  const dirty = useMemo(() => {
+    if (!coach) return false;
+    const payload = buildPayload();
+    return (
+      diffChanged(payload, coach as unknown as Record<string, unknown>, {
+        fields: [...editableKeys],
+      }).length > 0
+    );
+  }, [coach, buildPayload]);
 
   const handleSave = async () => {
-    setSaving(true)
-    try {
-      const payload = {
-        name, surname, phone, language,
-        job_title: title,
-        function: role,
-        social_media: { linkedin, instagram, website },
-      }
-      const { data: res } = await api.put('/coach/profile', payload)
-      if (res.success && res.data) {
-        updateCoach(res.data)
-        // Sync local title/role states in case backend sanitized them
-        setTitle(res.data.job_title ?? '')
-        setRole(res.data.function ?? '')
-      }
-      setDirty(false)
-      showToast('Settings saved successfully')
-    } catch (err: any) {
-      const msg = err?.response?.data?.message || 'Failed to save settings'
-      showToast(msg, 'error')
-    } finally {
-      setSaving(false)
+    if (!dirty) {
+      showToast("No changes to save", "error");
+      return;
     }
-  }
+
+    const payload = buildPayload();
+    setSaving(true);
+    try {
+      const { data: res } = await api.put("/coach/profile", payload);
+      if (res.success && res.data) {
+        updateCoach(res.data);
+        // Sync local title/role states in case backend sanitized them
+        setTitle(res.data.job_title ?? "");
+        setRole(res.data.function ?? "");
+      }
+
+      // Surface the backend's verdict on what actually changed.
+      // The backend is STRICT about null vs "" so it can detect
+      // "field explicitly cleared" as a real change; the frontend's
+      // skip-if-no-changes check is LENIENT, so we still need the
+      // toast in case the two views disagree.
+      const resultChanged = (res?.data?.changed_fields as string[] | undefined) ?? [];
+      if (resultChanged.length === 0) {
+        showToast("No fields actually changed", "error");
+      } else if (resultChanged.length === 1) {
+        showToast(`1 field updated: ${resultChanged[0]}`);
+      } else {
+        showToast(`${resultChanged.length} fields updated`);
+      }
+    } catch (err: any) {
+      const msg = err?.response?.data?.message || "Failed to save settings";
+      showToast(msg, "error");
+    } finally {
+      setSaving(false);
+    }
+  };
 
   const handleCancel = () => {
-    if (!coach) return
-    setName(coach.name ?? '')
-    setSurname(coach.surname ?? '')
-    setPhone(coach.phone ?? '')
-    setLanguage(coach.language ?? 'en')
-    setTitle(coach.job_title ?? '')
-    setRole(coach.function ?? '')
-    setLinkedin(coach.social_media?.linkedin ?? '')
-    setInstagram(coach.social_media?.instagram ?? '')
-    setWebsite(coach.social_media?.website ?? '')
-    setDirty(false)
-  }
+    if (!coach) return;
+    setName(coach.name ?? "");
+    setSurname(coach.surname ?? "");
+    setPhone(coach.phone ?? "");
+    setLanguage(coach.language ?? "en");
+    setTitle(coach.job_title ?? "");
+    setRole(coach.function ?? "");
+    setLinkedin(coach.social_media?.linkedin ?? "");
+    setInstagram(coach.social_media?.instagram ?? "");
+    setWebsite(coach.social_media?.website ?? "");
+  };
 
-  const MAX_FILE_SIZE = 5 * 1024 * 1024
+  const MAX_FILE_SIZE = 5 * 1024 * 1024;
 
   const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file) return
-    const ext = file.name.split('.').pop()?.toLowerCase() ?? 'jpg'
-    if (!['jpg', 'jpeg', 'png', 'webp'].includes(ext)) {
-      showToast('Only JPG, PNG, WEBP allowed', 'error')
-      return
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const ext = file.name.split(".").pop()?.toLowerCase() ?? "jpg";
+    if (!["jpg", "jpeg", "png", "webp"].includes(ext)) {
+      showToast("Only JPG, PNG, WEBP allowed", "error");
+      return;
     }
     if (file.size > MAX_FILE_SIZE) {
-      showToast('File too large (max 5 MB)', 'error')
-      return
+      showToast("File too large (max 5 MB)", "error");
+      return;
     }
-    setPhotoUploading(true)
+    setPhotoUploading(true);
     try {
-      const formData = new FormData()
-      formData.append('photo', file)
-      const { data: res } = await api.post(`/coach/profile/photo?ext=${ext}`, formData, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-      })
-      const { upload_url, profile_photo } = res.data ?? {}
+      const formData = new FormData();
+      formData.append("photo", file);
+      const { data: res } = await api.post(
+        `/coach/profile/photo?ext=${ext}`,
+        formData,
+        {
+          headers: { "Content-Type": "multipart/form-data" },
+        },
+      );
+      const { upload_url, profile_photo } = res.data ?? {};
       if (upload_url) {
         // Use the same MIME mapping as the backend so S3 signature matches
         const mimeMap: Record<string, string> = {
-          jpg: 'image/jpeg',
-          jpeg: 'image/jpeg',
-          png: 'image/png',
-          webp: 'image/webp',
-        }
-        const contentType = mimeMap[ext] ?? 'image/jpeg'
+          jpg: "image/jpeg",
+          jpeg: "image/jpeg",
+          png: "image/png",
+          webp: "image/webp",
+        };
+        const contentType = mimeMap[ext] ?? "image/jpeg";
         const uploadResponse = await fetch(upload_url, {
-          method: 'PUT',
+          method: "PUT",
           body: file,
-          headers: { 'Content-Type': contentType },
-        })
+          headers: { "Content-Type": contentType },
+        });
         if (!uploadResponse.ok) {
-          const s3Text = await uploadResponse.text().catch(() => '')
-          throw new Error(s3Text || `S3 upload failed (${uploadResponse.status})`)
+          const s3Text = await uploadResponse.text().catch(() => "");
+          throw new Error(
+            s3Text || `S3 upload failed (${uploadResponse.status})`,
+          );
         }
       }
       if (coach && profile_photo) {
-        updateCoach({ ...coach, profile_photo })
+        updateCoach({ ...coach, profile_photo });
       }
-      showToast('Photo uploaded successfully')
+      showToast("Photo uploaded successfully");
     } catch (err: any) {
-      const errorMsg = err?.response?.data?.message || err?.message || 'Upload failed'
-      showToast(errorMsg, 'error')
+      const errorMsg =
+        err?.response?.data?.message || err?.message || "Upload failed";
+      showToast(errorMsg, "error");
     } finally {
-      setPhotoUploading(false)
-      if (e.target) e.target.value = ''
+      setPhotoUploading(false);
+      if (e.target) e.target.value = "";
     }
-  }
+  };
 
   const handlePhotoDelete = async () => {
-    setPhotoUploading(true)
+    setPhotoUploading(true);
     try {
-      await api.delete('/coach/profile/photo')
-      if (coach) updateCoach({ ...coach, profile_photo: undefined })
-      showToast('Photo removed')
+      await api.delete("/coach/profile/photo");
+      if (coach) updateCoach({ ...coach, profile_photo: undefined });
+      showToast("Photo removed");
     } catch (err: any) {
-      const msg = err?.response?.data?.message || 'Failed to remove photo'
-      showToast(msg, 'error')
+      const msg = err?.response?.data?.message || "Failed to remove photo";
+      showToast(msg, "error");
     } finally {
-      setPhotoUploading(false)
+      setPhotoUploading(false);
     }
-  }
+  };
 
   return (
     <div className="max-w-3xl mx-auto pb-28">
@@ -259,10 +340,14 @@ export default function EditProfilePage() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
             className={`fixed top-4 right-4 z-50 text-white text-sm px-4 py-2.5 flex items-center gap-2 rounded-lg shadow-lg ${
-              toast.type === 'error' ? 'bg-red-600' : 'bg-[var(--btn-bg)]'
+              toast.type === "error" ? "bg-red-600" : "bg-[var(--btn-bg)]"
             }`}
           >
-            {toast.type === 'error' ? <X className="w-4 h-4" /> : <Check className="w-4 h-4" />}
+            {toast.type === "error" ? (
+              <X className="w-4 h-4" />
+            ) : (
+              <Check className="w-4 h-4" />
+            )}
             {toast.message}
           </motion.div>
         )}
@@ -279,7 +364,9 @@ export default function EditProfilePage() {
 
       {/* Header */}
       <div className="mb-8">
-        <h1 className="text-2xl font-semibold text-[var(--text-primary)] tracking-tight">Edit Profile</h1>
+        <h1 className="text-2xl font-semibold text-[var(--text-primary)] tracking-tight">
+          Edit Profile
+        </h1>
         <p className="text-sm text-[var(--text-secondary)] mt-1">
           Update your personal information and preferences.
         </p>
@@ -296,7 +383,7 @@ export default function EditProfilePage() {
                     {!imageErrored ? (
                       <Image
                         src={coach.profile_photo}
-                        alt={coach.name ?? 'Profile'}
+                        alt={coach.name ?? "Profile"}
                         fill
                         className="rounded-full object-cover ring-2 ring-[var(--border)]"
                         sizes="96px"
@@ -305,7 +392,7 @@ export default function EditProfilePage() {
                       />
                     ) : (
                       <div className="absolute inset-0 flex items-center justify-center rounded-full bg-[var(--btn-bg)] text-white text-xl font-bold">
-                        {coach.name?.[0]?.toUpperCase() ?? 'C'}
+                        {coach.name?.[0]?.toUpperCase() ?? "C"}
                       </div>
                     )}
                   </>
@@ -329,15 +416,19 @@ export default function EditProfilePage() {
                 </button>
               </div>
               <div className="text-center sm:text-left">
-                <h3 className="text-base font-semibold text-[var(--text-primary)]">Profile Photo</h3>
-                <p className="text-sm text-[var(--text-secondary)] mt-0.5">JPG, PNG or WEBP. Max 5 MB.</p>
+                <h3 className="text-base font-semibold text-[var(--text-primary)]">
+                  Profile Photo
+                </h3>
+                <p className="text-sm text-[var(--text-secondary)] mt-0.5">
+                  JPG, PNG or WEBP. Max 5 MB.
+                </p>
                 <div className="flex items-center justify-center sm:justify-start gap-3 mt-3">
                   <button
                     onClick={() => fileInputRef.current?.click()}
                     disabled={photoUploading}
                     className="text-sm font-medium text-[var(--accent)] hover:text-emerald-600 transition-colors disabled:opacity-50"
                   >
-                    {coach?.profile_photo ? 'Change Photo' : 'Upload Photo'}
+                    {coach?.profile_photo ? "Change Photo" : "Upload Photo"}
                   </button>
                   {coach?.profile_photo && (
                     <button
@@ -349,7 +440,13 @@ export default function EditProfilePage() {
                     </button>
                   )}
                 </div>
-                <input ref={fileInputRef} type="file" accept="image/jpeg,image/png,image/webp" onChange={handlePhotoUpload} className="hidden" />
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  onChange={handlePhotoUpload}
+                  className="hidden"
+                />
               </div>
             </div>
           </div>
@@ -358,42 +455,101 @@ export default function EditProfilePage() {
         {/* Personal Info Card */}
         <div className="bg-[var(--bg-card)] rounded-xl border border-[var(--border)] overflow-hidden shadow-sm">
           <div className="px-6 py-4 border-b border-[var(--border)]">
-            <h2 className="text-base font-semibold text-[var(--text-primary)]">Personal Information</h2>
+            <h2 className="text-base font-semibold text-[var(--text-primary)]">
+              Personal Information
+            </h2>
           </div>
           <div className="p-6 space-y-5">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-              <InputField label="First Name" value={name} onChange={setName} placeholder="John" icon={<User className="w-4 h-4" />} />
-              <InputField label="Last Name" value={surname} onChange={setSurname} placeholder="Doe" icon={<User className="w-4 h-4" />} />
+              <InputField
+                label="First Name"
+                value={name}
+                onChange={setName}
+                placeholder="John"
+                icon={<User className="w-4 h-4" />}
+              />
+              <InputField
+                label="Last Name"
+                value={surname}
+                onChange={setSurname}
+                placeholder="Doe"
+                icon={<User className="w-4 h-4" />}
+              />
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-              <InputField label="Prefix Title" value={title} onChange={setTitle} placeholder="Dr." icon={<User className="w-4 h-4" />} />
-              <InputField label="Role" value={role} onChange={setRole} placeholder="Coach" icon={<User className="w-4 h-4" />} />
+              <InputField
+                label="Prefix Title"
+                value={title}
+                onChange={setTitle}
+                placeholder="Dr."
+                icon={<User className="w-4 h-4" />}
+              />
+              <InputField
+                label="Role"
+                value={role}
+                onChange={setRole}
+                placeholder="Coach"
+                icon={<User className="w-4 h-4" />}
+              />
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
               <SelectField
                 label="Language"
                 value={language}
-                onChange={(v) => setLanguage(v as 'en' | 'de')}
+                onChange={(v) => setLanguage(v as "en" | "de")}
                 options={[
-                  { value: 'en', label: 'English' },
-                  { value: 'de', label: 'Deutsch' },
+                  { value: "en", label: "English" },
+                  { value: "de", label: "Deutsch" },
                 ]}
               />
-              <InputField label="Phone Number" value={phone} onChange={setPhone} placeholder="+1 234 567 890" type="tel" icon={<Phone className="w-4 h-4" />} />
+              <InputField
+                label="Phone Number"
+                value={phone}
+                onChange={setPhone}
+                placeholder="+1 234 567 890"
+                type="tel"
+                icon={<Phone className="w-4 h-4" />}
+              />
             </div>
-            <InputField label="Email Address" value={coach?.email ?? ''} onChange={() => {}} disabled icon={<Mail className="w-4 h-4" />} />
+            <InputField
+              label="Email Address"
+              value={coach?.email ?? ""}
+              onChange={() => {}}
+              disabled
+              icon={<Mail className="w-4 h-4" />}
+            />
           </div>
         </div>
 
         {/* Social Links Card */}
         <div className="bg-[var(--bg-card)] rounded-xl border border-[var(--border)] overflow-hidden shadow-sm">
           <div className="px-6 py-4 border-b border-[var(--border)]">
-            <h2 className="text-base font-semibold text-[var(--text-primary)]">Social Links</h2>
+            <h2 className="text-base font-semibold text-[var(--text-primary)]">
+              Social Links
+            </h2>
           </div>
           <div className="p-6 space-y-5">
-            <InputField label="LinkedIn" value={linkedin} onChange={setLinkedin} placeholder="linkedin.com/in/yourname" icon={<Globe className="w-4 h-4" />} />
-            <InputField label="Instagram" value={instagram} onChange={setInstagram} placeholder="instagram.com/yourname" icon={<Globe className="w-4 h-4" />} />
-            <InputField label="Website" value={website} onChange={setWebsite} placeholder="yourwebsite.com" icon={<LinkIcon className="w-4 h-4" />} />
+            <InputField
+              label="LinkedIn"
+              value={linkedin}
+              onChange={setLinkedin}
+              placeholder="linkedin.com/in/yourname"
+              icon={<Globe className="w-4 h-4" />}
+            />
+            <InputField
+              label="Instagram"
+              value={instagram}
+              onChange={setInstagram}
+              placeholder="instagram.com/yourname"
+              icon={<Globe className="w-4 h-4" />}
+            />
+            <InputField
+              label="Website"
+              value={website}
+              onChange={setWebsite}
+              placeholder="yourwebsite.com"
+              icon={<LinkIcon className="w-4 h-4" />}
+            />
           </div>
         </div>
       </div>
@@ -429,11 +585,11 @@ export default function EditProfilePage() {
             >
               {saving && <Loader2 className="w-4 h-4 animate-spin" />}
               <Save className="w-4 h-4" />
-              {saving ? 'Saving…' : 'Save Changes'}
+              {saving ? "Saving…" : "Save Changes"}
             </button>
           </div>
         </div>
       </div>
     </div>
-  )
+  );
 }

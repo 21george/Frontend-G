@@ -1,6 +1,6 @@
 "use client";
 
-import { Check, Shield, Lock, CreditCard, ShieldCheck } from "lucide-react";
+import { Check, Shield, Lock, CreditCard } from "lucide-react";
 import { useSignupStore } from "@/store/signup";
 import type { SubscriptionPeriod } from "@/types";
 

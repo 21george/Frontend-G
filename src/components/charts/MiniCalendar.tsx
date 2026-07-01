@@ -23,7 +23,6 @@ interface Checkin {
 interface DayProgram {
   date: Date
   checkins: Checkin[]
-  workoutPlans?: any[]
 }
 
 export default function MiniCalendar() {

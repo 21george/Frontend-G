@@ -22,10 +22,8 @@ import { Modal } from "@/components/ui/Modal";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { motion } from "framer-motion";
 import {
-  CreditCard,
   ArrowLeft,
   Download,
-  ExternalLink,
   X,
   Users,
   AlertTriangle,

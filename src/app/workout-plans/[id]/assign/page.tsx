@@ -27,12 +27,10 @@ export default function AssignWorkoutPlanPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
   const { data: plan, isLoading: planLoading } = useWorkoutPlan(id);
-  const { data: clients = [], isLoading: clientsLoading } = useAllClients();
+  const { data: clients = [] } = useAllClients();
   const assignMutation = useAssignWorkoutPlan(id);
   const [selectedClients, setSelectedClients] = useState<string[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
-
-  const isLoading = planLoading;
 
   if (planLoading) {
     return (
@@ -213,7 +211,7 @@ export default function AssignWorkoutPlanPage() {
 
               {/* Clients Grid */}
               <div className="p-4 grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-[500px] overflow-y-auto">
-                {clientsLoading ? (
+                {planLoading ? (
                   [...Array(6)].map((_, i) => (
                     <div
                       key={i}

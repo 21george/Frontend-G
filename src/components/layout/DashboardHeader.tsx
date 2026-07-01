@@ -15,7 +15,6 @@ import {
   Video,
   FileText,
   ChevronRight,
-  Bell,
 } from "lucide-react";
 import { NearbyGymsButton } from "./NearbyGyms";
 import NotificationsButton from "@/components/notifications";
@@ -269,7 +268,7 @@ export default function DashboardHeader({
             {heading}
           </span>
         </nav>
-        {showGreeting !== false && (
+        {showGreeting && (
           <div className="mb-1">
             <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#888780] dark:text-[#FAFAFA]/40 mb-0.5">
               Good {getGreeting()}, {coach?.name ?? "there"}

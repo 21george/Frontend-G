@@ -21,6 +21,7 @@ import { QueryWrapper } from "@/components/ui/QueryWrapper";
 import { Button } from "@/components/ui/button";
 import { SegmentedProgressBar } from "@/components/ui/SegmentedProgressBar";
 import { motion } from "framer-motion";
+import { MessageDrawer } from "@/components/messages/MessageDrawer";
 
 const MS_PER_DAY = 1000 * 60 * 60 * 24;
 const NEW_CLIENT_THRESHOLD_DAYS = 14;
@@ -102,6 +103,8 @@ export default function ClientsPage() {
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<FilterKey>("all");
   const [page, setPage] = useState(1);
+  const [drawerClient, setDrawerClient] = useState<any>(null);
+  const [drawerOpen, setDrawerOpen] = useState(false);
   const PER_PAGE = 10;
 
   // Fetch ALL clients and plans so stats/filters are accurate across pages
@@ -638,14 +641,17 @@ export default function ClientsPage() {
                           {/* Actions */}
                           <div className="col-span-3 sm:col-span-2 text-right">
                             <div className="flex items-center justify-end gap-1">
-                              <Link
-                                href={`/messages?client=${client.id}`}
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setDrawerClient(client);
+                                  setDrawerOpen(true);
+                                }}
                                 className="p-2 rounded-lg text-[var(--text-tertiary)] hover:text-brand-600 dark:hover:text-brand-400 hover:bg-[var(--bg-subtle)] transition-colors"
                                 title="Message client"
-                                onClick={(e) => e.stopPropagation()}
                               >
                                 <MessageSquare className="w-4 h-4" />
-                              </Link>
+                              </button>
                               <Link
                                 href={`/clients/${client.id}`}
                                 className="p-2 rounded-lg text-[var(--text-tertiary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-subtle)] transition-colors"
@@ -694,6 +700,15 @@ export default function ClientsPage() {
           )}
         </QueryWrapper>
       </div>
+
+      <MessageDrawer
+        client={drawerClient}
+        open={drawerOpen}
+        onClose={() => {
+          setDrawerOpen(false);
+          setDrawerClient(null);
+        }}
+      />
     </DashboardLayout>
   );
 }

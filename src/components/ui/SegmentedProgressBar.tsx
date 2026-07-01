@@ -1,7 +1,5 @@
 'use client'
 
-import { useMemo } from 'react'
-
 interface SegmentedProgressBarProps {
   percentage: number
   segments?: number
@@ -17,10 +15,7 @@ export function SegmentedProgressBar({
   inactiveColor = 'bg-[var(--bg-subtle)] dark:bg-white/[0.06]',
   className = '',
 }: SegmentedProgressBarProps) {
-  const filledSegments = useMemo(
-    () => Math.max(0, Math.min(segments, Math.round((percentage / 100) * segments))),
-    [percentage, segments]
-  )
+  const filledSegments = Math.max(0, Math.min(segments, Math.round((percentage / 100) * segments)))
 
   return (
     <div className={`flex items-center gap-2 ${className}`}>

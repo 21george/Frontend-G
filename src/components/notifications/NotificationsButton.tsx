@@ -15,8 +15,6 @@ import {
   Check,
   Trash2,
   Clock,
-  Camera,
-  Heart,
   Send,
 } from 'lucide-react'
 import Link from 'next/link'
@@ -115,13 +113,11 @@ function getAvatarColor(seed: string): string {
 // ── Instagram-Style Message Thread Card ──────────────────────────────────────
 
 interface MessageThreadProps {
-  id: string
   name: string
   avatarUrl?: string
   lastMessage: string
   timestamp: string
   unreadCount: number
-  isOnline?: boolean
   onClick: () => void
 }
 
@@ -131,7 +127,6 @@ function MessageThreadCard({
   lastMessage,
   timestamp,
   unreadCount,
-  isOnline,
   onClick,
 }: MessageThreadProps) {
   const initials = getInitials(name)
@@ -157,10 +152,7 @@ function MessageThreadCard({
             {initials}
           </div>
         )}
-        {isOnline && (
-          <span className="absolute bottom-0 right-0 w-3.5 h-3.5 bg-green-500 border-2 border-[var(--bg-card)] rounded-full" />
-        )}
-        {unreadCount > 0 && !isOnline && (
+        {unreadCount > 0 && (
           <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 bg-danger rounded-full text-[10px] font-bold text-white flex items-center justify-center border-2 border-[var(--bg-card)]">
             {unreadCount > 9 ? '9+' : unreadCount}
           </span>
@@ -186,43 +178,6 @@ function MessageThreadCard({
       {unreadCount > 0 && (
         <div className="w-2.5 h-2.5 rounded-full bg-brand-500 flex-shrink-0 mt-1" />
       )}
-    </button>
-  )
-}
-
-// ── Instagram-Style Story Ring Avatar ───────────────────────────────────────
-
-interface StoryAvatarProps {
-  name: string
-  avatarUrl?: string
-  hasStory?: boolean
-  isLive?: boolean
-  onClick?: () => void
-}
-
-function StoryAvatar({ name, avatarUrl, hasStory, isLive, onClick }: StoryAvatarProps) {
-  const initials = getInitials(name)
-  const gradient = getAvatarColor(name)
-
-  return (
-    <button onClick={onClick} className="flex flex-col items-center gap-1.5 flex-shrink-0">
-      <div className={`relative p-[2px] rounded-full ${hasStory ? 'bg-gradient-to-tr from-yellow-400 via-red-500 to-purple-500' : ''}`}>
-        <div className="p-[2px] bg-[var(--bg-card)] rounded-full">
-          {avatarUrl ? (
-            <img src={avatarUrl} alt={name} className="w-14 h-14 rounded-full object-cover" />
-          ) : (
-            <div className={`w-14 h-14 rounded-full bg-gradient-to-br ${gradient} flex items-center justify-center text-white text-sm font-bold`}>
-              {initials}
-            </div>
-          )}
-        </div>
-        {isLive && (
-          <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 px-1.5 py-0.5 bg-gradient-to-r from-pink-500 to-purple-500 rounded text-[9px] font-bold text-white border-2 border-[var(--bg-card)]">
-            LIVE
-          </span>
-        )}
-      </div>
-      <span className="text-[11px] text-[var(--text-secondary)] max-w-[60px] truncate">{name}</span>
     </button>
   )
 }
@@ -259,8 +214,6 @@ export default function NotificationsButton() {
   const modalRef = useRef<HTMLDivElement>(null)
   const triggerRef = useRef<HTMLButtonElement>(null)
   const prevShowAllRef = useRef(false)
-
-  const displayNotifications = allNotifications
 
   // Close modal on Escape key
   useEffect(() => {
@@ -465,7 +418,6 @@ export default function NotificationsButton() {
                           {messageThreads.map((thread, idx) => (
                             <MessageThreadCard
                               key={thread.client_id ?? `thread-${idx}`}
-                              id={thread.client_id}
                               name={thread.client_name}
                               lastMessage={thread.lastMessage}
                               timestamp={formatWhen(thread.lastMessageAt)}
@@ -738,7 +690,7 @@ export default function NotificationsButton() {
                     )}
 
                     {/* Notifications */}
-                    {displayNotifications.map((notification, idx) => {
+                    {allNotifications.map((notification, idx) => {
                       const Icon = notificationIcons[notification.type] ?? Bell
                       const colorClass =
                         notificationColors[notification.type] ??

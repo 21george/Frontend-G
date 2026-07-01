@@ -1,6 +1,6 @@
 'use client'
 
-import React from 'react'
+import { useRef, useEffect, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import Link from 'next/link'
 import RegistrationNav from '@/components/layout/RegistrationNav'
@@ -57,14 +57,14 @@ const slideVariants = {
 export default function RegisterPage() {
   const clearAuth = useAuthStore((s) => s.clearAuth)
   const { step } = useSignupStore()
-  const prevStep = React.useRef<number>(step)
+  const prevStep = useRef<number>(step)
   const direction = step > prevStep.current ? 1 : -1
 
-  React.useEffect(() => {
+  useEffect(() => {
     clearAuth()
   }, [clearAuth])
 
-  React.useEffect(() => {
+  useEffect(() => {
     prevStep.current = step
   }, [step])
 

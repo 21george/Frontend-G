@@ -15,7 +15,6 @@ import {
 } from "@/hooks/useSubscription";
 import { useInvoices } from "@/hooks/useInvoices";
 import { PLANS, getPlanPricing, PERIOD_LABELS } from "@/components/billing/PlanMeta";
-import { SubscriptionAlerts } from "@/components/billing/SubscriptionAlerts";
 import type { Invoice, SubscriptionPeriod } from "@/types";
 import type { PaymentMethod } from "@/lib/api/services/subscription";
 import toast from "react-hot-toast";
@@ -29,7 +28,6 @@ import {
   Trash2,
   Star,
   AlertTriangle,
-  Zap,
   Users,
 } from "lucide-react";
 import { AnimatedSearch } from "@/components/ui/AnimatedSearch";

@@ -7,7 +7,7 @@ import {
   Dumbbell,
   User,
 } from "lucide-react";
-import { formatDate, timeAgo } from "@/lib/utils";
+import { timeAgo } from "@/lib/utils";
 import type { LiveProgressResponse } from "@/types";
 
 interface Props {

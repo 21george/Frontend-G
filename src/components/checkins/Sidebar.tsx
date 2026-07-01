@@ -24,7 +24,7 @@ import {
 import { motion } from "framer-motion";
 import type { CheckinMeeting, Client } from "@/types";
 import { parseDateValue } from "@/lib/utils";
-import { EVENT_TYPES, TEXT, SURFACE } from "@/lib/constants";
+import { EVENT_TYPES } from "@/lib/constants";
 
 interface MiniCalendarProps {
   selectedDate: Date;

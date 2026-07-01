@@ -30,7 +30,6 @@ import type {
   WorkoutAnalysis,
   WorkoutAnalysisListItem,
   PlanRecommendation,
-  WorkoutMetrics,
 } from "@/types";
 import toast from "react-hot-toast";
 

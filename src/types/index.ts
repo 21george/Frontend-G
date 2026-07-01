@@ -35,6 +35,14 @@ export interface Coach {
   job_title?: string;
   function?: string;
   responsibilities?: string;
+  /**
+   * Set on the response of PUT /coach/profile, PUT /coach/clients/:id, and
+   * PUT /client/profile. Lists the field names whose value actually
+   * changed in the last write. Empty array means nothing changed.
+   * Allows the UI to show honest "X fields updated" feedback and lets
+   * the form skip the request entirely when there's nothing to update.
+   */
+  changed_fields?: string[];
 }
 
 export interface Client {
@@ -63,6 +71,14 @@ export interface Client {
   active: boolean;
   is_blocked?: boolean;
   created_at: string;
+  /**
+   * Set on the response of PUT /coach/clients/:id and PUT /client/profile.
+   * Lists the field names whose value actually changed (i.e. would have
+   * triggered a profile-update notification). Empty array means nothing
+   * changed. Allows the UI to show honest feedback and lets the client
+   * skip the request entirely when there's nothing to update.
+   */
+  changed_fields?: string[];
 }
 
 export interface Exercise {

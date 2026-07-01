@@ -1,6 +1,5 @@
 'use client'
 
-import { useRef } from 'react'
 import {
   Plus, Video, PhoneCall, Hash, ChevronDown, RefreshCw,
   MessageCircle, Wifi, WifiOff, Send,

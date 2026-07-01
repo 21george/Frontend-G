@@ -1,6 +1,6 @@
 "use client";
 
-import { ChevronDown, Plus, ExternalLink, Salad } from "lucide-react";
+import { ChevronDown, ExternalLink, Salad } from "lucide-react";
 import Link from "next/link";
 import type { NutritionPlan, NutritionDay } from "@/types";
 import { formatDate } from "@/lib/utils";
