@@ -1036,7 +1036,7 @@ export default function ClientDetailPage() {
 
             <div className="flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-end gap-2 sm:gap-3 mt-5 sm:mt-6 pt-4 border-t border-[var(--border)]">
               <button
-                onClick={() => setEditModal(false)}
+                onClick={closeEditModal}
                 disabled={editSaving}
                 className="px-4 py-2.5 text-sm font-medium text-[var(--text-secondary)] border border-[var(--border)] rounded-lg hover:bg-[var(--bg-subtle)] transition-colors"
               >

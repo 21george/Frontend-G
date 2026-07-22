@@ -48,5 +48,5 @@ export const foodsApi = {
       carbs_g: number;
       fat_g: number;
     };
-  }) => api.post("/foods", data).then((r) => r.data),
+  }) => api.post<ApiResponse<Food>>("/foods", data).then((r) => r.data.data),
 };

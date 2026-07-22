@@ -6,9 +6,9 @@ import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
 
 const NAV_LINKS = [
-  { label: "Product", href: "/../../registration/src/app/page.tsx" },
-  /*{ label: "Pricing", href: "/#pricing" },
-  { label: "Support", href: "/support" },*/
+  { label: "Product", href: "/" },
+  /*{ label: "Pricing", href: "/#pricing" },*/
+  { label: "Support", href: "/support" },
 ];
 
 export default function RegistrationNav() {

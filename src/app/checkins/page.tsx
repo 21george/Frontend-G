@@ -206,16 +206,31 @@ function CreateCheckinModal({
   /* Preview helpers */
   const selectedClient = clients.find((c) => c.id === clientId) ?? null;
   const scheduledAt = date && time ? parseISO(`${date}T${time}:00`) : null;
-  const endTimeDate = scheduledAt ? new Date(scheduledAt.getTime() + 60 * 60 * 1000) : null;
+  const endTimeDate = scheduledAt
+    ? new Date(scheduledAt.getTime() + 60 * 60 * 1000)
+    : null;
   const dateLabel = scheduledAt ? format(scheduledAt, "d MMMM, yyyy") : "";
   const dayName = scheduledAt ? format(scheduledAt, "EEE") : "";
   const dayNum = scheduledAt ? format(scheduledAt, "d") : "";
-  const timeRange = scheduledAt && endTimeDate ? `${format(scheduledAt, "h:mm a")} - ${format(endTimeDate, "h:mm a")}` : "";
-  const tz = scheduledAt ? (format(scheduledAt, "z") === "Z" ? "GMT" : format(scheduledAt, "z")) : "";
+  const timeRange =
+    scheduledAt && endTimeDate
+      ? `${format(scheduledAt, "h:mm a")} - ${format(endTimeDate, "h:mm a")}`
+      : "";
+  const tz = scheduledAt
+    ? format(scheduledAt, "z") === "Z"
+      ? "GMT"
+      : format(scheduledAt, "z")
+    : "";
   const browserTz = Intl.DateTimeFormat().resolvedOptions().timeZone;
 
-  const typeLabel = type === "video" ? "In-app Video Call" : type === "call" ? "Phone Call" : "Chat Session";
-  const typeIcon = type === "video" ? Video : type === "call" ? PhoneCall : MessageCircle;
+  const typeLabel =
+    type === "video"
+      ? "In-app Video Call"
+      : type === "call"
+        ? "Phone Call"
+        : "Chat Session";
+  const typeIcon =
+    type === "video" ? Video : type === "call" ? PhoneCall : MessageCircle;
 
   const inputCls =
     "w-full px-3 py-2.5 rounded-xl text-sm transition-all focus:outline-none focus:ring-2 focus:ring-purple-500/20 dark:focus:ring-[var(--energy)]/20 " +
@@ -231,7 +246,10 @@ function CreateCheckinModal({
           exit={{ opacity: 0 }}
           className="fixed inset-0 z-50 flex items-center justify-center p-4"
         >
-          <div className="absolute inset-0 bg-black/40 dark:bg-black/60 backdrop-blur-sm" onClick={handleClose} />
+          <div
+            className="absolute inset-0 bg-black/40 dark:bg-black/60 backdrop-blur-sm"
+            onClick={handleClose}
+          />
           <motion.div
             initial={{ scale: 0.94, opacity: 0, y: 20 }}
             animate={{ scale: 1, opacity: 1, y: 0 }}
@@ -244,15 +262,28 @@ function CreateCheckinModal({
             <div className="flex items-center justify-between px-6 py-4 border-b border-[var(--border)] dark:border-white/[0.08]">
               <div className="flex items-center gap-3">
                 <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-purple-600 to-purple-500 dark:from-[var(--energy)] dark:to-[#bef264] flex items-center justify-center">
-                  <CalendarDays size={16} className="text-white dark:text-[#0a1114]" />
+                  <CalendarDays
+                    size={16}
+                    className="text-white dark:text-[#0a1114]"
+                  />
                 </div>
                 <div>
-                  <h2 className="text-[15px] font-bold text-[var(--text-primary)] dark:text-white">Book a Check-in</h2>
-                  <p className="text-xs text-[var(--text-tertiary)] dark:text-white/40">Schedule a new session with your client</p>
+                  <h2 className="text-[15px] font-bold text-[var(--text-primary)] dark:text-white">
+                    Book a Check-in
+                  </h2>
+                  <p className="text-xs text-[var(--text-tertiary)] dark:text-white/40">
+                    Schedule a new session with your client
+                  </p>
                 </div>
               </div>
-              <button onClick={handleClose} className="p-2 hover:bg-[var(--bg-page)] dark:hover:bg-white/[0.06] rounded-full transition-colors">
-                <X size={18} className="text-[var(--text-tertiary)] dark:text-white/40" />
+              <button
+                onClick={handleClose}
+                className="p-2 hover:bg-[var(--bg-page)] dark:hover:bg-white/[0.06] rounded-full transition-colors"
+              >
+                <X
+                  size={18}
+                  className="text-[var(--text-tertiary)] dark:text-white/40"
+                />
               </button>
             </div>
 
@@ -262,7 +293,10 @@ function CreateCheckinModal({
                 {/* Date */}
                 <div className="flex items-center gap-3">
                   <div className="relative flex-1">
-                    <CalendarDays size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-tertiary)] dark:text-white/30" />
+                    <CalendarDays
+                      size={15}
+                      className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-tertiary)] dark:text-white/30"
+                    />
                     <input
                       type="date"
                       value={date}
@@ -272,8 +306,13 @@ function CreateCheckinModal({
                     />
                   </div>
                   <div className="relative flex-1">
-                    <Globe size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-tertiary)] dark:text-white/30" />
-                    <div className={`${inputCls} pl-9 truncate text-[var(--text-tertiary)] dark:text-white/40 text-xs`}>
+                    <Globe
+                      size={15}
+                      className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-tertiary)] dark:text-white/30"
+                    />
+                    <div
+                      className={`${inputCls} pl-9 truncate text-[var(--text-tertiary)] dark:text-white/40 text-xs`}
+                    >
                       {browserTz}
                     </div>
                   </div>
@@ -282,36 +321,73 @@ function CreateCheckinModal({
                 {/* Start / End */}
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-[11px] font-semibold text-[var(--text-tertiary)] dark:text-white/40 uppercase tracking-wider mb-1.5">Start</label>
+                    <label className="block text-[11px] font-semibold text-[var(--text-tertiary)] dark:text-white/40 uppercase tracking-wider mb-1.5">
+                      Start
+                    </label>
                     <div className="relative">
-                      <input type="time" value={time} onChange={(e) => setTime(e.target.value)} required className={inputCls} />
-                      <ChevronDown size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--text-tertiary)] dark:text-white/30 pointer-events-none" />
+                      <input
+                        type="time"
+                        value={time}
+                        onChange={(e) => setTime(e.target.value)}
+                        required
+                        className={inputCls}
+                      />
+                      <ChevronDown
+                        size={14}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--text-tertiary)] dark:text-white/30 pointer-events-none"
+                      />
                     </div>
                   </div>
                   <div>
-                    <label className="block text-[11px] font-semibold text-[var(--text-tertiary)] dark:text-white/40 uppercase tracking-wider mb-1.5">End</label>
+                    <label className="block text-[11px] font-semibold text-[var(--text-tertiary)] dark:text-white/40 uppercase tracking-wider mb-1.5">
+                      End
+                    </label>
                     <div className="relative">
-                      <div className={`${inputCls} opacity-70 pr-9`}>{endTimeDate ? format(endTimeDate, "h:mm a") : "—"}</div>
-                      <ChevronDown size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--text-tertiary)] dark:text-white/30 pointer-events-none" />
+                      <div className={`${inputCls} opacity-70 pr-9`}>
+                        {endTimeDate ? format(endTimeDate, "h:mm a") : "—"}
+                      </div>
+                      <ChevronDown
+                        size={14}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--text-tertiary)] dark:text-white/30 pointer-events-none"
+                      />
                     </div>
                   </div>
                 </div>
 
-                {/* Interview option radios */}
+                {/* Check-in option radios */}
                 <div>
-                  <label className="block text-[11px] font-semibold text-[var(--text-tertiary)] dark:text-white/40 uppercase tracking-wider mb-2">Interview option:</label>
+                  <label className="block text-[11px] font-semibold text-[var(--text-tertiary)] dark:text-white/40 uppercase tracking-wider mb-2">
+                    Check-in option:
+                  </label>
                   <div className="flex flex-wrap gap-4">
-                    {([
+                    {[
                       { key: "video" as const, label: "In-app video call" },
                       { key: "call" as const, label: "Call with 3rd app" },
-                      { key: "chat" as const, label: "On-site interview" },
-                    ]).map((opt) => (
-                      <label key={opt.key} className="flex items-center gap-2 cursor-pointer">
-                        <div className={`w-4 h-4 rounded-full border flex items-center justify-center transition-colors ${type === opt.key ? "border-green-500 dark:border-green-400" : "border-[var(--border)] dark:border-white/20"}`}>
-                          {type === opt.key && <div className="w-2 h-2 rounded-full bg-green-500 dark:bg-green-400" />}
+                      { key: "chat" as const, label: "Chat session" },
+                    ].map((opt) => (
+                      <label
+                        key={opt.key}
+                        className="flex items-center gap-2 cursor-pointer"
+                      >
+                        <div
+                          className={`w-4 h-4 rounded-full border flex items-center justify-center transition-colors ${type === opt.key ? "border-green-500 dark:border-green-400" : "border-[var(--border)] dark:border-white/20"}`}
+                        >
+                          {type === opt.key && (
+                            <div className="w-2 h-2 rounded-full bg-green-500 dark:bg-green-400" />
+                          )}
                         </div>
-                        <span className={`text-sm ${type === opt.key ? "text-[var(--text-primary)] dark:text-white font-medium" : "text-[var(--text-secondary)] dark:text-white/50"}`}>{opt.label}</span>
-                        <input type="radio" className="sr-only" value={opt.key} checked={type === opt.key} onChange={() => setType(opt.key)} />
+                        <span
+                          className={`text-sm ${type === opt.key ? "text-[var(--text-primary)] dark:text-white font-medium" : "text-[var(--text-secondary)] dark:text-white/50"}`}
+                        >
+                          {opt.label}
+                        </span>
+                        <input
+                          type="radio"
+                          className="sr-only"
+                          value={opt.key}
+                          checked={type === opt.key}
+                          onChange={() => setType(opt.key)}
+                        />
                       </label>
                     ))}
                   </div>
@@ -320,10 +396,15 @@ function CreateCheckinModal({
                 {/* Selected type detail card */}
                 <div className="flex items-center gap-3 p-3 rounded-xl border border-[var(--border)] dark:border-white/[0.08] bg-[var(--bg-page)] dark:bg-white/[0.02]">
                   <div className="w-10 h-10 rounded-lg bg-purple-600 dark:bg-[var(--energy)]/20 flex items-center justify-center shrink-0">
-                    <Link size={18} className="text-white dark:text-[var(--energy)]" />
+                    <Link
+                      size={18}
+                      className="text-white dark:text-[var(--energy)]"
+                    />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold text-[var(--text-primary)] dark:text-white">{typeLabel}</p>
+                    <p className="text-sm font-semibold text-[var(--text-primary)] dark:text-white">
+                      {typeLabel}
+                    </p>
                     <input
                       type="url"
                       value={meetingLink}
@@ -343,45 +424,55 @@ function CreateCheckinModal({
                   </button>
                 </div>
 
-                {/* Candidate */}
+                {/* Client */}
                 <div>
-                  <label className="block text-[11px] font-semibold text-[var(--text-tertiary)] dark:text-white/40 uppercase tracking-wider mb-2">Candidate</label>
+                  <label className="block text-[11px] font-semibold text-[var(--text-tertiary)] dark:text-white/40 uppercase tracking-wider mb-2">
+                    Client
+                  </label>
                   {!selectedClient ? (
-                    <select value={clientId} onChange={(e) => setClientId(e.target.value)} required className={inputCls}>
+                    <select
+                      value={clientId}
+                      onChange={(e) => setClientId(e.target.value)}
+                      required
+                      className={inputCls}
+                    >
                       <option value="">Select a client</option>
                       {clients.map((c) => (
-                        <option key={c.id} value={c.id}>{c.name}</option>
+                        <option key={c.id} value={c.id}>
+                          {c.name}
+                        </option>
                       ))}
                     </select>
                   ) : (
                     <div className="flex items-center gap-3 p-3 rounded-xl border border-[var(--border)] dark:border-white/[0.08] bg-[var(--bg-page)] dark:bg-white/[0.02]">
                       <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[var(--border)] to-[var(--text-tertiary)] dark:from-white/10 dark:to-white/5 flex items-center justify-center text-sm font-bold text-[var(--text-secondary)] dark:text-white/60 overflow-hidden shrink-0">
                         {selectedClient.profile_photo_url ? (
-                          <img src={selectedClient.profile_photo_url} alt={selectedClient.name} className="w-full h-full object-cover" />
+                          <img
+                            src={selectedClient.profile_photo_url}
+                            alt={selectedClient.name}
+                            className="w-full h-full object-cover"
+                          />
                         ) : (
-                          selectedClient.name?.[0]?.toUpperCase() ?? "?"
+                          (selectedClient.name?.[0]?.toUpperCase() ?? "?")
                         )}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-semibold text-[var(--text-primary)] dark:text-white truncate">{selectedClient.name}</p>
-                        <p className="text-xs text-[var(--text-tertiary)] dark:text-white/40">Candidate ID: #{selectedClient.id.slice(-4)}</p>
+                        <p className="text-sm font-semibold text-[var(--text-primary)] dark:text-white truncate">
+                          {selectedClient.name}
+                        </p>
+                        <p className="text-xs text-[var(--text-tertiary)] dark:text-white/40">
+                          Client ID: #{selectedClient.id.slice(-4)}
+                        </p>
                       </div>
-                      <button type="button" onClick={() => setClientId("")} className="p-1.5 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-full text-[var(--text-tertiary)] dark:text-white/40 hover:text-red-500 dark:hover:text-red-400 transition-colors">
+                      <button
+                        type="button"
+                        onClick={() => setClientId("")}
+                        className="p-1.5 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-full text-[var(--text-tertiary)] dark:text-white/40 hover:text-red-500 dark:hover:text-red-400 transition-colors"
+                      >
                         <X size={14} />
                       </button>
                     </div>
                   )}
-                </div>
-
-                {/* Applied Job (visual placeholder matching the image) */}
-                <div>
-                  <label className="block text-[11px] font-semibold text-[var(--text-tertiary)] dark:text-white/40 uppercase tracking-wider mb-2">Applied Job</label>
-                  <div className="relative">
-                    <select className={`${inputCls} appearance-none pr-9`} disabled={!selectedClient}>
-                      <option>{selectedClient ? "Learning & Development Specialist" : "Select a client first"}</option>
-                    </select>
-                    <ChevronDown size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--text-tertiary)] dark:text-white/30 pointer-events-none" />
-                  </div>
                 </div>
 
                 {/* Note */}
@@ -389,12 +480,22 @@ function CreateCheckinModal({
                   <label className="flex items-center gap-1.5 text-[11px] font-semibold text-[var(--text-tertiary)] dark:text-white/40 uppercase tracking-wider mb-1.5">
                     <FileText size={12} /> Note
                   </label>
-                  <textarea value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Write here..." rows={3} className={`${inputCls} resize-none`} />
+                  <textarea
+                    value={notes}
+                    onChange={(e) => setNotes(e.target.value)}
+                    placeholder="Write here..."
+                    rows={3}
+                    className={`${inputCls} resize-none`}
+                  />
                 </div>
 
                 {/* Footer */}
                 <div className="flex items-center gap-3 pt-2">
-                  <button type="button" onClick={handleClose} className="px-5 py-2.5 text-sm font-semibold text-[var(--text-secondary)] dark:text-white/60 bg-white dark:bg-transparent rounded-xl transition-colors border border-[var(--border)] dark:border-white/[0.08] hover:bg-[var(--bg-page)] dark:hover:bg-white/[0.04]">
+                  <button
+                    type="button"
+                    onClick={handleClose}
+                    className="px-5 py-2.5 text-sm font-semibold text-[var(--text-secondary)] dark:text-white/60 bg-white dark:bg-transparent rounded-xl transition-colors border border-[var(--border)] dark:border-white/[0.08] hover:bg-[var(--bg-page)] dark:hover:bg-white/[0.04]"
+                  >
                     Cancel
                   </button>
                   <button
@@ -402,7 +503,7 @@ function CreateCheckinModal({
                     disabled={isSubmitting || !clientId || !date || !time}
                     className="flex-1 px-5 py-2.5 text-sm font-bold text-white dark:text-[#0a1114] rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed bg-gradient-to-br from-purple-600 to-purple-500 dark:from-[var(--energy)] dark:to-[#bef264]"
                   >
-                    {isSubmitting ? "Saving..." : "Save Interview"}
+                    {isSubmitting ? "Saving..." : "Save Check-In"}
                   </button>
                 </div>
               </div>
@@ -412,52 +513,69 @@ function CreateCheckinModal({
                 {/* Date pillar + time */}
                 <div className="flex items-start gap-4">
                   <div className="w-12 h-12 rounded-xl bg-[var(--bg-card)] dark:bg-white/[0.04] border border-[var(--border)] dark:border-white/[0.08] flex flex-col items-center justify-center shrink-0">
-                    <span className="text-[10px] font-semibold uppercase text-[var(--text-tertiary)] dark:text-white/40">{dayName || "—"}</span>
-                    <span className="text-[18px] font-bold text-[var(--text-primary)] dark:text-white leading-none mt-0.5">{dayNum || "—"}</span>
+                    <span className="text-[10px] font-semibold uppercase text-[var(--text-tertiary)] dark:text-white/40">
+                      {dayName || "—"}
+                    </span>
+                    <span className="text-[18px] font-bold text-[var(--text-primary)] dark:text-white leading-none mt-0.5">
+                      {dayNum || "—"}
+                    </span>
                   </div>
                   <div className="min-w-0">
-                    <p className="text-[15px] font-semibold text-[var(--text-primary)] dark:text-white truncate">{timeRange || "Select a time"}</p>
-                    <p className="text-xs text-[var(--text-tertiary)] dark:text-white/40 mt-0.5">{tz ? `${tz} · 1 hour` : ""}</p>
+                    <p className="text-[15px] font-semibold text-[var(--text-primary)] dark:text-white truncate">
+                      {timeRange || "Select a time"}
+                    </p>
+                    <p className="text-xs text-[var(--text-tertiary)] dark:text-white/40 mt-0.5">
+                      {tz ? `${tz} · 1 hour` : ""}
+                    </p>
                   </div>
                 </div>
 
-                {/* Candidate and Applied Job */}
+                {/* Client */}
                 <div>
                   <p className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-[var(--text-tertiary)] dark:text-white/30 mb-3">
-                    <Briefcase size={13} /> Candidate and Applied Job
+                    <Briefcase size={13} /> Client
                   </p>
                   {selectedClient ? (
                     <div className="space-y-3">
                       <div className="flex items-center gap-3 p-3 rounded-xl border border-[var(--border)] dark:border-white/[0.08] bg-[var(--bg-card)] dark:bg-white/[0.02]">
                         <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[var(--border)] to-[var(--text-tertiary)] dark:from-white/10 dark:to-white/5 flex items-center justify-center text-sm font-bold text-[var(--text-secondary)] dark:text-white/60 overflow-hidden shrink-0">
                           {selectedClient.profile_photo_url ? (
-                            <img src={selectedClient.profile_photo_url} alt={selectedClient.name} className="w-full h-full object-cover" />
+                            <img
+                              src={selectedClient.profile_photo_url}
+                              alt={selectedClient.name}
+                              className="w-full h-full object-cover"
+                            />
                           ) : (
-                            selectedClient.name?.[0]?.toUpperCase() ?? "?"
+                            (selectedClient.name?.[0]?.toUpperCase() ?? "?")
                           )}
                         </div>
                         <div className="min-w-0">
                           <p className="text-sm font-semibold text-[var(--text-primary)] dark:text-white truncate flex items-center gap-1">
                             {selectedClient.name}
-                            <span className="text-blue-500 dark:text-blue-400"><User size={12} /></span>
+                            <span className="text-blue-500 dark:text-blue-400">
+                              <User size={12} />
+                            </span>
                           </p>
-                          <p className="text-xs text-[var(--text-tertiary)] dark:text-white/40">Candidate ID: #{selectedClient.id.slice(-4)}</p>
-                          {selectedClient.email && <p className="text-xs text-purple-600 dark:text-[var(--energy)] truncate">{selectedClient.email}</p>}
-                          {selectedClient.phone && <p className="text-xs text-[var(--text-secondary)] dark:text-white/60">{selectedClient.phone}</p>}
-                        </div>
-                      </div>
-                      {/* Skeleton bars for applied job */}
-                      <div className="space-y-2 p-3">
-                        <div className="h-2.5 rounded-full bg-[var(--border)] dark:bg-white/[0.06] w-3/4" />
-                        <div className="flex gap-2">
-                          <div className="h-2 rounded-full bg-[var(--border)] dark:bg-white/[0.06] w-1/3" />
-                          <div className="h-2 rounded-full bg-[var(--border)] dark:bg-white/[0.06] w-1/4" />
-                          <div className="h-2 rounded-full bg-[var(--border)] dark:bg-white/[0.06] w-1/5" />
+                          <p className="text-xs text-[var(--text-tertiary)] dark:text-white/40">
+                            Client ID: #{selectedClient.id.slice(-4)}
+                          </p>
+                          {selectedClient.email && (
+                            <p className="text-xs text-purple-600 dark:text-[var(--energy)] truncate">
+                              {selectedClient.email}
+                            </p>
+                          )}
+                          {selectedClient.phone && (
+                            <p className="text-xs text-[var(--text-secondary)] dark:text-white/60">
+                              {selectedClient.phone}
+                            </p>
+                          )}
                         </div>
                       </div>
                     </div>
                   ) : (
-                    <p className="text-sm text-[var(--text-tertiary)] dark:text-white/30 italic">Select a client to see details</p>
+                    <p className="text-sm text-[var(--text-tertiary)] dark:text-white/30 italic">
+                      Select a client to see details
+                    </p>
                   )}
                 </div>
 
@@ -468,8 +586,13 @@ function CreateCheckinModal({
                   </p>
                   <div className="space-y-3">
                     <div className="flex items-center gap-2 text-sm text-[var(--text-secondary)] dark:text-white/60">
-                      <User size={14} className="text-[var(--text-tertiary)] dark:text-white/30 shrink-0" />
-                      <span className="text-[var(--text-tertiary)] dark:text-white/30">Participant</span>
+                      <User
+                        size={14}
+                        className="text-[var(--text-tertiary)] dark:text-white/30 shrink-0"
+                      />
+                      <span className="text-[var(--text-tertiary)] dark:text-white/30">
+                        Participant
+                      </span>
                     </div>
                     {/* Participant skeleton bars */}
                     <div className="flex items-center gap-2 pl-6">
@@ -484,18 +607,35 @@ function CreateCheckinModal({
                     </div>
                     {meetingLink && (
                       <div className="flex items-start gap-2 text-sm">
-                        <Globe size={14} className="text-[var(--text-tertiary)] dark:text-white/30 mt-0.5 shrink-0" />
+                        <Globe
+                          size={14}
+                          className="text-[var(--text-tertiary)] dark:text-white/30 mt-0.5 shrink-0"
+                        />
                         <div className="min-w-0">
-                          <p className="text-xs text-[var(--text-tertiary)] dark:text-white/30 mb-0.5">Location</p>
-                          <a href={meetingLink} target="_blank" rel="noopener noreferrer" className="text-purple-600 dark:text-[var(--energy)] truncate hover:underline">{meetingLink}</a>
+                          <p className="text-xs text-[var(--text-tertiary)] dark:text-white/30 mb-0.5">
+                            Location
+                          </p>
+                          <a
+                            href={meetingLink}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-purple-600 dark:text-[var(--energy)] truncate hover:underline"
+                          >
+                            {meetingLink}
+                          </a>
                         </div>
                       </div>
                     )}
                     {notes && (
                       <div className="flex items-start gap-2 text-sm text-[var(--text-secondary)] dark:text-white/60">
-                        <FileText size={14} className="text-[var(--text-tertiary)] dark:text-white/30 mt-0.5 shrink-0" />
+                        <FileText
+                          size={14}
+                          className="text-[var(--text-tertiary)] dark:text-white/30 mt-0.5 shrink-0"
+                        />
                         <div className="min-w-0">
-                          <p className="text-xs text-[var(--text-tertiary)] dark:text-white/30 mb-0.5">Note</p>
+                          <p className="text-xs text-[var(--text-tertiary)] dark:text-white/30 mb-0.5">
+                            Note
+                          </p>
                           <p className="line-clamp-3">{notes}</p>
                         </div>
                       </div>
@@ -687,9 +827,13 @@ function CheckinCard({
           <div className="flex items-center gap-3">
             <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[var(--border)] to-[var(--text-tertiary)] dark:from-white/10 dark:to-white/5 flex items-center justify-center text-[16px] font-bold text-[var(--text-secondary)] dark:text-white/60 overflow-hidden shrink-0">
               {client?.profile_photo_url ? (
-                <img src={client.profile_photo_url} alt={client.name} className="w-full h-full object-cover" />
+                <img
+                  src={client.profile_photo_url}
+                  alt={client.name}
+                  className="w-full h-full object-cover"
+                />
               ) : (
-                client?.name?.[0]?.toUpperCase() ?? "?"
+                (client?.name?.[0]?.toUpperCase() ?? "?")
               )}
             </div>
             <div className="min-w-0">
@@ -721,32 +865,55 @@ function CheckinCard({
             <span className="text-[15px] font-semibold text-[var(--text-primary)] dark:text-white">
               {format(scheduledAt, "h:mm a")} - {format(endTime, "h:mm a")}
             </span>
-            <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold border ${meta.bg} ${meta.text} ${meta.border}`}>
+            <span
+              className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold border ${meta.bg} ${meta.text} ${meta.border}`}
+            >
               {StatusIcon && <StatusIcon size={12} />}
-              {!StatusIcon && <span className={`w-1.5 h-1.5 rounded-full ${meta.dot}`} />}
+              {!StatusIcon && (
+                <span className={`w-1.5 h-1.5 rounded-full ${meta.dot}`} />
+              )}
               {meta.label}
             </span>
-            <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium border ${typeColor}`}>
+            <span
+              className={`inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium border ${typeColor}`}
+            >
               {typeLabel}
             </span>
           </div>
 
           <div className="flex flex-wrap items-center gap-4 text-[12px] text-[var(--text-tertiary)] dark:text-white/40 mb-4">
-            <span className="inline-flex items-center gap-1"><Hash size={11} />#{checkin.id.slice(-4)}</span>
-            <span className="inline-flex items-center gap-1"><Globe size={11} />{format(scheduledAt, "z") === "Z" ? "GMT" : format(scheduledAt, "z")}</span>
-            <span className="inline-flex items-center gap-1"><Clock size={11} />1 hour</span>
+            <span className="inline-flex items-center gap-1">
+              <Hash size={11} />#{checkin.id.slice(-4)}
+            </span>
+            <span className="inline-flex items-center gap-1">
+              <Globe size={11} />
+              {format(scheduledAt, "z") === "Z"
+                ? "GMT"
+                : format(scheduledAt, "z")}
+            </span>
+            <span className="inline-flex items-center gap-1">
+              <Clock size={11} />1 hour
+            </span>
           </div>
 
           <div className="flex items-center gap-2">
             {statusKey === "scheduled" && (
               <>
                 {checkin.type === "video" && checkin.meeting_link && (
-                  <a href={checkin.meeting_link} target="_blank" rel="noopener noreferrer" className="px-3.5 py-2 text-[12px] font-semibold text-purple-700 dark:text-[var(--energy)] border border-purple-200 dark:border-[var(--energy)]/30 rounded-xl hover:bg-purple-50 dark:hover:bg-[var(--energy)]/10 transition-colors">
+                  <a
+                    href={checkin.meeting_link}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="px-3.5 py-2 text-[12px] font-semibold text-purple-700 dark:text-[var(--energy)] border border-purple-200 dark:border-[var(--energy)]/30 rounded-xl hover:bg-purple-50 dark:hover:bg-[var(--energy)]/10 transition-colors"
+                  >
                     Start Meeting
                   </a>
                 )}
                 {checkin.type === "call" && client?.phone && (
-                  <a href={`tel:${client.phone}`} className="px-3.5 py-2 text-[12px] font-semibold text-purple-700 dark:text-[var(--energy)] border border-purple-200 dark:border-[var(--energy)]/30 rounded-xl hover:bg-purple-50 dark:hover:bg-[var(--energy)]/10 transition-colors">
+                  <a
+                    href={`tel:${client.phone}`}
+                    className="px-3.5 py-2 text-[12px] font-semibold text-purple-700 dark:text-[var(--energy)] border border-purple-200 dark:border-[var(--energy)]/30 rounded-xl hover:bg-purple-50 dark:hover:bg-[var(--energy)]/10 transition-colors"
+                  >
                     Call Now
                   </a>
                 )}
@@ -754,7 +921,10 @@ function CheckinCard({
             )}
 
             {statusKey === "overdue" && (
-              <button onClick={() => onReschedule(checkin)} className="px-3.5 py-2 text-[12px] font-semibold text-red-700 dark:text-red-300 border border-red-200 dark:border-red-500/30 rounded-xl hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors">
+              <button
+                onClick={() => onReschedule(checkin)}
+                className="px-3.5 py-2 text-[12px] font-semibold text-red-700 dark:text-red-300 border border-red-200 dark:border-red-500/30 rounded-xl hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors"
+              >
                 Reschedule
               </button>
             )}
@@ -771,7 +941,10 @@ function CheckinCard({
             )}
 
             {statusKey === "cancelled" && (
-              <button onClick={() => onReschedule(checkin)} className="px-3.5 py-2 text-[12px] font-semibold text-[var(--text-secondary)] dark:text-white/60 border border-[var(--border)] dark:border-white/[0.08] rounded-xl hover:bg-[var(--bg-page)] dark:hover:bg-white/[0.04] transition-colors">
+              <button
+                onClick={() => onReschedule(checkin)}
+                className="px-3.5 py-2 text-[12px] font-semibold text-[var(--text-secondary)] dark:text-white/60 border border-[var(--border)] dark:border-white/[0.08] rounded-xl hover:bg-[var(--bg-page)] dark:hover:bg-white/[0.04] transition-colors"
+              >
                 <RotateCcw size={13} className="inline mr-1" /> Reschedule
               </button>
             )}
@@ -868,7 +1041,11 @@ export default function CheckinsPage() {
 
   const handleRescheduleSubmit = useCallback(
     async (id: string, scheduled_at: string) => {
-      await updateCheckin.mutateAsync({ id, scheduled_at, status: "scheduled" });
+      await updateCheckin.mutateAsync({
+        id,
+        scheduled_at,
+        status: "scheduled",
+      });
     },
     [updateCheckin],
   );
@@ -896,7 +1073,10 @@ export default function CheckinsPage() {
           <div className="max-w-[1400px] mx-auto px-6 h-16 flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-purple-600 to-purple-500 dark:from-[var(--energy)] dark:to-[#bef264] flex items-center justify-center">
-                <CalendarDays size={18} className="text-white dark:text-[#0a1114]" />
+                <CalendarDays
+                  size={18}
+                  className="text-white dark:text-[#0a1114]"
+                />
               </div>
               <h1 className="text-[17px] font-bold text-[var(--text-primary)] dark:text-white">
                 Check-ins

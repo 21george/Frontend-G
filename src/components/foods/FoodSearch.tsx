@@ -50,17 +50,13 @@ export default function FoodSearch({
         containerRef.current &&
         !containerRef.current.contains(e.target as Node)
       ) {
-        if (foods.length > 0 && !showCustomForm) {
-          handleSelect(foods[0]);
-        } else {
-          setOpen(false);
-          setShowCustomForm(false);
-        }
+        setOpen(false);
+        setShowCustomForm(false);
       }
     };
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, [open, foods, showCustomForm, handleSelect]);
+  }, [open]);
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Escape") {
@@ -88,7 +84,7 @@ export default function FoodSearch({
       });
       // The backend returns { id, name, nutrients_per_100g, source }
       const newFood: Food = {
-        id: result?.data?.id,
+        id: result.id,
         name: value.trim(),
         nutrients_per_100g: nutrients,
         source: "custom",

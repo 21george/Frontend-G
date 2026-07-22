@@ -23,17 +23,22 @@ type LoginValues = z.infer<typeof loginSchema>;
 
 /* ── Ambient floating particles ── */
 function FloatingParticles() {
-  const particles = Array.from({ length: 12 }, (_, i) => ({
-    id: i,
-    size: Math.random() * 3 + 1,
-    x: Math.random() * 100,
-    y: Math.random() * 100,
-    duration: Math.random() * 8 + 12,
-    delay: Math.random() * 5,
-  }));
+  const [particles] = useState(() =>
+    Array.from({ length: 12 }, (_, i) => ({
+      id: i,
+      size: Math.random() * 3 + 1,
+      x: Math.random() * 100,
+      y: Math.random() * 100,
+      duration: Math.random() * 8 + 12,
+      delay: Math.random() * 5,
+    })),
+  );
 
   return (
-    <div className="absolute inset-0 pointer-events-none overflow-hidden" aria-hidden>
+    <div
+      className="absolute inset-0 pointer-events-none overflow-hidden"
+      aria-hidden
+    >
       {particles.map((p) => (
         <motion.div
           key={p.id}
@@ -254,7 +259,9 @@ export default function LoginPage() {
         {/* Breathing radial glow */}
         <motion.div
           className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] rounded-full pointer-events-none blur-[100px]"
-          style={{ background: "radial-gradient(circle, #a3e635 0%, transparent 70%)" }}
+          style={{
+            background: "radial-gradient(circle, #a3e635 0%, transparent 70%)",
+          }}
           animate={{
             opacity: [0.1, 0.2, 0.1],
             scale: [1, 1.1, 1],
@@ -287,7 +294,10 @@ export default function LoginPage() {
             animate="visible"
           >
             {/* Logo */}
-            <motion.div variants={itemVariants} className="flex items-center justify-center mb-1">
+            <motion.div
+              variants={itemVariants}
+              className="flex items-center justify-center mb-1"
+            >
               <div className="relative w-16 h-16 rounded-xl overflow-hidden ring-1 ring-white/10">
                 <LogoRing />
                 <motion.img
@@ -390,7 +400,9 @@ export default function LoginPage() {
                   />
                   <motion.button
                     type="button"
-                    tabIndex={-1}
+                    aria-label={
+                      showPassword ? "Hide password" : "Show password"
+                    }
                     onClick={() => setShowPassword((v) => !v)}
                     className="absolute right-3 top-1/2 -translate-y-1/2 text-white/20 hover:text-white/50 transition-colors"
                     whileTap={{ scale: 0.85 }}
@@ -440,7 +452,10 @@ export default function LoginPage() {
                   type="submit"
                   disabled={isLoading}
                   className="w-full bg-[#a3e635] hover:bg-[#bef264] active:bg-[#8bc52f] text-[#0a1114] font-bold text-[14px] py-[11px] rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 mt-1 overflow-hidden relative"
-                  style={{ fontFamily: "var(--font-mono)", letterSpacing: "0.05em" }}
+                  style={{
+                    fontFamily: "var(--font-mono)",
+                    letterSpacing: "0.05em",
+                  }}
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                   transition={{ type: "spring", stiffness: 400, damping: 17 }}
@@ -450,12 +465,20 @@ export default function LoginPage() {
                     className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent"
                     initial={{ x: "-100%" }}
                     animate={isLoading ? { x: "200%" } : { x: "-100%" }}
-                    transition={{ duration: 1.2, repeat: Infinity, ease: "linear" }}
+                    transition={{
+                      duration: 1.2,
+                      repeat: Infinity,
+                      ease: "linear",
+                    }}
                   />
                   {isLoading && (
                     <motion.div
                       animate={{ rotate: 360 }}
-                      transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                      transition={{
+                        duration: 1,
+                        repeat: Infinity,
+                        ease: "linear",
+                      }}
                     >
                       <Loader2 className="w-4 h-4" />
                     </motion.div>

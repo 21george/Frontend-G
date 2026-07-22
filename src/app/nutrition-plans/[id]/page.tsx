@@ -35,7 +35,13 @@ import { formatDate } from "@/lib/utils";
 import { DAYS } from "@/lib/utils";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import FoodSearch from "@/components/foods/FoodSearch";
-import type { NutritionPlan, NutritionDay, Meal, Food, FoodNutrients } from "@/types";
+import type {
+  NutritionPlan,
+  NutritionDay,
+  Meal,
+  Food,
+  FoodNutrients,
+} from "@/types";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -52,24 +58,38 @@ const emptyFood = () => ({
 
 function parseQuantityToGrams(quantityStr: string): number {
   if (!quantityStr) return 0;
-  const match = quantityStr.match(/^\s*(\d+(?:\.\d+)?)\s*(g|kg|ml|l|oz|lb|cup|tbsp|tsp)?\s*$/i);
+  const match = quantityStr.match(
+    /^\s*(\d+(?:\.\d+)?)\s*(g|kg|ml|l|oz|lb|cup|tbsp|tsp)?\s*$/i,
+  );
   if (!match) return 0;
   const val = parseFloat(match[1]);
   const unit = (match[2] ?? "g").toLowerCase();
   switch (unit) {
-    case "kg": return val * 1000;
-    case "l": return val * 1000;
-    case "ml": return val;
-    case "oz": return val * 28.35;
-    case "lb": return val * 453.6;
-    case "cup": return val * 240;
-    case "tbsp": return val * 15;
-    case "tsp": return val * 5;
-    default: return val;
+    case "kg":
+      return val * 1000;
+    case "l":
+      return val * 1000;
+    case "ml":
+      return val;
+    case "oz":
+      return val * 28.35;
+    case "lb":
+      return val * 453.6;
+    case "cup":
+      return val * 240;
+    case "tbsp":
+      return val * 15;
+    case "tsp":
+      return val * 5;
+    default:
+      return val;
   }
 }
 
-function calculateNutrients(nutrientsPer100g: FoodNutrients, quantityG: number): FoodNutrients {
+function calculateNutrients(
+  nutrientsPer100g: FoodNutrients,
+  quantityG: number,
+): FoodNutrients {
   const factor = quantityG / 100;
   return {
     calories: Math.round(nutrientsPer100g.calories * factor * 10) / 10,
@@ -397,11 +417,14 @@ export default function NutritionPlanDetailPage() {
                       foods: m.foods.map((f, k) => {
                         if (k !== fi) return f;
                         const updated = { ...f, [field]: value };
-                        if (field === "quantity" && updated.nutrients_per_100g) {
+                        if (field === "quantity") {
                           const quantityG = parseQuantityToGrams(String(value));
                           updated.quantity_g = quantityG;
-                          if (quantityG > 0) {
-                            const calc = calculateNutrients(updated.nutrients_per_100g, quantityG);
+                          if (updated.nutrients_per_100g && quantityG > 0) {
+                            const calc = calculateNutrients(
+                              updated.nutrients_per_100g,
+                              quantityG,
+                            );
                             updated.calories = calc.calories;
                             updated.protein_g = calc.protein_g;
                             updated.carbs_g = calc.carbs_g;
@@ -431,8 +454,12 @@ export default function NutritionPlanDetailPage() {
                         ...m,
                         foods: m.foods.map((f, k) => {
                           if (k !== fi) return f;
-                          const quantityG = parseQuantityToGrams(f.quantity) || 100;
-                          const calc = calculateNutrients(food.nutrients_per_100g, quantityG);
+                          const quantityG =
+                            parseQuantityToGrams(f.quantity) || 100;
+                          const calc = calculateNutrients(
+                            food.nutrients_per_100g,
+                            quantityG,
+                          );
                           return {
                             ...f,
                             name: food.name,
@@ -910,8 +937,12 @@ export default function NutritionPlanDetailPage() {
                                 <div className="min-w-0">
                                   <FoodSearch
                                     value={food.name}
-                                    onChange={(name) => updateFood(di, mi, fi, "name", name)}
-                                    onSelect={(food) => handleFoodSelect(di, mi, fi, food)}
+                                    onChange={(name) =>
+                                      updateFood(di, mi, fi, "name", name)
+                                    }
+                                    onSelect={(food) =>
+                                      handleFoodSelect(di, mi, fi, food)
+                                    }
                                     placeholder="Search food..."
                                   />
                                 </div>
