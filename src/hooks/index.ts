@@ -38,6 +38,7 @@ export {
   useCreateCheckin,
   useUpdateCheckin,
   useDeleteCheckin,
+  useUpdateCheckinStatus,
 } from "./useCheckins";
 export {
   useMessages,
@@ -122,3 +123,10 @@ export {
   useRejectAnalysis,
   useAssignPlan,
 } from "./useWorkoutAnalysis";
+export {
+  useSearchFoods,
+  useFoods,
+  useCreateFood,
+  useCalculateNutrition,
+  useGetFoodDetails,
+} from "./useFoods";

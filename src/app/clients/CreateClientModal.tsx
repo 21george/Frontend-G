@@ -8,10 +8,17 @@ import { clientsApi } from "@/lib/api";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { useState, useRef, useEffect, useCallback, useMemo } from "react";
+import {
+  useState,
+  useRef,
+  useEffect,
+  useCallback,
+  useMemo,
+  type ComponentType,
+} from "react";
 import { getCountryCallingCode, type CountryCode } from "libphonenumber-js";
 import * as AllFlags from "country-flag-icons/react/3x2";
-import { Copy, Check, AlertCircle, Loader2, CheckCircle2 } from "lucide-react";
+import { Copy, Check, AlertCircle, Loader2, CheckCircle2, User, X } from "lucide-react";
 import type { Client } from "@/types";
 
 // ── Country data ──────────────────────────────────────────────────────────────
@@ -225,7 +232,7 @@ const COUNTRIES: Country[] = (
 type FlagProps = { className?: string; title?: string };
 
 function FlagIcon({ code, className }: { code: string; className?: string }) {
-  const Comp = (AllFlags as Record<string, React.ComponentType<FlagProps>>)[
+  const Comp = (AllFlags as Record<string, ComponentType<FlagProps>>)[
     code.toUpperCase()
   ];
   if (!Comp) return <span className="text-base leading-none">🌐</span>;
@@ -504,6 +511,9 @@ export function CreateClientModal({ open, onClose, onCreated }: Props) {
   const [copied, setCopied] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [checking, setChecking] = useState(false);
+  const [photoFile, setPhotoFile] = useState<File | null>(null);
+  const [photoPreview, setPhotoPreview] = useState<string | null>(null);
+  const [photoUploading, setPhotoUploading] = useState(false);
 
   const [emailState, setEmailState] = useState<
     "idle" | "checking" | "valid" | "invalid"
@@ -567,6 +577,12 @@ export function CreateClientModal({ open, onClose, onCreated }: Props) {
     },
     [],
   );
+
+  useEffect(() => {
+    return () => {
+      if (photoPreview?.startsWith("blob:")) URL.revokeObjectURL(photoPreview);
+    };
+  }, [photoPreview]);
 
   const checkEmailValidity = useCallback(async (email: string) => {
     if (!email) {
@@ -649,6 +665,19 @@ export function CreateClientModal({ open, onClose, onCreated }: Props) {
 
     try {
       const res = await createClient.mutateAsync(payload);
+
+      // Upload profile photo if selected
+      if (photoFile && res.data.id) {
+        setPhotoUploading(true);
+        try {
+          await clientsApi.uploadClientPhoto(res.data.id, photoFile);
+        } catch {
+          // Photo upload failed but client was created — don't block success flow
+        } finally {
+          setPhotoUploading(false);
+        }
+      }
+
       setGeneratedCode(res.data.login_code);
       setEmailSent(!!res.data.email_sent);
       setEmailError(res.data.email_error ?? null);
@@ -695,6 +724,10 @@ export function CreateClientModal({ open, onClose, onCreated }: Props) {
       setCopied(false);
       setSubmitError(null);
       setEmailState("idle");
+      setPhotoFile(null);
+      if (photoPreview?.startsWith("blob:")) URL.revokeObjectURL(photoPreview);
+      setPhotoPreview(null);
+      setPhotoUploading(false);
       reset();
     }, 300);
   };
@@ -760,6 +793,56 @@ export function CreateClientModal({ open, onClose, onCreated }: Props) {
           onSubmit={handleSubmit(onSubmit)}
           className="space-y-5 max-h-[70vh] overflow-y-auto pr-1"
         >
+          {/* Profile Photo */}
+          <div>
+            <label className="label">Profile Photo</label>
+            <div className="flex items-center gap-4">
+              <div className="relative">
+                {photoPreview ? (
+                  <img
+                    src={photoPreview}
+                    alt="Preview"
+                    className="w-16 h-16 rounded-full object-cover border border-[var(--border)]"
+                  />
+                ) : (
+                  <div className="w-16 h-16 rounded-full bg-[var(--bg-subtle)] border border-[var(--border)] flex items-center justify-center text-[var(--text-tertiary)]">
+                    <User className="w-6 h-6" />
+                  </div>
+                )}
+              </div>
+              <div className="flex-1">
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) {
+                      if (photoPreview?.startsWith("blob:"))
+                        URL.revokeObjectURL(photoPreview);
+                      setPhotoFile(file);
+                      setPhotoPreview(URL.createObjectURL(file));
+                    }
+                  }}
+                  className="block w-full text-xs text-[var(--text-secondary)] file:mr-3 file:px-3 file:py-1.5 file:rounded-lg file:border-0 file:bg-[var(--bg-subtle)] file:text-[var(--text-primary)] hover:file:bg-[var(--border)] cursor-pointer"
+                />
+                {photoPreview && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (photoPreview?.startsWith("blob:"))
+                        URL.revokeObjectURL(photoPreview);
+                      setPhotoFile(null);
+                      setPhotoPreview(null);
+                    }}
+                    className="mt-1.5 inline-flex items-center gap-1 text-xs text-red-600 hover:text-red-700"
+                  >
+                    <X className="w-3 h-3" /> Remove photo
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+
           {/* Name */}
           <div>
             <label className="label">Full Name *</label>
@@ -1073,17 +1156,19 @@ export function CreateClientModal({ open, onClose, onCreated }: Props) {
 
           <button
             type="submit"
-            disabled={isSubmitting || checking}
+            disabled={isSubmitting || checking || photoUploading}
             className="btn-primary w-full py-3 flex items-center justify-center gap-2"
           >
-            {(isSubmitting || checking) && (
+            {(isSubmitting || checking || photoUploading) && (
               <Loader2 size={16} className="animate-spin" />
             )}
-            {checking
-              ? "Checking…"
-              : isSubmitting
-                ? "Creating…"
-                : "Create Client & Generate Code"}
+            {photoUploading
+              ? "Uploading photo…"
+              : checking
+                ? "Checking…"
+                : isSubmitting
+                  ? "Creating…"
+                  : "Create Client & Generate Code"}
           </button>
         </form>
       )}

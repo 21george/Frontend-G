@@ -20,6 +20,7 @@ import { UpcomingSessions } from "@/components/dashboard/UpcomingSessions";
 import { UpcomingCoachingSessions } from "@/components/dashboard/UpcomingCoachingSessions";
 import { ClientWorkload } from "@/components/dashboard/ClientWorkload";
 import { KpiCard } from "@/components/dashboard/KpiCard";
+import { DashboardSkeleton } from "@/components/ui/skeletons";
 
 export default function DashboardPage() {
   const { data: clientsData, isLoading: clientsLoading } = useClients();
@@ -81,6 +82,14 @@ export default function DashboardPage() {
     () => workoutPlans.filter((p) => p.status === "active").length,
     [workoutPlans],
   );
+
+  if (kpiLoading) {
+    return (
+      <DashboardLayout>
+        <DashboardSkeleton />
+      </DashboardLayout>
+    );
+  }
 
   return (
     <DashboardLayout>

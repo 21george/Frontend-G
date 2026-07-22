@@ -112,6 +112,7 @@
     line-height: 1.6;
     font-weight: 400;
     letter-spacing: -0.01em;
+    text-wrap: pretty;
   }
 
   /* ── Typography hierarchy ─────────────────────────────────────────────── */

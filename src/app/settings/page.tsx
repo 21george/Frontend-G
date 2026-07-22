@@ -37,6 +37,7 @@ import {
   Trash2,
 } from "lucide-react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
+import { SettingsSkeleton } from "@/components/ui/skeletons";
 
 /* ═══════════════════════════════════════════════════════════════════════════
    UI Primitives
@@ -225,14 +226,22 @@ function InfoRow({
 export default function SettingsPage() {
   const { coach } = useAuthStore();
   const { theme, toggle: toggleTheme } = useThemeStore();
-  const { data: subscription } = useSubscription();
+  const { data: subscription, isLoading: subLoading } = useSubscription();
   const manageBilling = useManageBilling();
 
   const [imageErrored, setImageErrored] = useState(false);
   const [showPwModal, setShowPwModal] = useState(false);
 
-  const { data: notifData } = useNotificationSettings();
+  const { data: notifData, isLoading: notifLoading } = useNotificationSettings();
   const updateNotif = useUpdateNotificationSettings();
+
+  if (subLoading || notifLoading) {
+    return (
+      <DashboardLayout>
+        <SettingsSkeleton />
+      </DashboardLayout>
+    );
+  }
 
   const notifNewClient = notifData?.consultation ?? false;
   const notifMessages = notifData?.email_sms ?? true;

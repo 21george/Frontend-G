@@ -112,6 +112,7 @@ export default function EditProfilePage() {
   const { coach, updateCoach } = useAuthStore();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const toastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const syncedCoachIdRef = useRef<string | undefined>(undefined);
 
   // Profile state
   const [name, setName] = useState(coach?.name ?? "");
@@ -204,6 +205,31 @@ export default function EditProfilePage() {
     );
   }, [coach, buildPayload]);
 
+  // Centralised helper: reads all profile fields from a coach-shaped object
+  // and pushes them into form state. Called on hydration, after save, and on
+  // cancel so the form is always consistent with the persisted record.
+  const syncFormFromCoach = useCallback((c: typeof coach) => {
+    if (!c) return;
+    setName(c.name ?? "");
+    setSurname(c.surname ?? "");
+    setTitle(c.job_title ?? "");
+    setRole(c.function ?? "");
+    setPhone(c.phone ?? "");
+    setLanguage((c.language as "en" | "de") ?? "en");
+    setLinkedin(c.social_media?.linkedin ?? "");
+    setInstagram(c.social_media?.instagram ?? "");
+    setWebsite(c.social_media?.website ?? "");
+  }, []);
+
+  // Re-sync form when coach data first arrives (late hydration from auth
+  // store). Guard on ID so photo-upload ref changes don't clobber edits.
+  useEffect(() => {
+    if (coach?.id && coach.id !== syncedCoachIdRef.current) {
+      syncedCoachIdRef.current = coach.id;
+      syncFormFromCoach(coach);
+    }
+  }, [coach, syncFormFromCoach]);
+
   const handleSave = async () => {
     if (!dirty) {
       showToast("No changes to save", "error");
@@ -216,9 +242,7 @@ export default function EditProfilePage() {
       const { data: res } = await api.put("/coach/profile", payload);
       if (res.success && res.data) {
         updateCoach(res.data);
-        // Sync local title/role states in case backend sanitized them
-        setTitle(res.data.job_title ?? "");
-        setRole(res.data.function ?? "");
+        syncFormFromCoach(res.data);
       }
 
       // Surface the backend's verdict on what actually changed.
@@ -226,7 +250,8 @@ export default function EditProfilePage() {
       // "field explicitly cleared" as a real change; the frontend's
       // skip-if-no-changes check is LENIENT, so we still need the
       // toast in case the two views disagree.
-      const resultChanged = (res?.data?.changed_fields as string[] | undefined) ?? [];
+      const resultChanged =
+        (res?.data?.changed_fields as string[] | undefined) ?? [];
       if (resultChanged.length === 0) {
         showToast("No fields actually changed", "error");
       } else if (resultChanged.length === 1) {
@@ -243,16 +268,7 @@ export default function EditProfilePage() {
   };
 
   const handleCancel = () => {
-    if (!coach) return;
-    setName(coach.name ?? "");
-    setSurname(coach.surname ?? "");
-    setPhone(coach.phone ?? "");
-    setLanguage(coach.language ?? "en");
-    setTitle(coach.job_title ?? "");
-    setRole(coach.function ?? "");
-    setLinkedin(coach.social_media?.linkedin ?? "");
-    setInstagram(coach.social_media?.instagram ?? "");
-    setWebsite(coach.social_media?.website ?? "");
+    syncFormFromCoach(coach);
   };
 
   const MAX_FILE_SIZE = 5 * 1024 * 1024;

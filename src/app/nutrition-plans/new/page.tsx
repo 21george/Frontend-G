@@ -1,21 +1,66 @@
 "use client";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { useCreateNutritionPlan, useClients } from "@/lib/hooks";
+import FoodSearch from "@/components/foods/FoodSearch";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useState } from "react";
-import { ArrowLeft, Plus, Trash2 } from "lucide-react";
+import { useState, useCallback } from "react";
+import { ArrowLeft, Plus } from "lucide-react";
 import Link from "next/link";
 import { DAYS } from "@/lib/utils";
+import type { Food, FoodNutrients } from "@/types";
 
-const emptyFood = {
+interface PlanFood {
+  name: string;
+  quantity: string;
+  quantity_g: number;
+  calories: number;
+  protein_g: number;
+  carbs_g: number;
+  fat_g: number;
+  nutrients_per_100g?: FoodNutrients;
+}
+
+const emptyFood = (): PlanFood => ({
   name: "",
   quantity: "",
+  quantity_g: 0,
   calories: 0,
   protein_g: 0,
   carbs_g: 0,
   fat_g: 0,
-};
-const emptyMeal = { meal_name: "", time: "08:00", foods: [{ ...emptyFood }] };
+  nutrients_per_100g: undefined,
+});
+
+const emptyMeal = { meal_name: "", time: "08:00", foods: [emptyFood()] };
+
+function parseQuantityToGrams(quantityStr: string): number {
+  if (!quantityStr) return 0;
+  const match = quantityStr.match(/^\s*(\d+(?:\.\d+)?)\s*(g|kg|ml|l|oz|lb|cup|tbsp|tsp)?\s*$/i);
+  if (!match) return 0;
+  const val = parseFloat(match[1]);
+  const unit = (match[2] ?? "g").toLowerCase();
+  switch (unit) {
+    case "kg": return val * 1000;
+    case "l": return val * 1000;
+    case "ml": return val;
+    case "oz": return val * 28.35;
+    case "lb": return val * 453.6;
+    case "cup": return val * 240;
+    case "tbsp": return val * 15;
+    case "tsp": return val * 5;
+    default: return val;
+  }
+}
+
+function calculateNutrients(nutrientsPer100g: FoodNutrients, quantityG: number): FoodNutrients {
+  const factor = quantityG / 100;
+  return {
+    calories: Math.round(nutrientsPer100g.calories * factor * 10) / 10,
+    protein_g: Math.round(nutrientsPer100g.protein_g * factor * 10) / 10,
+    carbs_g: Math.round(nutrientsPer100g.carbs_g * factor * 10) / 10,
+    fat_g: Math.round(nutrientsPer100g.fat_g * factor * 10) / 10,
+  };
+}
 
 export default function NewNutritionPlanPage() {
   const router = useRouter();
@@ -31,29 +76,30 @@ export default function NewNutritionPlanPage() {
   const [days, setDays] = useState(
     DAYS.map((day) => ({
       day,
-      meals: [{ ...emptyMeal, foods: [{ ...emptyFood }] }],
+      meals: [{ ...emptyMeal, foods: [emptyFood()] }],
     })),
   );
 
   const addMeal = (di: number) =>
-    setDays(
-      days.map((d, i) =>
+    setDays((prev) =>
+      prev.map((d, i) =>
         i === di
           ? {
               ...d,
-              meals: [...d.meals, { ...emptyMeal, foods: [{ ...emptyFood }] }],
+              meals: [...d.meals, { ...emptyMeal, foods: [emptyFood()] }],
             }
           : d,
       ),
     );
+
   const addFood = (di: number, mi: number) =>
-    setDays(
-      days.map((d, i) =>
+    setDays((prev) =>
+      prev.map((d, i) =>
         i === di
           ? {
               ...d,
               meals: d.meals.map((m, j) =>
-                j === mi ? { ...m, foods: [...m.foods, { ...emptyFood }] } : m,
+                j === mi ? { ...m, foods: [...m.foods, emptyFood()] } : m,
               ),
             }
           : d,
@@ -64,11 +110,10 @@ export default function NewNutritionPlanPage() {
     di: number,
     mi: number,
     fi: number,
-    field: string,
-    value: any,
-  ) =>
-    setDays(
-      days.map((d, i) =>
+    partial: Partial<PlanFood>,
+  ) => {
+    setDays((prev) =>
+      prev.map((d, i) =>
         i === di
           ? {
               ...d,
@@ -76,9 +121,23 @@ export default function NewNutritionPlanPage() {
                 j === mi
                   ? {
                       ...m,
-                      foods: m.foods.map((f, k) =>
-                        k === fi ? { ...f, [field]: value } : f,
-                      ),
+                      foods: m.foods.map((f, k) => {
+                        if (k !== fi) return f;
+                        const updated = { ...f, ...partial };
+                        // Auto-recalculate if quantity changed and we have nutrients_per_100g
+                        if (partial.quantity !== undefined && updated.nutrients_per_100g) {
+                          const quantityG = parseQuantityToGrams(updated.quantity);
+                          updated.quantity_g = quantityG;
+                          if (quantityG > 0) {
+                            const calc = calculateNutrients(updated.nutrients_per_100g, quantityG);
+                            updated.calories = calc.calories;
+                            updated.protein_g = calc.protein_g;
+                            updated.carbs_g = calc.carbs_g;
+                            updated.fat_g = calc.fat_g;
+                          }
+                        }
+                        return updated;
+                      }),
                     }
                   : m,
               ),
@@ -86,9 +145,46 @@ export default function NewNutritionPlanPage() {
           : d,
       ),
     );
+  };
 
-  // totalMacros uses only day 0 (the template day) because all 7 days are
-  // identical once replicated, so the per-day total equals day-0 total.
+  const handleFoodSelect = useCallback(
+    (di: number, mi: number, fi: number, food: Food) => {
+      setDays((prev) =>
+        prev.map((d, i) =>
+          i === di
+            ? {
+                ...d,
+                meals: d.meals.map((m, j) =>
+                  j === mi
+                    ? {
+                        ...m,
+                        foods: m.foods.map((f, k) => {
+                          if (k !== fi) return f;
+                          const quantityG = parseQuantityToGrams(f.quantity) || 100;
+                          const calc = calculateNutrients(food.nutrients_per_100g, quantityG);
+                          return {
+                            ...f,
+                            name: food.name,
+                            nutrients_per_100g: food.nutrients_per_100g,
+                            quantity: f.quantity || "100g",
+                            quantity_g: quantityG,
+                            calories: calc.calories,
+                            protein_g: calc.protein_g,
+                            carbs_g: calc.carbs_g,
+                            fat_g: calc.fat_g,
+                          };
+                        }),
+                      }
+                    : m,
+                ),
+              }
+            : d,
+        ),
+      );
+    },
+    [],
+  );
+
   const totalMacros = () => {
     let cal = 0,
       pro = 0,
@@ -114,12 +210,26 @@ export default function NewNutritionPlanPage() {
     e.preventDefault();
     setLoading(true);
     try {
-      // Replicate day-0 (the template) to all 7 days before saving
       const replicatedDays = DAYS.map((dayName) => ({
         day: dayName,
         meals: days[0].meals.map((meal) => ({
           ...meal,
-          foods: meal.foods.map((food) => ({ ...food })),
+          foods: meal.foods.map((food) => ({
+            name: food.name,
+            quantity: food.quantity,
+            quantity_g: food.quantity_g,
+            calories: food.calories,
+            protein_g: food.protein_g,
+            carbs_g: food.carbs_g,
+            fat_g: food.fat_g,
+            nutrients_per_100g: food.nutrients_per_100g,
+            calculated_nutrients: {
+              calories: food.calories,
+              protein_g: food.protein_g,
+              carbs_g: food.carbs_g,
+              fat_g: food.fat_g,
+            },
+          })),
         })),
       }));
       await createPlan.mutateAsync({
@@ -201,8 +311,8 @@ export default function NewNutritionPlanPage() {
                     <input
                       value={meal.meal_name}
                       onChange={(e) =>
-                        setDays(
-                          days.map((d, i) =>
+                        setDays((prev) =>
+                          prev.map((d, i) =>
                             i === di
                               ? {
                                   ...d,
@@ -222,8 +332,8 @@ export default function NewNutritionPlanPage() {
                     <input
                       value={meal.time}
                       onChange={(e) =>
-                        setDays(
-                          days.map((d, i) =>
+                        setDays((prev) =>
+                          prev.map((d, i) =>
                             i === di
                               ? {
                                   ...d,
@@ -262,55 +372,59 @@ export default function NewNutritionPlanPage() {
                     </span>
                   </div>
                   {meal.foods.map((food, fi) => (
-                    <div key={fi} className="grid grid-cols-7 gap-2 mb-2">
-                      <input
-                        value={food.name}
-                        onChange={(e) =>
-                          updateFood(di, mi, fi, "name", e.target.value)
-                        }
-                        className="input text-sm col-span-2"
-                        placeholder="Food name"
-                      />
+                    <div key={fi} className="grid grid-cols-7 gap-2 mb-2 items-center">
+                      <div className="col-span-2">
+                        <FoodSearch
+                          value={food.name}
+                          onChange={(name) => updateFood(di, mi, fi, { name })}
+                          onSelect={(food) => handleFoodSelect(di, mi, fi, food)}
+                          placeholder="Search food..."
+                        />
+                      </div>
                       <input
                         value={food.quantity}
                         onChange={(e) =>
-                          updateFood(di, mi, fi, "quantity", e.target.value)
+                          updateFood(di, mi, fi, { quantity: e.target.value })
                         }
                         className="input text-sm"
                         placeholder="Qty"
                       />
                       <input
                         type="number"
+                        step="0.1"
                         value={food.calories}
                         onChange={(e) =>
-                          updateFood(di, mi, fi, "calories", +e.target.value)
+                          updateFood(di, mi, fi, { calories: +e.target.value })
                         }
                         className="input text-sm"
                         placeholder="kcal"
                       />
                       <input
                         type="number"
+                        step="0.1"
                         value={food.protein_g}
                         onChange={(e) =>
-                          updateFood(di, mi, fi, "protein_g", +e.target.value)
+                          updateFood(di, mi, fi, { protein_g: +e.target.value })
                         }
                         className="input text-sm"
                         placeholder="P(g)"
                       />
                       <input
                         type="number"
+                        step="0.1"
                         value={food.carbs_g}
                         onChange={(e) =>
-                          updateFood(di, mi, fi, "carbs_g", +e.target.value)
+                          updateFood(di, mi, fi, { carbs_g: +e.target.value })
                         }
                         className="input text-sm"
                         placeholder="C(g)"
                       />
                       <input
                         type="number"
+                        step="0.1"
                         value={food.fat_g}
                         onChange={(e) =>
-                          updateFood(di, mi, fi, "fat_g", +e.target.value)
+                          updateFood(di, mi, fi, { fat_g: +e.target.value })
                         }
                         className="input text-sm"
                         placeholder="F(g)"

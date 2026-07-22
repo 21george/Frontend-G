@@ -6,6 +6,7 @@ import { Calendar } from 'lucide-react'
 import { useState } from 'react'
 import { useClients, useCreateCheckin } from '@/lib/hooks'
 import { useQueryClient } from '@tanstack/react-query'
+import toast from 'react-hot-toast'
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   const [showCreate, setShowCreate] = useState(false)
@@ -40,9 +41,11 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         meeting_link: link,
         notes,
       })
+      toast.success('Check-in scheduled and client notified.')
       setShowCreate(false)
       resetForm()
       queryClient.invalidateQueries({ queryKey: ['checkins'] })
+      queryClient.invalidateQueries({ queryKey: ['notifications'] })
     } finally {
       setLoading(false)
     }

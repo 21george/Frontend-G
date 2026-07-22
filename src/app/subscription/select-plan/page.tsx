@@ -156,7 +156,7 @@ export default function SelectPlanPage() {
       {/* Header */}
       <header className="border-b bg-white/80 backdrop-blur-sm sticky top-0 z-10">
         <div className="container mx-auto px-4 py-4">
-          <h1 className="text-xl font-semibold text-blue-600 tracking-wider">CoachPro</h1>
+          <h1 className="text-xl font-semibold text-blue-600 tracking-wider">360Fit</h1>
         </div>
       </header>
 

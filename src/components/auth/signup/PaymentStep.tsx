@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Loader2, AlertCircle, ChevronLeft, CreditCard } from "lucide-react";
+import { Loader2, AlertCircle, ChevronLeft, CreditCard, CheckCircle2 } from "lucide-react";
 import api from "@/lib/api";
 import { useSignupStore } from "@/store/signup";
 import { safeRedirect } from "@/lib/validateUrl";
@@ -35,7 +35,6 @@ export function PaymentStep() {
 
       const data = res.data?.data;
       if (data?.redirect) {
-        // Free plan — already activated, redirect to dashboard
         reset();
         safeRedirect(data.redirect);
         return;
@@ -60,21 +59,33 @@ export function PaymentStep() {
 
   return (
     <div className="space-y-5">
-      {/* Plan summary */}
-      <div className="rounded-xl border border-[var(--border)] bg-[var(--bg-subtle)] p-4">
-        <p className="text-xs font-medium text-[var(--text-tertiary)] mb-1">
-          Selected plan
+      {/* Plan summary panel */}
+      <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-4 relative overflow-hidden">
+        <div
+          className="absolute top-0 right-0 w-24 h-24 opacity-10"
+          style={{
+            background: "radial-gradient(circle at top right, #a3e635, transparent 70%)",
+          }}
+          aria-hidden
+        />
+        <p
+          className="text-[10px] font-bold tracking-widest uppercase text-white/30 mb-1"
+          style={{ fontFamily: "var(--font-mono)" }}
+        >
+          Selected Plan
         </p>
-        <p className="text-sm font-semibold text-[var(--text-primary)]">
+        <p className="text-sm font-semibold text-white">
           {PERIOD_LABELS[period] ?? period}
         </p>
-        <p className="text-xs text-[var(--text-secondary)] mt-1">
-          14-day free trial included · Cancel anytime
-        </p>
+        <div className="flex items-center gap-1.5 mt-2">
+          <CheckCircle2 className="w-3.5 h-3.5 text-[#a3e635]" />
+          <p className="text-xs text-[#a3e635]/80">14-day free trial included</p>
+        </div>
+        <p className="text-[11px] text-white/20 mt-1">Cancel anytime before billing starts.</p>
       </div>
 
       {error && (
-        <div className="flex items-start gap-2 rounded-lg bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-900 px-3 py-2.5 text-sm text-red-700 dark:text-red-400">
+        <div className="flex items-start gap-2 rounded-lg bg-red-500/10 border border-red-500/20 px-3 py-2.5 text-sm text-red-400">
           <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" />
           {error}
         </div>
@@ -84,16 +95,16 @@ export function PaymentStep() {
         type="button"
         onClick={handleCheckout}
         disabled={loading}
-        className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm py-2.5 rounded-lg transition-colors disabled:opacity-60 flex items-center justify-center gap-2"
+        className="w-full bg-[#a3e635] hover:bg-[#bef264] active:bg-[#8bc52f] text-[#0a1114] font-bold text-sm py-3 rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+        style={{ fontFamily: "var(--font-mono)", letterSpacing: "0.05em" }}
       >
         {loading ? (
           <>
-            <Loader2 className="w-4 h-4 animate-spin" /> Redirecting to
-            checkout…
+            <Loader2 className="w-4 h-4 animate-spin" /> PROCESSING...
           </>
         ) : (
           <>
-            <CreditCard className="w-4 h-4" /> Proceed to Checkout
+            <CreditCard className="w-4 h-4" /> PROCEED TO CHECKOUT
           </>
         )}
       </button>
@@ -102,14 +113,20 @@ export function PaymentStep() {
         type="button"
         onClick={prevStep}
         disabled={loading}
-        className="w-full flex items-center justify-center gap-1 text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors disabled:opacity-50"
+        className="w-full flex items-center justify-center gap-1 text-sm text-white/30 hover:text-white/60 transition-colors disabled:opacity-50"
       >
         <ChevronLeft className="w-4 h-4" /> Change plan
       </button>
 
-      <p className="text-center text-xs text-[var(--text-tertiary)]">
-        Secured by Stripe · 256-bit encryption
-      </p>
+      <div className="flex items-center justify-center gap-2 pt-1">
+        <span className="text-[10px] text-white/20 tracking-widest uppercase" style={{ fontFamily: "var(--font-mono)" }}>
+          Secured by Stripe
+        </span>
+        <span className="text-white/10">·</span>
+        <span className="text-[10px] text-white/20 tracking-widest uppercase" style={{ fontFamily: "var(--font-mono)" }}>
+          256-bit encryption
+        </span>
+      </div>
     </div>
   );
 }

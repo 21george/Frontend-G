@@ -44,3 +44,11 @@ export const useDeleteCheckin = () =>
     errorMessage: 'Failed to cancel check-in. Please try again.',
     invalidateKeys: [['checkins']],
   })
+
+export const useUpdateCheckinStatus = () =>
+  useToastMutation({
+    mutationFn: ({ id, status }: { id: string; status: string }) => checkinsApi.updateStatus(id, status),
+    successMessage: 'Check-in status updated',
+    errorMessage: 'Failed to update check-in status. Please try again.',
+    invalidateKeys: [['checkins']],
+  })

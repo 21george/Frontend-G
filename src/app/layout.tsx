@@ -16,8 +16,12 @@ const unbounded = Unbounded({
 });
 
 export const metadata: Metadata = {
-  title: "CoachPro — Coaching Platform",
+  title: "360Fit — Coaching Platform",
   description: "Professional fitness coaching management platform",
+  icons: {
+    icon: "/favicon.png",
+    apple: "/favicon.png",
+  },
 };
 
 export default function RootLayout({

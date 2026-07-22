@@ -18,6 +18,7 @@ import {
 import { AnimatedSearch } from "@/components/ui/AnimatedSearch";
 
 import { QueryWrapper } from "@/components/ui/QueryWrapper";
+import { Skeleton } from "@/components/ui/Skeleton";
 import { Button } from "@/components/ui/button";
 import { SegmentedProgressBar } from "@/components/ui/SegmentedProgressBar";
 import { motion } from "framer-motion";
@@ -370,12 +371,12 @@ export default function ClientsPage() {
                   key={i}
                   className="flex items-center gap-4 p-5 border border-[var(--border)] rounded-xl bg-white dark:bg-neutral-900"
                 >
-                  <div className="w-10 h-10 rounded-full bg-slate-100 dark:bg-white/[0.06] animate-pulse flex-shrink-0" />
+                  <Skeleton className="w-10 h-10 rounded-full flex-shrink-0" />
                   <div className="flex-1 space-y-2">
-                    <div className="h-4 w-40 bg-slate-100 dark:bg-white/[0.06] animate-pulse rounded" />
-                    <div className="h-3 w-56 bg-slate-100 dark:bg-white/[0.04] animate-pulse rounded" />
+                    <Skeleton className="h-4 w-40" />
+                    <Skeleton className="h-3 w-56" />
                   </div>
-                  <div className="h-6 w-20 bg-slate-100 dark:bg-white/[0.04] animate-pulse rounded-full" />
+                  <Skeleton className="h-6 w-20 rounded-full" />
                 </div>
               ))}
             </div>

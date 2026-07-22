@@ -8,7 +8,13 @@ import { clientsApi } from "@/lib/api";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { useState, useRef, useEffect, useCallback } from "react";
+import {
+  useState,
+  useRef,
+  useEffect,
+  useCallback,
+  type ComponentType,
+} from "react";
 import { getCountryCallingCode, type CountryCode } from "libphonenumber-js";
 import * as AllFlags from "country-flag-icons/react/3x2";
 import {
@@ -233,7 +239,7 @@ const COUNTRIES: Country[] = (
 type FlagProps = { className?: string; title?: string };
 
 function FlagIcon({ code, className }: { code: string; className?: string }) {
-  const Comp = (AllFlags as Record<string, React.ComponentType<FlagProps>>)[
+  const Comp = (AllFlags as Record<string, ComponentType<FlagProps>>)[
     code.toUpperCase()
   ];
   if (!Comp) return <span className="text-base leading-none">🌐</span>;

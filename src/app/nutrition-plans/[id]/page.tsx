@@ -34,18 +34,50 @@ import {
 import { formatDate } from "@/lib/utils";
 import { DAYS } from "@/lib/utils";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
-import type { NutritionPlan, NutritionDay, Meal } from "@/types";
+import FoodSearch from "@/components/foods/FoodSearch";
+import type { NutritionPlan, NutritionDay, Meal, Food, FoodNutrients } from "@/types";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 const emptyFood = () => ({
   name: "",
   quantity: "",
+  quantity_g: 0,
   calories: 0,
   protein_g: 0,
   carbs_g: 0,
   fat_g: 0,
+  nutrients_per_100g: undefined as FoodNutrients | undefined,
 });
+
+function parseQuantityToGrams(quantityStr: string): number {
+  if (!quantityStr) return 0;
+  const match = quantityStr.match(/^\s*(\d+(?:\.\d+)?)\s*(g|kg|ml|l|oz|lb|cup|tbsp|tsp)?\s*$/i);
+  if (!match) return 0;
+  const val = parseFloat(match[1]);
+  const unit = (match[2] ?? "g").toLowerCase();
+  switch (unit) {
+    case "kg": return val * 1000;
+    case "l": return val * 1000;
+    case "ml": return val;
+    case "oz": return val * 28.35;
+    case "lb": return val * 453.6;
+    case "cup": return val * 240;
+    case "tbsp": return val * 15;
+    case "tsp": return val * 5;
+    default: return val;
+  }
+}
+
+function calculateNutrients(nutrientsPer100g: FoodNutrients, quantityG: number): FoodNutrients {
+  const factor = quantityG / 100;
+  return {
+    calories: Math.round(nutrientsPer100g.calories * factor * 10) / 10,
+    protein_g: Math.round(nutrientsPer100g.protein_g * factor * 10) / 10,
+    carbs_g: Math.round(nutrientsPer100g.carbs_g * factor * 10) / 10,
+    fat_g: Math.round(nutrientsPer100g.fat_g * factor * 10) / 10,
+  };
+}
 const emptyMeal = (): Meal => ({
   meal_name: "Meal",
   time: "08:00",
@@ -362,14 +394,65 @@ export default function NutritionPlanDetailPage() {
                   ? m
                   : {
                       ...m,
-                      foods: m.foods.map((f, k) =>
-                        k !== fi ? f : { ...f, [field]: value },
-                      ),
+                      foods: m.foods.map((f, k) => {
+                        if (k !== fi) return f;
+                        const updated = { ...f, [field]: value };
+                        if (field === "quantity" && updated.nutrients_per_100g) {
+                          const quantityG = parseQuantityToGrams(String(value));
+                          updated.quantity_g = quantityG;
+                          if (quantityG > 0) {
+                            const calc = calculateNutrients(updated.nutrients_per_100g, quantityG);
+                            updated.calories = calc.calories;
+                            updated.protein_g = calc.protein_g;
+                            updated.carbs_g = calc.carbs_g;
+                            updated.fat_g = calc.fat_g;
+                          }
+                        }
+                        return updated;
+                      }),
                     },
               ),
             },
       ),
     );
+
+  const handleFoodSelect = useCallback(
+    (di: number, mi: number, fi: number, food: Food) => {
+      setDays((d) =>
+        d.map((day, i) =>
+          i !== di
+            ? day
+            : {
+                ...day,
+                meals: day.meals.map((m, j) =>
+                  j !== mi
+                    ? m
+                    : {
+                        ...m,
+                        foods: m.foods.map((f, k) => {
+                          if (k !== fi) return f;
+                          const quantityG = parseQuantityToGrams(f.quantity) || 100;
+                          const calc = calculateNutrients(food.nutrients_per_100g, quantityG);
+                          return {
+                            ...f,
+                            name: food.name,
+                            nutrients_per_100g: food.nutrients_per_100g,
+                            quantity: f.quantity || "100g",
+                            quantity_g: quantityG,
+                            calories: calc.calories,
+                            protein_g: calc.protein_g,
+                            carbs_g: calc.carbs_g,
+                            fat_g: calc.fat_g,
+                          };
+                        }),
+                      },
+                ),
+              },
+        ),
+      );
+    },
+    [],
+  );
 
   const handleSave = async () => {
     setSaving(true);
@@ -824,20 +907,14 @@ export default function NutritionPlanDetailPage() {
                                 key={fi}
                                 className="group grid grid-cols-[2fr_1fr_1fr_1fr_1fr_1fr_auto] gap-2 items-center"
                               >
-                                <input
-                                  value={food.name}
-                                  onChange={(e) =>
-                                    updateFood(
-                                      di,
-                                      mi,
-                                      fi,
-                                      "name",
-                                      e.target.value,
-                                    )
-                                  }
-                                  className={inputCls}
-                                  placeholder="e.g. Chicken breast"
-                                />
+                                <div className="min-w-0">
+                                  <FoodSearch
+                                    value={food.name}
+                                    onChange={(name) => updateFood(di, mi, fi, "name", name)}
+                                    onSelect={(food) => handleFoodSelect(di, mi, fi, food)}
+                                    placeholder="Search food..."
+                                  />
+                                </div>
                                 <input
                                   value={food.quantity}
                                   onChange={(e) =>

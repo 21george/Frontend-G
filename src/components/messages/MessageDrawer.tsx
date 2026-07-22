@@ -1,22 +1,23 @@
-'use client'
+"use client";
 
 import {
   useMessages,
   useSendMessage,
   useUploadMessageMedia,
-} from '@/hooks/useMessages'
-import { useSocketChat } from '@/lib/useSocketChat'
-import { useState, useMemo, useRef, useEffect, useCallback } from 'react'
+} from "@/hooks/useMessages";
+import { useSocketChat } from "@/lib/useSocketChat";
+import { useState, useMemo, useRef, useEffect, useCallback } from "react";
 import {
   DrawerRoot,
   DrawerContent,
   DrawerHeader,
   DrawerTitle,
+  DrawerDescription,
   DrawerClose,
-} from '@/components/ui/Drawer'
-import { Skeleton } from '@/components/ui/Skeleton'
-import toast from 'react-hot-toast'
-import { motion, AnimatePresence } from 'framer-motion'
+} from "@/components/ui/Drawer";
+import { Skeleton } from "@/components/ui/Skeleton";
+import toast from "react-hot-toast";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   Send,
   Paperclip,
@@ -29,50 +30,50 @@ import {
   MessageSquare,
   Phone,
   Mail,
-} from 'lucide-react'
+} from "lucide-react";
 
 /* ── Types ─────────────────────────────────────────────────────────────── */
 interface Client {
-  id: string
-  name: string
-  email?: string
-  phone?: string
-  profile_photo_url?: string
-  active?: boolean
+  id: string;
+  name: string;
+  email?: string;
+  phone?: string;
+  profile_photo_url?: string;
+  active?: boolean;
 }
 
 interface ChatMessage {
-  id: string
-  content: string
-  sender_role: 'coach' | 'client'
-  sent_at: string
-  media_url?: string | null
-  media_type?: string | null
-  media_filename?: string | null
+  id: string;
+  content: string;
+  sender_role: "coach" | "client";
+  sent_at: string;
+  media_url?: string | null;
+  media_type?: string | null;
+  media_filename?: string | null;
 }
 
 interface MessageDrawerProps {
-  client: Client | null
-  open: boolean
-  onClose: () => void
+  client: Client | null;
+  open: boolean;
+  onClose: () => void;
 }
 
 /* ── Sub-components ────────────────────────────────────────────────────── */
 
 function formatWhen(sentAt: string | null | undefined): string {
-  if (!sentAt || sentAt === 'Invalid Date') return 'Just now'
-  const sent = new Date(sentAt)
-  if (isNaN(sent.getTime())) return 'Just now'
-  const now = new Date()
-  const diffMs = now.getTime() - sent.getTime()
-  const diffMins = Math.floor(diffMs / 60000)
-  const diffHours = Math.floor(diffMs / 3600000)
-  const diffDays = Math.floor(diffMs / 86400000)
-  if (diffMins < 1) return 'Just now'
-  if (diffMins < 60) return `${diffMins}m ago`
-  if (diffHours < 24) return `${diffHours}h ago`
-  if (diffDays < 7) return `${diffDays}d ago`
-  return sent.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+  if (!sentAt || sentAt === "Invalid Date") return "Just now";
+  const sent = new Date(sentAt);
+  if (isNaN(sent.getTime())) return "Just now";
+  const now = new Date();
+  const diffMs = now.getTime() - sent.getTime();
+  const diffMins = Math.floor(diffMs / 60000);
+  const diffHours = Math.floor(diffMs / 3600000);
+  const diffDays = Math.floor(diffMs / 86400000);
+  if (diffMins < 1) return "Just now";
+  if (diffMins < 60) return `${diffMins}m ago`;
+  if (diffHours < 24) return `${diffHours}h ago`;
+  if (diffDays < 7) return `${diffDays}d ago`;
+  return sent.toLocaleDateString("en-US", { month: "short", day: "numeric" });
 }
 
 function LiveIndicator({ connected }: { connected: boolean }) {
@@ -93,7 +94,7 @@ function LiveIndicator({ connected }: { connected: boolean }) {
         </>
       )}
     </div>
-  )
+  );
 }
 
 function ClientHeader({ client }: { client: Client }) {
@@ -108,7 +109,7 @@ function ClientHeader({ client }: { client: Client }) {
           />
         ) : (
           <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#132e35] to-[#0b1e22] flex items-center justify-center text-white text-[13px] font-semibold ring-2 ring-[var(--border)]">
-            {client.name?.[0]?.toUpperCase() ?? '?'}
+            {client.name?.[0]?.toUpperCase() ?? "?"}
           </div>
         )}
         {client.active && (
@@ -120,11 +121,11 @@ function ClientHeader({ client }: { client: Client }) {
           {client.name}
         </p>
         <p className="text-[11px] text-[var(--text-tertiary)] leading-tight mt-0.5">
-          {client.active ? 'Active now' : 'Offline'}
+          {client.active ? "Active now" : "Offline"}
         </p>
       </div>
     </div>
-  )
+  );
 }
 
 function MessageBubble({
@@ -132,27 +133,31 @@ function MessageBubble({
   client,
   showAvatar,
 }: {
-  message: ChatMessage
-  client: Client
-  showAvatar: boolean
+  message: ChatMessage;
+  client: Client;
+  showAvatar: boolean;
 }) {
-  const isCoach = message.sender_role === 'coach'
+  const isCoach = message.sender_role === "coach";
 
   return (
     <motion.div
       initial={{ opacity: 0, y: 12, scale: 0.96 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
-      transition={{ type: 'spring', stiffness: 400, damping: 28, mass: 0.6 }}
-      className={`flex items-end gap-2 ${isCoach ? 'justify-end' : 'justify-start'}`}
+      transition={{ type: "spring", stiffness: 400, damping: 28, mass: 0.6 }}
+      className={`flex items-end gap-2 ${isCoach ? "justify-end" : "justify-start"}`}
     >
       {/* Client avatar (only on first message in group) */}
       {!isCoach && showAvatar && (
         <div className="w-7 h-7 rounded-lg bg-[var(--bg-subtle)] border border-[var(--border)] flex items-center justify-center flex-shrink-0 mb-1">
           {client.profile_photo_url ? (
-            <img src={client.profile_photo_url} alt="" className="w-full h-full object-cover rounded-lg" />
+            <img
+              src={client.profile_photo_url}
+              alt=""
+              className="w-full h-full object-cover rounded-lg"
+            />
           ) : (
             <span className="text-[10px] font-semibold text-[var(--text-primary)]">
-              {client.name?.[0]?.toUpperCase() ?? '?'}
+              {client.name?.[0]?.toUpperCase() ?? "?"}
             </span>
           )}
         </div>
@@ -162,12 +167,12 @@ function MessageBubble({
       <div
         className={`max-w-[80%] sm:max-w-[75%] px-4 py-2.5 text-[13px] leading-relaxed ${
           isCoach
-            ? 'bg-gradient-to-br from-brand-600 to-[#0f2027] text-white rounded-2xl rounded-tr-sm shadow-lg shadow-brand-900/20'
-            : 'bg-[var(--bg-card)] border border-[var(--border)] text-[var(--text-primary)] rounded-2xl rounded-tl-sm shadow-sm'
+            ? "bg-gradient-to-br from-brand-600 to-[#0f2027] text-white rounded-2xl rounded-tr-sm shadow-lg shadow-brand-900/20"
+            : "bg-[var(--bg-card)] border border-[var(--border)] text-[var(--text-primary)] rounded-2xl rounded-tl-sm shadow-sm"
         }`}
       >
         {/* Media attachment */}
-        {message.media_url && message.media_type === 'image' && (
+        {message.media_url && message.media_type === "image" && (
           <a
             href={message.media_url}
             target="_blank"
@@ -181,64 +186,74 @@ function MessageBubble({
             />
           </a>
         )}
-        {message.media_url && message.media_type === 'file' && (
+        {message.media_url && message.media_type === "file" && (
           <a
             href={message.media_url}
             target="_blank"
             rel="noopener noreferrer"
             className={`flex items-center gap-2 mb-2 px-3 py-2 rounded-lg transition-colors ${
               isCoach
-                ? 'bg-white/15 hover:bg-white/25'
-                : 'bg-[var(--bg-subtle)] hover:bg-[var(--bg-hover)]'
+                ? "bg-white/15 hover:bg-white/25"
+                : "bg-[var(--bg-subtle)] hover:bg-[var(--bg-hover)]"
             }`}
           >
             <FileText size={14} />
-            <span className="text-[12px] truncate flex-1">{message.media_filename || 'File'}</span>
+            <span className="text-[12px] truncate flex-1">
+              {message.media_filename || "File"}
+            </span>
             <Download size={12} />
           </a>
         )}
 
         {message.content && (
-          <p className={message.media_url ? 'mt-1' : ''}>{message.content}</p>
+          <p className={message.media_url ? "mt-1" : ""}>{message.content}</p>
         )}
 
         <p
           className={`text-[11px] mt-1.5 text-right ${
-            isCoach ? 'text-brand-200/70' : 'text-[var(--text-tertiary)]'
+            isCoach ? "text-brand-200/70" : "text-[var(--text-tertiary)]"
           }`}
         >
           {formatWhen(message.sent_at)}
         </p>
       </div>
     </motion.div>
-  )
+  );
 }
 
 /* ── Main Component ──────────────────────────────────────────────────── */
 
 export function MessageDrawer({ client, open, onClose }: MessageDrawerProps) {
-  const clientId = client?.id ?? ''
-  const [msg, setMsg] = useState('')
+  const clientId = client?.id ?? "";
+  const [msg, setMsg] = useState("");
   const [pendingFile, setPendingFile] = useState<{
-    media_url: string
-    media_type: string
-    media_filename: string
-  } | null>(null)
-  const fileInputRef = useRef<HTMLInputElement>(null)
-  const messagesEndRef = useRef<HTMLDivElement>(null)
-  const scrollAreaRef = useRef<HTMLDivElement>(null)
+    media_url: string;
+    media_type: string;
+    media_filename: string;
+  } | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const scrollAreaRef = useRef<HTMLDivElement>(null);
 
-  const { data: messagesData, isLoading: msgLoading, error: msgError } = useMessages(clientId)
-  const sendMsg = useSendMessage()
-  const uploadMedia = useUploadMessageMedia()
+  const {
+    data: messagesData,
+    isLoading: msgLoading,
+    error: msgError,
+  } = useMessages(clientId);
+  const sendMsg = useSendMessage();
+  const uploadMedia = useUploadMessageMedia();
 
-  const { connected: socketConnected, incomingMessages, relayViaSocket, clearIncoming } =
-    useSocketChat(clientId)
+  const {
+    connected: socketConnected,
+    incomingMessages,
+    relayViaSocket,
+    clearIncoming,
+  } = useSocketChat(clientId);
 
   // Merge REST + socket messages
   const allMessages = useMemo(() => {
-    const rest: ChatMessage[] = messagesData?.data ?? []
-    const restIds = new Set(rest.map((m) => m.id))
+    const rest: ChatMessage[] = messagesData?.data ?? [];
+    const restIds = new Set(rest.map((m) => m.id));
     const extra = incomingMessages
       .filter((sm) => !restIds.has(sm.id))
       .map((sm) => ({
@@ -249,93 +264,111 @@ export function MessageDrawer({ client, open, onClose }: MessageDrawerProps) {
         media_url: null,
         media_type: null,
         media_filename: null,
-      }))
+      }));
     return [...rest, ...extra].sort(
-      (a, b) => new Date(a.sent_at).getTime() - new Date(b.sent_at).getTime()
-    )
-  }, [messagesData, incomingMessages])
+      (a, b) => new Date(a.sent_at).getTime() - new Date(b.sent_at).getTime(),
+    );
+  }, [messagesData, incomingMessages]);
 
   // Auto-scroll
-  const shouldAutoScroll = useRef(true)
+  const shouldAutoScroll = useRef(true);
   const handleScroll = useCallback(() => {
-    const el = scrollAreaRef.current
-    if (!el) return
-    const threshold = 50
-    shouldAutoScroll.current = el.scrollHeight - el.scrollTop - el.clientHeight < threshold
-  }, [])
+    const el = scrollAreaRef.current;
+    if (!el) return;
+    const threshold = 50;
+    shouldAutoScroll.current =
+      el.scrollHeight - el.scrollTop - el.clientHeight < threshold;
+  }, []);
 
   useEffect(() => {
     if (shouldAutoScroll.current) {
-      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
     }
-  }, [allMessages])
+  }, [allMessages]);
 
   // Clear socket messages covered by REST
   useEffect(() => {
-    const restIds = (messagesData?.data ?? []).map((m: ChatMessage) => m.id)
-    clearIncoming(restIds)
-  }, [messagesData, clearIncoming])
+    const restIds = (messagesData?.data ?? []).map((m: ChatMessage) => m.id);
+    clearIncoming(restIds);
+  }, [messagesData, clearIncoming]);
 
   // Reset local state when client changes
   useEffect(() => {
-    setMsg('')
-    setPendingFile(null)
-  }, [clientId])
+    setMsg("");
+    setPendingFile(null);
+  }, [clientId]);
 
   const handleSend = async () => {
-    if (!msg.trim() && !pendingFile) return
-    if (!clientId) return
-    const content = msg.trim() || (pendingFile ? `📎 ${pendingFile.media_filename}` : '')
+    if (!msg.trim() && !pendingFile) return;
+    if (!clientId) return;
+    const content =
+      msg.trim() || (pendingFile ? `📎 ${pendingFile.media_filename}` : "");
     const payload: Parameters<typeof sendMsg.mutateAsync>[0] = {
       client_id: clientId,
       content,
-    }
+    };
     if (pendingFile) {
-      payload.media_url = pendingFile.media_url
-      payload.media_type = pendingFile.media_type
-      payload.media_filename = pendingFile.media_filename
+      payload.media_url = pendingFile.media_url;
+      payload.media_type = pendingFile.media_type;
+      payload.media_filename = pendingFile.media_filename;
     }
     try {
-      await sendMsg.mutateAsync(payload)
-      setMsg('')
-      setPendingFile(null)
-      relayViaSocket(content)
+      await sendMsg.mutateAsync(payload);
+      setMsg("");
+      setPendingFile(null);
+      relayViaSocket(content);
     } catch {
       // user can retry
     }
-  }
+  };
 
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file) return
+    const file = e.target.files?.[0];
+    if (!file) return;
     try {
-      const result = await uploadMedia.mutateAsync(file)
-      setPendingFile(result)
+      const result = await uploadMedia.mutateAsync(file);
+      setPendingFile(result);
     } catch {
-      toast.error('Failed to upload file.')
+      toast.error("Failed to upload file.");
     }
-    e.target.value = ''
-  }
+    e.target.value = "";
+  };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault()
-      handleSend()
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      handleSend();
     }
-  }
+  };
 
   // Group consecutive messages to control avatar visibility
   const messageGroups = useMemo(() => {
     return allMessages.map((m, i) => {
-      const prev = allMessages[i - 1]
-      const showAvatar = m.sender_role === 'client' && (!prev || prev.sender_role !== 'client')
-      return { message: m, showAvatar }
-    })
-  }, [allMessages])
+      const prev = allMessages[i - 1];
+      const showAvatar =
+        m.sender_role === "client" && (!prev || prev.sender_role !== "client");
+      return { message: m, showAvatar };
+    });
+  }, [allMessages]);
 
   return (
     <DrawerRoot open={open} onOpenChange={(o) => !o && onClose()}>
-      <DrawerContent direction="right" size="lg" className="bg-gradient-to-b from-[var(--bg-page)] to-[var(--bg-card)]">
+      <DrawerContent
+        open={open}
+        direction="right"
+        size="lg"
+        className="bg-gradient-to-b from-[var(--bg-page)] to-[var(--bg-card)]"
+      >
+        {/* Radix requires a DialogTitle for screen-reader users. We
+            hide it visually because the client name is already shown
+            prominently in the header below; duplicating it as a
+            second visible title would be noise. */}
+        <DrawerTitle className="sr-only">
+          {client ? `Messages with ${client.name}` : "Messages"}
+        </DrawerTitle>
+        <DrawerDescription className="sr-only">
+          {client ? "Conversation history" : "Pick a client to start"}
+        </DrawerDescription>
         <AnimatePresence mode="wait">
           {!client ? (
             <motion.div
@@ -348,8 +381,12 @@ export function MessageDrawer({ client, open, onClose }: MessageDrawerProps) {
               <div className="w-14 h-14 rounded-2xl bg-[var(--bg-subtle)] border border-[var(--border)] flex items-center justify-center mb-4">
                 <MessageSquare className="w-6 h-6 text-[var(--text-tertiary)]" />
               </div>
-              <p className="text-[15px] font-semibold text-[var(--text-primary)]">Select a client</p>
-              <p className="text-[13px] text-[var(--text-secondary)] mt-1">Choose a client to start messaging</p>
+              <p className="text-[15px] font-semibold text-[var(--text-primary)]">
+                Select a client
+              </p>
+              <p className="text-[13px] text-[var(--text-secondary)] mt-1">
+                Choose a client to start messaging
+              </p>
             </motion.div>
           ) : (
             <>
@@ -383,13 +420,13 @@ export function MessageDrawer({ client, open, onClose }: MessageDrawerProps) {
                     {[...Array(5)].map((_, i) => (
                       <div
                         key={i}
-                        className={`flex items-end gap-2 ${i % 2 === 0 ? 'justify-start' : 'justify-end'}`}
+                        className={`flex items-end gap-2 ${i % 2 === 0 ? "justify-start" : "justify-end"}`}
                       >
                         {i % 2 === 0 && (
                           <Skeleton className="w-7 h-7 rounded-lg flex-shrink-0" />
                         )}
                         <Skeleton
-                          className={`h-10 rounded-xl ${i % 2 === 0 ? 'w-52' : 'w-40'}`}
+                          className={`h-10 rounded-xl ${i % 2 === 0 ? "w-52" : "w-40"}`}
                         />
                       </div>
                     ))}
@@ -398,8 +435,10 @@ export function MessageDrawer({ client, open, onClose }: MessageDrawerProps) {
 
                 {msgError && (
                   <div className="px-4 py-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl text-red-700 dark:text-red-300 text-[13px]">
-                    Failed to load messages.{' '}
-                    {(msgError as any)?.response?.data?.message || (msgError as Error)?.message || 'Please try again.'}
+                    Failed to load messages.{" "}
+                    {(msgError as any)?.response?.data?.message ||
+                      (msgError as Error)?.message ||
+                      "Please try again."}
                   </div>
                 )}
 
@@ -421,7 +460,9 @@ export function MessageDrawer({ client, open, onClose }: MessageDrawerProps) {
                     <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-brand-700 to-brand-900 flex items-center justify-center mb-4 shadow-lg shadow-brand-900/20">
                       <MessageSquare className="w-7 h-7 text-white" />
                     </div>
-                    <p className="text-[15px] font-semibold text-[var(--text-primary)]">Start the conversation</p>
+                    <p className="text-[15px] font-semibold text-[var(--text-primary)]">
+                      Start the conversation
+                    </p>
                     <p className="text-[13px] text-[var(--text-secondary)] mt-1 max-w-[16rem]">
                       Send your first message to {client.name} below.
                     </p>
@@ -452,7 +493,7 @@ export function MessageDrawer({ client, open, onClose }: MessageDrawerProps) {
                     exit={{ opacity: 0, y: 10 }}
                     className="px-5 py-2.5 border-t border-[var(--border)] bg-[var(--bg-card)]/80 backdrop-blur-sm flex items-center gap-3"
                   >
-                    {pendingFile.media_type === 'image' ? (
+                    {pendingFile.media_type === "image" ? (
                       <img
                         src={pendingFile.media_url}
                         alt=""
@@ -460,7 +501,10 @@ export function MessageDrawer({ client, open, onClose }: MessageDrawerProps) {
                       />
                     ) : (
                       <div className="w-10 h-10 rounded-lg bg-[var(--bg-subtle)] border border-[var(--border)] flex items-center justify-center">
-                        <FileText size={16} className="text-[var(--text-tertiary)]" />
+                        <FileText
+                          size={16}
+                          className="text-[var(--text-tertiary)]"
+                        />
                       </div>
                     )}
                     <span className="text-[12px] text-[var(--text-secondary)] truncate flex-1">
@@ -510,7 +554,9 @@ export function MessageDrawer({ client, open, onClose }: MessageDrawerProps) {
 
                   <button
                     onClick={handleSend}
-                    disabled={sendMsg.isPending || (!msg.trim() && !pendingFile)}
+                    disabled={
+                      sendMsg.isPending || (!msg.trim() && !pendingFile)
+                    }
                     className="p-3 bg-brand-600 hover:bg-brand-700 disabled:opacity-40 disabled:cursor-not-allowed text-white rounded-xl transition-colors flex-shrink-0 shadow-lg shadow-brand-900/20"
                   >
                     {sendMsg.isPending ? (
@@ -526,5 +572,5 @@ export function MessageDrawer({ client, open, onClose }: MessageDrawerProps) {
         </AnimatePresence>
       </DrawerContent>
     </DrawerRoot>
-  )
+  );
 }

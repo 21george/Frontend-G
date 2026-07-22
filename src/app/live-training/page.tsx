@@ -8,6 +8,7 @@ import {
  ArrowUpRight, Sparkles, Timer, Signal, TrendingUp,
 } from 'lucide-react'
 import { AnimatedSearch } from '@/components/ui/AnimatedSearch'
+import { TableSkeleton } from '@/components/ui/skeletons'
 import { useLiveTrainingSessions, useGoLive, useEndSession, useDeleteLiveTraining } from '@/lib/hooks'
 import { parseDateValue } from '@/lib/utils'
 import { format } from 'date-fns'
@@ -135,9 +136,7 @@ export default function LiveTrainingPage() {
 
  {/* ── SESSIONS TABLE ── */}
  {isLoading ? (
- <div className="flex items-center justify-center py-20">
- <div className="text-[13px] text-[var(--text-secondary)] dark:text-[var(--text-secondary)]">Loading sessions…</div>
- </div>
+ <TableSkeleton rows={5} showSearch={false} showFilters={false} />
  ) : filtered.length === 0 ? (
  <div className="flex flex-col items-center justify-center py-20 text-center">
  <div className="w-16 h-16 bg-slate-100 dark:bg-white/[0.04] flex items-center justify-center mb-4">

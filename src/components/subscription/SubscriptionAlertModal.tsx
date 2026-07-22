@@ -25,7 +25,7 @@ const alertConfig = {
   select_plan: {
     title: 'Select Your Plan',
     description:
-      'Welcome! To start using CoachPro, please select a subscription plan.',
+      'Welcome! To start using 360Fit, please select a subscription plan.',
     icon: CreditCard,
     actionLabel: 'Select Plan',
     action: 'navigate' as const,

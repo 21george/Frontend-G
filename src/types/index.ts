@@ -146,16 +146,36 @@ export interface WorkoutLog {
   media_count: number;
 }
 
+export interface FoodNutrients {
+  calories: number;
+  protein_g: number;
+  carbs_g: number;
+  fat_g: number;
+}
+
+export interface Food {
+  id?: string;
+  name: string;
+  fdc_id?: number | null;
+  nutrients_per_100g: FoodNutrients;
+  source: "usda" | "custom";
+  created_at?: string;
+  updated_at?: string;
+}
+
 export interface Meal {
   meal_name: string;
   time: string;
   foods: {
     name: string;
     quantity: string;
+    quantity_g: number;
     calories: number;
     protein_g: number;
     carbs_g: number;
     fat_g: number;
+    nutrients_per_100g?: FoodNutrients;
+    calculated_nutrients?: FoodNutrients;
   }[];
 }
 

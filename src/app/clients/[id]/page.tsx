@@ -5,7 +5,7 @@ import {
   useMessages,
   useSendMessage,
   useCheckins,
-  useDeleteCheckin,
+  useUpdateCheckinStatus,
   useWorkoutPlans,
   useNutritionPlans,
   useRegenerateCode,
@@ -39,6 +39,7 @@ import { useSocketChat } from "@/lib/useSocketChat";
 import { diffChanged } from "@/lib/diffChanged";
 import toast from "react-hot-toast";
 import { motion } from "framer-motion";
+import { Skeleton } from "@/components/ui/Skeleton";
 import type { CheckinMeeting, WorkoutPlan } from "@/types";
 import {
   ClientDetailSidebar,
@@ -171,7 +172,7 @@ export default function ClientDetailPage() {
     media_filename: string;
   } | null>(null);
   const [expandedLog, setExpandedLog] = useState<string | null>(null);
-  const deleteCheckin = useDeleteCheckin();
+  const updateCheckinStatus = useUpdateCheckinStatus();
   const deleteWorkoutPlan = useDeleteWorkoutPlan();
   const deleteClient = useDeleteClient();
   const updateClient = useUpdateClient(id);
@@ -380,7 +381,9 @@ export default function ClientDetailPage() {
     // also no-op (no changed fields -> no notification), but this
     // is cheaper and gives a cleaner "no changes" toast.
     const editableFields = Object.keys(payload);
-    const clientBefore = client as unknown as Record<string, unknown> | undefined;
+    const clientBefore = client as unknown as
+      | Record<string, unknown>
+      | undefined;
     const changedKeys = diffChanged(payload, clientBefore, {
       fields: editableFields,
     });
@@ -398,12 +401,14 @@ export default function ClientDetailPage() {
         await uploadClientPhoto.mutateAsync(editPhotoFile);
       }
 
-      await updateClient.mutateAsync(payload);
+      const mutationResult = await updateClient.mutateAsync(payload);
       // useUpdateClient already shows "Client updated successfully".
       // If the backend reports zero actual changes (e.g. we sent
       // trimmed strings that stringify to the same value as the DB
       // stored), downgrade to an info toast.
-      const resultData = (updateClient.data as { data?: { changed_fields?: string[] } } | undefined)?.data;
+      const resultData = (
+        mutationResult as { data?: { changed_fields?: string[] } } | undefined
+      )?.data;
       const resultChanged = resultData?.changed_fields;
       if (Array.isArray(resultChanged) && resultChanged.length === 0) {
         toast("No fields actually changed", { icon: "ℹ️" });
@@ -435,7 +440,7 @@ export default function ClientDetailPage() {
         return;
 
       try {
-        await deleteCheckin.mutateAsync(meeting.id);
+        await updateCheckinStatus.mutateAsync({ id: meeting.id, status: 'cancelled' });
         if (activeChatId === `chat-${meeting.id}`) {
           setActiveChatId(null);
         }
@@ -443,7 +448,7 @@ export default function ClientDetailPage() {
         alert("Failed to cancel check-in. Please try again.");
       }
     },
-    [activeChatId, deleteCheckin],
+    [activeChatId, updateCheckinStatus],
   );
 
   const allMessages = useMemo(() => {
@@ -473,13 +478,13 @@ export default function ClientDetailPage() {
 
   if (isLoading)
     return (
-      <div className="flex flex-col bg-[var(--bg-page)] dark:bg-[var(--bg-page)] animate-pulse min-h-[calc(100vh-4rem)]">
-        <div className="h-11 bg-[var(--bg-card)] border-b border-[var(--border)] dark:border-white/[0.06]" />
+      <div className="flex flex-col bg-[var(--bg-page)] dark:bg-[var(--bg-page)] min-h-[calc(100vh-4rem)]">
+        <Skeleton className="h-11 w-full rounded-none border-b border-[var(--border)] dark:border-white/[0.06]" />
         <div className="flex flex-1">
-          <div className="hidden md:block w-[300px] border-r border-[var(--border)] dark:border-white/[0.06]" />
+          <Skeleton className="hidden md:block w-[300px] rounded-none border-r border-[var(--border)] dark:border-white/[0.06]" />
           <div className="flex-1 p-4 sm:p-6 space-y-4">
-            <div className="h-7 w-52 bg-slate-200 dark:bg-white/[0.06] " />
-            <div className="h-72 bg-white dark:bg-white/[0.04] border border-[var(--border)] dark:border-white/[0.06] " />
+            <Skeleton className="h-7 w-52" />
+            <Skeleton className="h-72 w-full rounded-xl" />
           </div>
         </div>
       </div>
@@ -531,7 +536,7 @@ export default function ClientDetailPage() {
                     ? "Temporarily disable client access"
                     : "Restore client access"
               }
-              className={`inline-flex items-center gap-1.5 border px-3 py-1.5 text-xs font-semibold transition-colors disabled:opacity-50 ${
+              className={`inline-flex items-center gap-1.5 border rounded-lg px-2 sm:px-3 py-1.5 text-xs font-semibold transition-colors disabled:opacity-50 ${
                 client.is_blocked || !client.active
                   ? "border-emerald-200 dark:border-emerald-900/40 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-50 dark:hover:bg-emerald-500/10"
                   : "border-amber-200 dark:border-amber-900/40 text-amber-700 dark:text-amber-300 hover:bg-amber-50 dark:hover:bg-amber-500/10"
@@ -544,33 +549,35 @@ export default function ClientDetailPage() {
               ) : (
                 <X size={13} />
               )}
-              {client.is_blocked
-                ? "Unblock"
-                : !client.active
-                  ? "Restore Access"
-                  : "Block Access"}
+              <span className="hidden sm:inline">
+                {client.is_blocked
+                  ? "Unblock"
+                  : !client.active
+                    ? "Restore Access"
+                    : "Block Access"}
+              </span>
             </button>
             <button
               onClick={handleOpenEdit}
               disabled={updateClient.isPending}
               title="Edit client information"
-              className="inline-flex items-center gap-1.5 border border-[var(--border)] dark:border-white/[0.07] px-3 py-1.5 text-xs font-semibold text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-subtle)] transition-colors disabled:opacity-50"
+              className="inline-flex items-center gap-1.5 border border-[var(--border)] dark:border-white/[0.07] rounded-lg px-2 sm:px-3 py-1.5 text-xs font-semibold text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-subtle)] transition-colors disabled:opacity-50"
             >
               <Pencil size={13} />
-              Edit
+              <span className="hidden sm:inline">Edit</span>
             </button>
             <button
               onClick={handleDeleteClient}
               disabled={deleteClient.isPending}
               title="Permanently delete this client (cannot be undone)"
-              className="inline-flex rounded-s-xl items-center gap-1.5 border border-red-200 dark:border-red-900/40 px-3 py-1.5 text-xs font-semibold text-red-600 dark:text-red-300 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors disabled:opacity-50"
+              className="inline-flex items-center gap-1.5 border border-red-200 dark:border-red-900/40 rounded-lg px-2 sm:px-3 py-1.5 text-xs font-semibold text-red-600 dark:text-red-300 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors disabled:opacity-50"
             >
               {deleteClient.isPending ? (
                 <Loader2 size={13} className="animate-spin" />
               ) : (
                 <Trash2 size={13} />
               )}
-              Delete Permanently
+              <span className="hidden sm:inline">Delete</span>
             </button>
           </div>
         </div>
@@ -613,26 +620,51 @@ export default function ClientDetailPage() {
           />
 
           {/* ══════════ RIGHT PANEL ══════════ */}
-          <main className="flex-1 flex flex-col overflow-hidden">
-            {/* Tab navigation */}
-            <div className="flex items-center border-b border-[var(--border)] dark:border-white/[0.06] bg-white dark:bg-[#121212] px-2 sm:px-5 overflow-x-auto flex-shrink-0 scrollbar-hide">
-              {TABS.map(({ key, label }) => (
-                <button
-                  key={key}
-                  onClick={() => setTab(key)}
-                  className={`px-2.5 sm:px-4 py-2.5 sm:py-3 text-[11px] sm:text-[12px] font-semibold whitespace-nowrap border-b-2 transition-all -mb-px ${
-                    tab === key
-                      ? "border-[#f97316] text-[var(--text-primary)] dark:text-[var(--text-primary)]"
-                      : "border-transparent text-slate-500 dark:text-slate-600 hover:text-slate-700 dark:hover:text-slate-400 hover:border-slate-300 dark:hover:border-white/[0.15]"
-                  }`}
-                >
-                  {label}
-                </button>
-              ))}
-            </div>
+          <main className="flex-1 flex flex-col overflow-hidden relative bg-[var(--bg-page)] dark:bg-[#060d10]">
+            {/* Subtle ambient mesh behind content (dark only) */}
+            <div
+              aria-hidden
+              className="absolute inset-0 pointer-events-none opacity-0 dark:opacity-[0.04]"
+              style={{
+                backgroundImage:
+                  "radial-gradient(ellipse 80% 50% at 20% 40%, #a3e635 0%, transparent 60%), radial-gradient(ellipse 60% 70% at 80% 80%, #22d3ee 0%, transparent 55%)",
+              }}
+            />
 
-            {/* Scrollable content */}
-            <div className="flex-1 overflow-y-auto p-3 sm:p-6">
+            {/* Scrollable content area — tabs are sticky inside here */}
+            <div className="flex-1 overflow-y-auto relative z-10">
+              {/* Tab navigation — sticky with instrument styling */}
+              <div className="sticky top-0 z-20 flex items-center border-b border-[var(--border)] dark:border-white/[0.06] bg-[var(--bg-card)]/90 dark:bg-[#0a1114]/90 backdrop-blur-xl px-2 sm:px-5 overflow-x-auto scrollbar-hide shadow-[0_2px_16px_-4px_rgba(0,0,0,0.1)] dark:shadow-[0_4px_24px_-6px_rgba(0,0,0,0.4)]">
+                {/* Top sheen (dark only) */}
+                <div
+                  aria-hidden
+                  className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[var(--energy)]/30 dark:via-[#a3e635]/20 to-transparent"
+                />
+                {TABS.map(({ key, label }) => (
+                  <button
+                    key={key}
+                    onClick={() => setTab(key)}
+                    className={`relative px-3 sm:px-4 py-2.5 sm:py-3 text-[11px] sm:text-[12px] font-bold whitespace-nowrap transition-all ${
+                      tab === key
+                        ? "text-[var(--energy)] dark:text-[#a3e635]"
+                        : "text-[var(--text-tertiary)] hover:text-[var(--text-secondary)] dark:text-white/30 dark:hover:text-white/60"
+                    }`}
+                    style={{ fontFamily: "var(--font-mono)", letterSpacing: "0.05em" }}
+                  >
+                    {label}
+                    {tab === key && (
+                      <motion.div
+                        layoutId="activeClientTab"
+                        className="absolute bottom-0 left-2 right-2 h-0.5 bg-[var(--energy)] dark:bg-[#a3e635] rounded-full"
+                        transition={{ type: "spring", stiffness: 400, damping: 30 }}
+                      />
+                    )}
+                  </button>
+                ))}
+              </div>
+
+              {/* Content */}
+              <div className="p-3 sm:p-6 space-y-4">
               {/* ─── Calendar tab ─────────────────────────────── */}
 
               {/* ─── Workouts tab ─────────────────────────────── */}
@@ -707,22 +739,20 @@ export default function ClientDetailPage() {
                   onSend={handleSend}
                   chatEndRef={chatEndRef}
                   socketConnected={socketConnected}
-                  isDeleteCheckinPending={deleteCheckin.isPending}
+                  isDeleteCheckinPending={updateCheckinStatus.isPending}
                   onOpenScheduleModal={openScheduleModal}
                   onReschedule={handleRescheduleCheckin}
                   onCancel={handleCancelCheckin}
                 />
               )}
             </div>
-          </main>
+          </div>
+        </main>
         </div>
       </div>
 
       {/* Schedule modal */}
-      <ScheduleModal
-        open={showScheduleModal}
-        onClose={closeScheduleModal}
-      />
+      <ScheduleModal open={showScheduleModal} onClose={closeScheduleModal} clientId={id} />
 
       {/* Delete confirmation modal */}
       <DeleteConfirmModal
@@ -745,18 +775,18 @@ export default function ClientDetailPage() {
 
       {/* Edit client modal */}
       {editModal && client && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
           <div
-            className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
             onClick={() => !editSaving && closeEditModal()}
           />
           <motion.div
             initial={{ scale: 0.95, opacity: 0, y: 20 }}
             animate={{ scale: 1, opacity: 1, y: 0 }}
             exit={{ scale: 0.95, opacity: 0, y: 20 }}
-            className="relative bg-[var(--bg-card)] border border-[var(--border)] w-full max-w-lg rounded-xl p-6 shadow-xl max-h-[90vh] overflow-y-auto"
+            className="relative bg-[var(--bg-card)] border border-[var(--border)] w-full max-w-lg rounded-xl p-4 sm:p-6 shadow-xl max-h-[90vh] overflow-y-auto mx-2 sm:mx-0"
           >
-            <div className="flex items-center justify-between mb-5">
+            <div className="flex items-center justify-between mb-4 sm:mb-5">
               <h3 className="text-base font-semibold text-[var(--text-primary)]">
                 Edit Client
               </h3>
@@ -768,7 +798,7 @@ export default function ClientDetailPage() {
               </button>
             </div>
 
-            <div className="space-y-4">
+            <div className="space-y-3 sm:space-y-4">
               {/* Profile Photo */}
               <div className="flex items-center gap-4">
                 <div className="relative">
@@ -816,7 +846,7 @@ export default function ClientDetailPage() {
                   className="w-full mt-1 px-3 py-2 rounded-lg bg-[var(--bg-subtle)] border border-[var(--border)] text-sm text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--energy)]/20 focus:border-[var(--energy)]/30"
                 />
               </div>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                 <div>
                   <label className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider">
                     Email
@@ -843,7 +873,7 @@ export default function ClientDetailPage() {
                   />
                 </div>
               </div>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                 <div>
                   <label className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider">
                     Gender
@@ -877,6 +907,8 @@ export default function ClientDetailPage() {
                     className="w-full mt-1 px-3 py-2 rounded-lg bg-[var(--bg-subtle)] border border-[var(--border)] text-sm text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--energy)]/20 focus:border-[var(--energy)]/30"
                   />
                 </div>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                 <div>
                   <label className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider">
                     City
@@ -885,6 +917,18 @@ export default function ClientDetailPage() {
                     value={editForm.city}
                     onChange={(e) =>
                       setEditForm((f) => ({ ...f, city: e.target.value }))
+                    }
+                    className="w-full mt-1 px-3 py-2 rounded-lg bg-[var(--bg-subtle)] border border-[var(--border)] text-sm text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--energy)]/20 focus:border-[var(--energy)]/30"
+                  />
+                </div>
+                <div className="sm:col-span-2">
+                  <label className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider">
+                    Address
+                  </label>
+                  <input
+                    value={editForm.address}
+                    onChange={(e) =>
+                      setEditForm((f) => ({ ...f, address: e.target.value }))
                     }
                     className="w-full mt-1 px-3 py-2 rounded-lg bg-[var(--bg-subtle)] border border-[var(--border)] text-sm text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--energy)]/20 focus:border-[var(--energy)]/30"
                   />
@@ -902,7 +946,7 @@ export default function ClientDetailPage() {
                   className="w-full mt-1 px-3 py-2 rounded-lg bg-[var(--bg-subtle)] border border-[var(--border)] text-sm text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--energy)]/20 focus:border-[var(--energy)]/30"
                 />
               </div>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                 <div>
                   <label className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider">
                     Weight (kg)
@@ -934,7 +978,7 @@ export default function ClientDetailPage() {
                   />
                 </div>
               </div>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                 <div>
                   <label className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider">
                     Nationality
@@ -990,21 +1034,21 @@ export default function ClientDetailPage() {
               </div>
             </div>
 
-            <div className="flex items-center justify-end gap-3 mt-6 pt-4 border-t border-[var(--border)]">
+            <div className="flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-end gap-2 sm:gap-3 mt-5 sm:mt-6 pt-4 border-t border-[var(--border)]">
               <button
                 onClick={() => setEditModal(false)}
                 disabled={editSaving}
-                className="px-4 py-2 text-sm font-medium text-[var(--text-secondary)] border border-[var(--border)] rounded-lg hover:bg-[var(--bg-subtle)] transition-colors"
+                className="px-4 py-2.5 text-sm font-medium text-[var(--text-secondary)] border border-[var(--border)] rounded-lg hover:bg-[var(--bg-subtle)] transition-colors"
               >
                 Cancel
               </button>
               <button
                 onClick={handleSaveEdit}
                 disabled={editSaving}
-                className="px-4 py-2 bg-[var(--btn-bg)] text-[var(--btn-text)] text-sm font-medium hover:bg-[var(--btn-hover)] transition-colors disabled:opacity-50 rounded-lg"
+                className="px-4 py-2.5 bg-[var(--btn-bg)] text-[var(--btn-text)] text-sm font-medium hover:bg-[var(--btn-hover)] transition-colors disabled:opacity-50 rounded-lg flex items-center justify-center gap-1.5"
               >
                 {editSaving ? (
-                  <Loader2 size={13} className="animate-spin inline mr-1" />
+                  <Loader2 size={13} className="animate-spin" />
                 ) : null}
                 Save Changes
               </button>

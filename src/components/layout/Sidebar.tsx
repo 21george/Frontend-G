@@ -21,6 +21,7 @@ import {
   ChevronRight,
   BarChart3,
   Video,
+  Scale,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -29,6 +30,7 @@ const NAV = [
   { href: "/clients", label: "Clients", icon: Users },
   { href: "/workout-plans", label: "Workout Plans", icon: Dumbbell },
   { href: "/nutrition-plans", label: "Nutrition", icon: Salad },
+  { href: "/nutrition-calculator", label: "Calculator", icon: Scale },
   { href: "/checkins", label: "Schedule", icon: Calendar },
   { href: "/live-training", label: "Live Training", icon: Radio },
   { href: "/coaching-sessions", label: "1-on-1 Sessions", icon: Video },
@@ -55,9 +57,11 @@ function SidebarContent({ onClose, collapsed = false }: SidebarContentProps) {
   const tierInfo = TIER_LABEL[subscription?.tier ?? "free"];
 
   const brandIcon = (
-    <div className="w-8 h-8 bg-[var(--sidebar-text)]/10 flex items-center justify-center rounded-lg">
-      <Zap className="w-4 h-4 text-[var(--sidebar-text)]" />
-    </div>
+    <img
+      src="/img/360fit-bg.png"
+      alt="360Fit"
+      className="w-8 h-8 rounded-lg object-cover"
+    />
   );
 
   return (
@@ -73,7 +77,7 @@ function SidebarContent({ onClose, collapsed = false }: SidebarContentProps) {
           <div className="flex items-center gap-2.5">
             {brandIcon}
             <span className="font-semibold text-[var(--sidebar-text)] text-lg tracking-tight">
-              CoachPro
+              360Fit
             </span>
           </div>
         )}

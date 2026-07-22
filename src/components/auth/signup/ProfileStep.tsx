@@ -40,112 +40,20 @@ const schema = z
 type FormValues = z.infer<typeof schema>;
 
 const COUNTRIES = [
-  "Afghanistan",
-  "Albania",
-  "Algeria",
-  "Andorra",
-  "Angola",
-  "Argentina",
-  "Armenia",
-  "Australia",
-  "Austria",
-  "Azerbaijan",
-  "Bahrain",
-  "Bangladesh",
-  "Belarus",
-  "Belgium",
-  "Bolivia",
-  "Bosnia and Herzegovina",
-  "Brazil",
-  "Bulgaria",
-  "Cambodia",
-  "Cameroon",
-  "Canada",
-  "Chile",
-  "China",
-  "Colombia",
-  "Croatia",
-  "Cuba",
-  "Czech Republic",
-  "Denmark",
-  "Ecuador",
-  "Egypt",
-  "Estonia",
-  "Ethiopia",
-  "Finland",
-  "France",
-  "Georgia",
-  "Germany",
-  "Ghana",
-  "Greece",
-  "Guatemala",
-  "Hungary",
-  "Iceland",
-  "India",
-  "Indonesia",
-  "Iran",
-  "Iraq",
-  "Ireland",
-  "Israel",
-  "Italy",
-  "Jamaica",
-  "Japan",
-  "Jordan",
-  "Kazakhstan",
-  "Kenya",
-  "Kuwait",
-  "Latvia",
-  "Lebanon",
-  "Libya",
-  "Lithuania",
-  "Luxembourg",
-  "Malaysia",
-  "Mexico",
-  "Moldova",
-  "Morocco",
-  "Nepal",
-  "Netherlands",
-  "New Zealand",
-  "Nigeria",
-  "Norway",
-  "Pakistan",
-  "Panama",
-  "Paraguay",
-  "Peru",
-  "Philippines",
-  "Poland",
-  "Portugal",
-  "Qatar",
-  "Romania",
-  "Russia",
-  "Saudi Arabia",
-  "Senegal",
-  "Serbia",
-  "Singapore",
-  "Slovakia",
-  "Slovenia",
-  "South Africa",
-  "South Korea",
-  "Spain",
-  "Sri Lanka",
-  "Sudan",
-  "Sweden",
-  "Switzerland",
-  "Taiwan",
-  "Thailand",
-  "Tunisia",
-  "Turkey",
-  "Ukraine",
-  "United Arab Emirates",
-  "United Kingdom",
-  "United States",
-  "Uruguay",
-  "Uzbekistan",
-  "Venezuela",
-  "Vietnam",
-  "Yemen",
-  "Zambia",
-  "Zimbabwe",
+  "Afghanistan", "Albania", "Algeria", "Andorra", "Angola", "Argentina", "Armenia", "Australia",
+  "Austria", "Azerbaijan", "Bahrain", "Bangladesh", "Belarus", "Belgium", "Bolivia",
+  "Bosnia and Herzegovina", "Brazil", "Bulgaria", "Cambodia", "Cameroon", "Canada", "Chile",
+  "China", "Colombia", "Croatia", "Cuba", "Czech Republic", "Denmark", "Ecuador", "Egypt",
+  "Estonia", "Ethiopia", "Finland", "France", "Georgia", "Germany", "Ghana", "Greece",
+  "Guatemala", "Hungary", "Iceland", "India", "Indonesia", "Iran", "Iraq", "Ireland",
+  "Israel", "Italy", "Jamaica", "Japan", "Jordan", "Kazakhstan", "Kenya", "Kuwait",
+  "Latvia", "Lebanon", "Libya", "Lithuania", "Luxembourg", "Malaysia", "Mexico", "Moldova",
+  "Morocco", "Nepal", "Netherlands", "New Zealand", "Nigeria", "Norway", "Pakistan",
+  "Panama", "Paraguay", "Peru", "Philippines", "Poland", "Portugal", "Qatar", "Romania",
+  "Russia", "Saudi Arabia", "Senegal", "Serbia", "Singapore", "Slovakia", "Slovenia",
+  "South Africa", "South Korea", "Spain", "Sri Lanka", "Sudan", "Sweden", "Switzerland",
+  "Taiwan", "Thailand", "Tunisia", "Turkey", "Ukraine", "United Arab Emirates", "United Kingdom",
+  "United States", "Uruguay", "Uzbekistan", "Venezuela", "Vietnam", "Yemen", "Zambia", "Zimbabwe",
 ];
 
 function PasswordStrength({ password }: { password: string }) {
@@ -159,34 +67,38 @@ function PasswordStrength({ password }: { password: string }) {
 
   const info =
     score <= 2
-      ? { label: "Weak", color: "bg-red-500", pct: 33 }
+      ? { label: "WEAK", color: "bg-red-500", pct: 33 }
       : score <= 3
-        ? { label: "Medium", color: "bg-amber-500", pct: 66 }
-        : { label: "Strong", color: "bg-emerald-500", pct: 100 };
+        ? { label: "MODERATE", color: "bg-amber-500", pct: 66 }
+        : { label: "STRONG", color: "bg-[#a3e635]", pct: 100 };
 
   return (
     <div className="mt-2 space-y-1">
-      <div className="h-1 w-full rounded-full bg-slate-200 dark:bg-slate-700 overflow-hidden">
+      <div className="h-1 w-full rounded-full bg-white/[0.06] overflow-hidden">
         <div
-          className={`h-full rounded-full transition-all ${info.color}`}
+          className={`h-full rounded-full transition-all duration-500 ${info.color}`}
           style={{ width: `${info.pct}%` }}
         />
       </div>
-      <p className="text-[11px] text-[var(--text-tertiary)]">
-        Strength: <span className="font-medium">{info.label}</span>
+      <p
+        className="text-[10px] tracking-widest uppercase text-white/30"
+        style={{ fontFamily: "var(--font-mono)" }}
+      >
+        Strength: <span className={`font-bold ${score <= 2 ? "text-red-400" : score <= 3 ? "text-amber-400" : "text-[#a3e635]"}`}>{info.label}</span>
       </p>
     </div>
   );
 }
 
 const inputCls =
-  "w-full border border-[var(--border)] rounded-lg px-3 py-2.5 text-sm bg-white dark:bg-[#111] " +
-  "text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)] " +
-  "focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 disabled:opacity-50 transition-colors";
+  "w-full border border-white/[0.08] rounded-lg px-3 py-2.5 text-sm bg-white/[0.03] " +
+  "text-white placeholder:text-white/20 " +
+  "focus:outline-none focus:ring-1 focus:ring-[#a3e635]/40 focus:border-[#a3e635]/40 " +
+  "disabled:opacity-40 transition-all duration-200 hover:border-white/[0.12]";
 
 const labelCls =
-  "block text-xs font-medium text-[var(--text-secondary)] mb-1.5";
-const errCls = "mt-1 text-xs text-red-500";
+  "block text-[10px] font-bold tracking-widest uppercase text-white/40 mb-1.5";
+const errCls = "mt-1 text-[11px] text-red-400";
 
 function Field({
   label,
@@ -199,7 +111,7 @@ function Field({
 }) {
   return (
     <div>
-      <label className={labelCls}>{label}</label>
+      <label className={labelCls} style={{ fontFamily: "var(--font-mono)" }}>{label}</label>
       {children}
       {error && <p className={errCls}>{error}</p>}
     </div>
@@ -266,7 +178,7 @@ export function ProfileStep() {
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" noValidate>
       {serverError && (
-        <div className="flex items-start gap-2 rounded-lg bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-900 px-3 py-2.5 text-sm text-red-700 dark:text-red-400">
+        <div className="flex items-start gap-2 rounded-lg bg-red-500/10 border border-red-500/20 px-3 py-2.5 text-sm text-red-400">
           <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" />
           {serverError}
         </div>
@@ -279,6 +191,7 @@ export function ProfileStep() {
             placeholder="Alex"
             disabled={isSubmitting}
             className={inputCls}
+            style={{ fontFamily: "var(--font-mono)" }}
           />
         </Field>
         <Field label="Last Name *" error={errors.surname?.message}>
@@ -287,6 +200,7 @@ export function ProfileStep() {
             placeholder="Johnson"
             disabled={isSubmitting}
             className={inputCls}
+            style={{ fontFamily: "var(--font-mono)" }}
           />
         </Field>
       </div>
@@ -298,6 +212,7 @@ export function ProfileStep() {
           placeholder="alex@example.com"
           disabled={isSubmitting}
           className={inputCls}
+          style={{ fontFamily: "var(--font-mono)" }}
         />
       </Field>
 
@@ -309,12 +224,13 @@ export function ProfileStep() {
             placeholder="Min. 8 characters"
             disabled={isSubmitting}
             className={`${inputCls} pr-10`}
+            style={{ fontFamily: "var(--font-mono)" }}
           />
           <button
             type="button"
             tabIndex={-1}
             onClick={() => setShowPw((v) => !v)}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--text-tertiary)] hover:text-[var(--text-secondary)]"
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-white/20 hover:text-white/50 transition-colors"
           >
             {showPw ? <EyeOff size={15} /> : <Eye size={15} />}
           </button>
@@ -330,12 +246,13 @@ export function ProfileStep() {
             placeholder="Repeat your password"
             disabled={isSubmitting}
             className={`${inputCls} pr-10`}
+            style={{ fontFamily: "var(--font-mono)" }}
           />
           <button
             type="button"
             tabIndex={-1}
             onClick={() => setShowCpw((v) => !v)}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--text-tertiary)] hover:text-[var(--text-secondary)]"
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-white/20 hover:text-white/50 transition-colors"
           >
             {showCpw ? <EyeOff size={15} /> : <Eye size={15} />}
           </button>
@@ -350,6 +267,7 @@ export function ProfileStep() {
             placeholder="+1 555 000 0000"
             disabled={isSubmitting}
             className={inputCls}
+            style={{ fontFamily: "var(--font-mono)" }}
           />
         </Field>
         <Field label="Country *" error={errors.country?.message}>
@@ -357,8 +275,9 @@ export function ProfileStep() {
             {...register("country")}
             disabled={isSubmitting}
             className={inputCls}
+            style={{ fontFamily: "var(--font-mono)" }}
           >
-            <option value="">Select…</option>
+            <option value="">Select...</option>
             {COUNTRIES.map((c) => (
               <option key={c} value={c}>
                 {c}
@@ -375,17 +294,17 @@ export function ProfileStep() {
           type="checkbox"
           id="terms"
           disabled={isSubmitting}
-          className="w-4 h-4 mt-0.5 rounded border-[var(--border)] text-blue-600 focus:ring-blue-500/30 cursor-pointer"
+          className="w-4 h-4 mt-0.5 rounded border-white/[0.12] bg-white/[0.03] text-[#a3e635] focus:ring-[#a3e635]/30 cursor-pointer"
         />
         <label
           htmlFor="terms"
-          className="text-xs text-[var(--text-secondary)] leading-relaxed cursor-pointer"
+          className="text-xs text-white/40 leading-relaxed cursor-pointer"
         >
           I agree to the{" "}
           <a
             href="/terms"
             target="_blank"
-            className="text-blue-600 hover:underline font-medium"
+            className="text-[#a3e635] hover:text-[#bef264] font-semibold transition-colors"
           >
             Terms of Service
           </a>{" "}
@@ -393,7 +312,7 @@ export function ProfileStep() {
           <a
             href="/privacy"
             target="_blank"
-            className="text-blue-600 hover:underline font-medium"
+            className="text-[#a3e635] hover:text-[#bef264] font-semibold transition-colors"
           >
             Privacy Policy
           </a>
@@ -406,15 +325,16 @@ export function ProfileStep() {
       <button
         type="submit"
         disabled={isSubmitting}
-        className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm py-2.5 rounded-lg transition-colors disabled:opacity-60 flex items-center justify-center gap-2"
+        className="w-full bg-[#a3e635] hover:bg-[#bef264] active:bg-[#8bc52f] text-[#0a1114] font-bold text-sm py-2.5 rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 mt-2"
+        style={{ fontFamily: "var(--font-mono)", letterSpacing: "0.05em" }}
       >
         {isSubmitting ? (
           <>
-            <Loader2 className="w-4 h-4 animate-spin" /> Creating account…
+            <Loader2 className="w-4 h-4 animate-spin" /> INITIALIZING...
           </>
         ) : (
           <>
-            Continue <ArrowRight className="w-4 h-4" />
+            CONTINUE <ArrowRight className="w-4 h-4" />
           </>
         )}
       </button>

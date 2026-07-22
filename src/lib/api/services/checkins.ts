@@ -13,4 +13,8 @@ export const checkinsApi = {
 
   delete: (id: string) =>
     api.delete(`/checkins/${id}`).then(r => r.data),
+
+  /** Update status: 'scheduled' | 'completed' | 'cancelled' */
+  updateStatus: (id: string, status: string) =>
+    api.post<ApiResponse<null>>(`/checkins/${id}/status`, { status }).then(r => r.data),
 }

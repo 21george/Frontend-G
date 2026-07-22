@@ -6,9 +6,9 @@ import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
 
 const NAV_LINKS = [
-  { label: "Product", href: "/" },
-  { label: "Pricing", href: "/#pricing" },
-  { label: "Support", href: "/support" },
+  { label: "Product", href: "/../../registration/src/app/page.tsx" },
+  /*{ label: "Pricing", href: "/#pricing" },
+  { label: "Support", href: "/support" },*/
 ];
 
 export default function RegistrationNav() {
@@ -41,43 +41,21 @@ export default function RegistrationNav() {
         {/* LEFT: Logo */}
         <Link
           href="/"
-          aria-label="Go to CoachPro home page"
+          aria-label="Go to 360Fit home page"
           className="flex items-center gap-2.5 pl-4 group"
           style={{ textDecoration: "none" }}
         >
-          <div className="relative flex items-center justify-center w-8 h-8 rounded-[10px] bg-gradient-to-br from-[#132E35] to-[#091215] ring-1 ring-white/10 shadow-inner overflow-hidden">
-            {/* Logo mark — hexagonal reticle */}
-            <svg
-              width="18"
-              height="18"
-              viewBox="0 0 24 24"
-              fill="none"
-              className="relative z-10"
-            >
-              <path
-                d="M12 2l8.66 5v10L12 22 3.34 17V7L12 2z"
-                stroke="url(#navLogoGrad)"
-                strokeWidth="1.8"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-              <circle cx="12" cy="12" r="2.5" fill="#a3e635" />
-              <defs>
-                <linearGradient id="navLogoGrad" x1="3" y1="2" x2="21" y2="22">
-                  <stop stopColor="#a3e635" />
-                  <stop offset="1" stopColor="#10B981" />
-                </linearGradient>
-              </defs>
-            </svg>
-            {/* Active dot */}
-            <span className="absolute top-[2px] right-[2px] block h-1 w-1 rounded-full bg-[#a3e635] ring-1 ring-[#080c0c]" />
-          </div>
+          <img
+            src="/img/360fit-bg.png"
+            alt="360Fit"
+            className="w-8 h-8 rounded-[10px] object-cover ring-1 ring-white/10 shadow-inner"
+          />
 
           <span
             className="hidden sm:inline text-[15px] font-bold text-white tracking-tight"
             style={{ fontFamily: "var(--font-display)" }}
           >
-            CoachPro
+            360Fit
           </span>
         </Link>
 

@@ -6,6 +6,7 @@ import { useAuthStore } from "@/store/auth";
 import { useSubscriptionStore } from "@/store/subscription";
 import Sidebar from "@/components/layout/Sidebar";
 import DashboardHeader from "@/components/layout/DashboardHeader";
+import { PageSkeleton } from "@/components/ui/skeletons";
 import { motion } from "framer-motion";
 
 function AuthLayout({
@@ -110,7 +111,7 @@ function AuthLayout({
     setupToken,
   ]);
 
-  if (!isHydrated || !isAuthenticated || isLoading) return null;
+  if (!isHydrated || !isAuthenticated || isLoading) return <PageSkeleton />;
 
   // Don't render dashboard content for pending coaches
   if (coach?.subscription_status === "pending") return null;

@@ -9,6 +9,7 @@ import {
   Download, Trash2, Eye, Calendar, HardDrive
 } from 'lucide-react'
 import { AnimatedSearch } from '@/components/ui/AnimatedSearch'
+import { CardGridSkeleton } from '@/components/ui/skeletons'
 import { motion } from 'framer-motion'
 
 const FILE_TYPE_CONFIG: Record<string, { label: string; icon: typeof ImageIcon; gradient: string }> = {
@@ -218,9 +219,7 @@ export default function MediaPage() {
 
             {/* ── MEDIA GRID ── */}
             {isLoading ? (
-              <div className="flex items-center justify-center py-20">
-                <div className="text-sm text-[var(--text-secondary)] dark:text-[var(--text-secondary)]">Loading media...</div>
-              </div>
+              <CardGridSkeleton count={8} columns={4} showSearch={false} />
             ) : filtered.length === 0 ? (
               <div className="bg-[var(--bg-card)] border border-slate-200/80 dark:border-white/[0.08] p-12 text-center">
                 <div className="w-16 h-16 bg-slate-100 dark:bg-white/[0.04] flex items-center justify-center mx-auto mb-4">

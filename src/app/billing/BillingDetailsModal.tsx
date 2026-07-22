@@ -601,7 +601,7 @@ export function BillingDetailsModal({ open, onClose }: Props) {
 
         {/* Footer note */}
         <p className="text-[11px] text-[var(--text-tertiary)] mt-6 leading-relaxed">
-          CoachPro sends out invoices for service usage monthly, to the email address specified in Billing Information. If you are paying by credit card and have not arranged a separate billing agreement, please ensure that your credit card information is kept up to date, in order to prevent any issues.
+          360Fit sends out invoices for service usage monthly, to the email address specified in Billing Information. If you are paying by credit card and have not arranged a separate billing agreement, please ensure that your credit card information is kept up to date, in order to prevent any issues.
         </p>
       </div>
 
