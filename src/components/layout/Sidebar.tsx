@@ -21,7 +21,6 @@ import {
   ChevronRight,
   BarChart3,
   Video,
-  Scale,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -30,7 +29,6 @@ const NAV = [
   { href: "/clients", label: "Clients", icon: Users },
   { href: "/workout-plans", label: "Workout Plans", icon: Dumbbell },
   { href: "/nutrition-plans", label: "Nutrition", icon: Salad },
-  { href: "/nutrition-calculator", label: "Calculator", icon: Scale },
   { href: "/checkins", label: "Schedule", icon: Calendar },
   { href: "/live-training", label: "Live Training", icon: Radio },
   { href: "/coaching-sessions", label: "1-on-1 Sessions", icon: Video },

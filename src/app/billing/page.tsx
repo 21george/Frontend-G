@@ -271,7 +271,26 @@ export default function BillingHubPage() {
 
   return (
     <div className="space-y-8 ">
-      {/* Page Title */}
+      {/* ── Trial Banner ── */}
+      {isTrialing && (
+        <div className="rounded-lg border border-amber-200 bg-amber-50 dark:bg-amber-900/20 dark:border-amber-700 px-5 py-4 flex flex-col sm:flex-row sm:items-center gap-3">
+          <div className="flex-1">
+            <p className="text-sm font-semibold text-amber-900 dark:text-amber-200">
+              🎉 Free trial active — ends {trialEndDate}
+            </p>
+            <p className="text-xs text-amber-700 dark:text-amber-300 mt-0.5">
+              Your card will be charged automatically when the trial ends.
+              Cancel anytime before then.
+            </p>
+          </div>
+          <Link
+            href="/billing/upgrade"
+            className="shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold bg-amber-600 text-white hover:bg-amber-700 transition-colors"
+          >
+            <Zap className="w-3.5 h-3.5" /> Upgrade Now
+          </Link>
+        </div>
+      )}
 
       {/* ── Two-column row: Current Plan + Billing Information ── */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
@@ -290,7 +309,7 @@ export default function BillingHubPage() {
                 No Active Plan
               </h3>
               <p className="text-sm text-[var(--text-secondary)] mb-6 max-w-xs">
-                Start your 14-day free trial to unlock all features.
+                Start your 30-day free trial to unlock all features.
               </p>
               <Link
                 href="/billing/upgrade"

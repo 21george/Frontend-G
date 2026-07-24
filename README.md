@@ -1,6 +1,6 @@
-# CoachPro — Coach Dashboard (Next.js)
+# 360Fit — Coach Dashboard (Next.js)
 
-The web dashboard for coaches. Built with Next.js 14 (App Router), React Query, Zustand, and Tailwind CSS.
+The web dashboard for coaches. Built with Next.js 15 (App Router), React Query, Zustand, and Tailwind CSS.
 
 ---
 
@@ -8,7 +8,7 @@ The web dashboard for coaches. Built with Next.js 14 (App Router), React Query, 
 
 | Layer         | Technology                          |
 | ------------- | ----------------------------------- |
-| Framework     | Next.js 14 (App Router)             |
+| Framework     | Next.js 15 (App Router)             |
 | Styling       | Tailwind CSS                        |
 | State         | Zustand (auth, theme, UI)           |
 | Data fetching | TanStack React Query v5             |

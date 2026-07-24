@@ -1,31 +1,8 @@
 "use client";
-import {
-  useClient,
-  useClientAnalytics,
-  useMessages,
-  useSendMessage,
-  useCheckins,
-  useUpdateCheckinStatus,
-  useWorkoutPlans,
-  useNutritionPlans,
-  useRegenerateCode,
-  useClientMedia,
-  useWorkoutLogs,
-  useDeleteWorkoutPlan,
-  useDeleteClient,
-  useUpdateClient,
-  useUploadMessageMedia,
-  useBlockClient,
-  useUnblockClient,
-  useUploadClientPhoto,
-  useWorkoutProgress,
-  useLiveProgress,
-} from "@/lib/hooks";
-import { useState, useMemo, useCallback, useRef, useEffect } from "react";
+
 import {
   ArrowLeft,
   Check,
-  Search,
   X,
   Menu,
   Loader2,
@@ -33,18 +10,10 @@ import {
   Trash2,
 } from "lucide-react";
 import Link from "next/link";
-import { useParams, useRouter } from "next/navigation";
-import { formatDate } from "@/lib/utils";
-import { useSocketChat } from "@/lib/useSocketChat";
-import { diffChanged } from "@/lib/diffChanged";
-import toast from "react-hot-toast";
 import { motion } from "framer-motion";
 import { Skeleton } from "@/components/ui/Skeleton";
-import type { CheckinMeeting, WorkoutPlan } from "@/types";
 import {
   ClientDetailSidebar,
-  ScheduleModal,
-  DeleteConfirmModal,
   ClientWorkoutsTab,
   ClientNutritionTab,
   ClientAnalyticsTab,
@@ -52,429 +21,92 @@ import {
   ClientScheduleTab,
   PlanAnalysisTab,
   BodyAnalysisTab,
+  ClientAdherenceTab,
+  PredictionWidget,
+  ScheduleModal,
+  DeleteConfirmModal,
+  ClientEditModal,
 } from "@/components/clients";
-
-{
-  /*function generateCalendarDays(year: number, month: number, events: CalendarEvent[]): DayData[][] {
-  const firstDay        = new Date(year, month, 1)
-  const today           = new Date()
-  let startDay          = firstDay.getDay() - 1
-  if (startDay < 0) startDay = 6
-  const daysInMonth     = new Date(year, month + 1, 0).getDate()
-  const daysInPrevMonth = new Date(year, month, 0).getDate()
-  const weeks: DayData[][] = []
-  let week: DayData[]  = []
-  let nextDay          = 1
-
-  for (let i = startDay - 1; i >= 0; i--)
-    week.push({ date: daysInPrevMonth - i, currentMonth: false, isToday: false, isWeekend: false, events: [], fullDate: new Date(year, month - 1, daysInPrevMonth - i) })
-
-  for (let d = 1; d <= daysInMonth; d++) {
-    const fullDate  = new Date(year, month, d)
-    const dow       = fullDate.getDay()
-    week.push({
-      date: d, currentMonth: true,
-      isToday: fullDate.toDateString() === today.toDateString(),
-      isWeekend: dow === 0 || dow === 6,
-      events: events.filter(e => { const ed = new Date(e.date); return ed.getFullYear()===year && ed.getMonth()===month && ed.getDate()===d }),
-      fullDate,
-    })
-    if (week.length === 7) { weeks.push(week); week = [] }
-  }
-  while (week.length > 0 && week.length < 7)
-    week.push({ date: nextDay, currentMonth: false, isToday: false, isWeekend: false, events: [], fullDate: new Date(year, month+1, nextDay++) })
-  if (week.length > 0) weeks.push(week)
-  return weeks
-}*/
-}
-
-type TabKey =
-  | "workouts"
-  | "nutrition"
-  | "analytics"
-  | "messages"
-  | "checkins"
-  | "plan-analysis"
-  | "body";
-
-const TABS: { key: TabKey; label: string }[] = [
-  { key: "workouts", label: "Workouts" },
-  { key: "nutrition", label: "Nutrition" },
-  { key: "body", label: "Body" },
-  { key: "analytics", label: "Analytics" },
-  { key: "plan-analysis", label: "Plan Analysis" },
-  { key: "messages", label: "Messages" },
-  { key: "checkins", label: "Schedule" },
-];
+import { useClientDetailPage } from "@/hooks/useClientDetailPage";
 
 export default function ClientDetailPage() {
-  const { id } = useParams<{ id: string }>();
-  const router = useRouter();
-  const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [msg, setMsg] = useState("");
-  const [copied, setCopied] = useState(false);
-  const [newCode, setNewCode] = useState<string | null>(null);
-  const [tab, setTab] = useState<TabKey>("workouts");
-  const [showScheduleModal, setShowScheduleModal] = useState(false);
-  // Check-in chat panel (which check-in ID has chat open)
-  const [activeChatId, setActiveChatId] = useState<string | null>(null);
-  const [expandedPlan, setExpandedPlan] = useState<string | null>(null);
-  const [scheduleFilter, setScheduleFilter] = useState<
-    "Upcoming" | "Ongoing" | "Rescheduled" | "Cancelled" | "Completed"
-  >("Upcoming");
-  // Delete confirmation modal
-  const [deleteModal, setDeleteModal] = useState<{
-    open: boolean;
-    type: "client" | "workout";
-    item?: any;
-  }>({ open: false, type: "client" });
-  const [deleteError, setDeleteError] = useState<string | null>(null);
-  // Edit client modal
-  const [editModal, setEditModal] = useState(false);
-  const [editForm, setEditForm] = useState({
-    name: "",
-    email: "",
-    phone: "",
-    gender: "",
-    date_of_birth: "",
-    city: "",
-    address: "",
-    notes: "",
-    current_weight_kg: "",
-    height_cm: "",
-    nationality: "",
-    occupation: "",
-    sickness: "",
-  });
-  const [editSaving, setEditSaving] = useState(false);
-  const [editPhotoFile, setEditPhotoFile] = useState<File | null>(null);
-  const [editPhotoPreview, setEditPhotoPreview] = useState<string | null>(null);
-  const chatEndRef = useRef<HTMLDivElement>(null);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
-
-  const { data: client, isLoading } = useClient(id);
-  const { data: analytics } = useClientAnalytics(id);
-  const { data: messagesData, isLoading: msgLoading } = useMessages(id);
-  const { data: checkins } = useCheckins(id);
-  const { data: plans } = useWorkoutPlans(id);
-  const { data: nutrition } = useNutritionPlans(id);
-  const { data: media } = useClientMedia(id);
-  const { data: workoutLogs } = useWorkoutLogs(id);
-  const { data: workoutProgress } = useWorkoutProgress(id);
-  const { data: liveProgress, isLoading: liveProgressLoading } =
-    useLiveProgress(id);
-  const sendMsg = useSendMessage();
-  const uploadMedia = useUploadMessageMedia();
-  const regenerateCode = useRegenerateCode(id);
-  const [pendingFile, setPendingFile] = useState<{
-    media_url: string;
-    media_type: string;
-    media_filename: string;
-  } | null>(null);
-  const [expandedLog, setExpandedLog] = useState<string | null>(null);
-  const updateCheckinStatus = useUpdateCheckinStatus();
-  const deleteWorkoutPlan = useDeleteWorkoutPlan();
-  const deleteClient = useDeleteClient();
-  const updateClient = useUpdateClient(id);
-  const blockClient = useBlockClient(id);
-  const unblockClient = useUnblockClient(id);
-  const uploadClientPhoto = useUploadClientPhoto(id);
   const {
-    connected: socketConnected,
-    incomingMessages,
-    relayViaSocket,
-  } = useSocketChat(id);
-
-  const revokeBlobUrl = useCallback((url: string | null) => {
-    if (url?.startsWith("blob:")) {
-      URL.revokeObjectURL(url);
-    }
-  }, []);
-
-  const resetEditPhotoState = useCallback(() => {
-    revokeBlobUrl(editPhotoPreview);
-    setEditPhotoFile(null);
-    setEditPhotoPreview(null);
-  }, [editPhotoPreview, revokeBlobUrl]);
-
-  const closeEditModal = useCallback(() => {
-    resetEditPhotoState();
-    setEditModal(false);
-  }, [resetEditPhotoState]);
-
-  useEffect(() => {
-    return () => {
-      revokeBlobUrl(editPhotoPreview);
-    };
-  }, [editPhotoPreview, revokeBlobUrl]);
-
-  const closeScheduleModal = useCallback(() => {
-    setShowScheduleModal(false);
-  }, []);
-
-  const handleSend = async () => {
-    if (!msg.trim() && !pendingFile) return;
-    const content =
-      msg.trim() || (pendingFile ? `📎 ${pendingFile.media_filename}` : "");
-    setMsg("");
-    const payload: Parameters<typeof sendMsg.mutateAsync>[0] = {
-      client_id: id,
-      content,
-    };
-    if (pendingFile) {
-      payload.media_url = pendingFile.media_url;
-      payload.media_type = pendingFile.media_type;
-      payload.media_filename = pendingFile.media_filename;
-      setPendingFile(null);
-    }
-    try {
-      await sendMsg.mutateAsync(payload);
-      relayViaSocket(content);
-    } catch {
-      // Error toast is handled by useToastMutation
-    }
-  };
-
-  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    try {
-      const result = await uploadMedia.mutateAsync(file);
-      setPendingFile(result);
-    } catch {
-      toast.error("Failed to upload file.");
-    }
-    e.target.value = "";
-  };
-
-  const handleRegenerate = async () => {
-    if (
-      !confirm("Regenerate code? The old code will stop working immediately.")
-    )
-      return;
-    const res = await regenerateCode.mutateAsync();
-    setNewCode(res.data.login_code);
-  };
-
-  const handleDeleteClient = async () => {
-    setDeleteError(null);
-    setDeleteModal({ open: true, type: "client" });
-  };
-
-  const handleConfirmDeleteClient = async () => {
-    try {
-      await deleteClient.mutateAsync(id);
-      setDeleteError(null);
-      setDeleteModal({ open: false, type: "client" });
-      router.push("/clients");
-    } catch (err: any) {
-      if (process.env.NODE_ENV === "development") {
-        console.error("Delete client error:", err);
-      }
-      const message =
-        err?.response?.data?.message || err?.message || "Unknown error";
-      setDeleteError(message);
-    }
-  };
-
-  const handleDeleteWorkout = async (plan: WorkoutPlan) => {
-    setDeleteError(null);
-    setDeleteModal({ open: true, type: "workout", item: plan });
-  };
-
-  const handleConfirmDeleteWorkout = async () => {
-    if (!deleteModal.item) return;
-    try {
-      if (expandedPlan === deleteModal.item.id) setExpandedPlan(null);
-      await deleteWorkoutPlan.mutateAsync(deleteModal.item.id);
-      setDeleteError(null);
-      setDeleteModal({ open: false, type: "client" });
-    } catch {
-      setDeleteError("Failed to delete workout plan.");
-    }
-  };
-
-  const handleToggleBlockClient = async () => {
-    // Determine whether the client should be treated as blocked:
-    //  - If is_blocked is explicitly set, it takes precedence (true = blocked, false = active).
-    //  - If is_blocked is undefined/null (legacy data), fall back to the active flag:
-    //    active=false is treated as "inactive/blocked" for backward compatibility.
-    const computedIsBlocked = client?.is_blocked ?? !client?.active;
-
-    if (
-      !confirm(
-        `${computedIsBlocked ? "Unblock" : "Block"} client "${client?.name}"?${!computedIsBlocked ? " This will immediately invalidate all their sessions and login codes." : ""}`,
-      )
-    )
-      return;
-
-    try {
-      if (computedIsBlocked) {
-        await unblockClient.mutateAsync();
-      } else {
-        await blockClient.mutateAsync();
-      }
-    } catch {
-      toast.error(
-        `Failed to ${computedIsBlocked ? "unblock" : "block"} client.`,
-      );
-    }
-  };
-
-  const handleOpenEdit = () => {
-    if (!client) return;
-    setEditForm({
-      name: client.name ?? "",
-      email: client.email ?? "",
-      phone: client.phone ?? "",
-      gender: client.gender ?? "",
-      date_of_birth: client.date_of_birth ?? "",
-      city: client.city ?? "",
-      address: client.address ?? "",
-      notes: client.notes ?? "",
-      current_weight_kg:
-        client.current_weight_kg != null
-          ? String(client.current_weight_kg)
-          : "",
-      height_cm: client.height_cm != null ? String(client.height_cm) : "",
-      nationality: client.nationality ?? "",
-      occupation: client.occupation ?? "",
-      sickness: client.sickness ?? "",
-    });
-    revokeBlobUrl(editPhotoPreview);
-    setEditPhotoFile(null);
-    setEditPhotoPreview(client.profile_photo_url ?? null);
-    setEditModal(true);
-  };
-
-  const handleSaveEdit = async () => {
-    if (!editForm.name.trim()) {
-      toast.error("Name is required");
-      return;
-    }
-
-    // Build the payload as before
-    const payload: Record<string, any> = {
-      name: editForm.name.trim(),
-      email: editForm.email.trim() || undefined,
-      phone: editForm.phone.trim() || undefined,
-      gender: (editForm.gender as "male" | "female" | "other") || undefined,
-      date_of_birth: editForm.date_of_birth || undefined,
-      city: editForm.city.trim() || undefined,
-      address: editForm.address.trim() || undefined,
-      notes: editForm.notes.trim() || undefined,
-      nationality: editForm.nationality.trim() || undefined,
-      occupation: editForm.occupation.trim() || undefined,
-      sickness: editForm.sickness.trim() || undefined,
-    };
-    if (editForm.current_weight_kg.trim()) {
-      const w = parseFloat(editForm.current_weight_kg);
-      if (!isNaN(w)) payload.current_weight_kg = w;
-    }
-    if (editForm.height_cm.trim()) {
-      const h = parseInt(editForm.height_cm, 10);
-      if (!isNaN(h)) payload.height_cm = h;
-    }
-
-    // Client-side diff: if the form is identical to the original
-    // record, skip the network call entirely. The backend would
-    // also no-op (no changed fields -> no notification), but this
-    // is cheaper and gives a cleaner "no changes" toast.
-    const editableFields = Object.keys(payload);
-    const clientBefore = client as unknown as
-      | Record<string, unknown>
-      | undefined;
-    const changedKeys = diffChanged(payload, clientBefore, {
-      fields: editableFields,
-    });
-
-    if (changedKeys.length === 0 && !editPhotoFile) {
-      toast("No changes to save", { icon: "ℹ️" });
-      closeEditModal();
-      return;
-    }
-
-    setEditSaving(true);
-    try {
-      // Upload new photo first if selected
-      if (editPhotoFile) {
-        await uploadClientPhoto.mutateAsync(editPhotoFile);
-      }
-
-      const mutationResult = await updateClient.mutateAsync(payload);
-      // useUpdateClient already shows "Client updated successfully".
-      // If the backend reports zero actual changes (e.g. we sent
-      // trimmed strings that stringify to the same value as the DB
-      // stored), downgrade to an info toast.
-      const resultData = (
-        mutationResult as { data?: { changed_fields?: string[] } } | undefined
-      )?.data;
-      const resultChanged = resultData?.changed_fields;
-      if (Array.isArray(resultChanged) && resultChanged.length === 0) {
-        toast("No fields actually changed", { icon: "ℹ️" });
-      }
-      closeEditModal();
-    } catch {
-      toast.error("Failed to update client");
-    } finally {
-      setEditSaving(false);
-    }
-  };
-
-  // ── Schedule from calendar ────────────────────────────────────────────────
-  const openScheduleModal = useCallback(() => {
-    setShowScheduleModal(true);
-  }, []);
-
-  const handleRescheduleCheckin = useCallback(() => {
-    setShowScheduleModal(true);
-  }, []);
-
-  const handleCancelCheckin = useCallback(
-    async (meeting: CheckinMeeting) => {
-      const scheduledLabel = formatDate(
-        meeting.scheduled_at,
-        "EEE, MMM d · h:mm a",
-      );
-      if (!confirm(`Cancel this ${meeting.type} meeting on ${scheduledLabel}?`))
-        return;
-
-      try {
-        await updateCheckinStatus.mutateAsync({ id: meeting.id, status: 'cancelled' });
-        if (activeChatId === `chat-${meeting.id}`) {
-          setActiveChatId(null);
-        }
-      } catch {
-        alert("Failed to cancel check-in. Please try again.");
-      }
-    },
-    [activeChatId, updateCheckinStatus],
-  );
-
-  const allMessages = useMemo(() => {
-    const rest: any[] = messagesData?.data ?? [];
-    const restIds = new Set(rest.map((m: any) => m.id));
-    const extra = incomingMessages.filter((sm) => !restIds.has(sm.id));
-    if (extra.length === 0) return rest;
-    return [...rest, ...extra].sort(
-      (a: any, b: any) =>
-        new Date(a.sent_at).getTime() - new Date(b.sent_at).getTime(),
-    );
-  }, [messagesData, incomingMessages]);
-
-  useEffect(() => {
-    if (tab === "messages") {
-      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-    }
-  }, [allMessages, tab]);
-
-  const completedDaysMap = useMemo(() => {
-    const map: Record<string, boolean> = {};
-    (workoutLogs ?? []).forEach((l: any) => {
-      map[`${l.workout_plan_id}-${l.day?.toLowerCase()}`] = true;
-    });
-    return map;
-  }, [workoutLogs]);
+    id,
+    client,
+    isLoading,
+    analytics,
+    msgLoading,
+    checkins,
+    plans,
+    nutrition,
+    media,
+    workoutLogs,
+    workoutProgress,
+    liveProgress,
+    liveProgressLoading,
+    msg,
+    setMsg,
+    allMessages,
+    pendingFile,
+    setPendingFile,
+    socketConnected,
+    messagesEndRef,
+    chatEndRef,
+    sidebarOpen,
+    setSidebarOpen,
+    copied,
+    setCopied,
+    newCode,
+    tab,
+    setTab,
+    TABS,
+    showScheduleModal,
+    closeScheduleModal,
+    openScheduleModal,
+    scheduleFilter,
+    setScheduleFilter,
+    activeChatId,
+    setActiveChatId,
+    expandedPlan,
+    setExpandedPlan,
+    expandedLog,
+    setExpandedLog,
+    completedDaysMap,
+    deleteModal,
+    setDeleteModal,
+    deleteError,
+    setDeleteError,
+    handleDeleteClient,
+    handleConfirmDeleteClient,
+    handleConfirmDeleteWorkout,
+    editModal,
+    editForm,
+    setEditForm,
+    editSaving,
+    editPhotoPreview,
+    closeEditModal,
+    handleOpenEdit,
+    handleSaveEdit,
+    handleSend,
+    handleFileSelect,
+    handleRegenerate,
+    handleToggleBlockClient,
+    handleRescheduleCheckin,
+    handleCancelCheckin,
+    sendMsg,
+    uploadMedia,
+    regenerateCode,
+    deleteClient,
+    deleteWorkoutPlan,
+    updateClient,
+    blockClient,
+    unblockClient,
+    updateCheckinStatus,
+    completedCheckins,
+    setEditPhotoFile,
+    setEditPhotoPreview,
+    revokeBlobUrl,
+  } = useClientDetailPage();
 
   if (isLoading)
     return (
@@ -497,10 +129,6 @@ export default function ClientDetailPage() {
       </div>
     );
 
-  const completedCheckins = (checkins ?? []).filter(
-    (c: any) => c.status === "completed",
-  ).length;
-
   return (
     <>
       <div className="flex flex-col bg-[var(--bg-page)] dark:bg-[var(--bg-page)] min-h-[calc(100vh-4rem)]">
@@ -517,10 +145,10 @@ export default function ClientDetailPage() {
               href="/clients"
               className="flex items-center gap-1.5 text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 transition-colors flex-shrink-0"
             >
-              <ArrowLeft size={13} />{" "}
+              <ArrowLeft size={13} />
               <span className="hidden sm:inline">Clients</span>
             </Link>
-            <span className="text-slate-300 dark:text-slate-700 hidden sm:inline"></span>
+            <span className="text-slate-300 dark:text-slate-700 hidden sm:inline" />
             <span className="text-slate-700 dark:text-slate-300 truncate">
               {client.name}
             </span>
@@ -621,7 +249,6 @@ export default function ClientDetailPage() {
 
           {/* ══════════ RIGHT PANEL ══════════ */}
           <main className="flex-1 flex flex-col overflow-hidden relative bg-[var(--bg-page)] dark:bg-[#060d10]">
-            {/* Subtle ambient mesh behind content (dark only) */}
             <div
               aria-hidden
               className="absolute inset-0 pointer-events-none opacity-0 dark:opacity-[0.04]"
@@ -631,11 +258,9 @@ export default function ClientDetailPage() {
               }}
             />
 
-            {/* Scrollable content area — tabs are sticky inside here */}
             <div className="flex-1 overflow-y-auto relative z-10">
-              {/* Tab navigation — sticky with instrument styling */}
+              {/* Tab navigation */}
               <div className="sticky top-0 z-20 flex items-center border-b border-[var(--border)] dark:border-white/[0.06] bg-[var(--bg-card)]/90 dark:bg-[#0a1114]/90 backdrop-blur-xl px-2 sm:px-5 overflow-x-auto scrollbar-hide shadow-[0_2px_16px_-4px_rgba(0,0,0,0.1)] dark:shadow-[0_4px_24px_-6px_rgba(0,0,0,0.4)]">
-                {/* Top sheen (dark only) */}
                 <div
                   aria-hidden
                   className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[var(--energy)]/30 dark:via-[#a3e635]/20 to-transparent"
@@ -649,14 +274,21 @@ export default function ClientDetailPage() {
                         ? "text-[var(--energy)] dark:text-[#a3e635]"
                         : "text-[var(--text-tertiary)] hover:text-[var(--text-secondary)] dark:text-white/30 dark:hover:text-white/60"
                     }`}
-                    style={{ fontFamily: "var(--font-mono)", letterSpacing: "0.05em" }}
+                    style={{
+                      fontFamily: "var(--font-mono)",
+                      letterSpacing: "0.05em",
+                    }}
                   >
                     {label}
                     {tab === key && (
                       <motion.div
                         layoutId="activeClientTab"
                         className="absolute bottom-0 left-2 right-2 h-0.5 bg-[var(--energy)] dark:bg-[#a3e635] rounded-full"
-                        transition={{ type: "spring", stiffness: 400, damping: 30 }}
+                        transition={{
+                          type: "spring",
+                          stiffness: 400,
+                          damping: 30,
+                        }}
                       />
                     )}
                   </button>
@@ -665,96 +297,88 @@ export default function ClientDetailPage() {
 
               {/* Content */}
               <div className="p-3 sm:p-6 space-y-4">
-              {/* ─── Calendar tab ─────────────────────────────── */}
+                {tab === "workouts" && (
+                  <ClientWorkoutsTab
+                    clientId={id}
+                    plans={plans}
+                    workoutProgress={workoutProgress}
+                    workoutLogs={workoutLogs}
+                    liveProgress={liveProgress}
+                    liveProgressLoading={liveProgressLoading}
+                    completedDaysMap={completedDaysMap}
+                    expandedPlan={expandedPlan}
+                    setExpandedPlan={setExpandedPlan}
+                    expandedLog={expandedLog}
+                    setExpandedLog={setExpandedLog}
+                  />
+                )}
 
-              {/* ─── Workouts tab ─────────────────────────────── */}
-              {tab === "workouts" && (
-                <ClientWorkoutsTab
-                  clientId={id}
-                  plans={plans}
-                  workoutProgress={workoutProgress}
-                  workoutLogs={workoutLogs}
-                  liveProgress={liveProgress}
-                  liveProgressLoading={liveProgressLoading}
-                  completedDaysMap={completedDaysMap}
-                  expandedPlan={expandedPlan}
-                  setExpandedPlan={setExpandedPlan}
-                  expandedLog={expandedLog}
-                  setExpandedLog={setExpandedLog}
-                />
-              )}
+                {tab === "nutrition" && (
+                  <ClientNutritionTab
+                    clientId={id}
+                    nutrition={nutrition}
+                    expandedPlan={expandedPlan}
+                    setExpandedPlan={setExpandedPlan}
+                  />
+                )}
 
-              {/* ─── Nutrition tab ──────────────────────────────── */}
-              {tab === "nutrition" && (
-                <ClientNutritionTab
-                  clientId={id}
-                  nutrition={nutrition}
-                  expandedPlan={expandedPlan}
-                  setExpandedPlan={setExpandedPlan}
-                />
-              )}
+                {tab === "body" && <BodyAnalysisTab clientId={id} />}
+                {tab === "adherence" && <ClientAdherenceTab clientId={id} />}
+                {tab === "prediction" && <PredictionWidget clientId={id} />}
 
-              {/* ─── Body tab ─────────────────────────────────── */}
-              {tab === "body" && <BodyAnalysisTab clientId={id} />}
+                {tab === "analytics" && (
+                  <ClientAnalyticsTab analytics={analytics} client={client} />
+                )}
 
-              {/* ─── Analytics tab ──────────────────────────────── */}
-              {tab === "analytics" && (
-                <ClientAnalyticsTab analytics={analytics} client={client} />
-              )}
+                {tab === "plan-analysis" && <PlanAnalysisTab clientId={id} />}
 
-              {/* ─── Plan Analysis tab ─────────────────────────── */}
-              {tab === "plan-analysis" && <PlanAnalysisTab clientId={id} />}
+                {tab === "messages" && (
+                  <ClientMessagesTab
+                    client={client}
+                    allMessages={allMessages}
+                    msg={msg}
+                    setMsg={setMsg}
+                    onSend={handleSend}
+                    isSendPending={sendMsg.isPending}
+                    isUploadPending={uploadMedia.isPending}
+                    pendingFile={pendingFile}
+                    onClearPendingFile={() => setPendingFile(null)}
+                    onFileSelect={handleFileSelect}
+                    socketConnected={socketConnected}
+                    msgLoading={msgLoading}
+                    messagesEndRef={messagesEndRef}
+                  />
+                )}
 
-              {/* ─── Messages tab ───────────────────────────────── */}
-              {tab === "messages" && (
-                <ClientMessagesTab
-                  client={client}
-                  allMessages={allMessages}
-                  msg={msg}
-                  setMsg={setMsg}
-                  onSend={handleSend}
-                  isSendPending={sendMsg.isPending}
-                  isUploadPending={uploadMedia.isPending}
-                  pendingFile={pendingFile}
-                  onClearPendingFile={() => setPendingFile(null)}
-                  onFileSelect={handleFileSelect}
-                  socketConnected={socketConnected}
-                  msgLoading={msgLoading}
-                  messagesEndRef={messagesEndRef}
-                />
-              )}
-
-              {/* ─── Schedule tab ──────────────────────────────── */}
-              {tab === "checkins" && (
-                <ClientScheduleTab
-                  client={client}
-                  checkins={checkins}
-                  scheduleFilter={scheduleFilter}
-                  setScheduleFilter={setScheduleFilter}
-                  activeChatId={activeChatId}
-                  setActiveChatId={setActiveChatId}
-                  allMessages={allMessages}
-                  msg={msg}
-                  setMsg={setMsg}
-                  onSend={handleSend}
-                  chatEndRef={chatEndRef}
-                  socketConnected={socketConnected}
-                  isDeleteCheckinPending={updateCheckinStatus.isPending}
-                  onOpenScheduleModal={openScheduleModal}
-                  onReschedule={handleRescheduleCheckin}
-                  onCancel={handleCancelCheckin}
-                />
-              )}
+                {tab === "checkins" && (
+                  <ClientScheduleTab
+                    client={client}
+                    checkins={checkins}
+                    scheduleFilter={scheduleFilter}
+                    setScheduleFilter={setScheduleFilter}
+                    activeChatId={activeChatId}
+                    setActiveChatId={setActiveChatId}
+                    allMessages={allMessages}
+                    msg={msg}
+                    setMsg={setMsg}
+                    onSend={handleSend}
+                    chatEndRef={chatEndRef}
+                    socketConnected={socketConnected}
+                    isDeleteCheckinPending={updateCheckinStatus.isPending}
+                    onOpenScheduleModal={openScheduleModal}
+                    onReschedule={handleRescheduleCheckin}
+                    onCancel={handleCancelCheckin}
+                  />
+                )}
+              </div>
             </div>
-          </div>
-        </main>
+          </main>
         </div>
       </div>
 
-      {/* Schedule modal */}
+      {/* Modals */}
       <ScheduleModal open={showScheduleModal} onClose={closeScheduleModal} clientId={id} />
 
-      {/* Delete confirmation modal */}
       <DeleteConfirmModal
         open={deleteModal.open}
         type={deleteModal.type}
@@ -773,289 +397,21 @@ export default function ClientDetailPage() {
         error={deleteError}
       />
 
-      {/* Edit client modal */}
-      {editModal && client && (
-        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
-          <div
-            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
-            onClick={() => !editSaving && closeEditModal()}
-          />
-          <motion.div
-            initial={{ scale: 0.95, opacity: 0, y: 20 }}
-            animate={{ scale: 1, opacity: 1, y: 0 }}
-            exit={{ scale: 0.95, opacity: 0, y: 20 }}
-            className="relative bg-[var(--bg-card)] border border-[var(--border)] w-full max-w-lg rounded-xl p-4 sm:p-6 shadow-xl max-h-[90vh] overflow-y-auto mx-2 sm:mx-0"
-          >
-            <div className="flex items-center justify-between mb-4 sm:mb-5">
-              <h3 className="text-base font-semibold text-[var(--text-primary)]">
-                Edit Client
-              </h3>
-              <button
-                onClick={closeEditModal}
-                className="p-1 text-[var(--text-tertiary)] hover:text-[var(--text-primary)]"
-              >
-                <X size={16} />
-              </button>
-            </div>
-
-            <div className="space-y-3 sm:space-y-4">
-              {/* Profile Photo */}
-              <div className="flex items-center gap-4">
-                <div className="relative">
-                  {editPhotoPreview || client?.profile_photo_url ? (
-                    <img
-                      src={editPhotoPreview || client?.profile_photo_url}
-                      alt="Profile"
-                      className="w-16 h-16 rounded-full object-cover border border-[var(--border)]"
-                    />
-                  ) : (
-                    <div className="w-16 h-16 rounded-full bg-[var(--bg-subtle)] border border-[var(--border)] flex items-center justify-center text-[var(--text-tertiary)] text-xs font-semibold">
-                      {editForm.name?.charAt(0)?.toUpperCase() || "?"}
-                    </div>
-                  )}
-                </div>
-                <div className="flex-1">
-                  <label className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider">
-                    Profile Photo
-                  </label>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={(e) => {
-                      const file = e.target.files?.[0];
-                      if (file) {
-                        revokeBlobUrl(editPhotoPreview);
-                        setEditPhotoFile(file);
-                        setEditPhotoPreview(URL.createObjectURL(file));
-                      }
-                    }}
-                    className="mt-1 block w-full text-xs text-[var(--text-secondary)] file:mr-3 file:px-3 file:py-1.5 file:rounded-lg file:border-0 file:bg-[var(--bg-subtle)] file:text-[var(--text-primary)] hover:file:bg-[var(--border)] cursor-pointer"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider">
-                  Name *
-                </label>
-                <input
-                  value={editForm.name}
-                  onChange={(e) =>
-                    setEditForm((f) => ({ ...f, name: e.target.value }))
-                  }
-                  className="w-full mt-1 px-3 py-2 rounded-lg bg-[var(--bg-subtle)] border border-[var(--border)] text-sm text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--energy)]/20 focus:border-[var(--energy)]/30"
-                />
-              </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-                <div>
-                  <label className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider">
-                    Email
-                  </label>
-                  <input
-                    type="email"
-                    value={editForm.email}
-                    onChange={(e) =>
-                      setEditForm((f) => ({ ...f, email: e.target.value }))
-                    }
-                    className="w-full mt-1 px-3 py-2 rounded-lg bg-[var(--bg-subtle)] border border-[var(--border)] text-sm text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--energy)]/20 focus:border-[var(--energy)]/30"
-                  />
-                </div>
-                <div>
-                  <label className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider">
-                    Phone
-                  </label>
-                  <input
-                    value={editForm.phone}
-                    onChange={(e) =>
-                      setEditForm((f) => ({ ...f, phone: e.target.value }))
-                    }
-                    className="w-full mt-1 px-3 py-2 rounded-lg bg-[var(--bg-subtle)] border border-[var(--border)] text-sm text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--energy)]/20 focus:border-[var(--energy)]/30"
-                  />
-                </div>
-              </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-                <div>
-                  <label className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider">
-                    Gender
-                  </label>
-                  <select
-                    value={editForm.gender}
-                    onChange={(e) =>
-                      setEditForm((f) => ({ ...f, gender: e.target.value }))
-                    }
-                    className="w-full mt-1 px-3 py-2 rounded-lg bg-[var(--bg-subtle)] border border-[var(--border)] text-sm text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--energy)]/20 focus:border-[var(--energy)]/30"
-                  >
-                    <option value="">Select gender…</option>
-                    <option value="male">Male</option>
-                    <option value="female">Female</option>
-                    <option value="other">Other</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider">
-                    Date of Birth
-                  </label>
-                  <input
-                    type="date"
-                    value={editForm.date_of_birth}
-                    onChange={(e) =>
-                      setEditForm((f) => ({
-                        ...f,
-                        date_of_birth: e.target.value,
-                      }))
-                    }
-                    className="w-full mt-1 px-3 py-2 rounded-lg bg-[var(--bg-subtle)] border border-[var(--border)] text-sm text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--energy)]/20 focus:border-[var(--energy)]/30"
-                  />
-                </div>
-              </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-                <div>
-                  <label className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider">
-                    City
-                  </label>
-                  <input
-                    value={editForm.city}
-                    onChange={(e) =>
-                      setEditForm((f) => ({ ...f, city: e.target.value }))
-                    }
-                    className="w-full mt-1 px-3 py-2 rounded-lg bg-[var(--bg-subtle)] border border-[var(--border)] text-sm text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--energy)]/20 focus:border-[var(--energy)]/30"
-                  />
-                </div>
-                <div className="sm:col-span-2">
-                  <label className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider">
-                    Address
-                  </label>
-                  <input
-                    value={editForm.address}
-                    onChange={(e) =>
-                      setEditForm((f) => ({ ...f, address: e.target.value }))
-                    }
-                    className="w-full mt-1 px-3 py-2 rounded-lg bg-[var(--bg-subtle)] border border-[var(--border)] text-sm text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--energy)]/20 focus:border-[var(--energy)]/30"
-                  />
-                </div>
-              </div>
-              <div>
-                <label className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider">
-                  Address
-                </label>
-                <input
-                  value={editForm.address}
-                  onChange={(e) =>
-                    setEditForm((f) => ({ ...f, address: e.target.value }))
-                  }
-                  className="w-full mt-1 px-3 py-2 rounded-lg bg-[var(--bg-subtle)] border border-[var(--border)] text-sm text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--energy)]/20 focus:border-[var(--energy)]/30"
-                />
-              </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-                <div>
-                  <label className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider">
-                    Weight (kg)
-                  </label>
-                  <input
-                    type="number"
-                    step="0.1"
-                    value={editForm.current_weight_kg}
-                    onChange={(e) =>
-                      setEditForm((f) => ({
-                        ...f,
-                        current_weight_kg: e.target.value,
-                      }))
-                    }
-                    className="w-full mt-1 px-3 py-2 rounded-lg bg-[var(--bg-subtle)] border border-[var(--border)] text-sm text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--energy)]/20 focus:border-[var(--energy)]/30"
-                  />
-                </div>
-                <div>
-                  <label className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider">
-                    Height (cm)
-                  </label>
-                  <input
-                    type="number"
-                    value={editForm.height_cm}
-                    onChange={(e) =>
-                      setEditForm((f) => ({ ...f, height_cm: e.target.value }))
-                    }
-                    className="w-full mt-1 px-3 py-2 rounded-lg bg-[var(--bg-subtle)] border border-[var(--border)] text-sm text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--energy)]/20 focus:border-[var(--energy)]/30"
-                  />
-                </div>
-              </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-                <div>
-                  <label className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider">
-                    Nationality
-                  </label>
-                  <input
-                    value={editForm.nationality}
-                    onChange={(e) =>
-                      setEditForm((f) => ({
-                        ...f,
-                        nationality: e.target.value,
-                      }))
-                    }
-                    className="w-full mt-1 px-3 py-2 rounded-lg bg-[var(--bg-subtle)] border border-[var(--border)] text-sm text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--energy)]/20 focus:border-[var(--energy)]/30"
-                  />
-                </div>
-                <div>
-                  <label className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider">
-                    Occupation
-                  </label>
-                  <input
-                    value={editForm.occupation}
-                    onChange={(e) =>
-                      setEditForm((f) => ({ ...f, occupation: e.target.value }))
-                    }
-                    className="w-full mt-1 px-3 py-2 rounded-lg bg-[var(--bg-subtle)] border border-[var(--border)] text-sm text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--energy)]/20 focus:border-[var(--energy)]/30"
-                  />
-                </div>
-              </div>
-              <div>
-                <label className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider">
-                  Health Conditions
-                </label>
-                <input
-                  value={editForm.sickness}
-                  onChange={(e) =>
-                    setEditForm((f) => ({ ...f, sickness: e.target.value }))
-                  }
-                  className="w-full mt-1 px-3 py-2 rounded-lg bg-[var(--bg-subtle)] border border-[var(--border)] text-sm text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--energy)]/20 focus:border-[var(--energy)]/30"
-                />
-              </div>
-              <div>
-                <label className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider">
-                  Notes
-                </label>
-                <textarea
-                  value={editForm.notes}
-                  onChange={(e) =>
-                    setEditForm((f) => ({ ...f, notes: e.target.value }))
-                  }
-                  rows={3}
-                  className="w-full mt-1 px-3 py-2 rounded-lg bg-[var(--bg-subtle)] border border-[var(--border)] text-sm text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--energy)]/20 focus:border-[var(--energy)]/30 resize-none"
-                />
-              </div>
-            </div>
-
-            <div className="flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-end gap-2 sm:gap-3 mt-5 sm:mt-6 pt-4 border-t border-[var(--border)]">
-              <button
-                onClick={closeEditModal}
-                disabled={editSaving}
-                className="px-4 py-2.5 text-sm font-medium text-[var(--text-secondary)] border border-[var(--border)] rounded-lg hover:bg-[var(--bg-subtle)] transition-colors"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleSaveEdit}
-                disabled={editSaving}
-                className="px-4 py-2.5 bg-[var(--btn-bg)] text-[var(--btn-text)] text-sm font-medium hover:bg-[var(--btn-hover)] transition-colors disabled:opacity-50 rounded-lg flex items-center justify-center gap-1.5"
-              >
-                {editSaving ? (
-                  <Loader2 size={13} className="animate-spin" />
-                ) : null}
-                Save Changes
-              </button>
-            </div>
-          </motion.div>
-        </div>
-      )}
+      <ClientEditModal
+        open={editModal}
+        client={client}
+        editForm={editForm}
+        setEditForm={setEditForm}
+        editSaving={editSaving}
+        editPhotoPreview={editPhotoPreview}
+        onClose={closeEditModal}
+        onSave={handleSaveEdit}
+        onPhotoSelect={(file) => {
+          revokeBlobUrl(editPhotoPreview);
+          setEditPhotoFile(file);
+          setEditPhotoPreview(URL.createObjectURL(file));
+        }}
+      />
     </>
   );
 }
