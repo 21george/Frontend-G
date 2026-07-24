@@ -4,7 +4,7 @@ import { useMemo } from "react";
 import { MoreHorizontal, Users } from "lucide-react";
 import type { Client, CheckinMeeting } from "@/types";
 import { motion } from "framer-motion";
-import { ClientAvatar } from "@/components/ui/ClientAvatar";
+import { Avatar } from "@/components/ui/Avatar";
 
 interface ClientWorkloadProps {
   clients: Client[];
@@ -27,7 +27,10 @@ export function ClientWorkload({ clients, checkins }: ClientWorkloadProps) {
     return withCounts.slice(0, 6);
   }, [clients, checkins]);
 
-  const maxCount = useMemo(() => Math.max(1, ...rows.map((r) => r.count)), [rows]);
+  const maxCount = useMemo(
+    () => Math.max(1, ...rows.map((r) => r.count)),
+    [rows],
+  );
 
   return (
     <motion.div
@@ -68,9 +71,9 @@ export function ClientWorkload({ clients, checkins }: ClientWorkloadProps) {
               transition={{ delay: 0.18 + i * 0.06 }}
               className="flex items-center gap-3"
             >
-              <ClientAvatar
+              <Avatar
                 name={client.name}
-                profile_photo_url={client.profile_photo_url}
+                photo={client.profile_photo_url}
                 size="h-9 w-9"
               />
 
@@ -87,7 +90,7 @@ export function ClientWorkload({ clients, checkins }: ClientWorkloadProps) {
                     )}
                   </div>
                   <span className="text-[10px] font-semibold text-[var(--text-secondary)] dark:text-[#FAFAFA]/40 flex-shrink-0 ml-2">
-                    {count} session{count !== 1 ? 's' : ''}
+                    {count} session{count !== 1 ? "s" : ""}
                   </span>
                 </div>
 

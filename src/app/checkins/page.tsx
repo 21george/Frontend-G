@@ -1,6 +1,7 @@
 "use client";
 
 import DashboardLayout from "@/components/layout/DashboardLayout";
+import { Button } from "@/components/ui/button";
 import {
   useCheckins,
   useClients,
@@ -81,10 +82,10 @@ const STATUS_META: Record<
   },
   completed: {
     label: "Completed",
-    dot: "bg-green-500",
-    bg: "bg-green-50 dark:bg-green-500/15",
-    text: "text-green-700 dark:text-green-300",
-    border: "border-green-200 dark:border-green-500/30",
+    dot: "bg-brand-500",
+    bg: "bg-brand-50 dark:bg-brand-500/15",
+    text: "text-brand-700 dark:text-brand-300",
+    border: "border-brand-200 dark:border-brand-500/30",
     icon: CheckCircle2,
   },
   cancelled: {
@@ -370,10 +371,10 @@ function CreateCheckinModal({
                         className="flex items-center gap-2 cursor-pointer"
                       >
                         <div
-                          className={`w-4 h-4 rounded-full border flex items-center justify-center transition-colors ${type === opt.key ? "border-green-500 dark:border-green-400" : "border-[var(--border)] dark:border-white/20"}`}
+                          className={`w-4 h-4 rounded-full border flex items-center justify-center transition-colors ${type === opt.key ? "border-brand-500 dark:border-brand-400" : "border-[var(--border)] dark:border-white/20"}`}
                         >
                           {type === opt.key && (
-                            <div className="w-2 h-2 rounded-full bg-green-500 dark:bg-green-400" />
+                            <div className="w-2 h-2 rounded-full bg-brand-500 dark:bg-brand-400" />
                           )}
                         </div>
                         <span
@@ -931,9 +932,9 @@ function CheckinCard({
 
             {statusKey === "completed" && (
               <>
-                <button className="flex items-center gap-2 px-3.5 py-2 text-[12px] font-semibold text-green-700 dark:text-green-300 bg-green-50 dark:bg-green-500/10 rounded-xl hover:bg-green-100 dark:hover:bg-green-500/20 transition-colors">
+                <Button variant="secondary" size="sm" className="rounded-xl">
                   <Play size={13} fill="currentColor" /> View Recording
-                </button>
+                </Button>
                 <button className="p-2 text-[var(--text-tertiary)] dark:text-white/40 hover:bg-[var(--bg-page)] dark:hover:bg-white/[0.04] rounded-xl transition-colors">
                   <X size={16} />
                 </button>
@@ -1135,7 +1136,7 @@ export default function CheckinsPage() {
                           : t.key === "overdue"
                             ? "bg-red-50 dark:bg-red-500/15 text-red-700 dark:text-red-300"
                             : t.key === "completed"
-                              ? "bg-green-50 dark:bg-green-500/15 text-green-700 dark:text-green-300"
+                              ? "bg-brand-50 dark:bg-brand-500/15 text-brand-700 dark:text-brand-300"
                               : "bg-[var(--bg-page)] dark:bg-white/[0.04] text-[var(--text-secondary)] dark:text-white/50"
                     }`}
                   >

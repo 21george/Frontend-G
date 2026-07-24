@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/store/auth";
 import { useSubscriptionStore } from "@/store/subscription";
+import { useCoachProfile } from "@/hooks/useSettings";
 import Sidebar from "@/components/layout/Sidebar";
 import DashboardHeader from "@/components/layout/DashboardHeader";
 import { PageSkeleton } from "@/components/ui/skeletons";
@@ -18,10 +19,22 @@ function AuthLayout({
   children: React.ReactNode;
   showHeader?: boolean;
   showGreeting?: boolean;
-  quickActions?: { label: string; icon: any; color: string; onClick?: () => void; href?: string }[];
+  quickActions?: {
+    label: string;
+    icon: any;
+    color: string;
+    onClick?: () => void;
+    href?: string;
+  }[];
 }) {
-  const { isAuthenticated, accessToken, refreshAccessToken, clearAuth, coach } =
-    useAuthStore();
+  const {
+    isAuthenticated,
+    accessToken,
+    refreshAccessToken,
+    clearAuth,
+    coach,
+    updateCoach,
+  } = useAuthStore();
   const { setupToken } = useSubscriptionStore();
   const router = useRouter();
   const refreshInProgressRef = useRef(false);
@@ -51,6 +64,18 @@ function AuthLayout({
     );
     return () => unsub?.();
   }, []);
+
+  // Keep the coach profile fresh — profile_photo is a presigned URL that
+  // expires 24h after it was issued. Without this, a coach who stays logged
+  // in (silent token refresh keeps sessions alive indefinitely) loses their
+  // avatar a day after login even though nothing is actually wrong with the
+  // photo. See useCoachProfile / settingsApi.getProfile for details.
+  const { data: freshCoach } = useCoachProfile(isHydrated && isAuthenticated);
+
+  useEffect(() => {
+    if (freshCoach) updateCoach(freshCoach);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [freshCoach]);
 
   useEffect(() => {
     if (!isHydrated) return;
@@ -128,7 +153,12 @@ function AuthLayout({
       <main className="flex-1 min-h-screen overflow-x-hidden">
         {/* Mobile top padding accounts for the fixed hamburger button (lg:hidden) */}
         <div className="px-3 sm:px-5 md:px-8 lg:px-10 pt-16 sm:pt-12 lg:pt-8 pb-6 sm:pb-10">
-          {showHeader && <DashboardHeader showGreeting={showGreeting} quickActions={quickActions} />}
+          {showHeader && (
+            <DashboardHeader
+              showGreeting={showGreeting}
+              quickActions={quickActions}
+            />
+          )}
           {children}
         </div>
       </main>

@@ -99,7 +99,8 @@ export function CoachingSessionDetail({ id, onClose, onEnterVideoRoom }: Props) 
   useEffect(() => {
     if (session) {
       const dt = parseDateValue(session.scheduled_at);
-      setNewScheduledAt(dt ? new Date(dt.getTime() - dt.getTimezoneOffset() * 60000).toISOString().slice(0, 16) : "");
+      const scheduledAtValue = dt ? new Date(dt.getTime() - dt.getTimezoneOffset() * 60000).toISOString().slice(0, 16) : "";
+      setNewScheduledAt(scheduledAtValue);
       setNewDuration(session.duration_min);
     }
   }, [session]);

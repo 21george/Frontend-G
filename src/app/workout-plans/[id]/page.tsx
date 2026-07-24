@@ -1,75 +1,116 @@
-'use client'
-import { useParams, useRouter } from 'next/navigation'
-import DashboardLayout from '@/components/layout/DashboardLayout'
-import { useWorkoutPlan, useClient } from '@/lib/hooks'
-import Link from 'next/link'
-import { ClientAvatar } from '@/components/ui/ClientAvatar'
-import { useState } from 'react'
-import { ChevronRight, Edit, Dumbbell, Clock, Calendar, ArrowLeft, ChevronDown, Video as VideoIcon, ExternalLink } from 'lucide-react'
-import { addDays, format, parseISO, startOfWeek } from 'date-fns'
-import { motion } from 'framer-motion'
-import type { Exercise } from '@/types'
-import { safeHref } from '@/lib/safeHref'
+"use client";
+import { useParams, useRouter } from "next/navigation";
+import DashboardLayout from "@/components/layout/DashboardLayout";
+import { useWorkoutPlan, useClient } from "@/lib/hooks";
+import Link from "next/link";
+import { Avatar } from "@/components/ui/Avatar";
+import { useState } from "react";
+import {
+  ChevronRight,
+  Edit,
+  Dumbbell,
+  Clock,
+  Calendar,
+  ArrowLeft,
+  ChevronDown,
+  Video as VideoIcon,
+  ExternalLink,
+} from "lucide-react";
+import { addDays, format, parseISO, startOfWeek } from "date-fns";
+import { motion } from "framer-motion";
+import type { Exercise } from "@/types";
+import { safeHref } from "@/lib/safeHref";
 
-const BOARD_DAYS = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'] as const
+const BOARD_DAYS = [
+  "monday",
+  "tuesday",
+  "wednesday",
+  "thursday",
+  "friday",
+  "saturday",
+  "sunday",
+] as const;
 
 const SESSION_STYLES = {
   easy: {
-    label: 'Easy Run',
-    border: 'border-t-brand-400',
-    badge: 'bg-brand-50 text-brand-700 dark:bg-brand-500/10 dark:text-brand-300',
+    label: "Easy Run",
+    border: "border-t-brand-400",
+    badge:
+      "bg-brand-50 text-brand-700 dark:bg-brand-500/10 dark:text-brand-300",
   },
   interval: {
-    label: 'Interval Run',
-    border: 'border-t-violet-400',
-    badge: 'bg-violet-50 text-violet-700 dark:bg-violet-500/10 dark:text-violet-300',
+    label: "Interval Run",
+    border: "border-t-violet-400",
+    badge:
+      "bg-violet-50 text-violet-700 dark:bg-violet-500/10 dark:text-violet-300",
   },
   strength: {
-    label: 'Strength',
-    border: 'border-t-amber-400',
-    badge: 'bg-amber-50 text-amber-700 dark:bg-amber-500/10 dark:text-amber-300',
+    label: "Strength",
+    border: "border-t-amber-400",
+    badge:
+      "bg-amber-50 text-amber-700 dark:bg-amber-500/10 dark:text-amber-300",
   },
   long: {
-    label: 'Long Run',
-    border: 'border-t-emerald-400',
-    badge: 'bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300',
+    label: "Long Run",
+    border: "border-t-emerald-400",
+    badge:
+      "bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300",
   },
   general: {
-    label: 'Training',
-    border: 'border-t-slate-300 dark:border-t-slate-600',
-    badge: 'bg-slate-100 text-slate-700 dark:bg-white/[0.08] dark:text-slate-300',
+    label: "Training",
+    border: "border-t-slate-300 dark:border-t-slate-600",
+    badge:
+      "bg-slate-100 text-slate-700 dark:bg-white/[0.08] dark:text-slate-300",
   },
-} as const
+} as const;
 
 function normalizeDay(value: string) {
-  return value.trim().toLowerCase()
+  return value.trim().toLowerCase();
 }
 
 function getSessionStyle(exercises: Exercise[]) {
   const searchText = exercises
-    .map((exercise) => `${exercise.name} ${exercise.notes ?? ''}`.toLowerCase())
-    .join(' ')
+    .map((exercise) => `${exercise.name} ${exercise.notes ?? ""}`.toLowerCase())
+    .join(" ");
 
-  if (searchText.includes('long')) return SESSION_STYLES.long
-  if (searchText.includes('interval') || searchText.includes('tempo') || searchText.includes('sprint')) return SESSION_STYLES.interval
-  if (searchText.includes('strength') || searchText.includes('squat') || searchText.includes('deadlift') || searchText.includes('press')) return SESSION_STYLES.strength
-  if (searchText.includes('easy') || searchText.includes('recovery') || searchText.includes('jog')) return SESSION_STYLES.easy
-  return SESSION_STYLES.general
+  if (searchText.includes("long")) return SESSION_STYLES.long;
+  if (
+    searchText.includes("interval") ||
+    searchText.includes("tempo") ||
+    searchText.includes("sprint")
+  )
+    return SESSION_STYLES.interval;
+  if (
+    searchText.includes("strength") ||
+    searchText.includes("squat") ||
+    searchText.includes("deadlift") ||
+    searchText.includes("press")
+  )
+    return SESSION_STYLES.strength;
+  if (
+    searchText.includes("easy") ||
+    searchText.includes("recovery") ||
+    searchText.includes("jog")
+  )
+    return SESSION_STYLES.easy;
+  return SESSION_STYLES.general;
 }
 
 /* ── Video helpers ──────────────────────────────────────────────── */
 function getYouTubeId(url: string): string | null {
-  const match = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([a-zA-Z0-9_-]{11})/)
-  return match?.[1] ?? null
+  const match = url.match(
+    /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([a-zA-Z0-9_-]{11})/,
+  );
+  return match?.[1] ?? null;
 }
 
 function isValidVideoUrl(url: string): boolean {
-  if (!url) return false
+  if (!url) return false;
   // Anchor the regex to the URL's hostname. A bare substring match
   // would let `javascript:alert(1)//youtube.com` pass.
   try {
-    const u = new URL(url)
-    const host = u.hostname.toLowerCase()
+    const u = new URL(url);
+    const host = u.hostname.toLowerCase();
     return (
       host === "youtube.com" ||
       host === "www.youtube.com" ||
@@ -80,16 +121,16 @@ function isValidVideoUrl(url: string): boolean {
       host === "player.vimeo.com" ||
       host === "dailymotion.com" ||
       host === "www.dailymotion.com"
-    )
+    );
   } catch {
-    return false
+    return false;
   }
 }
 
 function VideoPreview({ url }: { url: string }) {
-  if (!isValidVideoUrl(url)) return null
+  if (!isValidVideoUrl(url)) return null;
 
-  const youtubeId = getYouTubeId(url)
+  const youtubeId = getYouTubeId(url);
 
   if (youtubeId) {
     return (
@@ -102,7 +143,7 @@ function VideoPreview({ url }: { url: string }) {
           allowFullScreen
         />
       </div>
-    )
+    );
   }
 
   const safeUrl = safeHref(url);
@@ -122,24 +163,34 @@ function VideoPreview({ url }: { url: string }) {
 }
 
 function getWeekStartDate(value: string) {
-  const parsed = parseISO(`${value}T00:00:00`)
-  if (!Number.isNaN(parsed.getTime())) return startOfWeek(parsed, { weekStartsOn: 1 })
+  const parsed = parseISO(`${value}T00:00:00`);
+  if (!Number.isNaN(parsed.getTime()))
+    return startOfWeek(parsed, { weekStartsOn: 1 });
 
-  const fallback = new Date(value)
-  if (!Number.isNaN(fallback.getTime())) return startOfWeek(fallback, { weekStartsOn: 1 })
+  const fallback = new Date(value);
+  if (!Number.isNaN(fallback.getTime()))
+    return startOfWeek(fallback, { weekStartsOn: 1 });
 
-  return startOfWeek(new Date(), { weekStartsOn: 1 })
+  return startOfWeek(new Date(), { weekStartsOn: 1 });
 }
 
 export default function WorkoutPlanDetailPage() {
-  const { id } = useParams<{ id: string }>()
-  const router = useRouter()
-  const { data: plan, isLoading, error } = useWorkoutPlan(id)
-  const { data: client } = useClient(plan?.client_id || '')
-  const [expandedDay, setExpandedDay] = useState<string | null>(null)
+  const { id } = useParams<{ id: string }>();
+  const router = useRouter();
+  const { data: plan, isLoading, error } = useWorkoutPlan(id);
+  const { data: client } = useClient(plan?.client_id || "");
+  const [expandedDay, setExpandedDay] = useState<string | null>(null);
 
   // Use assigned_client from API response if available, fallback to separate client fetch
-  const assignedClient = plan?.assigned_client ?? (client ? { id: client.id, name: client.name, profile_photo_url: client.profile_photo_url ?? null } : null)
+  const assignedClient =
+    plan?.assigned_client ??
+    (client
+      ? {
+          id: client.id,
+          name: client.name,
+          profile_photo_url: client.profile_photo_url ?? null,
+        }
+      : null);
 
   if (isLoading) {
     return (
@@ -152,7 +203,7 @@ export default function WorkoutPlanDetailPage() {
           </div>
         </div>
       </DashboardLayout>
-    )
+    );
   }
 
   if (error || !plan) {
@@ -162,75 +213,104 @@ export default function WorkoutPlanDetailPage() {
           <div className="w-16 h-16 bg-slate-100 dark:bg-white/[0.04] flex items-center justify-center mb-4">
             <Dumbbell className="w-8 h-8 text-slate-300 dark:text-slate-600" />
           </div>
-          <p className="text-sm font-medium text-slate-600 dark:text-slate-400">Workout plan not found</p>
-          <Link href="/workout-plans" className="mt-4 inline-flex items-center gap-2 px-4 py-2 bg-brand-600 hover:bg-brand-700 text-white text-sm font-medium transition-colors">
+          <p className="text-sm font-medium text-slate-600 dark:text-slate-400">
+            Workout plan not found
+          </p>
+          <Link
+            href="/workout-plans"
+            className="mt-4 inline-flex items-center gap-2 px-4 py-2 bg-brand-600 hover:bg-brand-700 text-white text-sm font-medium transition-colors"
+          >
             <ArrowLeft className="w-4 h-4" />
             Back to Plans
           </Link>
         </div>
       </DashboardLayout>
-    )
+    );
   }
 
-  const weekStart = getWeekStartDate(plan.week_start)
-  const dayLookup = new Map(plan.days.map((day) => [normalizeDay(day.day), day]))
+  const weekStart = getWeekStartDate(plan.week_start);
+  const dayLookup = new Map(
+    plan.days.map((day) => [normalizeDay(day.day), day]),
+  );
 
   const boardDays = BOARD_DAYS.map((dayKey, index) => {
-    const date = addDays(weekStart, index)
-    const workoutDay = dayLookup.get(dayKey)
-    const exercises = workoutDay?.exercises ?? []
-    const sessionStyle = getSessionStyle(exercises)
+    const date = addDays(weekStart, index);
+    const workoutDay = dayLookup.get(dayKey);
+    const exercises = workoutDay?.exercises ?? [];
+    const sessionStyle = getSessionStyle(exercises);
     return {
       key: dayKey,
-      shortLabel: format(date, 'EEE').toUpperCase(),
-      dateLabel: format(date, 'dd MMM'),
-      fullLabel: format(date, 'EEE, dd MMM'),
+      shortLabel: format(date, "EEE").toUpperCase(),
+      dateLabel: format(date, "dd MMM"),
+      fullLabel: format(date, "EEE, dd MMM"),
       workoutDay,
       exercises,
       sessionStyle,
-    }
-  })
+    };
+  });
 
-  const defaultExpandedDay = boardDays.find((day) => day.exercises.length > 0)?.key ?? boardDays[0].key
-  const activeDayKey = expandedDay ?? defaultExpandedDay
-  const activeDay = boardDays.find((day) => day.key === activeDayKey) ?? boardDays[0]
-  const totalExercises = plan.days.reduce((sum, day) => sum + day.exercises.length, 0)
-  const activeDays = plan.days.filter((day) => day.exercises.length > 0).length
-  const averageRest = totalExercises > 0
-    ? Math.round(plan.days.flatMap((day) => day.exercises).reduce((sum, exercise) => sum + (exercise.rest_seconds ?? 0), 0) / totalExercises)
-    : 0
-  const clientInitials = assignedClient?.name
-    ?.split(' ')
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((part) => part[0]?.toUpperCase())
-    .join('') || 'WP'
-  const rangeLabel = `${format(weekStart, 'EEE, dd MMM')} - ${format(addDays(weekStart, 6), 'EEE, dd MMM')}`
+  const defaultExpandedDay =
+    boardDays.find((day) => day.exercises.length > 0)?.key ?? boardDays[0].key;
+  const activeDayKey = expandedDay ?? defaultExpandedDay;
+  const activeDay =
+    boardDays.find((day) => day.key === activeDayKey) ?? boardDays[0];
+  const totalExercises = plan.days.reduce(
+    (sum, day) => sum + day.exercises.length,
+    0,
+  );
+  const activeDays = plan.days.filter((day) => day.exercises.length > 0).length;
+  const averageRest =
+    totalExercises > 0
+      ? Math.round(
+          plan.days
+            .flatMap((day) => day.exercises)
+            .reduce((sum, exercise) => sum + (exercise.rest_seconds ?? 0), 0) /
+            totalExercises,
+        )
+      : 0;
+  const clientInitials =
+    assignedClient?.name
+      ?.split(" ")
+      .filter(Boolean)
+      .slice(0, 2)
+      .map((part) => part[0]?.toUpperCase())
+      .join("") || "WP";
+  const rangeLabel = `${format(weekStart, "EEE, dd MMM")} - ${format(addDays(weekStart, 6), "EEE, dd MMM")}`;
 
   return (
     <DashboardLayout>
       <div className="space-y-6">
-
         <section className="border border-slate-200/80 dark:border-white/[0.08] bg-[var(--bg-card)] overflow-hidden">
           <div className="border-b border-[var(--border)] dark:border-white/[0.08] px-4 py-3 sm:px-6">
             <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
               <div>
                 <nav className="mb-3 flex items-center gap-2 text-[11px] uppercase tracking-[0.16em] text-slate-400 dark:text-slate-500">
-                  <Link href="/workout-plans" className="transition-colors hover:text-brand-600 dark:hover:text-brand-300">
+                  <Link
+                    href="/workout-plans"
+                    className="transition-colors hover:text-brand-600 dark:hover:text-brand-300"
+                  >
                     Dashboard
                   </Link>
                   <ChevronRight className="h-3 w-3" />
-                  <Link href="/workout-plans" className="transition-colors hover:text-brand-600 dark:hover:text-brand-300">
+                  <Link
+                    href="/workout-plans"
+                    className="transition-colors hover:text-brand-600 dark:hover:text-brand-300"
+                  >
                     Weekly Menu
                   </Link>
                   <ChevronRight className="h-3 w-3" />
-                  <span className="truncate text-brand-600 dark:text-brand-300">{plan.title}</span>
+                  <span className="truncate text-brand-600 dark:text-brand-300">
+                    {plan.title}
+                  </span>
                 </nav>
                 <h1 className="text-2xl font-bold tracking-tight text-[var(--text-primary)] dark:text-[var(--text-primary)] sm:text-4xl">
                   Weekly Training Menu
                 </h1>
                 <p className="mt-2 text-sm text-[var(--text-secondary)] dark:text-[var(--text-secondary)]">
-                  {plan.title}{assignedClient ? ` for ${assignedClient.name}` : ' — Not assigned to any client'}
+                  {plan.title}
+                  {assignedClient
+                    ? ` for ${assignedClient.name}`
+                    : " — Not assigned to any client"}
                 </p>
               </div>
 
@@ -241,7 +321,7 @@ export default function WorkoutPlanDetailPage() {
 
                 <div className="flex items-center gap-2 self-start sm:self-auto">
                   <button
-                    onClick={() => router.push('/workout-plans')}
+                    onClick={() => router.push("/workout-plans")}
                     className="inline-flex items-center rounded-s-xl gap-2 border border-slate-200 px-4 py-2.5 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50 dark:border-white/[0.08] dark:text-slate-200 dark:hover:bg-white/[0.04]"
                   >
                     <ArrowLeft className="h-4 w-4" />
@@ -261,24 +341,34 @@ export default function WorkoutPlanDetailPage() {
 
           <div className="border-b border-slate-200 px-4 py-5 dark:border-white/[0.08] lg:hidden">
             <div className="flex items-start gap-3">
-              <ClientAvatar name={assignedClient?.name} profile_photo_url={assignedClient?.profile_photo_url} initials={clientInitials} />
+              <Avatar
+                name={assignedClient?.name}
+                photo={assignedClient?.profile_photo_url}
+                initials={clientInitials}
+              />
               <div className="min-w-0 flex-1">
                 <p className="truncate text-[15px] font-semibold text-[var(--text-primary)] dark:text-[var(--text-primary)]">
-                  {assignedClient?.name ?? 'Not assigned'}
+                  {assignedClient?.name ?? "Not assigned"}
                 </p>
                 <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-[var(--text-secondary)] dark:text-[var(--text-secondary)]">
                   <span className="inline-flex items-center gap-1.5 bg-slate-100 px-2.5 py-1 font-semibold uppercase tracking-[0.14em] text-slate-700 dark:bg-white/[0.05] dark:text-slate-300">
-                    <span className={`h-1.5 w-1.5 ${
-                      plan.status === 'active'
-                        ? 'bg-emerald-400'
-                        : plan.status === 'completed'
-                          ? 'bg-blue-400'
-                          : 'bg-slate-400'
-                    }`} />
+                    <span
+                      className={`h-1.5 w-1.5 ${
+                        plan.status === "active"
+                          ? "bg-emerald-400"
+                          : plan.status === "completed"
+                            ? "bg-blue-400"
+                            : "bg-slate-400"
+                      }`}
+                    />
                     {plan.status}
                   </span>
-                  <span>{activeDays} active day{activeDays === 1 ? '' : 's'}</span>
-                  <span>{totalExercises} exercise{totalExercises === 1 ? '' : 's'}</span>
+                  <span>
+                    {activeDays} active day{activeDays === 1 ? "" : "s"}
+                  </span>
+                  <span>
+                    {totalExercises} exercise{totalExercises === 1 ? "" : "s"}
+                  </span>
                 </div>
               </div>
             </div>
@@ -290,10 +380,14 @@ export default function WorkoutPlanDetailPage() {
             )}
           </div>
 
-          <div className="grid gap-3 p-4 sm:p-6 lg:hidden" role="radiogroup" aria-label="Select a day">
+          <div
+            className="grid gap-3 p-4 sm:p-6 lg:hidden"
+            role="radiogroup"
+            aria-label="Select a day"
+          >
             {boardDays.map((day) => {
-              const isActive = activeDayKey === day.key
-              const isRestDay = day.exercises.length === 0
+              const isActive = activeDayKey === day.key;
+              const isRestDay = day.exercises.length === 0;
 
               return (
                 <button
@@ -304,8 +398,8 @@ export default function WorkoutPlanDetailPage() {
                   onClick={() => setExpandedDay(day.key)}
                   className={`border p-4 text-left transition-colors ${
                     isActive
-                      ? 'border-brand-200 bg-brand-50 dark:border-brand-500/30 dark:bg-brand-500/10'
-                      : 'border-slate-200 bg-[var(--bg-subtle)] dark:border-white/[0.08]'
+                      ? "border-brand-200 bg-brand-50 dark:border-brand-500/30 dark:bg-brand-500/10"
+                      : "border-slate-200 bg-[var(--bg-subtle)] dark:border-white/[0.08]"
                   }`}
                 >
                   <div className="flex items-start justify-between gap-3">
@@ -317,20 +411,31 @@ export default function WorkoutPlanDetailPage() {
                         {day.dateLabel}
                       </h3>
                     </div>
-                    <span className={`px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] ${day.sessionStyle.badge}`}>
-                      {isRestDay ? 'Recovery' : day.sessionStyle.label}
+                    <span
+                      className={`px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] ${day.sessionStyle.badge}`}
+                    >
+                      {isRestDay ? "Recovery" : day.sessionStyle.label}
                     </span>
                   </div>
 
                   {isRestDay ? (
-                    <p className="mt-4 text-sm text-slate-400 dark:text-slate-500">No workout assigned for this day.</p>
+                    <p className="mt-4 text-sm text-slate-400 dark:text-slate-500">
+                      No workout assigned for this day.
+                    </p>
                   ) : (
                     <div className="mt-4 space-y-2.5">
                       {day.exercises.slice(0, 3).map((exercise, index) => (
-                        <div key={`${day.key}-mobile-${exercise.name}-${index}`}>
-                          <p className="text-sm font-medium text-slate-800 dark:text-slate-100">{exercise.name}</p>
+                        <div
+                          key={`${day.key}-mobile-${exercise.name}-${index}`}
+                        >
+                          <p className="text-sm font-medium text-slate-800 dark:text-slate-100">
+                            {exercise.name}
+                          </p>
                           <p className="mt-1 text-[11px] text-slate-400 dark:text-slate-500">
-                            {exercise.sets} sets • {exercise.reps} reps • {exercise.rest_seconds != null ? `${exercise.rest_seconds}s rest` : '— rest'}
+                            {exercise.sets} sets • {exercise.reps} reps •{" "}
+                            {exercise.rest_seconds != null
+                              ? `${exercise.rest_seconds}s rest`
+                              : "— rest"}
                           </p>
                         </div>
                       ))}
@@ -343,7 +448,7 @@ export default function WorkoutPlanDetailPage() {
                     </div>
                   )}
                 </button>
-              )
+              );
             })}
           </div>
 
@@ -351,38 +456,57 @@ export default function WorkoutPlanDetailPage() {
             <div className="min-w-[1160px]">
               <div
                 className="grid border-b border-[var(--border)] dark:border-white/[0.08] bg-[#13131314] dark:bg-white/[0.02]"
-                style={{ gridTemplateColumns: '230px repeat(7, minmax(132px, 1fr))' }}
+                style={{
+                  gridTemplateColumns: "230px repeat(7, minmax(132px, 1fr))",
+                }}
               >
                 <div className="border-r border-slate-200 px-5 py-4 dark:border-white/[0.08]">
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">Athlete</p>
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">
+                    Athlete
+                  </p>
                 </div>
                 {boardDays.map((day) => (
-                  <div key={day.key} className="border-r border-slate-200 px-4 py-4 last:border-r-0 dark:border-white/[0.08]">
-                    <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-400 dark:text-slate-500">{day.shortLabel}</p>
-                    <p className="mt-1 text-sm font-semibold text-slate-700 dark:text-slate-200">{day.dateLabel}</p>
+                  <div
+                    key={day.key}
+                    className="border-r border-slate-200 px-4 py-4 last:border-r-0 dark:border-white/[0.08]"
+                  >
+                    <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-400 dark:text-slate-500">
+                      {day.shortLabel}
+                    </p>
+                    <p className="mt-1 text-sm font-semibold text-slate-700 dark:text-slate-200">
+                      {day.dateLabel}
+                    </p>
                   </div>
                 ))}
               </div>
 
               <div
                 className="grid"
-                style={{ gridTemplateColumns: '230px repeat(7, minmax(132px, 1fr))' }}
+                style={{
+                  gridTemplateColumns: "230px repeat(7, minmax(132px, 1fr))",
+                }}
               >
                 <div className="border-r border-slate-200 bg-[var(--bg-card)] px-5 py-5 dark:border-white/[0.08] ">
                   <div className="flex items-start gap-3">
-                    <ClientAvatar name={assignedClient?.name} profile_photo_url={assignedClient?.profile_photo_url} initials={clientInitials} />
+                    <Avatar
+                      name={assignedClient?.name}
+                      photo={assignedClient?.profile_photo_url}
+                      initials={clientInitials}
+                    />
                     <div className="min-w-0">
                       <p className="truncate text-[15px] font-semibold text-[var(--text-primary)] dark:text-[var(--text-primary)]">
-                        {assignedClient?.name ?? 'Not assigned'}
+                        {assignedClient?.name ?? "Not assigned"}
                       </p>
                       <div className="mt-2 inline-flex items-center gap-1.5 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.14em] text-slate-700 dark:text-slate-300 bg-[var(--bg-subtle)] dark:bg-white/[0.05]">
-                        <span className={`h-1.5 w-1.5 ${
-                          plan.status === 'active'
-                            ? 'bg-emerald-400'
-                            : plan.status === 'completed'
-                              ? 'bg-blue-400'
-                              : 'bg-slate-400'
-                        }`} />
+                        <span
+                          className={`h-1.5 w-1.5 ${
+                            plan.status === "active"
+                              ? "bg-emerald-400"
+                              : plan.status === "completed"
+                                ? "bg-blue-400"
+                                : "bg-slate-400"
+                          }`}
+                        />
                         {plan.status}
                       </div>
                     </div>
@@ -390,26 +514,37 @@ export default function WorkoutPlanDetailPage() {
 
                   <div className="mt-5 space-y-3 text-sm text-[var(--text-secondary)] dark:text-[var(--text-secondary)]">
                     <div>
-                      <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">Week Summary</p>
+                      <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">
+                        Week Summary
+                      </p>
                       <div className="mt-2 space-y-1.5">
-                        <p>{activeDays} active day{activeDays === 1 ? '' : 's'}</p>
-                        <p>{totalExercises} exercise{totalExercises === 1 ? '' : 's'}</p>
+                        <p>
+                          {activeDays} active day{activeDays === 1 ? "" : "s"}
+                        </p>
+                        <p>
+                          {totalExercises} exercise
+                          {totalExercises === 1 ? "" : "s"}
+                        </p>
                         <p>{averageRest}s average rest</p>
                       </div>
                     </div>
 
                     {plan.notes && (
                       <div>
-                        <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">Coach Note</p>
-                        <p className="mt-2 line-clamp-4 leading-relaxed">{plan.notes}</p>
+                        <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">
+                          Coach Note
+                        </p>
+                        <p className="mt-2 line-clamp-4 leading-relaxed">
+                          {plan.notes}
+                        </p>
                       </div>
                     )}
                   </div>
                 </div>
 
                 {boardDays.map((day) => {
-                  const isActive = activeDayKey === day.key
-                  const isRestDay = day.exercises.length === 0
+                  const isActive = activeDayKey === day.key;
+                  const isRestDay = day.exercises.length === 0;
 
                   return (
                     <button
@@ -417,43 +552,66 @@ export default function WorkoutPlanDetailPage() {
                       type="button"
                       onClick={() => setExpandedDay(day.key)}
                       className={`min-h-[260px] border-r border-slate-200 p-3 text-left align-top transition-colors last:border-r-0 dark:border-white/[0.08] ${
-                        isActive ? 'bg-[var(--bg-subtle)] dark:bg-white/[0.03]' : 'bg-[var(--bg-card)] '
+                        isActive
+                          ? "bg-[var(--bg-subtle)] dark:bg-white/[0.03]"
+                          : "bg-[var(--bg-card)] "
                       }`}
                     >
                       {isRestDay ? (
                         <div className="flex h-full min-h-[224px] flex-col justify-between border border-dashed border-slate-200 bg-slate-50/60 px-4 py-4 dark:border-white/[0.08] dark:bg-white/[0.02]">
                           <div>
-                            <p className="text-sm font-semibold text-slate-700 dark:text-slate-200">Recovery</p>
+                            <p className="text-sm font-semibold text-slate-700 dark:text-slate-200">
+                              Recovery
+                            </p>
                             <p className="mt-2 text-xs leading-5 text-slate-400 dark:text-slate-500">
                               No workout assigned for this day.
                             </p>
                           </div>
-                          <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-300 dark:text-slate-600">Rest day</span>
+                          <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-300 dark:text-slate-600">
+                            Rest day
+                          </span>
                         </div>
                       ) : (
-                        <div className={`flex h-full min-h-[224px] flex-col border border-slate-200 bg-[var(--bg-subtle)] dark:border-white/[0.08] ${day.sessionStyle.border} border-t-2`}>
+                        <div
+                          className={`flex h-full min-h-[224px] flex-col border border-slate-200 bg-[var(--bg-subtle)] dark:border-white/[0.08] ${day.sessionStyle.border} border-t-2`}
+                        >
                           <div className="flex items-start justify-between gap-2 px-4 py-3">
                             <div>
-                              <span className={`inline-flex items-center px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] ${day.sessionStyle.badge}`}>
+                              <span
+                                className={`inline-flex items-center px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] ${day.sessionStyle.badge}`}
+                              >
                                 {day.sessionStyle.label}
                               </span>
                               <p className="mt-2 text-xs text-[var(--text-secondary)] dark:text-[var(--text-secondary)]">
-                                {day.exercises.length} exercise{day.exercises.length === 1 ? '' : 's'}
+                                {day.exercises.length} exercise
+                                {day.exercises.length === 1 ? "" : "s"}
                               </p>
                             </div>
-                            <ChevronDown className={`mt-1 h-4 w-4 text-slate-400 transition-transform ${isActive ? 'rotate-180' : ''}`} />
+                            <ChevronDown
+                              className={`mt-1 h-4 w-4 text-slate-400 transition-transform ${isActive ? "rotate-180" : ""}`}
+                            />
                           </div>
 
                           <div className="flex-1 border-t border-slate-100 px-4 py-3 dark:border-white/[0.06]">
                             <div className="space-y-2.5">
-                              {day.exercises.slice(0, 3).map((exercise, index) => (
-                                <div key={`${day.key}-${exercise.name}-${index}`}>
-                                  <p className="text-sm font-medium text-slate-800 dark:text-slate-100">{exercise.name}</p>
-                                  <p className="mt-1 text-[11px] text-slate-400 dark:text-slate-500">
-                                    {exercise.sets} sets • {exercise.reps} reps • {exercise.rest_seconds != null ? `${exercise.rest_seconds}s rest` : '— rest'}
-                                  </p>
-                                </div>
-                              ))}
+                              {day.exercises
+                                .slice(0, 3)
+                                .map((exercise, index) => (
+                                  <div
+                                    key={`${day.key}-${exercise.name}-${index}`}
+                                  >
+                                    <p className="text-sm font-medium text-slate-800 dark:text-slate-100">
+                                      {exercise.name}
+                                    </p>
+                                    <p className="mt-1 text-[11px] text-slate-400 dark:text-slate-500">
+                                      {exercise.sets} sets • {exercise.reps}{" "}
+                                      reps •{" "}
+                                      {exercise.rest_seconds != null
+                                        ? `${exercise.rest_seconds}s rest`
+                                        : "— rest"}
+                                    </p>
+                                  </div>
+                                ))}
                             </div>
 
                             {day.exercises.length > 3 && (
@@ -465,7 +623,7 @@ export default function WorkoutPlanDetailPage() {
                         </div>
                       )}
                     </button>
-                  )
+                  );
                 })}
               </div>
             </div>
@@ -488,71 +646,96 @@ export default function WorkoutPlanDetailPage() {
                 </h2>
               </div>
               {!activeDay.exercises.length ? null : (
-                <span className={`inline-flex items-center px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.14em] ${activeDay.sessionStyle.badge}`}>
+                <span
+                  className={`inline-flex items-center px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.14em] ${activeDay.sessionStyle.badge}`}
+                >
                   {activeDay.sessionStyle.label}
                 </span>
               )}
             </div>
 
             <div className="mt-6 space-y-3">
-              {activeDay.exercises.length > 0 ? activeDay.exercises.map((exercise, index) => (
-                <div
-                  key={`${activeDay.key}-${exercise.name}-${index}`}
-                  className="border border-slate-200 bg-slate-50/70 p-4 dark:border-white/[0.08] dark:bg-white/[0.03]"
-                >
-                  <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-3">
-                        <div className="flex h-7 w-7 items-center justify-center bg-brand-600 text-xs font-bold text-white dark:bg-brand-500">
-                          {index + 1}
+              {activeDay.exercises.length > 0 ? (
+                activeDay.exercises.map((exercise, index) => (
+                  <div
+                    key={`${activeDay.key}-${exercise.name}-${index}`}
+                    className="border border-slate-200 bg-slate-50/70 p-4 dark:border-white/[0.08] dark:bg-white/[0.03]"
+                  >
+                    <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-3">
+                          <div className="flex h-7 w-7 items-center justify-center bg-brand-600 text-xs font-bold text-white dark:bg-brand-500">
+                            {index + 1}
+                          </div>
+                          <p className="text-base font-semibold text-[var(--text-primary)] dark:text-[var(--text-primary)]">
+                            {exercise.name}
+                          </p>
+                          {exercise.video_url && (
+                            <a
+                              href={exercise.video_url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-1 text-xs text-blue-500 hover:text-blue-600"
+                            >
+                              <VideoIcon className="w-3 h-3" />
+                              <span className="hidden sm:inline">Video</span>
+                            </a>
+                          )}
                         </div>
-                        <p className="text-base font-semibold text-[var(--text-primary)] dark:text-[var(--text-primary)]">{exercise.name}</p>
+                        {exercise.notes && (
+                          <p className="mt-3 text-sm leading-relaxed text-[var(--text-secondary)] dark:text-[var(--text-secondary)] sm:ml-10">
+                            {exercise.notes}
+                          </p>
+                        )}
+
+                        {/* Video preview */}
                         {exercise.video_url && (
-                          <a
-                            href={exercise.video_url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="inline-flex items-center gap-1 text-xs text-blue-500 hover:text-blue-600"
-                          >
-                            <VideoIcon className="w-3 h-3" />
-                            <span className="hidden sm:inline">Video</span>
-                          </a>
+                          <div className="mt-3 sm:ml-10">
+                            <VideoPreview url={exercise.video_url} />
+                          </div>
                         )}
                       </div>
-                      {exercise.notes && (
-                        <p className="mt-3 text-sm leading-relaxed text-[var(--text-secondary)] dark:text-[var(--text-secondary)] sm:ml-10">{exercise.notes}</p>
-                      )}
 
-                      {/* Video preview */}
-                      {exercise.video_url && (
-                        <div className="mt-3 sm:ml-10">
-                          <VideoPreview url={exercise.video_url} />
+                      <div className="grid grid-cols-3 gap-2 sm:min-w-[250px]">
+                        <div className="bg-white px-3 py-2 text-center dark:bg-white/[0.04]">
+                          <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">
+                            Sets
+                          </p>
+                          <p className="mt-1 text-sm font-bold text-[var(--text-primary)] dark:text-[var(--text-primary)]">
+                            {exercise.sets}
+                          </p>
                         </div>
-                      )}
-                    </div>
-
-                    <div className="grid grid-cols-3 gap-2 sm:min-w-[250px]">
-                      <div className="bg-white px-3 py-2 text-center dark:bg-white/[0.04]">
-                        <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">Sets</p>
-                        <p className="mt-1 text-sm font-bold text-[var(--text-primary)] dark:text-[var(--text-primary)]">{exercise.sets}</p>
-                      </div>
-                      <div className="bg-white px-3 py-2 text-center dark:bg-white/[0.04]">
-                        <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">Reps</p>
-                        <p className="mt-1 text-sm font-bold text-[var(--text-primary)] dark:text-[var(--text-primary)]">{exercise.reps}</p>
-                      </div>
-                      <div className="bg-white px-3 py-2 text-center dark:bg-white/[0.04]">
-                        <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">Rest</p>
-                        <p className="mt-1 text-sm font-bold text-[var(--text-primary)] dark:text-[var(--text-primary)]">{exercise.rest_seconds != null ? `${exercise.rest_seconds}s` : '—'}</p>
+                        <div className="bg-white px-3 py-2 text-center dark:bg-white/[0.04]">
+                          <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">
+                            Reps
+                          </p>
+                          <p className="mt-1 text-sm font-bold text-[var(--text-primary)] dark:text-[var(--text-primary)]">
+                            {exercise.reps}
+                          </p>
+                        </div>
+                        <div className="bg-white px-3 py-2 text-center dark:bg-white/[0.04]">
+                          <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">
+                            Rest
+                          </p>
+                          <p className="mt-1 text-sm font-bold text-[var(--text-primary)] dark:text-[var(--text-primary)]">
+                            {exercise.rest_seconds != null
+                              ? `${exercise.rest_seconds}s`
+                              : "—"}
+                          </p>
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
-              )) : (
+                ))
+              ) : (
                 <div className="flex min-h-[220px] flex-col items-center justify-center border border-dashed border-slate-200 bg-slate-50/60 px-6 text-center dark:border-white/[0.08] dark:bg-white/[0.02]">
                   <Dumbbell className="h-8 w-8 text-slate-300 dark:text-slate-600" />
-                  <p className="mt-4 text-base font-semibold text-slate-700 dark:text-slate-200">Recovery day</p>
+                  <p className="mt-4 text-base font-semibold text-slate-700 dark:text-slate-200">
+                    Recovery day
+                  </p>
                   <p className="mt-2 max-w-sm text-sm text-[var(--text-secondary)] dark:text-[var(--text-secondary)]">
-                    This day has no assigned exercises. Use it for mobility, recovery, or leave it open between heavier sessions.
+                    This day has no assigned exercises. Use it for mobility,
+                    recovery, or leave it open between heavier sessions.
                   </p>
                 </div>
               )}
@@ -566,23 +749,41 @@ export default function WorkoutPlanDetailPage() {
             className="space-y-4"
           >
             <div className="border border-slate-200/80 bg-[var(--bg-card)] p-6 dark:border-white/[0.08] ">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-400 dark:text-slate-500">Plan Snapshot</p>
+              <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-400 dark:text-slate-500">
+                Plan Snapshot
+              </p>
               <div className="mt-5 grid grid-cols-2 gap-3">
                 <div className="bg-slate-50 p-4 dark:bg-white/[0.03]">
-                  <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">Week Of</p>
-                  <p className="mt-2 text-sm font-semibold text-[var(--text-primary)] dark:text-[var(--text-primary)]">{format(weekStart, 'dd MMM yyyy')}</p>
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">
+                    Week Of
+                  </p>
+                  <p className="mt-2 text-sm font-semibold text-[var(--text-primary)] dark:text-[var(--text-primary)]">
+                    {format(weekStart, "dd MMM yyyy")}
+                  </p>
                 </div>
                 <div className="bg-slate-50 p-4 dark:bg-white/[0.03]">
-                  <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">Status</p>
-                  <p className="mt-2 text-sm font-semibold capitalize text-[var(--text-primary)] dark:text-[var(--text-primary)]">{plan.status}</p>
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">
+                    Status
+                  </p>
+                  <p className="mt-2 text-sm font-semibold capitalize text-[var(--text-primary)] dark:text-[var(--text-primary)]">
+                    {plan.status}
+                  </p>
                 </div>
                 <div className="bg-slate-50 p-4 dark:bg-white/[0.03]">
-                  <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">Training Days</p>
-                  <p className="mt-2 text-sm font-semibold text-[var(--text-primary)] dark:text-[var(--text-primary)]">{activeDays}/7</p>
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">
+                    Training Days
+                  </p>
+                  <p className="mt-2 text-sm font-semibold text-[var(--text-primary)] dark:text-[var(--text-primary)]">
+                    {activeDays}/7
+                  </p>
                 </div>
                 <div className="bg-slate-50 p-4 dark:bg-white/[0.03]">
-                  <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">Exercises</p>
-                  <p className="mt-2 text-sm font-semibold text-[var(--text-primary)] dark:text-[var(--text-primary)]">{totalExercises}</p>
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">
+                    Exercises
+                  </p>
+                  <p className="mt-2 text-sm font-semibold text-[var(--text-primary)] dark:text-[var(--text-primary)]">
+                    {totalExercises}
+                  </p>
                 </div>
               </div>
             </div>
@@ -590,5 +791,5 @@ export default function WorkoutPlanDetailPage() {
         </section>
       </div>
     </DashboardLayout>
-  )
+  );
 }

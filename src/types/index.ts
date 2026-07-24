@@ -601,3 +601,54 @@ export type {
   WorkoutAnalysisListItem,
   RecommendationsPreview,
 } from "./analysis";
+
+/**
+ * Organization staff / RBAC (multi-trainer studios). The org root is always
+ * the authenticated coach account (org_id == coach.id); the coach is the
+ * implicit "owner". Additional staff members are invited with one of the
+ * roles below.
+ */
+export type StaffRole = "admin" | "manager" | "front_desk" | "instructor_coach";
+
+export type StaffStatus = "invited" | "active" | "deactivated";
+
+export interface StaffMember {
+  id: string;
+  org_id: string;
+  email: string;
+  name: string;
+  role: StaffRole;
+  status: StaffStatus;
+  invited_at: string | null;
+  activated_at: string | null;
+}
+
+export interface InviteStaffPayload {
+  email: string;
+  role: StaffRole;
+  name?: string;
+}
+
+export interface UpdateStaffRolePayload {
+  id: string;
+  role: StaffRole;
+}
+
+export interface DeactivateStaffPayload {
+  id: string;
+  reassign_to?: string | "owner";
+}
+
+export const STAFF_ROLE_LABELS: Record<StaffRole, string> = {
+  admin: "Admin",
+  manager: "Manager",
+  front_desk: "Front Desk",
+  instructor_coach: "Instructor / Coach",
+};
+
+export const STAFF_ROLE_DESCRIPTIONS: Record<StaffRole, string> = {
+  admin: "Full access, excluding billing ownership transfer.",
+  manager: "Staff scheduling and client roster oversight.",
+  front_desk: "Check-ins, bookings and membership status only.",
+  instructor_coach: "Full access to their own assigned clients.",
+};

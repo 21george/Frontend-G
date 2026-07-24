@@ -22,4 +22,5 @@ export { settingsApi } from "./services/settings";
 export { notificationsApi } from "./services/notifications";
 export { workoutAnalysisApi } from "./services/workout-analysis";
 export { foodsApi } from "./services/foods";
+export { staffApi } from "./services/staff";
 export type { NotificationSettings } from "./services/settings";

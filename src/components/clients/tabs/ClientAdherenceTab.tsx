@@ -130,10 +130,13 @@ export function ClientAdherenceTab({ clientId }: { clientId: string }) {
           value={
             summary && summary.workouts_completed + summary.meals_completed > 0
               ? `${Math.round(
-                  ((summary.workouts_completed * 1 +
-                    summary.meals_completed * 0.5) /
-                    (rangeDays * 1.5)) *
+                  Math.min(
                     100,
+                    ((summary.workouts_completed * 1 +
+                      summary.meals_completed * 0.5) /
+                      (rangeDays * 1.5)) *
+                      100,
+                  ),
                 )}%`
               : "—"
           }

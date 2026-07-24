@@ -71,9 +71,7 @@ function MacroPill({
   bg: string;
 }) {
   return (
-    <div
-      className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-md ${bg}`}
-    >
+    <div className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-md ${bg}`}>
       <span className={color}>{icon}</span>
       <span className={`text-[11px] font-semibold ${color}`}>
         {Math.round(value)}
@@ -103,10 +101,7 @@ function MacroBar({
         <span className="text-[10px] font-medium text-[var(--text-tertiary)]">
           {label}
         </span>
-        <span
-          className="text-[10px] font-semibold"
-          style={{ color }}
-        >
+        <span className="text-[10px] font-semibold" style={{ color }}>
           {Math.round(value)}g
         </span>
       </div>
@@ -128,11 +123,31 @@ function MacroBar({
 function MealCard({ meal, index }: { meal: Meal; index: number }) {
   const macros = mealMacros(meal);
   const mealColors = [
-    { bg: "bg-orange-50 dark:bg-orange-900/15", border: "border-orange-200 dark:border-orange-800/30", icon: "text-orange-500" },
-    { bg: "bg-blue-50 dark:bg-blue-900/15", border: "border-blue-200 dark:border-blue-800/30", icon: "text-blue-500" },
-    { bg: "bg-purple-50 dark:bg-purple-900/15", border: "border-purple-200 dark:border-purple-800/30", icon: "text-purple-500" },
-    { bg: "bg-indigo-50 dark:bg-indigo-900/15", border: "border-indigo-200 dark:border-indigo-800/30", icon: "text-indigo-500" },
-    { bg: "bg-emerald-50 dark:bg-emerald-900/15", border: "border-emerald-200 dark:border-emerald-800/30", icon: "text-emerald-500" },
+    {
+      bg: "bg-orange-50 dark:bg-orange-900/15",
+      border: "border-orange-200 dark:border-orange-800/30",
+      icon: "text-orange-500",
+    },
+    {
+      bg: "bg-blue-50 dark:bg-blue-900/15",
+      border: "border-blue-200 dark:border-blue-800/30",
+      icon: "text-blue-500",
+    },
+    {
+      bg: "bg-purple-50 dark:bg-purple-900/15",
+      border: "border-purple-200 dark:border-purple-800/30",
+      icon: "text-purple-500",
+    },
+    {
+      bg: "bg-indigo-50 dark:bg-indigo-900/15",
+      border: "border-indigo-200 dark:border-indigo-800/30",
+      icon: "text-indigo-500",
+    },
+    {
+      bg: "bg-emerald-50 dark:bg-emerald-900/15",
+      border: "border-emerald-200 dark:border-emerald-800/30",
+      icon: "text-emerald-500",
+    },
   ];
   const style = mealColors[index % mealColors.length];
 
@@ -285,8 +300,12 @@ function DayCard({ day, index }: { day: NutritionDay; index: number }) {
 /* ── Plan macro summary (header) ──────────────────────────── */
 
 function PlanMacroSummary({ plan }: { plan: NutritionPlan }) {
-  const { calories = 0, protein_g = 0, carbs_g = 0, fat_g = 0 } =
-    plan.daily_totals ?? {};
+  const {
+    calories = 0,
+    protein_g = 0,
+    carbs_g = 0,
+    fat_g = 0,
+  } = plan.daily_totals ?? {};
 
   return (
     <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 p-3 bg-[var(--bg-subtle)] dark:bg-white/[0.02] border border-[var(--border)] dark:border-white/[0.05]">
@@ -339,6 +358,10 @@ export function NutritionListCard({ plan, expanded, onToggle }: Props) {
 
   const days = plan.days ?? [];
   const hasMultipleDays = days.length > 1;
+  const safeActiveDayIndex =
+    days.length > 0
+      ? Math.max(0, Math.min(activeDayIndex, days.length - 1))
+      : 0;
 
   return (
     <div
@@ -401,9 +424,7 @@ export function NutritionListCard({ plan, expanded, onToggle }: Props) {
           {expanded ? "Hide Details" : "View Details"}
           <ChevronDown
             size={12}
-            className={`transition-transform ${
-              expanded ? "rotate-180" : ""
-            }`}
+            className={`transition-transform ${expanded ? "rotate-180" : ""}`}
           />
         </button>
       </div>
@@ -422,20 +443,22 @@ export function NutritionListCard({ plan, expanded, onToggle }: Props) {
             {plan.notes && (
               <div className="mx-4 sm:mx-5 mt-4 p-3 bg-amber-50 dark:bg-amber-900/10 rounded-lg border border-amber-200 dark:border-amber-800/20">
                 <div className="flex items-start gap-2">
-                  <StickyNote size={14} className="text-amber-600 dark:text-amber-400 mt-0.5 flex-shrink-0" />
+                  <StickyNote
+                    size={14}
+                    className="text-amber-600 dark:text-amber-400 mt-0.5 flex-shrink-0"
+                  />
                   <p className="text-[12px] text-amber-800 dark:text-amber-200 leading-relaxed">
                     {plan.notes}
                   </p>
                 </div>
               </div>
             )}
-
             {/* Day navigation (if multiple days) */}
             {hasMultipleDays && (
               <div className="mx-4 sm:mx-5 mt-4">
                 <div className="flex items-center gap-1 overflow-x-auto pb-1">
                   {days.map((day, idx) => {
-                    const isActive = idx === activeDayIndex;
+                    const isActive = idx === safeActiveDayIndex;
                     const macros = dayMacros(day);
                     return (
                       <button
@@ -465,29 +488,22 @@ export function NutritionListCard({ plan, expanded, onToggle }: Props) {
                 </div>
               </div>
             )}
-
             {/* Day content */}
             <div className="p-4 sm:p-5 space-y-4">
               {hasMultipleDays ? (
-                <DayCard
-                  day={days[activeDayIndex]}
-                  index={0}
-                />
+                <DayCard day={days[safeActiveDayIndex]} index={0} />
               ) : (
                 days.map((day, idx) => (
                   <DayCard key={idx} day={day} index={idx} />
                 ))
               )}
             </div>
-
-            {/* Day nav arrows for multiple days */}
+            Day {safeActiveDayIndex + 1} of {days.length}
             {hasMultipleDays && (
               <div className="px-4 sm:px-5 pb-4 flex items-center justify-between">
                 <button
                   onClick={() =>
-                    setActiveDayIndex((i) =>
-                      i > 0 ? i - 1 : days.length - 1,
-                    )
+                    setActiveDayIndex((i) => (i > 0 ? i - 1 : days.length - 1))
                   }
                   className="flex items-center gap-1 px-3 py-1.5 text-[11px] font-medium text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] dark:hover:bg-white/[0.04] rounded-md transition-colors"
                 >
@@ -498,9 +514,7 @@ export function NutritionListCard({ plan, expanded, onToggle }: Props) {
                 </span>
                 <button
                   onClick={() =>
-                    setActiveDayIndex((i) =>
-                      i < days.length - 1 ? i + 1 : 0,
-                    )
+                    setActiveDayIndex((i) => (i < days.length - 1 ? i + 1 : 0))
                   }
                   className="flex items-center gap-1 px-3 py-1.5 text-[11px] font-medium text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] dark:hover:bg-white/[0.04] rounded-md transition-colors"
                 >
@@ -508,11 +522,15 @@ export function NutritionListCard({ plan, expanded, onToggle }: Props) {
                 </button>
               </div>
             )}
-
             {/* Footer actions */}
             <div className="border-t border-slate-100 dark:border-white/[0.06] p-4 sm:px-5 flex items-center justify-between gap-2 bg-[var(--bg-card)]">
               <span className="text-[11px] text-[var(--text-tertiary)]">
-                {days.reduce((s, d) => s + d.meals.reduce((ms, m) => ms + m.foods.length, 0), 0)} total food items
+                {days.reduce(
+                  (s, d) =>
+                    s + d.meals.reduce((ms, m) => ms + m.foods.length, 0),
+                  0,
+                )}{" "}
+                total food items
               </span>
               <Link
                 href={`/nutrition-plans/${plan.id}`}

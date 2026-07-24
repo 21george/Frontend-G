@@ -77,7 +77,7 @@ frontend/
 │   │   ├── notifications/         # Notification centre
 │   │   ├── billing/               # Subscription, invoices & payment methods
 │   │   ├── subscription/          # Subscription onboarding flow
-│   │   ├── settings/              # Profile, integrations, notification prefs
+│   │   ├── settings/              # Profile, integrations, notification prefs, team
 │   │   ├── api/                   # Next.js route handlers (server-side helpers)
 │   │   └── providers.tsx          # QueryClient + theme providers
 │   ├── components/
@@ -94,7 +94,11 @@ frontend/
 │   │   ├── ui/                    # Headless primitives (Button, Modal, Badge…)
 │   │   ├── weather/               # Weather card widget
 │   │   ├── workout-plans/         # Plan builder, exercise drag-and-drop
-│   │   └── Background/            # Animated page background
+│   │   ├── Background/            # Animated page background
+│   │   ├── InviteStaffModal.tsx   # Invite an org staff member (Feature 6 RBAC)
+│   │   ├── DeactivateStaffModal.tsx # Deactivate + reassign a staff member's clients
+│   │   ├── StaffTable.tsx         # Org staff list — role change, deactivate
+│   │   └── RoleBadge.tsx          # Staff role / status badges
 │   ├── hooks/                     # TanStack Query data hooks (one file per domain)
 │   │   ├── useClients.ts          # CRUD + block/unblock/photo/analytics/measurements
 │   │   ├── useWorkoutPlans.ts     # Plan CRUD, import, assignment
@@ -113,12 +117,13 @@ frontend/
 │   │   ├── useTrialReminder.ts    # 14-day free trial countdown banner
 │   │   ├── useNearbyGyms.ts       # Geolocation gym search
 │   │   ├── useWeather.ts          # OpenWeather widget
+│   │   ├── useStaff.ts            # Org staff list/invite/role-update/deactivate (Feature 6)
 │   │   └── useToastMutation.ts    # Generic toast-on-mutation helper
 │   ├── lib/
 │   │   ├── api/
 │   │   │   ├── client.ts          # Axios instance — auth interceptors, 401 auto-refresh
 │   │   │   ├── index.ts           # Barrel export
-│   │   │   └── services/          # Domain API functions (one file per domain)
+│   │   │   └── services/          # Domain API functions (one file per domain, incl. staff.ts)
 │   │   ├── env.ts                 # Resolves NEXT_PUBLIC_API_URL
 │   │   ├── validateUrl.ts         # Safe redirect helper (SSRF prevention)
 │   │   └── useSocketChat.ts       # Polling-based real-time chat hook
@@ -128,13 +133,17 @@ frontend/
 │   │   ├── subscription.ts        # Zustand: subscription tier + status
 │   │   ├── theme.ts               # Zustand: dark / light mode
 │   │   └── ui.ts                  # Zustand: UI side-effects
-│   └── types/                     # TypeScript type definitions
+│   └── types/                     # TypeScript type definitions (incl. Staff types)
 ├── e2e/                           # Playwright end-to-end tests
 ├── .env.local.example
 ├── next.config.js
 ├── tailwind.config.ts
 └── vitest.config.ts
 ```
+
+All domains — including new v1.2 features like Staff/RBAC — follow this same
+flat convention: `components/{Component}.tsx`, `hooks/use{Domain}.ts`,
+`lib/api/services/{domain}.ts`, with shared types centralised in `types/index.ts`.
 
 ---
 

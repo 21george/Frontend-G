@@ -19,6 +19,7 @@ import {
 import { NearbyGymsButton } from "./NearbyGyms";
 import NotificationsButton from "@/components/notifications";
 import WeatherForecast from "@/components/weather";
+import { Avatar } from "@/components/ui/Avatar";
 
 interface QuickAction {
   href?: string;
@@ -40,23 +41,6 @@ function getGreeting(): string {
   if (hour < 12) return "morning";
   if (hour < 18) return "afternoon";
   return "evening";
-}
-
-function getInitials(name?: string, surname?: string): string {
-  const first = name?.trim().charAt(0).toUpperCase() ?? "";
-  const second =
-    surname?.trim().charAt(0).toUpperCase() ??
-    name?.trim().split(" ")[1]?.charAt(0).toUpperCase() ??
-    "";
-  return first + second || "C";
-}
-
-function avatarColor(seed: string): string {
-  let hash = 0;
-  for (let i = 0; i < seed.length; i++)
-    hash = seed.charCodeAt(i) + ((hash << 5) - hash);
-  const hue = Math.abs(hash) % 360;
-  return `hsl(${hue}, 60%, 45%)`;
 }
 
 function ThemeToggle() {
@@ -98,43 +82,6 @@ function ThemeToggle() {
         )}
       </span>
     </button>
-  );
-}
-
-function CoachAvatar({
-  name,
-  surname,
-  photo,
-}: {
-  name?: string;
-  surname?: string;
-  photo?: string;
-}) {
-  const initials = getInitials(name, surname);
-  const bg = avatarColor(name ?? "coach");
-
-  if (photo) {
-    return (
-      <div className="h-12 w-12 overflow-hidden rounded-10 ring-2 ring-white/10 flex-shrink-0">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src={photo}
-          alt={name ?? "Coach"}
-          width={48}
-          height={48}
-          className="h-full w-full rounded-10 object-cover"
-        />
-      </div>
-    );
-  }
-
-  return (
-    <div
-      className="h-12 w-12 rounded-10 flex items-center justify-center text-white text-[13px] font-semibold flex-shrink-0 ring-2 ring-white/10 select-none"
-      style={{ backgroundColor: bg }}
-    >
-      {initials}
-    </div>
   );
 }
 
@@ -291,27 +238,29 @@ export default function DashboardHeader({
         <NotificationsButton />
         <NearbyGymsButton />
         {defaultQuickActions.length > 0 &&
-          defaultQuickActions.map(({ href, onClick, label, icon: Icon, color }) => {
-            const className = `inline-flex items-center gap-1.5 px-2.5 sm:px-3.5 py-1.5 sm:py-2 text-xs rounded-xl sm:text-sm font-medium transition-colors ${color}`;
-            const content = (
-              <>
-                <Icon className="w-4 h-4" />
-                <span className="hidden sm:inline">{label}</span>
-              </>
-            );
-            if (onClick) {
-              return (
-                <button key={label} onClick={onClick} className={className}>
-                  {content}
-                </button>
+          defaultQuickActions.map(
+            ({ href, onClick, label, icon: Icon, color }) => {
+              const className = `inline-flex items-center gap-1.5 px-2.5 sm:px-3.5 py-1.5 sm:py-2 text-xs rounded-xl sm:text-sm font-medium transition-colors ${color}`;
+              const content = (
+                <>
+                  <Icon className="w-4 h-4" />
+                  <span className="hidden sm:inline">{label}</span>
+                </>
               );
-            }
-            return (
-              <Link key={href} href={href!} className={className}>
-                {content}
-              </Link>
-            );
-          })}
+              if (onClick) {
+                return (
+                  <button key={label} onClick={onClick} className={className}>
+                    {content}
+                  </button>
+                );
+              }
+              return (
+                <Link key={href} href={href!} className={className}>
+                  {content}
+                </Link>
+              );
+            },
+          )}
         <div className="rounded-sm">
           <ThemeToggle />
         </div>
@@ -319,11 +268,15 @@ export default function DashboardHeader({
           href="/settings/edit"
           className="flex items-center gap-2.5 pl-1 border-l border-slate-200 rounded-sm dark:border-white/[0.1] hover:opacity-80 transition-opacity"
         >
-          <CoachAvatar
-            key={coach?.id ?? 'no-user'}
+          <Avatar
+            key={coach?.id ?? "no-user"}
             name={coach?.name}
             surname={coach?.surname}
             photo={coach?.profile_photo}
+            size="h-12 w-12"
+            variant="colored"
+            shape="squircle"
+            className="ring-2 ring-white/10"
           />
           {fullName && (
             <div className="hidden sm:flex flex-col">

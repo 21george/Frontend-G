@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useAuthStore } from "@/store/auth";
 import { useThemeStore } from "@/store/theme";
 import {
@@ -12,7 +12,6 @@ import {
 import { safeHref } from "@/lib/safeHref";
 import Image from "next/image";
 import Link from "next/link";
-import { motion, AnimatePresence } from "framer-motion";
 import {
   User,
   Mail,
@@ -35,13 +34,40 @@ import {
   AlertTriangle,
   Clock,
   Trash2,
+  Users,
 } from "lucide-react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { SettingsSkeleton } from "@/components/ui/skeletons";
+import { ChangePasswordModal } from "@/components/settings/ChangePasswordModal";
+import { DeleteAccountModal } from "@/components/settings/DeleteAccountModal";
 
-/* ═══════════════════════════════════════════════════════════════════════════
-   UI Primitives
-   ═══════════════════════════════════════════════════════════════════════════ */
+/* ── Small self-contained avatar component ─────────────────────── */
+
+function ProfilePhoto({
+  src,
+  alt,
+  fallback,
+}: {
+  src: string;
+  alt: string;
+  fallback: React.ReactNode;
+}) {
+  const [errored, setErrored] = useState(false);
+  if (errored) return <>{fallback}</>;
+  return (
+    <Image
+      src={src}
+      alt={alt}
+      fill
+      className="rounded-full object-cover ring-2 ring-[var(--border)]"
+      sizes="96px"
+      unoptimized
+      onError={() => setErrored(true)}
+    />
+  );
+}
+
+/* ── UI Primitives ─────────────────────────────────────────────── */
 
 function Card({
   children,
@@ -219,9 +245,7 @@ function InfoRow({
   );
 }
 
-/* ═══════════════════════════════════════════════════════════════════════════
-   Main Page
-   ═══════════════════════════════════════════════════════════════════════════ */
+/* ── Main Page ─────────────────────────────────────────────────── */
 
 export default function SettingsPage() {
   const { coach } = useAuthStore();
@@ -229,10 +253,11 @@ export default function SettingsPage() {
   const { data: subscription, isLoading: subLoading } = useSubscription();
   const manageBilling = useManageBilling();
 
-  const [imageErrored, setImageErrored] = useState(false);
   const [showPwModal, setShowPwModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
 
-  const { data: notifData, isLoading: notifLoading } = useNotificationSettings();
+  const { data: notifData, isLoading: notifLoading } =
+    useNotificationSettings();
   const updateNotif = useUpdateNotificationSettings();
 
   if (subLoading || notifLoading) {
@@ -249,88 +274,6 @@ export default function SettingsPage() {
   const loginAlerts = notifData?.login_alerts ?? true;
   const doNotDisturb = notifData?.dnd_enabled ?? false;
 
-  const setNotifNewClient = (v: boolean) =>
-    updateNotif.mutate({ consultation: v });
-  const setNotifMessages = (v: boolean) => updateNotif.mutate({ email_sms: v });
-  const setNotifCheckins = (v: boolean) =>
-    updateNotif.mutate({ appointments: v });
-  const setLoginAlerts = (v: boolean) =>
-    updateNotif.mutate({ login_alerts: v });
-  const setDoNotDisturb = (v: boolean) =>
-    updateNotif.mutate({ dnd_enabled: v });
-
-  // Password modal state
-  const [pwCurrent, setPwCurrent] = useState("");
-  const [pwNew, setPwNew] = useState("");
-  const [pwConfirm, setPwConfirm] = useState("");
-  const [pwSaving, setPwSaving] = useState(false);
-  const [pwMessage, setPwMessage] = useState<{
-    type: "ok" | "err";
-    text: string;
-  } | null>(null);
-
-  // Delete account modal state
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [deleteConfirmText, setDeleteConfirmText] = useState("");
-  const [deleteLoading, setDeleteLoading] = useState(false);
-  const [deleteError, setDeleteError] = useState<string | null>(null);
-
-  useEffect(() => setImageErrored(false), [coach?.profile_photo]);
-
-  const handleChangePassword = async () => {
-    if (pwNew.length < 8) {
-      setPwMessage({ type: "err", text: "At least 8 characters" });
-      return;
-    }
-    if (pwNew !== pwConfirm) {
-      setPwMessage({ type: "err", text: "Passwords do not match" });
-      return;
-    }
-    setPwSaving(true);
-    setPwMessage(null);
-    try {
-      const api = (await import("@/lib/api")).default;
-      await api.put("/coach/profile/password", {
-        current_password: pwCurrent,
-        new_password: pwNew,
-      });
-      setPwMessage({ type: "ok", text: "Password changed" });
-      setTimeout(() => {
-        setShowPwModal(false);
-        setPwCurrent("");
-        setPwNew("");
-        setPwConfirm("");
-      }, 1200);
-    } catch (err: any) {
-      setPwMessage({
-        type: "err",
-        text: err?.response?.data?.message ?? "Failed",
-      });
-    } finally {
-      setPwSaving(false);
-    }
-  };
-
-  const handleDeleteAccount = async () => {
-    if (deleteConfirmText !== "DELETE") {
-      setDeleteError('Please type "DELETE" to confirm');
-      return;
-    }
-    setDeleteLoading(true);
-    setDeleteError(null);
-    try {
-      const { settingsApi } = await import("@/lib/api/services/settings");
-      await settingsApi.deleteAccount();
-      useAuthStore.getState().logout();
-      window.location.href = "/login";
-    } catch (err: any) {
-      setDeleteError(
-        err?.response?.data?.message ?? "Failed to delete account",
-      );
-      setDeleteLoading(false);
-    }
-  };
-
   const tier = subscription?.tier ?? "free";
   const tierLabel =
     tier === "pro" ? "Pro" : tier === "business" ? "Business" : "Free";
@@ -343,7 +286,7 @@ export default function SettingsPage() {
     <DashboardLayout>
       <div className="mx-auto pb-8">
         {/* Page Header */}
-        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-8"></div>
+        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-8" />
 
         {/* Main Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -366,28 +309,18 @@ export default function SettingsPage() {
               />
               <div className="p-6">
                 <div className="flex items-start gap-5 mb-6">
-                  <div
-                    key={coach?.id ?? "no-user"}
-                    className="relative h-20 w-20 rounded-full flex-shrink-0"
-                  >
+                  <div className="relative h-20 w-20 rounded-full flex-shrink-0">
                     {coach?.profile_photo ? (
-                      <>
-                        {!imageErrored ? (
-                          <Image
-                            src={coach.profile_photo}
-                            alt={coach.name ?? "Profile"}
-                            fill
-                            className="rounded-full object-cover ring-2 ring-[var(--border)]"
-                            sizes="96px"
-                            unoptimized
-                            onError={() => setImageErrored(true)}
-                          />
-                        ) : (
+                      <ProfilePhoto
+                        key={coach.profile_photo}
+                        src={coach.profile_photo}
+                        alt={coach.name ?? "Profile"}
+                        fallback={
                           <div className="absolute inset-0 flex items-center justify-center rounded-full bg-[var(--btn-bg)] text-white text-lg font-bold">
                             {coach.name?.[0]?.toUpperCase() ?? "C"}
                           </div>
-                        )}
-                      </>
+                        }
+                      />
                     ) : (
                       <div className="h-full w-full flex items-center justify-center rounded-full bg-[var(--bg-subtle)] text-[var(--text-tertiary)]">
                         <User className="w-8 h-8" />
@@ -443,36 +376,39 @@ export default function SettingsPage() {
                       Social Links
                     </p>
                     <div className="flex flex-wrap gap-3">
-                      {coach.social_media.linkedin && safeHref(coach.social_media.linkedin) && (
-                        <a
-                          href={safeHref(coach.social_media.linkedin)!}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1.5 text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
-                        >
-                          <Globe className="w-3.5 h-3.5" /> LinkedIn
-                        </a>
-                      )}
-                      {coach.social_media.instagram && safeHref(coach.social_media.instagram) && (
-                        <a
-                          href={safeHref(coach.social_media.instagram)!}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1.5 text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
-                        >
-                          <Globe className="w-3.5 h-3.5" /> Instagram
-                        </a>
-                      )}
-                      {coach.social_media.website && safeHref(coach.social_media.website) && (
-                        <a
-                          href={safeHref(coach.social_media.website)!}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1.5 text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
-                        >
-                          <LinkIcon className="w-3.5 h-3.5" /> Website
-                        </a>
-                      )}
+                      {coach.social_media.linkedin &&
+                        safeHref(coach.social_media.linkedin) && (
+                          <a
+                            href={safeHref(coach.social_media.linkedin)!}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1.5 text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
+                          >
+                            <Globe className="w-3.5 h-3.5" /> LinkedIn
+                          </a>
+                        )}
+                      {coach.social_media.instagram &&
+                        safeHref(coach.social_media.instagram) && (
+                          <a
+                            href={safeHref(coach.social_media.instagram)!}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1.5 text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
+                          >
+                            <Globe className="w-3.5 h-3.5" /> Instagram
+                          </a>
+                        )}
+                      {coach.social_media.website &&
+                        safeHref(coach.social_media.website) && (
+                          <a
+                            href={safeHref(coach.social_media.website)!}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1.5 text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
+                          >
+                            <LinkIcon className="w-3.5 h-3.5" /> Website
+                          </a>
+                        )}
                     </div>
                   </div>
                 )}
@@ -504,7 +440,7 @@ export default function SettingsPage() {
                   label="Login Alerts"
                   description="Notify on new/unfamiliar logins"
                   checked={loginAlerts}
-                  onChange={setLoginAlerts}
+                  onChange={(v) => updateNotif.mutate({ login_alerts: v })}
                 />
                 <div className="flex items-center justify-between py-3.5 px-6 hover:bg-[var(--bg-subtle)] transition-colors">
                   <div className="flex items-center gap-3">
@@ -549,11 +485,7 @@ export default function SettingsPage() {
                     </p>
                   </div>
                   <button
-                    onClick={() => {
-                      setShowDeleteModal(true);
-                      setDeleteConfirmText("");
-                      setDeleteError(null);
-                    }}
+                    onClick={() => setShowDeleteModal(true)}
                     className="inline-flex items-center gap-1.5 px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-medium rounded-lg transition-colors"
                   >
                     <Trash2 className="w-4 h-4" />
@@ -566,6 +498,29 @@ export default function SettingsPage() {
 
           {/* ── Right Column ── */}
           <div className="space-y-6">
+            {/* Team Management */}
+            <Card>
+              <CardHeader
+                icon={<Users className="w-5 h-5 text-white" />}
+                title="Team"
+                action={
+                  <Link
+                    href="/settings/team"
+                    className="inline-flex items-center gap-1.5 text-sm font-medium text-[var(--accent)] hover:text-emerald-600 transition-colors"
+                  >
+                    Manage
+                    <ChevronRight className="w-3.5 h-3.5" />
+                  </Link>
+                }
+              />
+              <div className="p-6">
+                <p className="text-sm text-[var(--text-secondary)]">
+                  Invite additional trainers, managers or front-desk staff to
+                  your organization and control what each of them can access.
+                </p>
+              </div>
+            </Card>
+
             {/* Notifications */}
             <Card>
               <CardHeader
@@ -585,31 +540,31 @@ export default function SettingsPage() {
                   label="Appointments"
                   description="New or updated check-ins"
                   checked={notifCheckins}
-                  onChange={setNotifCheckins}
+                  onChange={(v) => updateNotif.mutate({ appointments: v })}
                 />
                 <ToggleRow
                   label="New Clients"
                   description="When a new client signs up"
                   checked={notifNewClient}
-                  onChange={setNotifNewClient}
+                  onChange={(v) => updateNotif.mutate({ consultation: v })}
                 />
                 <ToggleRow
                   label="Messages"
                   description="New message notifications"
                   checked={notifMessages}
-                  onChange={setNotifMessages}
+                  onChange={(v) => updateNotif.mutate({ email_sms: v })}
                 />
                 <ToggleRow
                   label="Login Alerts"
                   description="Notify on new/unfamiliar logins"
                   checked={loginAlerts}
-                  onChange={setLoginAlerts}
+                  onChange={(v) => updateNotif.mutate({ login_alerts: v })}
                 />
                 <ToggleRow
                   label="Do Not Disturb"
                   description="Mute notifications during set hours"
                   checked={doNotDisturb}
-                  onChange={setDoNotDisturb}
+                  onChange={(v) => updateNotif.mutate({ dnd_enabled: v })}
                 />
                 {doNotDisturb && (
                   <div className="px-6 py-3 bg-[var(--bg-subtle)]">
@@ -797,204 +752,15 @@ export default function SettingsPage() {
           </div>
         </div>
 
-        {/* Password Modal */}
-        <AnimatePresence>
-          {showPwModal && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                className="absolute inset-0 bg-black/50 backdrop-blur-sm"
-                onClick={() => {
-                  setShowPwModal(false);
-                  setPwMessage(null);
-                  setPwCurrent("");
-                  setPwNew("");
-                  setPwConfirm("");
-                }}
-              />
-              <motion.div
-                initial={{ scale: 0.95, opacity: 0, y: 20 }}
-                animate={{ scale: 1, opacity: 1, y: 0 }}
-                exit={{ scale: 0.95, opacity: 0, y: 20 }}
-                className="relative bg-[var(--bg-card)] border border-[var(--border)] w-full max-w-md rounded-xl p-6 shadow-xl"
-              >
-                <div className="flex items-center gap-3 mb-5">
-                  <div className="w-10 h-10 bg-[var(--btn-bg)] flex items-center justify-center rounded-lg">
-                    <Lock className="w-5 h-5 text-white" />
-                  </div>
-                  <div>
-                    <h3 className="text-base font-semibold text-[var(--text-primary)]">
-                      Change Password
-                    </h3>
-                    <p className="text-xs text-[var(--text-secondary)]">
-                      Update your password securely
-                    </p>
-                  </div>
-                </div>
-
-                <div className="space-y-4">
-                  <div>
-                    <label className="text-xs font-medium text-[var(--text-secondary)] uppercase tracking-wide">
-                      Current Password
-                    </label>
-                    <input
-                      type="password"
-                      value={pwCurrent}
-                      onChange={(e) => setPwCurrent(e.target.value)}
-                      placeholder="Enter current password"
-                      className="input mt-1.5 rounded-lg"
-                    />
-                  </div>
-                  <div>
-                    <label className="text-xs font-medium text-[var(--text-secondary)] uppercase tracking-wide">
-                      New Password
-                    </label>
-                    <input
-                      type="password"
-                      value={pwNew}
-                      onChange={(e) => setPwNew(e.target.value)}
-                      placeholder="At least 8 characters"
-                      className="input mt-1.5 rounded-lg"
-                    />
-                  </div>
-                  <div>
-                    <label className="text-xs font-medium text-[var(--text-secondary)] uppercase tracking-wide">
-                      Confirm Password
-                    </label>
-                    <input
-                      type="password"
-                      value={pwConfirm}
-                      onChange={(e) => setPwConfirm(e.target.value)}
-                      placeholder="Re-enter new password"
-                      className="input mt-1.5 rounded-lg"
-                    />
-                  </div>
-
-                  {pwMessage && (
-                    <div
-                      className={`p-3 text-sm rounded-lg ${pwMessage.type === "ok" ? "bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400" : "bg-red-50 dark:bg-red-950/20 text-red-700 dark:text-red-400"}`}
-                    >
-                      {pwMessage.text}
-                    </div>
-                  )}
-
-                  <div className="flex justify-end gap-3 pt-4 border-t border-[var(--border)]">
-                    <button
-                      onClick={() => {
-                        setShowPwModal(false);
-                        setPwMessage(null);
-                        setPwCurrent("");
-                        setPwNew("");
-                        setPwConfirm("");
-                      }}
-                      className="px-4 py-2 text-sm font-medium text-[var(--text-secondary)] border border-[var(--border)] rounded-lg hover:bg-[var(--bg-subtle)] transition-colors"
-                    >
-                      Cancel
-                    </button>
-                    <button
-                      onClick={handleChangePassword}
-                      disabled={pwSaving}
-                      className="px-4 py-2 bg-[var(--btn-bg)] text-white text-sm font-medium hover:bg-[var(--btn-hover)] transition-colors disabled:opacity-50 rounded-lg"
-                    >
-                      {pwSaving ? "Saving…" : "Update Password"}
-                    </button>
-                  </div>
-                </div>
-              </motion.div>
-            </div>
-          )}
-        </AnimatePresence>
-
-        {/* Delete Account Modal */}
-        <AnimatePresence>
-          {showDeleteModal && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                className="absolute inset-0 bg-black/50 backdrop-blur-sm"
-                onClick={() => {
-                  if (!deleteLoading) {
-                    setShowDeleteModal(false);
-                    setDeleteConfirmText("");
-                    setDeleteError(null);
-                  }
-                }}
-              />
-              <motion.div
-                initial={{ scale: 0.95, opacity: 0, y: 20 }}
-                animate={{ scale: 1, opacity: 1, y: 0 }}
-                exit={{ scale: 0.95, opacity: 0, y: 20 }}
-                className="relative bg-[var(--bg-card)] border border-red-200 dark:border-red-900/30 w-full max-w-md rounded-xl p-6 shadow-xl"
-              >
-                <div className="flex items-center gap-3 mb-5">
-                  <div className="w-10 h-10 bg-red-100 dark:bg-red-900/30 flex items-center justify-center rounded-lg">
-                    <AlertTriangle className="w-5 h-5 text-red-600 dark:text-red-400" />
-                  </div>
-                  <div>
-                    <h3 className="text-base font-semibold text-[var(--text-primary)]">
-                      Delete Account
-                    </h3>
-                    <p className="text-xs text-[var(--text-secondary)]">
-                      This action is irreversible
-                    </p>
-                  </div>
-                </div>
-
-                <div className="space-y-4">
-                  <p className="text-sm text-[var(--text-secondary)]">
-                    To confirm deletion, type{" "}
-                    <strong className="text-[var(--text-primary)]">
-                      DELETE
-                    </strong>{" "}
-                    below.
-                  </p>
-                  <input
-                    type="text"
-                    value={deleteConfirmText}
-                    onChange={(e) => setDeleteConfirmText(e.target.value)}
-                    placeholder="Type DELETE"
-                    disabled={deleteLoading}
-                    className="input rounded-lg"
-                  />
-
-                  {deleteError && (
-                    <div className="p-3 text-sm rounded-lg bg-red-50 dark:bg-red-950/20 text-red-700 dark:text-red-400">
-                      {deleteError}
-                    </div>
-                  )}
-
-                  <div className="flex justify-end gap-3 pt-4 border-t border-[var(--border)]">
-                    <button
-                      onClick={() => {
-                        setShowDeleteModal(false);
-                        setDeleteConfirmText("");
-                        setDeleteError(null);
-                      }}
-                      disabled={deleteLoading}
-                      className="px-4 py-2 text-sm font-medium text-[var(--text-secondary)] border border-[var(--border)] rounded-lg hover:bg-[var(--bg-subtle)] transition-colors disabled:opacity-50"
-                    >
-                      Cancel
-                    </button>
-                    <button
-                      onClick={handleDeleteAccount}
-                      disabled={deleteLoading}
-                      className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-medium transition-colors disabled:opacity-50 rounded-lg inline-flex items-center gap-2"
-                    >
-                      {deleteLoading && (
-                        <Loader2 className="w-4 h-4 animate-spin" />
-                      )}
-                      {deleteLoading ? "Deleting…" : "Delete Account"}
-                    </button>
-                  </div>
-                </div>
-              </motion.div>
-            </div>
-          )}
-        </AnimatePresence>
+        {/* Modals */}
+        <ChangePasswordModal
+          open={showPwModal}
+          onClose={() => setShowPwModal(false)}
+        />
+        <DeleteAccountModal
+          open={showDeleteModal}
+          onClose={() => setShowDeleteModal(false)}
+        />
       </div>
     </DashboardLayout>
   );
