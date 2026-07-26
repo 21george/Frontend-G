@@ -13,16 +13,13 @@ import { useState, useMemo, useCallback } from "react";
 import { format, isPast, parseISO } from "date-fns";
 import type { CheckinMeeting, Client } from "@/types";
 import { motion, AnimatePresence } from "framer-motion";
+import Image from "next/image";
 import {
   Search,
   CalendarDays,
   SlidersHorizontal,
   Plus,
   Bell,
-  MoreHorizontal,
-  Video,
-  PhoneCall,
-  MessageCircle,
   Clock,
   Globe,
   Hash,
@@ -210,7 +207,6 @@ function CreateCheckinModal({
   const endTimeDate = scheduledAt
     ? new Date(scheduledAt.getTime() + 60 * 60 * 1000)
     : null;
-  const dateLabel = scheduledAt ? format(scheduledAt, "d MMMM, yyyy") : "";
   const dayName = scheduledAt ? format(scheduledAt, "EEE") : "";
   const dayNum = scheduledAt ? format(scheduledAt, "d") : "";
   const timeRange =
@@ -230,8 +226,6 @@ function CreateCheckinModal({
       : type === "call"
         ? "Phone Call"
         : "Chat Session";
-  const typeIcon =
-    type === "video" ? Video : type === "call" ? PhoneCall : MessageCircle;
 
   const inputCls =
     "w-full px-3 py-2.5 rounded-xl text-sm transition-all focus:outline-none focus:ring-2 focus:ring-purple-500/20 dark:focus:ring-[var(--energy)]/20 " +
@@ -446,12 +440,14 @@ function CreateCheckinModal({
                     </select>
                   ) : (
                     <div className="flex items-center gap-3 p-3 rounded-xl border border-[var(--border)] dark:border-white/[0.08] bg-[var(--bg-page)] dark:bg-white/[0.02]">
-                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[var(--border)] to-[var(--text-tertiary)] dark:from-white/10 dark:to-white/5 flex items-center justify-center text-sm font-bold text-[var(--text-secondary)] dark:text-white/60 overflow-hidden shrink-0">
+                      <div className="relative w-10 h-10 rounded-full bg-gradient-to-br from-[var(--border)] to-[var(--text-tertiary)] dark:from-white/10 dark:to-white/5 flex items-center justify-center text-sm font-bold text-[var(--text-secondary)] dark:text-white/60 overflow-hidden shrink-0">
                         {selectedClient.profile_photo_url ? (
-                          <img
+                          <Image
                             src={selectedClient.profile_photo_url}
                             alt={selectedClient.name}
-                            className="w-full h-full object-cover"
+                            fill
+                            unoptimized
+                            className="object-cover"
                           />
                         ) : (
                           (selectedClient.name?.[0]?.toUpperCase() ?? "?")
@@ -539,12 +535,14 @@ function CreateCheckinModal({
                   {selectedClient ? (
                     <div className="space-y-3">
                       <div className="flex items-center gap-3 p-3 rounded-xl border border-[var(--border)] dark:border-white/[0.08] bg-[var(--bg-card)] dark:bg-white/[0.02]">
-                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[var(--border)] to-[var(--text-tertiary)] dark:from-white/10 dark:to-white/5 flex items-center justify-center text-sm font-bold text-[var(--text-secondary)] dark:text-white/60 overflow-hidden shrink-0">
+                        <div className="relative w-10 h-10 rounded-full bg-gradient-to-br from-[var(--border)] to-[var(--text-tertiary)] dark:from-white/10 dark:to-white/5 flex items-center justify-center text-sm font-bold text-[var(--text-secondary)] dark:text-white/60 overflow-hidden shrink-0">
                           {selectedClient.profile_photo_url ? (
-                            <img
+                            <Image
                               src={selectedClient.profile_photo_url}
                               alt={selectedClient.name}
-                              className="w-full h-full object-cover"
+                              fill
+                              unoptimized
+                              className="object-cover"
                             />
                           ) : (
                             (selectedClient.name?.[0]?.toUpperCase() ?? "?")
@@ -826,12 +824,14 @@ function CheckinCard({
         {/* ── Left: Client Name (prominent) ── */}
         <div className="flex-1 p-5 border-b lg:border-b-0 lg:border-r border-[var(--border)] dark:border-white/[0.08]">
           <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[var(--border)] to-[var(--text-tertiary)] dark:from-white/10 dark:to-white/5 flex items-center justify-center text-[16px] font-bold text-[var(--text-secondary)] dark:text-white/60 overflow-hidden shrink-0">
+            <div className="relative w-12 h-12 rounded-full bg-gradient-to-br from-[var(--border)] to-[var(--text-tertiary)] dark:from-white/10 dark:to-white/5 flex items-center justify-center text-[16px] font-bold text-[var(--text-secondary)] dark:text-white/60 overflow-hidden shrink-0">
               {client?.profile_photo_url ? (
-                <img
+                <Image
                   src={client.profile_photo_url}
                   alt={client.name}
-                  className="w-full h-full object-cover"
+                  fill
+                  unoptimized
+                  className="object-cover"
                 />
               ) : (
                 (client?.name?.[0]?.toUpperCase() ?? "?")
@@ -918,6 +918,12 @@ function CheckinCard({
                     Call Now
                   </a>
                 )}
+                <button
+                  onClick={() => onCancel(checkin)}
+                  className="px-3.5 py-2 text-[12px] font-semibold text-[var(--text-secondary)] dark:text-white/60 border border-[var(--border)] dark:border-white/[0.08] rounded-xl hover:bg-[var(--bg-page)] dark:hover:bg-white/[0.04] transition-colors"
+                >
+                  Cancel
+                </button>
               </>
             )}
 
@@ -966,7 +972,7 @@ export default function CheckinsPage() {
   const updateCheckin = useUpdateCheckin();
   const updateStatus = useUpdateCheckinStatus();
 
-  const clients = clientsData?.data ?? [];
+  const clients = useMemo(() => clientsData?.data ?? [], [clientsData]);
   const clientMap = useMemo(
     () => new Map(clients.map((c) => [c.id, c])),
     [clients],
