@@ -4,6 +4,8 @@
 
 @layer base {
   :root {
+    --font-sans:      "Inter", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    --font-mono:      "JetBrains Mono", "SFMono-Regular", Menlo, Monaco, Consolas, monospace;
     --brand:         #2563EB;
     --brand-dark:    #1D4ED8;
     --brand-light:   #1a3663;

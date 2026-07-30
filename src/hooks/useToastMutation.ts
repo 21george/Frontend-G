@@ -21,15 +21,15 @@ export function useToastMutation<TData = unknown, TVariables = void>({
 
   return useMutation<TData, Error, TVariables>({
     mutationFn,
-    onSuccess: (data, vars, ctx) => {
+    onSuccess: (data, vars, onMutateResult, context) => {
       if (successMessage) toast.success(successMessage)
       invalidateKeys.forEach((key) => qc.invalidateQueries({ queryKey: key }))
-      onSuccess?.(data, vars, ctx)
+      onSuccess?.(data, vars, onMutateResult, context)
     },
-    onError: (error, vars, ctx) => {
+    onError: (error, vars, onMutateResult, context) => {
       const msg = (error as any)?.response?.data?.message || error.message || errorMessage
       toast.error(msg)
-      onError?.(error, vars, ctx)
+      onError?.(error, vars, onMutateResult, context)
     },
     ...rest,
   })
