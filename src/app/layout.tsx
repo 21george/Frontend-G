@@ -3,6 +3,7 @@ import Script from "next/script";
 import { JetBrains_Mono, Unbounded } from "next/font/google";
 import "./globals.css";
 import { Providers } from "@/app/providers";
+import { Toaster } from "@/components/ui/toaster";
 
 const jetbrainsMono = JetBrains_Mono({
   subsets: ["latin"],
@@ -35,7 +36,10 @@ export default function RootLayout({
         className={`${jetbrainsMono.variable} ${unbounded.variable} font-sans bg-[var(--bg-page)] text-[var(--text-primary)] antialiased`}
       >
         <Script src="/theme-init.js" strategy="beforeInteractive" />
-        <Providers>{children}</Providers>
+        <Providers>
+          {children}
+          <Toaster />
+        </Providers>
       </body>
     </html>
   );

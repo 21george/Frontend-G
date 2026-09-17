@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -21,18 +21,28 @@ const loginSchema = z.object({
 });
 type LoginValues = z.infer<typeof loginSchema>;
 
+/* ── Deterministic seeded random (avoids hydration mismatch & impure-render lint) ── */
+function seededRandom(seed: number) {
+  let s = seed;
+  return () => {
+    s = (s * 16807) % 2147483647;
+    return (s - 1) / 2147483646;
+  };
+}
+
 /* ── Ambient floating particles ── */
 function FloatingParticles() {
-  const [particles] = useState(() =>
-    Array.from({ length: 12 }, (_, i) => ({
+  const particles = useMemo(() => {
+    const rand = seededRandom(42);
+    return Array.from({ length: 12 }, (_, i) => ({
       id: i,
-      size: Math.random() * 3 + 1,
-      x: Math.random() * 100,
-      y: Math.random() * 100,
-      duration: Math.random() * 8 + 12,
-      delay: Math.random() * 5,
-    })),
-  );
+      size: rand() * 3 + 1,
+      x: rand() * 100,
+      y: rand() * 100,
+      duration: rand() * 8 + 12,
+      delay: rand() * 5,
+    }));
+  }, []);
 
   return (
     <div
@@ -116,7 +126,9 @@ export default function LoginPage() {
   const [pendingAlert, setPendingAlert] = useState<
     "update_payment" | "resubscribe" | "renew_subscription" | null
   >(null);
-  const [isHydrated, setIsHydrated] = useState(false);
+  const [isHydrated, setIsHydrated] = useState(
+    useAuthStore.persist.hasHydrated(),
+  );
 
   const form = useForm<LoginValues>({
     resolver: zodResolver(loginSchema),
@@ -124,15 +136,12 @@ export default function LoginPage() {
   });
 
   useEffect(() => {
-    if (useAuthStore.persist.hasHydrated()) {
-      setIsHydrated(true);
-      return;
-    }
+    if (isHydrated) return;
     const unsub = useAuthStore.persist.onFinishHydration(() =>
       setIsHydrated(true),
     );
     return unsub;
-  }, []);
+  }, [isHydrated]);
 
   useEffect(() => {
     if (isHydrated && isAuthenticated) router.replace("/dashboard");
@@ -158,17 +167,21 @@ export default function LoginPage() {
     try {
       const res = await apiClient.post("/auth/coach/login", data);
       const { coach, access_token, setup_token } = res.data?.data || {};
-      if (!coach || !access_token)
-        throw new Error("Invalid response from server");
-      setCoach(coach, access_token);
+      if (!coach) throw new Error("Invalid response from server");
 
-      if (coach.subscription_status === "pending" && setup_token) {
+      // Pending subscription: setup_token is returned instead of access_token
+      if (coach.subscription_status === "pending") {
+        if (!setup_token) throw new Error("Invalid response from server");
         setSetupToken(setup_token, coach.id);
         router.push(
           `/subscription/select-plan?token=${encodeURIComponent(setup_token)}&coach_id=${coach.id}`,
         );
         return;
       }
+
+      if (!access_token) throw new Error("Invalid response from server");
+      setCoach(coach, access_token);
+
       if (coach.subscription_alert === "select_plan") {
         if (setup_token) {
           setSetupToken(setup_token, coach.id);

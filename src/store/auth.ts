@@ -1,6 +1,8 @@
+"use client";
+
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import type { Coach } from "@/types";
+import type { Coach, StaffMember, StaffRole } from "@/types";
 import {
   setAuthInvalidationCallback,
   setAuthTokenGetter,
@@ -29,12 +31,35 @@ function runLogoutCallbacks() {
   });
 }
 
+/* ── JWT payload decoder (no verification — just reads claims) ─────────────── */
+function decodeJwtPayload(token: string): Record<string, unknown> | null {
+  try {
+    const base64Url = token.split(".")[1];
+    if (!base64Url) return null;
+    const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
+    const json = decodeURIComponent(
+      atob(base64)
+        .split("")
+        .map((c) => `%${c.charCodeAt(0).toString(16).padStart(2, "0")}`)
+        .join(""),
+    );
+    return JSON.parse(json) as Record<string, unknown>;
+  } catch {
+    return null;
+  }
+}
+
 /* ── Store ────────────────────────────────────────────────────────────────── */
 interface AuthState {
   coach: Coach | null;
   isAuthenticated: boolean;
   accessToken: string | null;
+  hasHydrated: boolean;
+  isStaff: boolean;
+  staffRole: StaffRole | null;
+  staff: StaffMember | null;
   setCoach: (coach: Coach, token?: string) => void;
+  setStaff: (staff: StaffMember, token?: string) => void;
   updateCoach: (coach: Coach) => void;
   logout: () => void;
   clearAuth: () => void;
@@ -48,14 +73,40 @@ export const useAuthStore = create<AuthState>()(
       coach: null,
       isAuthenticated: false,
       accessToken: null,
+      hasHydrated: false,
+      isStaff: false,
+      staffRole: null,
+      staff: null,
       setCoach: (coach, token) => {
-        set({ coach, isAuthenticated: true, accessToken: token ?? null });
+        set({
+          coach,
+          isAuthenticated: true,
+          accessToken: token ?? null,
+          isStaff: false,
+          staffRole: null,
+          staff: null,
+        });
+      },
+      setStaff: (staff, token) => {
+        set({
+          staff,
+          isAuthenticated: true,
+          accessToken: token ?? null,
+          isStaff: true,
+          staffRole: staff.role,
+          coach: null,
+        });
       },
       updateCoach: (coach) => {
         set({ coach, isAuthenticated: true });
       },
       setToken: (token) => {
-        set({ accessToken: token });
+        const payload = decodeJwtPayload(token);
+        const updates: Partial<AuthState> = { accessToken: token };
+        if (payload && typeof payload.staff_role === "string") {
+          updates.staffRole = payload.staff_role as StaffRole;
+        }
+        set(updates);
       },
       logout: () => {
         const token = get().accessToken;
@@ -65,12 +116,25 @@ export const useAuthStore = create<AuthState>()(
           headers: token ? { Authorization: `Bearer ${token}` } : undefined,
         }).catch(() => {});
         runLogoutCallbacks();
-        set({ coach: null, isAuthenticated: false, accessToken: null });
+        set({
+          coach: null,
+          isAuthenticated: false,
+          accessToken: null,
+          isStaff: false,
+          staffRole: null,
+          staff: null,
+        });
       },
       clearAuth: () => {
-        // Clear local state only (e.g., when session expires or 401/403 received)
         runLogoutCallbacks();
-        set({ coach: null, isAuthenticated: false, accessToken: null });
+        set({
+          coach: null,
+          isAuthenticated: false,
+          accessToken: null,
+          isStaff: false,
+          staffRole: null,
+          staff: null,
+        });
       },
       refreshAccessToken: async () => {
         try {
@@ -81,7 +145,6 @@ export const useAuthStore = create<AuthState>()(
           }
           return token;
         } catch {
-          // Refresh failed — clear auth so the user is redirected to login
           get().clearAuth();
           return null;
         }
@@ -92,7 +155,15 @@ export const useAuthStore = create<AuthState>()(
       partialize: (s) => ({
         coach: s.coach,
         isAuthenticated: s.isAuthenticated,
+        isStaff: s.isStaff,
+        staffRole: s.staffRole,
+        staff: s.staff,
       }),
+      onRehydrateStorage: () => (state) => {
+        if (state) {
+          state.hasHydrated = true;
+        }
+      },
     },
   ),
 );

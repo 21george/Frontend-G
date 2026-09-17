@@ -79,6 +79,12 @@ export interface Client {
    * skip the request entirely when there's nothing to update.
    */
   changed_fields?: string[];
+  primary_staff_id?: string | null;
+  last_staff_id?: string | null;
+  last_staff_name?: string | null;
+  last_staff_role?: string | null;
+  last_staff_activity?: string | null;
+  last_staff_activity_at?: string | null;
 }
 
 export interface Exercise {
@@ -292,6 +298,30 @@ export interface AnalyticsData {
     max_kg: number;
     date: string | null;
   }>;
+  wearable?: {
+    readiness?: {
+      recovery_score: number;
+      date: string;
+      steps: number;
+      active_calories: number;
+      sleep_minutes: number;
+      resting_hr: number;
+    };
+    trends?: {
+      "30d": Record<
+        string,
+        {
+          average: number;
+          points: Array<{ date: string; value: number }>;
+        }
+      >;
+    };
+    correlation?: {
+      poor: { completion_rate: number; workout_days: number; days: number };
+      moderate: { completion_rate: number; workout_days: number; days: number };
+      good: { completion_rate: number; workout_days: number; days: number };
+    };
+  };
   weekly_volume?: Array<{
     week: string;
     volume: number;
@@ -637,6 +667,18 @@ export interface UpdateStaffRolePayload {
 export interface DeactivateStaffPayload {
   id: string;
   reassign_to?: string | "owner";
+}
+
+export interface StaffActivity {
+  id: string;
+  staff_id: string | null;
+  staff_name: string | null;
+  staff_role: string | null;
+  action: string;
+  client_id: string | null;
+  client_name: string | null;
+  metadata: Record<string, unknown>;
+  created_at: string;
 }
 
 export const STAFF_ROLE_LABELS: Record<StaffRole, string> = {

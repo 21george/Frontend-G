@@ -2,6 +2,7 @@ import api from "@/lib/api/client";
 import type {
   ApiResponse,
   StaffMember,
+  StaffActivity,
   InviteStaffPayload,
   UpdateStaffRolePayload,
   DeactivateStaffPayload,
@@ -15,6 +16,9 @@ import type {
 export const staffApi = {
   list: () =>
     api.get<ApiResponse<StaffMember[]>>("/org/staff").then((r) => r.data.data),
+
+  get: (id: string) =>
+    api.get<ApiResponse<StaffMember>>(`/org/staff/${id}`).then((r) => r.data.data),
 
   invite: (payload: InviteStaffPayload) =>
     api
@@ -42,6 +46,23 @@ export const staffApi = {
 
   acceptInvite: (payload: { token: string; name: string; password: string }) =>
     api
-      .post<ApiResponse<{ id: string }>>("/org/staff/accept-invite", payload)
+      .post<
+        ApiResponse<{
+          id: string;
+          access_token: string;
+          refresh_token: string;
+          staff: StaffMember;
+        }>
+      >("/org/staff/accept-invite", payload)
+      .then((r) => r.data),
+
+  activities: (page = 1) =>
+    api
+      .get<ApiResponse<{ data: StaffActivity[]; pagination: { total: number; page: number; per_page: number } }>>("/org/staff/activities", { params: { page } })
+      .then((r) => r.data.data),
+
+  updateProfile: (payload: { name: string }) =>
+    api
+      .put<ApiResponse<StaffMember>>("/staff/profile", payload)
       .then((r) => r.data),
 };

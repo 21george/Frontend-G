@@ -90,20 +90,7 @@ export {
   useNotificationSettings,
   useUpdateNotificationSettings,
 } from "./useSettings";
-export {
-  useLiveTrainingSessions,
-  useLiveTrainingSession,
-  useCreateLiveTraining,
-  useUpdateLiveTraining,
-  useDeleteLiveTraining,
-  useGoLive,
-  useEndSession,
-  useLiveTrainingRequests,
-  useHandleJoinRequest,
-  useLiveTrainingParticipants,
-  useLiveTrainingChat,
-  useSendLiveTrainingChat,
-} from "./useLiveTraining";
+
 export {
   useCoachingSessions,
   useCoachingSession,
@@ -130,3 +117,10 @@ export {
   useCalculateNutrition,
   useGetFoodDetails,
 } from "./useFoods";
+export {
+  useStaffList,
+  useInviteStaff,
+  useUpdateStaffRole,
+  useDeactivateStaff,
+  useStaffActivities,
+} from "./useStaff";

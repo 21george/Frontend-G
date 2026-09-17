@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { useAuthStore } from "@/store/auth";
 import { useThemeStore } from "@/store/theme";
 import Link from "next/link";
@@ -36,11 +36,31 @@ interface DashboardHeaderProps {
   showGreeting?: boolean;
 }
 
-function getGreeting(): string {
+function getGreetingLabel(): string {
   const hour = new Date().getHours();
   if (hour < 12) return "morning";
   if (hour < 18) return "afternoon";
   return "evening";
+}
+
+function useClientDateLabel() {
+  const [label, setLabel] = useState("");
+  useEffect(() => {
+    const now = new Date();
+    const dayName = now.toLocaleDateString("en-US", { weekday: "long" });
+    const dayNum = now.getDate();
+    const monthName = now.toLocaleDateString("en-US", { month: "long" });
+    setLabel(`${dayName}, ${dayNum} ${monthName}`);
+  }, []);
+  return label;
+}
+
+function useClientGreeting() {
+  const [greeting, setGreeting] = useState("");
+  useEffect(() => {
+    setGreeting(getGreetingLabel());
+  }, []);
+  return greeting;
 }
 
 function ThemeToggle() {
@@ -91,8 +111,14 @@ export default function DashboardHeader({
   quickActions,
   showGreeting = false,
 }: DashboardHeaderProps) {
-  const { coach } = useAuthStore();
+  const { coach, staff, isStaff, hasHydrated } = useAuthStore();
   const pathname = usePathname();
+  const dateLabel = useClientDateLabel();
+  const greeting = useClientGreeting();
+  const userName = isStaff ? staff?.name : coach?.name;
+  const userSurname = isStaff ? undefined : coach?.surname;
+  const userEmail = isStaff ? staff?.email : coach?.email;
+  const userPhoto = isStaff ? undefined : coach?.profile_photo;
 
   const getPageTitle = () => {
     const path = pathname.split("/").pop() || "";
@@ -194,13 +220,7 @@ export default function DashboardHeader({
     return actions;
   }, [quickActions, pathname]);
 
-  const fullName = [coach?.name, coach?.surname].filter(Boolean).join(" ");
-
-  const now = new Date();
-  const dayName = now.toLocaleDateString("en-US", { weekday: "long" });
-  const dayNum = now.getDate();
-  const monthName = now.toLocaleDateString("en-US", { month: "long" });
-  const dateLabel = `${dayName}, ${dayNum} ${monthName}`;
+  const fullName = [userName, userSurname].filter(Boolean).join(" ");
 
   return (
     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 mb-6 sm:mb-8">
@@ -218,7 +238,9 @@ export default function DashboardHeader({
         {showGreeting && (
           <div className="mb-1">
             <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#888780] dark:text-[#FAFAFA]/40 mb-0.5">
-              Good {getGreeting()}, {coach?.name ?? "there"}
+              {greeting
+                ? `Good ${greeting}, ${userName ?? "there"}`
+                : "Welcome"}
             </p>
             <p className="text-[10px] text-[var(--text-tertiary)]">
               {dateLabel}
@@ -268,25 +290,30 @@ export default function DashboardHeader({
           href="/settings/edit"
           className="flex items-center gap-2.5 pl-1 border-l border-slate-200 rounded-sm dark:border-white/[0.1] hover:opacity-80 transition-opacity"
         >
-          <Avatar
-            key={coach?.id ?? "no-user"}
-            name={coach?.name}
-            surname={coach?.surname}
-            photo={coach?.profile_photo}
-            size="h-12 w-12"
-            variant="colored"
-            shape="squircle"
-            className="ring-2 ring-white/10"
-          />
-          {fullName && (
-            <div className="hidden sm:flex flex-col">
-              <span className="text-[13px] font-semibold text-[var(--text-primary)] leading-tight">
-                {fullName}
-              </span>
-              <span className="text-[11px] text-slate-500 dark:text-neutral-400 leading-tight">
-                {coach?.email}
-              </span>
-            </div>
+          {hasHydrated ? (
+            <>
+              <Avatar
+                name={userName}
+                surname={userSurname}
+                photo={userPhoto}
+                size="h-12 w-12"
+                variant="colored"
+                shape="squircle"
+                className="ring-2 ring-white/10"
+              />
+              {fullName && (
+                <div className="hidden sm:flex flex-col">
+                  <span className="text-[13px] font-semibold text-[var(--text-primary)] leading-tight">
+                    {fullName}
+                  </span>
+                  <span className="text-[11px] text-slate-500 dark:text-neutral-400 leading-tight">
+                    {userEmail}
+                  </span>
+                </div>
+              )}
+            </>
+          ) : (
+            <div className="h-12 w-12 rounded-lg bg-white/10 animate-pulse" />
           )}
         </Link>
       </div>

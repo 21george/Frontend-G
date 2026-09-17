@@ -10,7 +10,6 @@ import {
   Clock,
   ArrowRight,
   X,
-  Loader2,
 } from "lucide-react";
 import { safeRedirect } from "@/lib/validateUrl";
 
@@ -69,12 +68,10 @@ export function TrialReminderModal() {
           </div>
           <div>
             <p className="text-sm text-[var(--text-primary)]">
-              Your trial expires on <strong>{formattedDate}</strong>. Upgrade now to
-              keep unlimited access to all features.
+              Your trial expires on <strong>{formattedDate}</strong>.
             </p>
             <p className="text-xs text-[var(--text-secondary)] mt-1">
-              After the trial ends, your account will be downgraded and some features
-              may become unavailable.
+              Your saved payment method will be charged automatically when the trial ends to keep your subscription active. If you wish to cancel before being charged, visit your billing settings.
             </p>
           </div>
         </div>

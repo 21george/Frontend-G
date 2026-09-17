@@ -40,6 +40,7 @@ import DashboardLayout from "@/components/layout/DashboardLayout";
 import { SettingsSkeleton } from "@/components/ui/skeletons";
 import { ChangePasswordModal } from "@/components/settings/ChangePasswordModal";
 import { DeleteAccountModal } from "@/components/settings/DeleteAccountModal";
+import { ClientDate } from "@/components/ui/ClientDate";
 
 /* ── Small self-contained avatar component ─────────────────────── */
 
@@ -248,7 +249,7 @@ function InfoRow({
 /* ── Main Page ─────────────────────────────────────────────────── */
 
 export default function SettingsPage() {
-  const { coach } = useAuthStore();
+  const { coach, isStaff, staffRole } = useAuthStore();
   const { theme, toggle: toggleTheme } = useThemeStore();
   const { data: subscription, isLoading: subLoading } = useSubscription();
   const manageBilling = useManageBilling();
@@ -498,28 +499,30 @@ export default function SettingsPage() {
 
           {/* ── Right Column ── */}
           <div className="space-y-6">
-            {/* Team Management */}
-            <Card>
-              <CardHeader
-                icon={<Users className="w-5 h-5 text-white" />}
-                title="Team"
-                action={
-                  <Link
-                    href="/settings/team"
-                    className="inline-flex items-center gap-1.5 text-sm font-medium text-[var(--accent)] hover:text-emerald-600 transition-colors"
-                  >
-                    Manage
-                    <ChevronRight className="w-3.5 h-3.5" />
-                  </Link>
-                }
-              />
-              <div className="p-6">
-                <p className="text-sm text-[var(--text-secondary)]">
-                  Invite additional trainers, managers or front-desk staff to
-                  your organization and control what each of them can access.
-                </p>
-              </div>
-            </Card>
+            {/* Team Management — only for owner / admin */}
+            {(!isStaff || staffRole === "admin") && (
+              <Card>
+                <CardHeader
+                  icon={<Users className="w-5 h-5 text-white" />}
+                  title="Team"
+                  action={
+                    <Link
+                      href="/settings/team"
+                      className="inline-flex items-center gap-1.5 text-sm font-medium text-[var(--accent)] hover:text-emerald-600 transition-colors"
+                    >
+                      Manage
+                      <ChevronRight className="w-3.5 h-3.5" />
+                    </Link>
+                  }
+                />
+                <div className="p-6">
+                  <p className="text-sm text-[var(--text-secondary)]">
+                    Invite additional trainers, managers or front-desk staff to
+                    your organization and control what each of them can access.
+                  </p>
+                </div>
+              </Card>
+            )}
 
             {/* Notifications */}
             <Card>
@@ -648,11 +651,7 @@ export default function SettingsPage() {
                   <div className="mb-4 p-3 bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-900/30 rounded-lg">
                     <p className="text-sm text-amber-700 dark:text-amber-400">
                       Trial active until{" "}
-                      {subscription?.trial_ends_at
-                        ? new Date(
-                            subscription.trial_ends_at,
-                          ).toLocaleDateString()
-                        : "soon"}
+                      <ClientDate date={subscription?.trial_ends_at} />
                       .
                     </p>
                   </div>
@@ -698,11 +697,10 @@ export default function SettingsPage() {
                           ? "Trial Ends"
                           : "Renews"}
                       </span>
-                      <span className="font-medium text-[var(--text-primary)]">
-                        {new Date(
-                          subscription.next_payment_date,
-                        ).toLocaleDateString()}
-                      </span>
+                      <ClientDate
+                        date={subscription?.next_payment_date}
+                        className="font-medium text-[var(--text-primary)]"
+                      />
                     </div>
                   )}
                 </div>

@@ -12,17 +12,37 @@ import { Button } from '@/components/ui/button';
 
 const PERIOD_OPTIONS = [
   { key: 'monthly', label: 'Monthly' },
-  { key: 'quarterly', label: '3 Months' },
   { key: 'semi_annual', label: '6 Months' },
   { key: 'annual', label: 'Yearly' },
 ];
 
-const PLANS = [
+type PlanId = 'pro' | 'business';
+type PeriodKey = typeof PERIOD_OPTIONS[number]['key'];
+
+const PLAN_PRICING: Record<PlanId, Record<PeriodKey, { price: string; period: string }>> = {
+  pro: {
+    monthly: { price: '$29', period: '/month' },
+    semi_annual: { price: '$350', period: '/6 months' },
+    annual: { price: '$550', period: '/year' },
+  },
+  business: {
+    monthly: { price: '$79', period: '/month' },
+    semi_annual: { price: '$474', period: '/6 months' },
+    annual: { price: '$948', period: '/year' },
+  },
+};
+
+const PLANS: {
+  id: PlanId;
+  name: string;
+  description: string;
+  features: string[];
+  cta: string;
+  highlighted: boolean;
+}[] = [
   {
-    id: 'pro' as const,
+    id: 'pro',
     name: 'Pro',
-    price: '$29',
-    period: '/month',
     description: 'For growing coaches',
     features: [
       'Unlimited clients',
@@ -36,10 +56,8 @@ const PLANS = [
     highlighted: true,
   },
   {
-    id: 'business' as const,
+    id: 'business',
     name: 'Business',
-    price: '$79',
-    period: '/month',
     description: 'For established businesses',
     features: [
       'Unlimited clients',
@@ -70,7 +88,7 @@ export default function SelectPlanPage() {
   const searchParams = useSearchParams();
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [selectedPeriod, setSelectedPeriod] = useState<typeof PERIOD_OPTIONS[number]['key']>('monthly');
+  const [selectedPeriod, setSelectedPeriod] = useState<PeriodKey>('monthly');
 
   const accessToken = useAuthStore((s) => s.accessToken);
   const coach = useAuthStore((s) => s.coach);
@@ -90,10 +108,9 @@ export default function SelectPlanPage() {
     if (token && coachIdParam) {
       setSetupToken(token, coachIdParam);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams, setSetupToken, router, coach]);
 
-  const handleSelectPlan = async (planId: 'pro' | 'business') => {
+  const handleSelectPlan = async (planId: PlanId) => {
     setError(null);
     setIsLoading(true);
 
@@ -119,9 +136,10 @@ export default function SelectPlanPage() {
       } else {
         setError('Failed to create checkout session');
       }
-    } catch (e: any) {
-      const status = e?.response?.status;
-      const msg = e?.response?.data?.message || 'Failed to select plan. Please try again.';
+    } catch (e: unknown) {
+      const err = e as { response?: { status?: number; data?: { message?: string } } };
+      const status = err?.response?.status;
+      const msg = err?.response?.data?.message || 'Failed to select plan. Please try again.';
 
       // Already configured — just go to dashboard
       if (status === 409) {
@@ -201,7 +219,7 @@ export default function SelectPlanPage() {
           animate="visible"
           className="grid gap-8 md:grid-cols-2 max-w-4xl mx-auto"
         >
-          {PLANS.map((plan, index) => (
+          {PLANS.map((plan) => (
             <motion.div
               key={plan.id}
               variants={itemVariants}
@@ -218,8 +236,15 @@ export default function SelectPlanPage() {
               </div>
 
               <div className="mb-6">
-                <span className="text-4xl font-bold">{plan.price}</span>
-                <span className="text-[var(--text-secondary)]">{plan.period}</span>
+                {(() => {
+                  const pricing = PLAN_PRICING[plan.id][selectedPeriod];
+                  return (
+                    <>
+                      <span className="text-4xl font-bold">{pricing.price}</span>
+                      <span className="text-[var(--text-secondary)]">{pricing.period}</span>
+                    </>
+                  );
+                })()}
               </div>
 
               <ul className="mb-8 space-y-3 flex-1">
@@ -290,7 +315,7 @@ export default function SelectPlanPage() {
       <footer className="border-t bg-[var(--bg-subtle)] mt-16">
         <div className="container mx-auto px-4 py-8 text-center text-sm text-[var(--text-secondary)]">
           <p>14-day free trial on all plans. No credit card required.</p>
-          <p className="mt-2">Cancel anytime from your account settings. You won't be charged until your trial ends.</p>
+          <p className="mt-2">Cancel anytime from your account settings. You won&apos;t be charged until your trial ends.</p>
         </div>
       </footer>
     </div>

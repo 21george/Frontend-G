@@ -430,7 +430,7 @@ export default function ClientsPage() {
               <div className="grid grid-cols-12 gap-4 px-4 py-2 text-xs font-medium text-[var(--text-secondary)] uppercase tracking-wider">
                 <div className="col-span-3 sm:col-span-3">Client</div>
                 <div className="col-span-3 hidden sm:block">Progress</div>
-                <div className="col-span-2 hidden md:block">Last Active</div>
+                <div className="col-span-2 hidden md:block">Assigned To</div>
                 <div className="col-span-3 sm:col-span-2">Status</div>
                 <div className="col-span-3 sm:col-span-2 text-right">
                   Actions
@@ -608,26 +608,30 @@ export default function ClientsPage() {
                             </div>
                           </div>
 
-                          {/* Last Active */}
+                          {/* Assigned To */}
                           <div className="col-span-2 hidden md:block">
-                            <div className="text-sm text-[var(--text-primary)]">
-                              {(() => {
-                                if (!client.created_at) return "Recently";
-                                const date = new Date(client.created_at);
-                                if (isNaN(date.getTime())) return "Recently";
-                                const now = Date.now();
-                                const diff = now - date.getTime();
-                                if (diff < MS_PER_DAY) return "Today";
-                                if (diff < MS_PER_DAY * 2) return "Yesterday";
-                                return date.toLocaleDateString("en-US", {
-                                  month: "short",
-                                  day: "numeric",
-                                });
-                              })()}
-                            </div>
-                            <div className="text-xs text-[var(--text-secondary)]">
-                              Program active
-                            </div>
+                            {client.last_staff_name ? (
+                              <div>
+                                <div className="text-sm text-[var(--text-primary)] font-medium truncate">
+                                  {client.last_staff_name}
+                                </div>
+                                <div className="text-xs text-[var(--text-secondary)]">
+                                  {client.last_staff_activity
+                                    ? client.last_staff_activity.replace(/_/g, " ")
+                                    : client.last_staff_role
+                                      ? client.last_staff_role.replace(/_/g, " ")
+                                      : "Instructor"}
+                                </div>
+                              </div>
+                            ) : client.primary_staff_id ? (
+                              <div className="text-sm text-[var(--text-secondary)]">
+                                Assigned
+                              </div>
+                            ) : (
+                              <div className="text-sm text-[var(--text-secondary)]">
+                                —
+                              </div>
+                            )}
                           </div>
 
                           {/* Status */}

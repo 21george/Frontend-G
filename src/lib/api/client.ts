@@ -32,7 +32,16 @@ const processQueue = (error: unknown = null) => {
 }
 
 // Auth endpoints that should never trigger a token refresh
-const AUTH_PATHS = ['/auth/coach/login', '/auth/client/login', '/auth/coach/register', '/auth/refresh', '/auth/verify-email', '/auth/resend-verification']
+const AUTH_PATHS = [
+  '/auth/coach/login',
+  '/auth/client/login',
+  '/auth/staff/login',
+  '/auth/coach/register',
+  '/auth/refresh',
+  '/auth/verify-email',
+  '/auth/resend-verification',
+  '/org/staff/accept-invite',
+]
 
 // Callback for clearing auth state (set by auth store to avoid circular dependency)
 let onAuthInvalidated: (() => void) | null = null

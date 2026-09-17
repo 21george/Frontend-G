@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/store/auth";
 import { useSubscription } from "@/hooks/useSubscription";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   LayoutDashboard,
   Users,
@@ -19,8 +20,14 @@ import {
   ChevronLeft,
   ChevronRight,
   Video,
+  Building2,
 } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+
+function useCanViewTeam(): boolean {
+  const { isStaff, staffRole } = useAuthStore();
+  if (!isStaff) return true; // owner (legacy coach)
+  return staffRole === "admin" || staffRole === "manager" || staffRole === "instructor_coach";
+}
 
 const NAV = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -28,10 +35,16 @@ const NAV = [
   { href: "/workout-plans", label: "Workout Plans", icon: Dumbbell },
   { href: "/nutrition-plans", label: "Nutrition", icon: Salad },
   { href: "/checkins", label: "Schedule", icon: Calendar },
-  { href: "/live-training", label: "Live Training", icon: Radio },
   { href: "/coaching-sessions", label: "1-on-1 Sessions", icon: Video },
   { href: "/settings", label: "Settings", icon: Settings },
 ];
+
+
+function useCanManageBilling(): boolean {
+  const { isStaff, staffRole } = useAuthStore();
+  if (!isStaff) return true; // owner (legacy coach)
+  return staffRole === "admin";
+}
 
 interface SidebarContentProps {
   onClose?: () => void;
@@ -40,8 +53,10 @@ interface SidebarContentProps {
 
 function SidebarContent({ onClose, collapsed = false }: SidebarContentProps) {
   const path = usePathname();
-  const { coach, logout } = useAuthStore();
+  const { coach, staff, isStaff, logout, hasHydrated } = useAuthStore();
   const { data: subscription } = useSubscription();
+  const canManageBilling = useCanManageBilling();
+  const canViewTeam = useCanViewTeam();
 
   const TIER_LABEL: Record<string, { label: string; color: string }> = {
     none: { label: "No Plan", color: "#888780" },
@@ -116,40 +131,70 @@ function SidebarContent({ onClose, collapsed = false }: SidebarContentProps) {
             </motion.div>
           );
         })}
+
+        {canViewTeam && (
+          <motion.div
+            key="team"
+            whileHover={{ x: 4 }}
+            whileTap={{ scale: 0.98 }}
+          >
+            <Link
+              href="/settings/team"
+              onClick={onClose}
+              className={cn(
+                "flex items-center gap-4 px-4 py-3 text-base font-medium transition-all duration-150",
+                collapsed ? "justify-center px-2" : "",
+                path.startsWith("/settings/team")
+                  ? "bg-[var(--sidebar-text)]/10 text-[var(--sidebar-text)]"
+                  : "text-[var(--sidebar-text-secondary)] hover:bg-[var(--sidebar-text)]/5 hover:text-[var(--sidebar-text)]",
+              )}
+              tabIndex={0}
+              title={collapsed ? "Team" : undefined}
+            >
+              <Building2 className="w-5 h-5 flex-shrink-0" />
+              {!collapsed && <span>Team</span>}
+              {!collapsed && path.startsWith("/settings/team") && (
+                <span className="ml-auto w-1.5 h-1.5 bg-[var(--sidebar-text)]/60 opacity-80" />
+              )}
+            </Link>
+          </motion.div>
+        )}
       </nav>
 
       {/* ── Plan badge ── */}
-      <div
-        className={cn(
-          "border-t border-white/10 dark:border-white/[0.08]",
-          collapsed ? "px-2 py-2" : "px-3 py-2",
-        )}
-      >
-        <Link
-          href="/billing"
-          onClick={onClose}
+      {canManageBilling && (
+        <div
           className={cn(
-            "flex items-center gap-2 px-2 py-2 hover:bg-white/10 dark:hover:bg-white/[0.06] transition-colors",
-            collapsed ? "justify-center" : "",
+            "border-t border-white/10 dark:border-white/[0.08]",
+            collapsed ? "px-2 py-2" : "px-3 py-2",
           )}
-          title={collapsed ? `Plan: ${tierInfo?.label}` : undefined}
         >
-          <CreditCard
-            className="w-4 h-4 flex-shrink-0"
-            style={{ color: tierInfo?.color }}
-          />
-          {!collapsed && (
-            <span
-              className="text-xs font-bold uppercase tracking-wider"
+          <Link
+            href="/billing"
+            onClick={onClose}
+            className={cn(
+              "flex items-center gap-2 px-2 py-2 hover:bg-white/10 dark:hover:bg-white/[0.06] transition-colors",
+              collapsed ? "justify-center" : "",
+            )}
+            title={collapsed ? `Plan: ${tierInfo?.label}` : undefined}
+          >
+            <CreditCard
+              className="w-4 h-4 flex-shrink-0"
               style={{ color: tierInfo?.color }}
-            >
-              {tierInfo?.label}
-            </span>
-          )}
-        </Link>
-      </div>
+            />
+            {!collapsed && (
+              <span
+                className="text-xs font-bold uppercase tracking-wider"
+                style={{ color: tierInfo?.color }}
+              >
+                {tierInfo?.label}
+              </span>
+            )}
+          </Link>
+        </div>
+      )}
 
-      {/* ── Coach profile ── */}
+      {/* ── Profile ── */}
       <div
         className={cn(
           "border-t border-white/10 dark:border-white/[0.08]",
@@ -163,20 +208,23 @@ function SidebarContent({ onClose, collapsed = false }: SidebarContentProps) {
           )}
         >
           <div
-            key={coach?.id ?? 'no-user'}
             className="w-9 h-9 flex items-center justify-center text-[var(--sidebar-text)] text-sm font-semibold flex-shrink-0 ring-2 ring-[var(--sidebar-bdr)] rounded-lg"
             style={{ background: "var(--bg-subtle)" }}
           >
-            {coach?.name?.[0]?.toUpperCase() ?? "C"}
+            {hasHydrated
+              ? (isStaff
+                ? (staff?.name?.[0]?.toUpperCase() ?? "S")
+                : (coach?.name?.[0]?.toUpperCase() ?? "C"))
+              : "—"}
           </div>
-          {!collapsed && (
+          {!collapsed && hasHydrated && (
             <>
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-semibold text-[var(--sidebar-text)] truncate leading-snug">
-                  {coach?.name}
+                  {isStaff ? staff?.name : coach?.name}
                 </p>
                 <p className="text-xs text-[var(--sidebar-text-secondary)] truncate">
-                  {coach?.email}
+                  {isStaff ? staff?.email : coach?.email}
                 </p>
               </div>
               <button
@@ -187,6 +235,12 @@ function SidebarContent({ onClose, collapsed = false }: SidebarContentProps) {
                 <LogOut className="w-4 h-4" />
               </button>
             </>
+          )}
+          {!collapsed && !hasHydrated && (
+            <div className="flex-1 min-w-0 space-y-1.5">
+              <div className="h-3.5 w-20 bg-white/10 rounded animate-pulse" />
+              <div className="h-2.5 w-28 bg-white/5 rounded animate-pulse" />
+            </div>
           )}
         </div>
       </div>

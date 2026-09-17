@@ -273,6 +273,30 @@ export function ClientDetailSidebar({
           </div>
         </section>
 
+        {/* Staff Assignment */}
+        {(client.last_staff_name || client.primary_staff_id) && (
+          <>
+            <hr className="border-[var(--border)] dark:border-white/[0.05]" />
+            <section>
+              <SectionHeader icon={User} label="Assigned Instructor" />
+              <div className="space-y-2.5">
+                {client.last_staff_name && (
+                  <InfoRow label="Name" value={client.last_staff_name} />
+                )}
+                {client.last_staff_role && (
+                  <InfoRow label="Role" value={client.last_staff_role.replace(/_/g, " ")} />
+                )}
+                {client.last_staff_activity && (
+                  <InfoRow label="Last Activity" value={client.last_staff_activity.replace(/_/g, " ")} />
+                )}
+                {client.last_staff_activity_at && (
+                  <InfoRow label="When" value={formatDate(client.last_staff_activity_at, "dd MMM yyyy, HH:mm")} />
+                )}
+              </div>
+            </section>
+          </>
+        )}
+
         <hr className="border-[var(--border)] dark:border-white/[0.05]" />
 
         {/* Stats cards */}

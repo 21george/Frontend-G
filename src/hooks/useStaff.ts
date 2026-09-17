@@ -8,11 +8,27 @@ import type {
 } from "@/types";
 
 const STAFF_KEY = ["org-staff"];
+const ACTIVITIES_KEY = ["org-staff-activities"];
 
 export const useStaffList = () =>
   useQuery({
     queryKey: STAFF_KEY,
     queryFn: () => staffApi.list(),
+    staleTime: 30_000,
+  });
+
+export const useStaffMember = (id: string) =>
+  useQuery({
+    queryKey: [...STAFF_KEY, id],
+    queryFn: () => staffApi.get(id),
+    staleTime: 30_000,
+    enabled: !!id,
+  });
+
+export const useStaffActivities = (page = 1) =>
+  useQuery({
+    queryKey: [...ACTIVITIES_KEY, page],
+    queryFn: () => staffApi.activities(page),
     staleTime: 30_000,
   });
 

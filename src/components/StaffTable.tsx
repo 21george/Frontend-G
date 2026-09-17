@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { DataTable, type Column } from "@/components/ui/DataTable";
 import { RoleBadge, StatusBadge } from "./RoleBadge";
 import { DeactivateStaffModal } from "./DeactivateStaffModal";
@@ -14,6 +15,15 @@ const ROLES: StaffRole[] = [
   "front_desk",
   "instructor_coach",
 ];
+
+function ClientDateCell({ date }: { date: string | null }) {
+  if (!date) return <span className="text-sm text-[var(--text-secondary)]">—</span>;
+  return (
+    <span className="text-sm text-[var(--text-secondary)]">
+      {new Date(date).toLocaleDateString("en-US")}
+    </span>
+  );
+}
 
 interface Props {
   staff: StaffMember[];
@@ -30,12 +40,15 @@ export function StaffTable({ staff }: Props) {
       sortable: true,
       sortFn: (a, b) => (a.name || a.email).localeCompare(b.name || b.email),
       render: (s) => (
-        <div>
-          <p className="font-medium text-[var(--text-primary)]">
+        <Link
+          href={`/settings/team/${s.id}`}
+          className="group block"
+        >
+          <p className="font-medium text-[var(--text-primary)] group-hover:text-[var(--accent)] transition-colors">
             {s.name || "—"}
           </p>
           <p className="text-xs text-[var(--text-tertiary)]">{s.email}</p>
-        </div>
+        </Link>
       ),
     },
     {
@@ -73,14 +86,7 @@ export function StaffTable({ staff }: Props) {
       sortFn: (a, b) =>
         new Date(a.invited_at ?? 0).getTime() -
         new Date(b.invited_at ?? 0).getTime(),
-      render: (s) =>
-        s.invited_at ? (
-          <span className="text-sm text-[var(--text-secondary)]">
-            {new Date(s.invited_at).toLocaleDateString()}
-          </span>
-        ) : (
-          "—"
-        ),
+      render: (s) => <ClientDateCell date={s.invited_at} />,
     },
     {
       key: "actions",
@@ -88,15 +94,30 @@ export function StaffTable({ staff }: Props) {
       className: "text-right",
       render: (s) =>
         s.status !== "deactivated" ? (
-          <button
-            onClick={() => setToDeactivate(s)}
-            title="Deactivate"
-            className="inline-flex items-center gap-1.5 text-sm text-red-500 hover:text-red-600 transition-colors"
+          <div className="flex items-center justify-end gap-3">
+            <Link
+              href={`/settings/team/${s.id}`}
+              className="text-sm text-[var(--accent)] hover:underline"
+            >
+              View
+            </Link>
+            <button
+              onClick={() => setToDeactivate(s)}
+              title="Deactivate"
+              className="inline-flex items-center gap-1.5 text-sm text-red-500 hover:text-red-600 transition-colors"
+            >
+              <Ban className="w-4 h-4" />
+              Deactivate
+            </button>
+          </div>
+        ) : (
+          <Link
+            href={`/settings/team/${s.id}`}
+            className="text-sm text-[var(--accent)] hover:underline"
           >
-            <Ban className="w-4 h-4" />
-            Deactivate
-          </button>
-        ) : null,
+            View
+          </Link>
+        ),
     },
   ];
 

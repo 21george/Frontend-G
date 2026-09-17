@@ -3,7 +3,7 @@
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { useClients, useCheckins, useWorkoutPlans } from "@/lib/hooks";
-import { useMemo } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { Users, Calendar, TrendingUp, Briefcase } from "lucide-react";
 import { parseDateValue } from "@/lib/utils";
 import type {
@@ -20,13 +20,38 @@ import { UpcomingSessions } from "@/components/dashboard/UpcomingSessions";
 import { UpcomingCoachingSessions } from "@/components/dashboard/UpcomingCoachingSessions";
 import { ClientWorkload } from "@/components/dashboard/ClientWorkload";
 import { KpiCard } from "@/components/dashboard/KpiCard";
+import { TeamOverview } from "@/components/dashboard/TeamOverview";
 import { DashboardSkeleton } from "@/components/ui/skeletons";
+import { useAuthStore } from "@/store/auth";
+
+function useTodayString() {
+  const [str, setStr] = useState("");
+  useEffect(() => {
+    setStr(
+      new Date().toLocaleDateString("en-US", {
+        weekday: "long",
+        month: "long",
+        day: "numeric",
+      }),
+    );
+  }, []);
+  return str;
+}
 
 export default function DashboardPage() {
   const { data: clientsData, isLoading: clientsLoading } = useClients();
   const { data: checkinsData, isLoading: checkinsLoading } = useCheckins();
   const { data: workoutData, isLoading: plansLoading } = useWorkoutPlans();
+  const { isStaff, staffRole } = useAuthStore();
   const kpiLoading = clientsLoading || checkinsLoading || plansLoading;
+  const todayStr = useTodayString();
+  // Instructors, managers, and admins (plus the owner coach) can see the team
+  // overview on the dashboard. Front-desk staff do not need this view.
+  const canViewTeamOverview =
+    !isStaff ||
+    (staffRole === "admin" ||
+      staffRole === "manager" ||
+      staffRole === "instructor_coach");
 
   const clients: Client[] = useMemo(
     () => (clientsData as PaginatedResponse<Client> | undefined)?.data ?? [],
@@ -103,11 +128,7 @@ export default function DashboardPage() {
         >
           <div>
             <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#888780] dark:text-[#FAFAFA]/40 mb-1">
-              {new Date().toLocaleDateString("en-US", {
-                weekday: "long",
-                month: "long",
-                day: "numeric",
-              })}
+              {todayStr}
             </p>
           </div>
         </motion.div>
@@ -117,6 +138,11 @@ export default function DashboardPage() {
           inactiveCount={inactiveCount}
           todayCount={todaySessions}
         />
+
+        {/* Team Overview — owner / admin only */}
+        {canViewTeamOverview && !clientsLoading && (
+          <TeamOverview clients={clients} />
+        )}
 
         {/* Row 1: Session Volume Heatmap + Upcoming Sessions */}
         <div className="grid grid-cols-1 xl:grid-cols-5 gap-4 mb-4">
