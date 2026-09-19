@@ -1,9 +1,9 @@
 "use client";
 
-import { useSyncExternalStore } from "react";
+import { useSyncExternalStore, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   ArrowLeft,
   Users,
@@ -11,14 +11,51 @@ import {
   Calendar,
   Dumbbell,
   Briefcase,
+  Ban,
+  Loader2,
+  Menu,
+  Shield,
+  Crown,
+  User,
 } from "lucide-react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { useAuthStore } from "@/store/auth";
-import { useStaffMember, useStaffActivities } from "@/hooks/useStaff";
+import {
+  useStaffMember,
+  useStaffActivities,
+  useDeactivateStaff,
+  useUpdateStaffRole,
+} from "@/hooks/useStaff";
 import { useClients, useCheckins, useWorkoutPlans } from "@/lib/hooks";
-import { STAFF_ROLE_LABELS, type Client, type StaffActivity } from "@/types";
+import {
+  STAFF_ROLE_LABELS,
+  type StaffRole,
+  type Client,
+  type StaffActivity,
+} from "@/types";
 import type { PaginatedResponse, WorkoutPlan, CheckinMeeting } from "@/types";
+
+const ROLES: StaffRole[] = [
+  "admin",
+  "manager",
+  "front_desk",
+  "instructor_coach",
+];
+
+const TABS = [
+  { key: "clients", label: "Clients" },
+  { key: "schedule", label: "Schedule" },
+  { key: "programs", label: "Programs" },
+  { key: "activity", label: "Activity" },
+];
+
+const roleIcons: Record<StaffRole, typeof Shield> = {
+  admin: Crown,
+  manager: Briefcase,
+  front_desk: User,
+  instructor_coach: Shield,
+};
 
 function useIsClient(): boolean {
   return useSyncExternalStore(
@@ -61,12 +98,18 @@ export default function StaffMemberPage() {
   const isClient = useIsClient();
   const { isStaff, staffRole } = useAuthStore();
 
+  const [tab, setTab] = useState("clients");
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+
   const { data: staff, isLoading: staffLoading } = useStaffMember(staffId);
   const { data: activitiesData, isLoading: activitiesLoading } =
     useStaffActivities(1);
   const { data: clientsData, isLoading: clientsLoading } = useClients();
   const { data: checkinsData, isLoading: checkinsLoading } = useCheckins();
   const { data: plansData, isLoading: plansLoading } = useWorkoutPlans();
+
+  const deactivateStaff = useDeactivateStaff();
+  const updateRole = useUpdateStaffRole();
 
   const allClients: Client[] =
     (clientsData as PaginatedResponse<Client> | undefined)?.data ?? [];
@@ -76,28 +119,20 @@ export default function StaffMemberPage() {
     (plansData as PaginatedResponse<WorkoutPlan> | undefined)?.data ??
     (Array.isArray(plansData) ? (plansData as WorkoutPlan[]) : []);
 
-  // Staff member's clients: primary assignment or last interaction.
   const staffClients = allClients.filter(
-    (c) =>
-      c.primary_staff_id === staffId ||
-      c.last_staff_id === staffId,
+    (c) => c.primary_staff_id === staffId || c.last_staff_id === staffId,
   );
 
-  // Activities performed by this staff member.
-  const staffActivities: StaffActivity[] =
-    ((activitiesData as { data: StaffActivity[] } | undefined)?.data ?? []).filter(
-      (a) => a.staff_id === staffId,
-    );
+  const staffActivities: StaffActivity[] = (
+    (activitiesData as { data: StaffActivity[] } | undefined)?.data ?? []
+  ).filter((a) => a.staff_id === staffId);
 
-  // Today's schedule for this staff member (check-ins they created).
   const today = new Date().toISOString().split("T")[0];
   const todaySchedule = allCheckins.filter((c) => {
     const scheduled = new Date(c.scheduled_at).toISOString().split("T")[0];
     return scheduled === today;
   });
 
-  // Workout / nutrition plans created by this staff member. We approximate
-  // this by plans whose assigned clients list this staff member as primary.
   const staffPlans = allPlans.filter((p) =>
     p.client_ids?.some((cid) =>
       staffClients.some((c) => c.id === cid),
@@ -114,235 +149,449 @@ export default function StaffMemberPage() {
     );
   }
 
-  // Front-desk staff should not access other staff profiles.
   if (isStaff && staffRole === "front_desk") {
     router.replace("/dashboard");
     return null;
   }
 
+  const statusColor =
+    staff?.status === "active"
+      ? { text: "text-emerald-400", bg: "bg-emerald-400", border: "border-emerald-500/25", bgSoft: "bg-emerald-500/5", label: "Active" }
+      : staff?.status === "invited"
+        ? { text: "text-blue-400", bg: "bg-blue-400", border: "border-blue-500/25", bgSoft: "bg-blue-500/5", label: "Invited" }
+        : { text: "text-slate-400", bg: "bg-slate-400", border: "border-slate-500/25", bgSoft: "bg-slate-500/5", label: "Deactivated" };
+
+  if (staffLoading) {
+    return (
+      <DashboardLayout>
+        <div className="flex flex-col bg-[var(--bg-page)] dark:bg-[var(--bg-page)] min-h-[calc(100vh-4rem)]">
+          <Skeleton className="h-11 w-full rounded-none border-b border-[var(--border)] dark:border-white/[0.06]" />
+          <div className="flex flex-1">
+            <Skeleton className="hidden md:block w-[300px] rounded-none border-r border-[var(--border)] dark:border-white/[0.06]" />
+            <div className="flex-1 p-4 sm:p-6 space-y-4">
+              <Skeleton className="h-7 w-52" />
+              <Skeleton className="h-72 w-full rounded-xl" />
+            </div>
+          </div>
+        </div>
+      </DashboardLayout>
+    );
+  }
+
+  if (!staff) {
+    return (
+      <DashboardLayout>
+        <div className="flex items-center justify-center bg-[var(--bg-page)] dark:bg-[var(--bg-page)] min-h-[calc(100vh-4rem)]">
+          <p className="text-slate-500 text-sm">Staff member not found.</p>
+        </div>
+      </DashboardLayout>
+    );
+  }
+
+  const RoleIcon = roleIcons[staff.role];
+
   return (
     <DashboardLayout>
-      <div className="max-w-6xl mx-auto p-6 space-y-6">
-        <div className="flex items-center gap-3">
-          <Link
-            href="/settings/team"
-            className="inline-flex items-center gap-1.5 text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            Team
-          </Link>
+      <div className="flex flex-col bg-[var(--bg-page)] dark:bg-[var(--bg-page)] min-h-[calc(100vh-4rem)]">
+        {/* Breadcrumb bar */}
+        <div className="flex items-center justify-between px-3 sm:px-5 h-11 border-b border-[var(--border)] flex-shrink-0">
+          <div className="flex items-center gap-2 text-[11px] font-semibold tracking-widest uppercase min-w-0">
+            <button
+              onClick={() => setSidebarOpen(true)}
+              className="md:hidden p-1 -ml-1 text-slate-500 hover:text-slate-800 dark:hover:text-white"
+            >
+              <Menu size={16} />
+            </button>
+            <Link
+              href="/settings/team"
+              className="flex items-center gap-1.5 text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 transition-colors flex-shrink-0"
+            >
+              <ArrowLeft size={13} />
+              <span className="hidden sm:inline">Team</span>
+            </Link>
+            <span className="text-slate-300 dark:text-slate-700 hidden sm:inline" />
+            <span className="text-slate-700 dark:text-slate-300 truncate">
+              {staff.name || staff.email}
+            </span>
+          </div>
+          <div className="flex items-center gap-1.5 sm:gap-2 flex-shrink-0">
+            {staff.status !== "deactivated" && (
+              <button
+                onClick={() => deactivateStaff.mutate({ id: staff.id })}
+                disabled={deactivateStaff.isPending}
+                title="Deactivate staff member"
+                className="inline-flex items-center gap-1.5 border border-red-200 dark:border-red-900/40 rounded-lg px-2 sm:px-3 py-1.5 text-xs font-semibold text-red-600 dark:text-red-300 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors disabled:opacity-50"
+              >
+                {deactivateStaff.isPending ? (
+                  <Loader2 size={13} className="animate-spin" />
+                ) : (
+                  <Ban size={13} />
+                )}
+                <span className="hidden sm:inline">Deactivate</span>
+              </button>
+            )}
+          </div>
         </div>
 
-        {staffLoading ? (
-          <div className="space-y-6">
-            <Skeleton className="h-24 rounded-2xl" />
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <Skeleton className="h-64 rounded-2xl" />
-              <Skeleton className="h-64 rounded-2xl" />
+        {/* Body */}
+        <div className="flex flex-1 overflow-hidden">
+          {/* Mobile backdrop */}
+          {sidebarOpen && (
+            <div
+              className="fixed inset-0 z-30 bg-black/50 md:hidden"
+              onClick={() => setSidebarOpen(false)}
+            />
+          )}
+
+          {/* Left panel sidebar */}
+          <aside
+            className={`fixed inset-y-0 left-0 z-40 w-[85vw] max-w-[320px] sm:w-[300px] transform transition-transform duration-200 ease-out
+              md:relative md:inset-auto md:z-auto md:translate-x-0 md:w-[300px] md:top-auto md:bottom-auto
+              bg-[var(--bg-card)] dark:bg-[#0f1416] border-r border-[var(--border)] dark:border-white/[0.06]
+              flex flex-col overflow-hidden ${sidebarOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"}`}
+          >
+            {/* Sidebar header */}
+            <div className="flex items-center justify-between px-4 h-11 border-b border-[var(--border)] dark:border-white/[0.06] flex-shrink-0">
+              <span className="text-[10px] font-semibold uppercase tracking-widest text-[var(--text-secondary)]">
+                Staff Profile
+              </span>
+              <button
+                onClick={() => setSidebarOpen(false)}
+                className="md:hidden p-1 text-slate-500 hover:text-slate-800 dark:hover:text-white"
+              >
+                <ArrowLeft size={16} />
+              </button>
             </div>
-          </div>
-        ) : !staff ? (
-          <div className="rounded-2xl border border-[var(--border)] bg-[var(--bg-card)] p-8 text-center">
-            <p className="text-[var(--text-secondary)]">Staff member not found.</p>
-          </div>
-        ) : (
-          <>
-            {/* Header */}
-            <motion.div
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="rounded-2xl border border-[var(--border)] bg-[var(--bg-card)] p-6 flex items-center gap-4"
-            >
-              <div className="w-16 h-16 rounded-full bg-[var(--accent)]/10 text-[var(--accent)] flex items-center justify-center text-2xl font-bold">
-                {staff.name?.[0]?.toUpperCase() ??
-                  staff.email?.[0]?.toUpperCase() ??
-                  "S"}
-              </div>
-              <div>
-                <h1 className="text-2xl font-bold text-[var(--text-primary)]">
+
+            <div className="flex-1 overflow-y-auto p-4 space-y-6">
+              {/* Avatar + name */}
+              <div className="flex flex-col items-center text-center">
+                <div className="relative mb-3">
+                  <div className="w-20 h-20 rounded-full bg-gradient-to-br from-[#132e35] to-[#0b1e22] flex items-center justify-center text-white text-2xl font-bold">
+                    {staff.name?.[0]?.toUpperCase() ??
+                      staff.email?.[0]?.toUpperCase() ??
+                      "S"}
+                  </div>
+                  {staff.status === "active" && (
+                    <motion.div
+                      className="absolute inset-0 rounded-full"
+                      animate={{
+                        boxShadow: [
+                          "0 0 0 0px rgba(163,230,53,0)",
+                          "0 0 0 3px rgba(163,230,53,0.2)",
+                          "0 0 0 0px rgba(163,230,53,0)",
+                        ],
+                      }}
+                      transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut" }}
+                    />
+                  )}
+                </div>
+                <h2 className="text-base font-bold text-[var(--text-primary)]">
                   {staff.name || "Unnamed staff"}
-                </h1>
-                <p className="text-sm text-[var(--text-secondary)]">
-                  {staff.email} · {STAFF_ROLE_LABELS[staff.role]}
+                </h2>
+                <p className="text-xs text-[var(--text-secondary)] mt-0.5">
+                  {staff.email}
                 </p>
-                <p className="text-xs text-[var(--text-tertiary)] mt-1 capitalize">
-                  {staff.status}
-                </p>
+                <div className={`mt-2 inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-tight border ${statusColor.border} ${statusColor.bgSoft} ${statusColor.text}`}>
+                  <span className={`relative flex h-1.5 w-1.5 rounded-full ${statusColor.bg}`}>
+                    {staff.status === "active" && (
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                    )}
+                    <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-current" />
+                  </span>
+                  {statusColor.label}
+                </div>
               </div>
-            </motion.div>
 
-            {/* Quick stats */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <StatCard
-                icon={Users}
-                label="Clients"
-                value={staffClients.length}
-                isLoading={clientsLoading}
-              />
-              <StatCard
-                icon={Briefcase}
-                label="Plans"
-                value={staffPlans.length}
-                isLoading={plansLoading}
-              />
-              <StatCard
-                icon={Calendar}
-                label="Today"
-                value={todaySchedule.length}
-                isLoading={checkinsLoading}
-              />
-              <StatCard
-                icon={Activity}
-                label="Activities"
-                value={staffActivities.length}
-                isLoading={activitiesLoading}
-              />
-            </div>
-
-            {/* Main grid */}
-            <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
-              {/* Clients */}
-              <Panel
-                title="Clients"
-                icon={Users}
-                isLoading={clientsLoading}
-                empty={staffClients.length === 0}
-                emptyText="No clients assigned or recently handled."
-              >
-                <div className="space-y-2 max-h-72 overflow-y-auto pr-1">
-                  {staffClients.slice(0, 20).map((c) => (
-                    <Link
-                      key={c.id}
-                      href={`/clients/${c.id}`}
-                      className="flex items-center gap-3 p-2 rounded-lg hover:bg-white/[0.03] transition-colors"
-                    >
-                      <div className="w-8 h-8 flex items-center justify-center rounded-full bg-white/5 text-[var(--text-primary)] text-xs font-bold flex-shrink-0">
-                        {c.name?.[0]?.toUpperCase() ?? "C"}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-[var(--text-primary)] truncate">
-                          {c.name}
-                        </p>
-                        <p className="text-[11px] text-[var(--text-secondary)]">
-                          {c.primary_staff_id === staffId
-                            ? "Primary trainer"
-                            : "Last interaction"}
-                        </p>
-                      </div>
-                    </Link>
-                  ))}
+              {/* Info section */}
+              <div className="space-y-3">
+                <div className="flex items-center gap-1.5 mb-2">
+                  <User size={12} className="text-[var(--text-secondary)]" />
+                  <span className="text-[10px] font-semibold uppercase tracking-widest text-[var(--text-secondary)]">
+                    Details
+                  </span>
                 </div>
-              </Panel>
-
-              {/* Schedule for today */}
-              <Panel
-                title="Plan for Today"
-                icon={Calendar}
-                isLoading={checkinsLoading}
-                empty={todaySchedule.length === 0}
-                emptyText="Nothing scheduled for today."
-              >
-                <div className="space-y-2 max-h-72 overflow-y-auto pr-1">
-                  {todaySchedule.map((s) => (
-                    <div
-                      key={s.id}
-                      className="flex items-center gap-3 p-2 rounded-lg hover:bg-white/[0.03] transition-colors"
-                    >
-                      <div className="w-8 h-8 flex items-center justify-center rounded-full bg-[var(--accent)]/10 text-[var(--accent)] text-xs font-bold flex-shrink-0">
-                        {new Date(s.scheduled_at).toLocaleTimeString([], {
-                          hour: "2-digit",
-                          minute: "2-digit",
-                        })}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-[var(--text-primary)] truncate">
-                          {s.type === "call"
-                            ? "Call"
-                            : s.type === "video"
-                            ? "Video"
-                            : "Chat"}
-                        </p>
-                        <p className="text-[11px] text-[var(--text-secondary)]">
-                          {clientName(allClients, s.client_id)}
-                        </p>
-                      </div>
+                <div className="space-y-2.5">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[11px] text-[var(--text-tertiary)]">Role</span>
+                    <span className="text-[12px] text-[var(--text-secondary)] dark:text-slate-300 flex items-center gap-1">
+                      <RoleIcon className="w-3 h-3" />
+                      {STAFF_ROLE_LABELS[staff.role]}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-[11px] text-[var(--text-tertiary)]">Email</span>
+                    <span className="text-[12px] text-[var(--text-secondary)] dark:text-slate-300 truncate max-w-[140px]">
+                      {staff.email}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-[11px] text-[var(--text-tertiary)]">Invited</span>
+                    <span className="text-[12px] text-[var(--text-secondary)] dark:text-slate-300">
+                      {staff.invited_at
+                        ? new Date(staff.invited_at).toLocaleDateString("en-US")
+                        : "—"}
+                    </span>
+                  </div>
+                  {staff.activated_at && (
+                    <div className="flex items-center justify-between">
+                      <span className="text-[11px] text-[var(--text-tertiary)]">Activated</span>
+                      <span className="text-[12px] text-[var(--text-secondary)] dark:text-slate-300">
+                        {new Date(staff.activated_at).toLocaleDateString("en-US")}
+                      </span>
                     </div>
-                  ))}
+                  )}
                 </div>
-              </Panel>
+              </div>
 
-              {/* Plans */}
-              <Panel
-                title="Programs"
-                icon={Dumbbell}
-                isLoading={plansLoading}
-                empty={staffPlans.length === 0}
-                emptyText="No active programs for this staff member's clients."
-              >
-                <div className="space-y-2 max-h-72 overflow-y-auto pr-1">
-                  {staffPlans.slice(0, 20).map((p) => (
-                    <Link
-                      key={p.id}
-                      href={`/workout-plans/${p.id}`}
-                      className="flex items-center gap-3 p-2 rounded-lg hover:bg-white/[0.03] transition-colors"
-                    >
-                      <div className="w-8 h-8 flex items-center justify-center rounded-full bg-white/5 text-[var(--text-primary)] text-xs font-bold flex-shrink-0">
-                        <Dumbbell className="w-4 h-4" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-[var(--text-primary)] truncate">
-                          {p.title}
-                        </p>
-                        <p className="text-[11px] text-[var(--text-secondary)]">
-                          {p.status} · {p.days?.length ?? 0} days
-                        </p>
-                      </div>
-                    </Link>
-                  ))}
+              {/* Quick stats in sidebar */}
+              <div className="space-y-3">
+                <div className="flex items-center gap-1.5 mb-2">
+                  <Activity size={12} className="text-[var(--text-secondary)]" />
+                  <span className="text-[10px] font-semibold uppercase tracking-widest text-[var(--text-secondary)]">
+                    Overview
+                  </span>
                 </div>
-              </Panel>
-
-              {/* Recent activity */}
-              <Panel
-                title="Recent Activity"
-                icon={Activity}
-                isLoading={activitiesLoading}
-                empty={staffActivities.length === 0}
-                emptyText="No recent activity recorded."
-              >
-                <div className="space-y-2 max-h-72 overflow-y-auto pr-1">
-                  {staffActivities.slice(0, 20).map((a) => (
-                    <div
-                      key={a.id}
-                      className="flex items-start gap-3 p-2 rounded-lg hover:bg-white/[0.03] transition-colors"
-                    >
-                      <div className="w-8 h-8 flex items-center justify-center rounded-full bg-[var(--accent)]/10 text-[var(--accent)] text-xs font-bold flex-shrink-0">
-                        {a.client_name?.[0]?.toUpperCase() ?? "A"}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm text-[var(--text-primary)] truncate">
-                          {actionLabel(a.action)}
-                          {a.client_name && (
-                            <span className="text-[var(--text-secondary)]">
-                              {" "}
-                              for{" "}
-                              <span className="font-medium text-[var(--text-primary)]">
-                                {a.client_name}
-                              </span>
-                            </span>
-                          )}
-                        </p>
-                        <p className="text-[11px] text-[var(--text-secondary)] mt-0.5">
-                          {a.created_at ? formatTimeAgo(a.created_at) : ""}
-                        </p>
-                      </div>
-                    </div>
-                  ))}
+                <div className="grid grid-cols-2 gap-2">
+                  <SidebarStat label="Clients" value={staffClients.length} isLoading={clientsLoading} />
+                  <SidebarStat label="Plans" value={staffPlans.length} isLoading={plansLoading} />
+                  <SidebarStat label="Today" value={todaySchedule.length} isLoading={checkinsLoading} />
+                  <SidebarStat label="Activities" value={staffActivities.length} isLoading={activitiesLoading} />
                 </div>
-              </Panel>
+              </div>
             </div>
-          </>
-        )}
+          </aside>
+
+          {/* RIGHT PANEL */}
+          <main className="flex-1 flex flex-col overflow-hidden relative bg-[var(--bg-page)] dark:bg-[#060d10]">
+            <div
+              aria-hidden
+              className="absolute inset-0 pointer-events-none opacity-0 dark:opacity-[0.04]"
+              style={{
+                backgroundImage:
+                  "radial-gradient(ellipse 80% 50% at 20% 40%, #a3e635 0%, transparent 60%), radial-gradient(ellipse 60% 70% at 80% 80%, #22d3ee 0%, transparent 55%)",
+              }}
+            />
+
+            <div className="flex-1 overflow-y-auto relative z-10">
+              {/* Tab navigation */}
+              <div className="sticky top-0 z-20 flex items-center border-b border-[var(--border)] dark:border-white/[0.06] bg-[var(--bg-card)]/90 dark:bg-[#0a1114]/90 backdrop-blur-xl px-2 sm:px-5 overflow-x-auto scrollbar-hide shadow-[0_2px_16px_-4px_rgba(0,0,0,0.1)] dark:shadow-[0_4px_24px_-6px_rgba(0,0,0,0.4)]">
+                <div
+                  aria-hidden
+                  className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[var(--energy)]/30 dark:via-[#a3e635]/20 to-transparent"
+                />
+                {TABS.map(({ key, label }) => (
+                  <button
+                    key={key}
+                    onClick={() => setTab(key)}
+                    className={`relative px-3 sm:px-4 py-2.5 sm:py-3 text-[11px] sm:text-[12px] font-bold whitespace-nowrap transition-all ${
+                      tab === key
+                        ? "text-[var(--energy)] dark:text-[#a3e635]"
+                        : "text-[var(--text-tertiary)] hover:text-[var(--text-secondary)] dark:text-white/30 dark:hover:text-white/60"
+                    }`}
+                    style={{
+                      fontFamily: "var(--font-mono)",
+                      letterSpacing: "0.05em",
+                    }}
+                  >
+                    {label}
+                    {tab === key && (
+                      <motion.div
+                        layoutId="activeStaffTab"
+                        className="absolute bottom-0 left-2 right-2 h-0.5 bg-[var(--energy)] dark:bg-[#a3e635] rounded-full"
+                        transition={{
+                          type: "spring",
+                          stiffness: 400,
+                          damping: 30,
+                        }}
+                      />
+                    )}
+                  </button>
+                ))}
+              </div>
+
+              {/* Content */}
+              <div className="p-3 sm:p-6 space-y-4">
+                <AnimatePresence mode="wait">
+                  {tab === "clients" && (
+                    <motion.div
+                      key="clients"
+                      initial={{ opacity: 0, y: 8 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -8 }}
+                      transition={{ duration: 0.15 }}
+                    >
+                      <ContentPanel
+                        title="Clients"
+                        icon={Users}
+                        isLoading={clientsLoading}
+                        empty={staffClients.length === 0}
+                        emptyText="No clients assigned or recently handled."
+                      >
+                        <div className="space-y-2">
+                          {staffClients.map((c) => (
+                            <Link
+                              key={c.id}
+                              href={`/clients/${c.id}`}
+                              className="flex items-center gap-3 p-2 rounded-lg hover:bg-white/[0.03] transition-colors"
+                            >
+                              <div className="w-8 h-8 flex items-center justify-center rounded-full bg-gradient-to-br from-[#132e35] to-[#0b1e22] text-white text-xs font-bold flex-shrink-0">
+                                {c.name?.[0]?.toUpperCase() ?? "C"}
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <p className="text-sm font-medium text-[var(--text-primary)] truncate">
+                                  {c.name}
+                                </p>
+                                <p className="text-[11px] text-[var(--text-secondary)]">
+                                  {c.primary_staff_id === staffId
+                                    ? "Primary trainer"
+                                    : "Last interaction"}
+                                </p>
+                              </div>
+                            </Link>
+                          ))}
+                        </div>
+                      </ContentPanel>
+                    </motion.div>
+                  )}
+
+                  {tab === "schedule" && (
+                    <motion.div
+                      key="schedule"
+                      initial={{ opacity: 0, y: 8 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -8 }}
+                      transition={{ duration: 0.15 }}
+                    >
+                      <ContentPanel
+                        title="Plan for Today"
+                        icon={Calendar}
+                        isLoading={checkinsLoading}
+                        empty={todaySchedule.length === 0}
+                        emptyText="Nothing scheduled for today."
+                      >
+                        <div className="space-y-2">
+                          {todaySchedule.map((s) => (
+                            <div
+                              key={s.id}
+                              className="flex items-center gap-3 p-2 rounded-lg hover:bg-white/[0.03] transition-colors"
+                            >
+                              <div className="w-8 h-8 flex items-center justify-center rounded-full bg-[var(--accent)]/10 text-[var(--accent)] text-xs font-bold flex-shrink-0">
+                                {new Date(s.scheduled_at).toLocaleTimeString([], {
+                                  hour: "2-digit",
+                                  minute: "2-digit",
+                                })}
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <p className="text-sm font-medium text-[var(--text-primary)] truncate">
+                                  {s.type === "call"
+                                    ? "Call"
+                                    : s.type === "video"
+                                      ? "Video"
+                                      : "Chat"}
+                                </p>
+                                <p className="text-[11px] text-[var(--text-secondary)]">
+                                  {clientName(allClients, s.client_id)}
+                                </p>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </ContentPanel>
+                    </motion.div>
+                  )}
+
+                  {tab === "programs" && (
+                    <motion.div
+                      key="programs"
+                      initial={{ opacity: 0, y: 8 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -8 }}
+                      transition={{ duration: 0.15 }}
+                    >
+                      <ContentPanel
+                        title="Programs"
+                        icon={Dumbbell}
+                        isLoading={plansLoading}
+                        empty={staffPlans.length === 0}
+                        emptyText="No active programs for this staff member's clients."
+                      >
+                        <div className="space-y-2">
+                          {staffPlans.map((p) => (
+                            <Link
+                              key={p.id}
+                              href={`/workout-plans/${p.id}`}
+                              className="flex items-center gap-3 p-2 rounded-lg hover:bg-white/[0.03] transition-colors"
+                            >
+                              <div className="w-8 h-8 flex items-center justify-center rounded-full bg-white/5 text-[var(--text-primary)] text-xs font-bold flex-shrink-0">
+                                <Dumbbell className="w-4 h-4" />
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <p className="text-sm font-medium text-[var(--text-primary)] truncate">
+                                  {p.title}
+                                </p>
+                                <p className="text-[11px] text-[var(--text-secondary)]">
+                                  {p.status} · {p.days?.length ?? 0} days
+                                </p>
+                              </div>
+                            </Link>
+                          ))}
+                        </div>
+                      </ContentPanel>
+                    </motion.div>
+                  )}
+
+                  {tab === "activity" && (
+                    <motion.div
+                      key="activity"
+                      initial={{ opacity: 0, y: 8 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -8 }}
+                      transition={{ duration: 0.15 }}
+                    >
+                      <ContentPanel
+                        title="Recent Activity"
+                        icon={Activity}
+                        isLoading={activitiesLoading}
+                        empty={staffActivities.length === 0}
+                        emptyText="No recent activity recorded."
+                      >
+                        <div className="space-y-2">
+                          {staffActivities.map((a) => (
+                            <div
+                              key={a.id}
+                              className="flex items-start gap-3 p-2 rounded-lg hover:bg-white/[0.03] transition-colors"
+                            >
+                              <div className="w-8 h-8 flex items-center justify-center rounded-full bg-[var(--accent)]/10 text-[var(--accent)] text-xs font-bold flex-shrink-0">
+                                {a.client_name?.[0]?.toUpperCase() ?? "A"}
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <p className="text-sm text-[var(--text-primary)] truncate">
+                                  {actionLabel(a.action)}
+                                  {a.client_name && (
+                                    <span className="text-[var(--text-secondary)]">
+                                      {" "}for{" "}
+                                      <span className="font-medium text-[var(--text-primary)]">
+                                        {a.client_name}
+                                      </span>
+                                    </span>
+                                  )}
+                                </p>
+                                <p className="text-[11px] text-[var(--text-secondary)] mt-0.5">
+                                  {a.created_at ? formatTimeAgo(a.created_at) : ""}
+                                </p>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </ContentPanel>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            </div>
+          </main>
+        </div>
       </div>
     </DashboardLayout>
   );
@@ -352,35 +601,30 @@ function clientName(clients: Client[], clientId: string): string {
   return clients.find((c) => c.id === clientId)?.name ?? "Unknown client";
 }
 
-function StatCard({
-  icon: Icon,
+function SidebarStat({
   label,
   value,
   isLoading,
 }: {
-  icon: React.ComponentType<{ className?: string }>;
   label: string;
   value: number;
   isLoading: boolean;
 }) {
   return (
-    <div className="rounded-xl border border-[var(--border)] bg-[var(--bg-card)] p-4">
-      <div className="flex items-center gap-2 mb-2 text-[var(--text-secondary)]">
-        <Icon className="w-4 h-4" />
-        <span className="text-xs font-medium uppercase tracking-wider">
-          {label}
-        </span>
+    <div className="rounded-lg border border-[var(--border)] bg-white/[0.02] p-2.5 text-center">
+      <div className="text-[10px] font-medium uppercase tracking-wider text-[var(--text-secondary)] mb-1">
+        {label}
       </div>
       {isLoading ? (
-        <Skeleton className="h-8 w-12" />
+        <Skeleton className="h-5 w-8 mx-auto" />
       ) : (
-        <p className="text-2xl font-bold text-[var(--text-primary)]">{value}</p>
+        <div className="text-lg font-bold text-[var(--text-primary)]">{value}</div>
       )}
     </div>
   );
 }
 
-function Panel({
+function ContentPanel({
   title,
   icon: Icon,
   children,

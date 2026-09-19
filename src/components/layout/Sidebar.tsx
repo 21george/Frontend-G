@@ -3,16 +3,16 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
-import { useAuthStore } from "@/store/auth";
+import { useAuthStore, canViewTeam } from "@/store/auth";
 import { useSubscription } from "@/hooks/useSubscription";
 import { motion, AnimatePresence } from "framer-motion";
+import { Avatar } from "@/components/ui/Avatar";
 import {
   LayoutDashboard,
   Users,
   Dumbbell,
   Salad,
   Calendar,
-  Radio,
   Settings,
   LogOut,
   Menu,
@@ -24,9 +24,9 @@ import {
 } from "lucide-react";
 
 function useCanViewTeam(): boolean {
-  const { isStaff, staffRole } = useAuthStore();
-  if (!isStaff) return true; // owner (legacy coach)
-  return staffRole === "admin" || staffRole === "manager" || staffRole === "instructor_coach";
+  const { isStaff, staffRole, hasHydrated } = useAuthStore();
+  if (!hasHydrated) return false;
+  return canViewTeam(isStaff, staffRole);
 }
 
 const NAV = [
@@ -39,9 +39,9 @@ const NAV = [
   { href: "/settings", label: "Settings", icon: Settings },
 ];
 
-
 function useCanManageBilling(): boolean {
-  const { isStaff, staffRole } = useAuthStore();
+  const { isStaff, staffRole, hasHydrated } = useAuthStore();
+  if (!hasHydrated) return false;
   if (!isStaff) return true; // owner (legacy coach)
   return staffRole === "admin";
 }
@@ -207,16 +207,19 @@ function SidebarContent({ onClose, collapsed = false }: SidebarContentProps) {
             collapsed ? "justify-center p-2" : "gap-3 px-2 py-2",
           )}
         >
-          <div
-            className="w-9 h-9 flex items-center justify-center text-[var(--sidebar-text)] text-sm font-semibold flex-shrink-0 ring-2 ring-[var(--sidebar-bdr)] rounded-lg"
-            style={{ background: "var(--bg-subtle)" }}
-          >
-            {hasHydrated
-              ? (isStaff
-                ? (staff?.name?.[0]?.toUpperCase() ?? "S")
-                : (coach?.name?.[0]?.toUpperCase() ?? "C"))
-              : "—"}
-          </div>
+          {hasHydrated ? (
+            <Avatar
+              name={isStaff ? staff?.name : coach?.name}
+              surname={isStaff ? undefined : coach?.surname}
+              photo={isStaff ? undefined : coach?.profile_photo}
+              size="w-9 h-9"
+              variant="colored"
+              shape="squircle"
+              className="ring-2 ring-[var(--sidebar-bdr)]"
+            />
+          ) : (
+            <div className="w-9 h-9 rounded-lg bg-white/10 animate-pulse flex-shrink-0" />
+          )}
           {!collapsed && hasHydrated && (
             <>
               <div className="flex-1 min-w-0">

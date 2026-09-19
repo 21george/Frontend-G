@@ -23,6 +23,7 @@ import BarChartIcon from "@mui/icons-material/BarChart";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import NavigateNextIcon from "@mui/icons-material/NavigateNext";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
+import FilterBreadcrumb from "@/components/ui/Breadcrumb";
 
 const TYPE_CONFIG: Record<
   NonNullable<WorkoutPlanType>,
@@ -320,7 +321,11 @@ export default function WorkoutPlansPage() {
     "all" | "individual" | "group" | "team"
   >("all");
 
-  const query = useWorkoutPlans(undefined, filter !== "all" ? filter : undefined, typeFilter !== "all" ? typeFilter : undefined);
+  const query = useWorkoutPlans(
+    undefined,
+    filter !== "all" ? filter : undefined,
+    typeFilter !== "all" ? typeFilter : undefined,
+  );
   const { data: clientsData } = useClients();
   const plans = query.data?.data ?? [];
   const clients = clientsData?.data ?? [];
@@ -350,22 +355,57 @@ export default function WorkoutPlansPage() {
         {/* ── FILTERS ── */}
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-2 flex-wrap">
-            <FilterListIcon className="w-3.5 h-3.5 text-slate-400" />
-            {(["all", "active", "draft", "completed", "saved"] as const).map(
-              (s) => (
-                <button
-                  key={s}
-                  onClick={() => setFilter(s)}
-                  className={`px-3 py-1.5 border text-[12px] font-medium transition-colors ${
-                    filter === s
-                      ? "bg-cyan-950 text-white border-cyan-950"
-                      : "border-slate-200 dark:border-white/[0.1] bg-white dark:bg-white/[0.04] text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-white/[0.08]"
-                  }`}
-                >
-                  {s.charAt(0).toUpperCase() + s.slice(1)}
-                </button>
-              ),
-            )}
+            <FilterBreadcrumb
+              items={[
+                { key: "all", label: "All", count: plans.length },
+                {
+                  key: "active",
+                  label: "Active",
+                  count: plans.filter((p) => p.status === "active").length,
+                },
+                {
+                  key: "draft",
+                  label: "Draft",
+                  count: plans.filter((p) => p.status === "draft").length,
+                },
+                {
+                  key: "completed",
+                  label: "Completed",
+                  count: plans.filter((p) => p.status === "completed").length,
+                },
+                {
+                  key: "saved",
+                  label: "Saved",
+                  count: plans.filter((p) => p.status === "saved").length,
+                },
+              ]}
+              value={filter}
+              onChange={setFilter}
+            />
+            <div className="w-px h-5 bg-[var(--border)] dark:border-white/[0.08] mx-1 hidden sm:block" />
+            <FilterBreadcrumb
+              items={[
+                { key: "all", label: "All Types", count: plans.length },
+                {
+                  key: "individual",
+                  label: "Individual",
+                  count: plans.filter((p) => p.plan_type === "individual")
+                    .length,
+                },
+                {
+                  key: "group",
+                  label: "Group",
+                  count: plans.filter((p) => p.plan_type === "group").length,
+                },
+                {
+                  key: "team",
+                  label: "Team",
+                  count: plans.filter((p) => p.plan_type === "team").length,
+                },
+              ]}
+              value={typeFilter}
+              onChange={setTypeFilter}
+            />
           </div>
           <AnimatedSearch className="relative" active={search.length > 0}>
             <input

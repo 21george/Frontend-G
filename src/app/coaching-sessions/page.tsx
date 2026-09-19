@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { AnimatedSearch } from "@/components/ui/AnimatedSearch";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
+import FilterBreadcrumb from "@/components/ui/Breadcrumb";
 import {
   useCoachingSessions,
   useUpdateSessionStatus,
@@ -84,7 +85,21 @@ export default function CoachingSessionsPage() {
   const [rescheduleId, setRescheduleId] = useState<string | null>(null);
   const [rescheduleAt, setRescheduleAt] = useState("");
   const [rescheduleDuration, setRescheduleDuration] = useState(60);
-  const [deleteTarget, setDeleteTarget] = useState<CoachingSession | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<CoachingSession | null>(
+    null,
+  );
+
+  /* ── Counts for tabs ── */
+  const counts = useMemo(() => {
+    const list = sessions;
+    return {
+      all: list.length,
+      upcoming: list.filter((s) => s.status === "upcoming").length,
+      live: list.filter((s) => s.status === "live").length,
+      ended: list.filter((s) => s.status === "ended").length,
+      cancelled: list.filter((s) => s.status === "cancelled").length,
+    };
+  }, [sessions]);
 
   /* ── Filtered rows ── */
   const filtered = useMemo(() => {
@@ -109,7 +124,9 @@ export default function CoachingSessionsPage() {
     updateStatus.mutate({ id: s.id, status: "ended" });
 
   const handleCancel = (s: CoachingSession) => {
-    if (confirm(`Cancel "${s.title}"? The session will be marked as cancelled.`))
+    if (
+      confirm(`Cancel "${s.title}"? The session will be marked as cancelled.`)
+    )
       updateStatus.mutate({ id: s.id, status: "cancelled" });
   };
 
@@ -123,7 +140,13 @@ export default function CoachingSessionsPage() {
   const openReschedule = (s: CoachingSession) => {
     setRescheduleId(s.id);
     const dt = parseDateValue(s.scheduled_at);
-    setRescheduleAt(dt ? new Date(dt.getTime() - dt.getTimezoneOffset() * 60000).toISOString().slice(0, 16) : "");
+    setRescheduleAt(
+      dt
+        ? new Date(dt.getTime() - dt.getTimezoneOffset() * 60000)
+            .toISOString()
+            .slice(0, 16)
+        : "",
+    );
     setRescheduleDuration(s.duration_min);
   };
 
@@ -136,8 +159,14 @@ export default function CoachingSessionsPage() {
   const submitReschedule = () => {
     if (!rescheduleId || !rescheduleAt) return;
     updateSession.mutate(
-      { id: rescheduleId, payload: { scheduled_at: new Date(rescheduleAt).toISOString(), duration_min: rescheduleDuration } },
-      { onSuccess: closeReschedule }
+      {
+        id: rescheduleId,
+        payload: {
+          scheduled_at: new Date(rescheduleAt).toISOString(),
+          duration_min: rescheduleDuration,
+        },
+      },
+      { onSuccess: closeReschedule },
     );
   };
 
@@ -157,26 +186,35 @@ export default function CoachingSessionsPage() {
         {/* ── KPI cards ── */}
 
         {/* ── Filters ── */}
-        <div className="flex flex-col sm:flex-row gap-3">
-          <AnimatedSearch className="relative flex-1" active={search.length > 0}>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="flex flex-wrap items-center gap-2">
+            <FilterBreadcrumb
+              items={[
+                { key: "all", label: "All", count: counts.all },
+                { key: "upcoming", label: "Upcoming", count: counts.upcoming },
+                { key: "live", label: "Live", count: counts.live },
+                { key: "ended", label: "Ended", count: counts.ended },
+                {
+                  key: "cancelled",
+                  label: "Cancelled",
+                  count: counts.cancelled,
+                },
+              ]}
+              value={statusFilter}
+              onChange={setStatusFilter}
+            />
+          </div>
+          <AnimatedSearch
+            className="relative flex-1 max-w-xs"
+            active={search.length > 0}
+          >
             <input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search by title or client…"
-              className=" pl-9 pr-4 py-2  rounded-8 border border-slate-200 dark:border-white/[0.1] bg-white dark:bg-white/[0.04] text-sm text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-cyan-500/20"
+              className="w-full pl-9 pr-4 py-2 rounded-xl border border-[var(--border)] dark:border-white/[0.08] bg-[var(--bg-card)] dark:bg-white/[0.03] text-sm text-[var(--text-primary)] dark:text-white placeholder:text-[var(--text-tertiary)] dark:placeholder:text-white/20 focus:outline-none focus:ring-2 focus:ring-brand-700/20 focus:border-brand-400 transition-all"
             />
           </AnimatedSearch>
-          <select
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-            className="px-3 py-2 rounded-8 border border-slate-200 dark:border-white/[0.1] bg-white dark:bg-white/[0.04] text-sm text-[var(--text-secondary)] focus:outline-none"
-          >
-            <option value="all">All Statuses</option>
-            <option value="upcoming">Upcoming</option>
-            <option value="live">Live</option>
-            <option value="ended">Ended</option>
-            <option value="cancelled">Cancelled</option>
-          </select>
         </div>
 
         {/* ── Table ── */}
@@ -331,13 +369,20 @@ export default function CoachingSessionsPage() {
                                 Join
                               </button>
                             )}
-                            {(s.status === "ended" || s.status === "cancelled") && (
+                            {(s.status === "ended" ||
+                              s.status === "cancelled") && (
                               <button
                                 onClick={() => openDeleteConfirm(s)}
-                                disabled={deleteMut.isPending && deleteTarget?.id === s.id}
+                                disabled={
+                                  deleteMut.isPending &&
+                                  deleteTarget?.id === s.id
+                                }
                                 className="px-2.5 py-1 text-xs rounded-lg border border-red-200 dark:border-red-500/20 text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors disabled:opacity-50"
                               >
-                                {deleteMut.isPending && deleteTarget?.id === s.id ? "Deleting…" : "Delete"}
+                                {deleteMut.isPending &&
+                                deleteTarget?.id === s.id
+                                  ? "Deleting…"
+                                  : "Delete"}
                               </button>
                             )}
                           </div>
@@ -358,10 +403,14 @@ export default function CoachingSessionsPage() {
       {rescheduleId && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
           <div className="bg-white dark:bg-[#181818] border border-[var(--border)] rounded-2xl shadow-xl w-full max-w-sm mx-4 p-6 space-y-4">
-            <h3 className="text-lg font-semibold text-[var(--text-primary)]">Reschedule Session</h3>
+            <h3 className="text-lg font-semibold text-[var(--text-primary)]">
+              Reschedule Session
+            </h3>
             <div className="space-y-3">
               <div>
-                <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">New Date & Time</label>
+                <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">
+                  New Date & Time
+                </label>
                 <input
                   type="datetime-local"
                   value={rescheduleAt}
@@ -370,14 +419,20 @@ export default function CoachingSessionsPage() {
                 />
               </div>
               <div>
-                <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">Duration (minutes)</label>
+                <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">
+                  Duration (minutes)
+                </label>
                 <select
                   value={rescheduleDuration}
-                  onChange={(e) => setRescheduleDuration(Number(e.target.value))}
+                  onChange={(e) =>
+                    setRescheduleDuration(Number(e.target.value))
+                  }
                   className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-white/[0.1] bg-white dark:bg-white/[0.04] text-sm text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-cyan-500/30"
                 >
                   {[15, 30, 45, 60, 75, 90, 120].map((m) => (
-                    <option key={m} value={m}>{m} minutes</option>
+                    <option key={m} value={m}>
+                      {m} minutes
+                    </option>
                   ))}
                 </select>
               </div>
@@ -407,7 +462,11 @@ export default function CoachingSessionsPage() {
         onClose={closeDeleteConfirm}
         onConfirm={confirmDelete}
         title="Delete Session"
-        message={deleteTarget ? `Permanently delete "${deleteTarget.title}"? This cannot be undone.` : ""}
+        message={
+          deleteTarget
+            ? `Permanently delete "${deleteTarget.title}"? This cannot be undone.`
+            : ""
+        }
         confirmLabel="Delete"
         variant="danger"
         loading={deleteMut.isPending}

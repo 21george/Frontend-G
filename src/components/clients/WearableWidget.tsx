@@ -28,18 +28,22 @@ export default function WearableWidget({ analytics }: Props) {
     const trends = analytics?.wearable?.trends?.["30d"];
     if (!trends) return null;
     return {
-      steps: trends.steps?.average ?? 0,
-      sleep: trends.sleep_minutes?.average ?? 0,
-      calories: trends.active_calories?.average ?? 0,
-      hr: trends.resting_hr?.average ?? 0,
+      steps: trends.steps?.average,
+      sleep: trends.sleep_minutes?.average,
+      calories: trends.active_calories?.average,
+      hr: trends.resting_hr?.average,
     };
   }, [analytics]);
 
   if (!readiness && !avg30d) {
     return (
       <div className="p-4 border border-dashed border-[var(--border)] rounded-xl text-center">
-        <p className="text-sm text-[var(--text-secondary)]">No wearable data yet.</p>
-        <p className="text-xs text-[var(--text-tertiary)] mt-1">Connect Fitbit or Apple Watch in the FitApp.</p>
+        <p className="text-sm text-[var(--text-secondary)]">
+          No wearable data yet.
+        </p>
+        <p className="text-xs text-[var(--text-tertiary)] mt-1">
+          Connect Fitbit or Apple Watch in the FitApp.
+        </p>
       </div>
     );
   }
@@ -60,16 +64,22 @@ export default function WearableWidget({ analytics }: Props) {
               <Activity className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
             </div>
             <div>
-              <p className="text-xs text-[var(--text-tertiary)]">Readiness / Recovery</p>
+              <p className="text-xs text-[var(--text-tertiary)]">
+                Readiness / Recovery
+              </p>
               <p className={`text-2xl font-bold ${recoveryColor}`}>
                 {readiness.recovery_score}
-                <span className="text-sm font-normal text-[var(--text-tertiary)]">/100</span>
+                <span className="text-sm font-normal text-[var(--text-tertiary)]">
+                  /100
+                </span>
               </p>
             </div>
           </div>
           <div className="text-right">
             <p className="text-xs text-[var(--text-tertiary)]">Latest</p>
-            <p className="text-sm text-[var(--text-secondary)]">{readiness.date}</p>
+            <p className="text-sm text-[var(--text-secondary)]">
+              {readiness.date}
+            </p>
           </div>
         </div>
       )}
@@ -77,7 +87,7 @@ export default function WearableWidget({ analytics }: Props) {
       <div className="grid grid-cols-2 gap-3">
         <MetricCard
           icon={Watch}
-          label="Steps today"
+          label={readiness?.steps != null ? "Steps today" : "Avg steps (30d)"}
           value={fmtNumber(readiness?.steps ?? avg30d?.steps)}
           color="bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400"
         />
@@ -116,13 +126,17 @@ function MetricCard({
   color: string;
 }) {
   return (
-    <div className="flex items-center gap-3 p-3 border border-[var(--border)] rounded-xl bg-white dark:bg-[#1A1A1A]">
+    <div className="flex items-center gap-3 p-3 border border-[var(--border)] rounded-xl bg-white dark:bg-[var(--bg-card)]">
       <div className={`p-2 rounded-lg ${color}`}>
         <Icon className="w-4 h-4" />
       </div>
       <div>
-        <p className="text-[10px] text-[var(--text-tertiary)] uppercase tracking-wider">{label}</p>
-        <p className="text-sm font-semibold text-[var(--text-primary)]">{value}</p>
+        <p className="text-[10px] text-[var(--text-tertiary)] uppercase tracking-wider">
+          {label}
+        </p>
+        <p className="text-sm font-semibold text-[var(--text-primary)]">
+          {value}
+        </p>
       </div>
     </div>
   );

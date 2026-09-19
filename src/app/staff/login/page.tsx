@@ -13,9 +13,7 @@ import { useAuthStore } from "@/store/auth";
 
 const loginSchema = z.object({
   email: z.string().trim().email({ message: "Please enter a valid email." }),
-  password: z
-    .string()
-    .min(1, { message: "Password is required." }),
+  password: z.string().min(1, { message: "Password is required." }),
 });
 type LoginValues = z.infer<typeof loginSchema>;
 
@@ -75,7 +73,7 @@ export default function StaffLoginPage() {
           animate={{ rotate: 360 }}
           transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
         >
-          <Loader2 className="w-8 h-8 text-[#a3e635]" />
+          <Loader2 className="w-8 h-8 text-energy" />
         </motion.div>
       </div>
     );
@@ -88,7 +86,8 @@ export default function StaffLoginPage() {
     try {
       const res = await apiClient.post("/auth/staff/login", data);
       const { staff, access_token, setup_complete } = res.data?.data || {};
-      if (!staff || !access_token) throw new Error("Invalid response from server");
+      if (!staff || !access_token)
+        throw new Error("Invalid response from server");
 
       setStaff(staff, access_token);
       if (setup_complete === false) {
@@ -104,9 +103,11 @@ export default function StaffLoginPage() {
           err.code === "ECONNABORTED" ||
           (typeof err.message === "string" && err.message.includes("timeout"))
         ) {
-          msg = "Login request timed out. Please check your network connection.";
+          msg =
+            "Login request timed out. Please check your network connection.";
         } else if (err.message === "Network Error") {
-          msg = "Cannot connect to the server. Please check your network connection.";
+          msg =
+            "Cannot connect to the server. Please check your network connection.";
         } else {
           const resp = err.response as Record<string, unknown> | undefined;
           const respData = resp?.data as Record<string, unknown> | undefined;
@@ -122,7 +123,7 @@ export default function StaffLoginPage() {
   const inputCls =
     "w-full border border-white/[0.08] rounded-lg pl-9 pr-4 py-[11px] text-[13px] bg-white/[0.03] " +
     "text-white placeholder:text-white/20 " +
-    "focus:outline-none focus:ring-1 focus:ring-[#a3e635]/40 focus:border-[#a3e635]/40 " +
+    "focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus:ring-[#a3e635]/40 focus:border-[#a3e635]/40 " +
     "disabled:opacity-40 transition-all duration-200 hover:border-white/[0.12]";
 
   return (
@@ -263,7 +264,10 @@ export default function StaffLoginPage() {
                 type="submit"
                 disabled={isLoading}
                 className="w-full bg-[#a3e635] hover:bg-[#bef264] active:bg-[#8bc52f] text-[#0a1114] font-bold text-[14px] py-[11px] rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 mt-1"
-                style={{ fontFamily: "var(--font-mono)", letterSpacing: "0.05em" }}
+                style={{
+                  fontFamily: "var(--font-mono)",
+                  letterSpacing: "0.05em",
+                }}
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
               >

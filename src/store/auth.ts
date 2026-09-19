@@ -180,3 +180,11 @@ setAuthTokenGetter(() => useAuthStore.getState().accessToken);
 setTokenRefreshCallback((token) => {
   useAuthStore.getState().setToken(token);
 });
+
+// Shared Team-visibility rule: owners (legacy coach) or admin-role staff only.
+export function canViewTeam(
+  isStaff: boolean,
+  staffRole: StaffRole | null,
+): boolean {
+  return !isStaff || staffRole === "admin";
+}

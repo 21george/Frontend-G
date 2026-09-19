@@ -1,121 +1,190 @@
-'use client'
+"use client";
 
 import {
-  Plus, Video, PhoneCall, Hash, ChevronDown, RefreshCw,
-  MessageCircle, Wifi, WifiOff, Send, CheckCircle2, XCircle, Clock,
-} from 'lucide-react'
-import { motion, AnimatePresence } from 'framer-motion'
-import type { CheckinMeeting, Client } from '@/types'
-import { formatDate, timeAgo } from '@/lib/utils'
+  Plus,
+  Video,
+  PhoneCall,
+  Hash,
+  ChevronDown,
+  RefreshCw,
+  MessageCircle,
+  Wifi,
+  WifiOff,
+  Send,
+  CheckCircle2,
+  XCircle,
+  Clock,
+} from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import type { CheckinMeeting, Client } from "@/types";
+import { formatDate, timeAgo } from "@/lib/utils";
+import FilterBreadcrumb from "@/components/ui/Breadcrumb";
 
-export type ScheduleFilter = 'Upcoming' | 'Ongoing' | 'Rescheduled' | 'Cancelled' | 'Completed'
-const FILTER_TABS: ScheduleFilter[] = ['Upcoming', 'Ongoing', 'Rescheduled', 'Cancelled', 'Completed']
+export type ScheduleFilter =
+  | "Upcoming"
+  | "Ongoing"
+  | "Rescheduled"
+  | "Cancelled"
+  | "Completed";
+const FILTER_TABS: ScheduleFilter[] = [
+  "Upcoming",
+  "Ongoing",
+  "Rescheduled",
+  "Cancelled",
+  "Completed",
+];
 
 function getStatusFilter(f: ScheduleFilter) {
-  if (f === 'Upcoming')    return (c: CheckinMeeting) => c.status === 'scheduled' && c.client_response !== 'reschedule_requested' && new Date(c.scheduled_at).getTime() > Date.now()
-  if (f === 'Ongoing')     return (c: CheckinMeeting) => c.status === 'scheduled' && new Date(c.scheduled_at).getTime() <= Date.now()
-  if (f === 'Rescheduled') return (c: CheckinMeeting) => c.client_response === 'reschedule_requested'
-  if (f === 'Completed')   return (c: CheckinMeeting) => c.status === 'completed'
-  return (c: CheckinMeeting) => c.status === 'cancelled'
+  if (f === "Upcoming")
+    return (c: CheckinMeeting) =>
+      c.status === "scheduled" &&
+      c.client_response !== "reschedule_requested" &&
+      new Date(c.scheduled_at).getTime() > Date.now();
+  if (f === "Ongoing")
+    return (c: CheckinMeeting) =>
+      c.status === "scheduled" &&
+      new Date(c.scheduled_at).getTime() <= Date.now();
+  if (f === "Rescheduled")
+    return (c: CheckinMeeting) => c.client_response === "reschedule_requested";
+  if (f === "Completed") return (c: CheckinMeeting) => c.status === "completed";
+  return (c: CheckinMeeting) => c.status === "cancelled";
 }
 
 interface Props {
-  client: Client
-  checkins: CheckinMeeting[] | undefined
-  scheduleFilter: ScheduleFilter
-  setScheduleFilter: (f: ScheduleFilter) => void
-  activeChatId: string | null
-  setActiveChatId: (id: string | null) => void
-  allMessages: any[]
-  msg: string
-  setMsg: (v: string) => void
-  onSend: () => void
-  chatEndRef: React.RefObject<HTMLDivElement>
-  socketConnected: boolean
-  isDeleteCheckinPending: boolean
-  onOpenScheduleModal: (date: Date) => void
-  onReschedule: (meeting: CheckinMeeting) => void
-  onCancel: (meeting: CheckinMeeting) => void
+  client: Client;
+  checkins: CheckinMeeting[] | undefined;
+  scheduleFilter: ScheduleFilter;
+  setScheduleFilter: (f: ScheduleFilter) => void;
+  activeChatId: string | null;
+  setActiveChatId: (id: string | null) => void;
+  allMessages: any[];
+  msg: string;
+  setMsg: (v: string) => void;
+  onSend: () => void;
+  chatEndRef: React.RefObject<HTMLDivElement>;
+  socketConnected: boolean;
+  isDeleteCheckinPending: boolean;
+  onOpenScheduleModal: (date: Date) => void;
+  onReschedule: (meeting: CheckinMeeting) => void;
+  onCancel: (meeting: CheckinMeeting) => void;
 }
 
 function getVideoRoom(c: CheckinMeeting) {
-  return c.meeting_link || `https://meet.jit.si/360Fit-${c.id.replace(/-/g, '')}`
+  return (
+    c.meeting_link || `https://meet.jit.si/360Fit-${c.id.replace(/-/g, "")}`
+  );
 }
 
 const cardVariants = {
   hidden: { opacity: 0, y: 16, scale: 0.98 },
   visible: (i: number) => ({
-    opacity: 1, y: 0, scale: 1,
+    opacity: 1,
+    y: 0,
+    scale: 1,
     transition: { duration: 0.35, delay: i * 0.06, ease: "easeOut" as const },
   }),
-}
+};
 
 const statusMeta = (c: CheckinMeeting) => {
-  if (c.status === 'completed') return {
-    label: 'Completed',
-    color: 'text-emerald-400',
-    bg: 'bg-emerald-400',
-    border: 'border-emerald-500/20',
-    bgSoft: 'bg-emerald-500/8',
-    accent: 'border-l-emerald-500',
-    glow: 'shadow-emerald-500/10',
-  }
-  if (c.status === 'cancelled') return {
-    label: 'Cancelled',
-    color: 'text-red-400',
-    bg: 'bg-red-400',
-    border: 'border-red-500/20',
-    bgSoft: 'bg-red-500/8',
-    accent: 'border-l-red-500',
-    glow: 'shadow-red-500/10',
-  }
-  if (c.client_response === 'reschedule_requested') return {
-    label: 'Rescheduled',
-    color: 'text-amber-400',
-    bg: 'bg-amber-400',
-    border: 'border-amber-500/20',
-    bgSoft: 'bg-amber-500/8',
-    accent: 'border-l-amber-500',
-    glow: 'shadow-amber-500/10',
-  }
-  if (c.client_response === 'accepted') return {
-    label: 'Confirmed',
-    color: 'text-blue-400',
-    bg: 'bg-blue-400',
-    border: 'border-blue-500/20',
-    bgSoft: 'bg-blue-500/8',
-    accent: 'border-l-blue-500',
-    glow: 'shadow-blue-500/10',
-  }
-  if (c.client_response === 'declined') return {
-    label: 'Declined',
-    color: 'text-rose-400',
-    bg: 'bg-rose-400',
-    border: 'border-rose-500/20',
-    bgSoft: 'bg-rose-500/8',
-    accent: 'border-l-rose-500',
-    glow: 'shadow-rose-500/10',
-  }
+  if (c.status === "completed")
+    return {
+      label: "Completed",
+      color: "text-emerald-400",
+      bg: "bg-emerald-400",
+      border: "border-emerald-500/20",
+      bgSoft: "bg-emerald-500/8",
+      accent: "border-l-emerald-500",
+      glow: "shadow-emerald-500/10",
+    };
+  if (c.status === "cancelled")
+    return {
+      label: "Cancelled",
+      color: "text-red-400",
+      bg: "bg-red-400",
+      border: "border-red-500/20",
+      bgSoft: "bg-red-500/8",
+      accent: "border-l-red-500",
+      glow: "shadow-red-500/10",
+    };
+  if (c.client_response === "reschedule_requested")
+    return {
+      label: "Rescheduled",
+      color: "text-amber-400",
+      bg: "bg-amber-400",
+      border: "border-amber-500/20",
+      bgSoft: "bg-amber-500/8",
+      accent: "border-l-amber-500",
+      glow: "shadow-amber-500/10",
+    };
+  if (c.client_response === "accepted")
+    return {
+      label: "Confirmed",
+      color: "text-blue-400",
+      bg: "bg-blue-400",
+      border: "border-blue-500/20",
+      bgSoft: "bg-blue-500/8",
+      accent: "border-l-blue-500",
+      glow: "shadow-blue-500/10",
+    };
+  if (c.client_response === "declined")
+    return {
+      label: "Declined",
+      color: "text-rose-400",
+      bg: "bg-rose-400",
+      border: "border-rose-500/20",
+      bgSoft: "bg-rose-500/8",
+      accent: "border-l-rose-500",
+      glow: "shadow-rose-500/10",
+    };
   return {
-    label: 'Upcoming',
-    color: 'text-[var(--text-secondary)]',
-    bg: 'bg-[var(--text-secondary)]',
-    border: 'border-[var(--border)]',
-    bgSoft: 'bg-[var(--bg-subtle)]',
-    accent: 'border-l-[var(--energy)]',
-    glow: 'shadow-[var(--energy)]/10',
-  }
-}
+    label: "Upcoming",
+    color: "text-[var(--text-secondary)]",
+    bg: "bg-[var(--text-secondary)]",
+    border: "border-[var(--border)]",
+    bgSoft: "bg-[var(--bg-subtle)]",
+    accent: "border-l-[var(--energy)]",
+    glow: "shadow-[var(--energy)]/10",
+  };
+};
 
-function EmptyState({ filter, onSchedule }: { filter: ScheduleFilter; onSchedule: () => void }) {
-  const meta: Record<ScheduleFilter, { icon: React.ElementType; title: string; desc: string }> = {
-    Upcoming:    { icon: Clock,         title: 'No upcoming meetings',      desc: 'Plan your next session to stay on track' },
-    Ongoing:     { icon: Clock,         title: 'No ongoing meetings',       desc: 'Nothing happening right now' },
-    Rescheduled: { icon: RefreshCw,      title: 'No rescheduled meetings',   desc: 'All sessions are on their original schedule' },
-    Cancelled:   { icon: XCircle,       title: 'No cancelled meetings',     desc: 'Everything is running smoothly' },
-    Completed:   { icon: CheckCircle2,  title: 'No completed meetings yet', desc: 'Finished sessions will appear here' },
-  }
-  const { icon: Icon, title, desc } = meta[filter]
+function EmptyState({
+  filter,
+  onSchedule,
+}: {
+  filter: ScheduleFilter;
+  onSchedule: () => void;
+}) {
+  const meta: Record<
+    ScheduleFilter,
+    { icon: React.ElementType; title: string; desc: string }
+  > = {
+    Upcoming: {
+      icon: Clock,
+      title: "No upcoming meetings",
+      desc: "Plan your next session to stay on track",
+    },
+    Ongoing: {
+      icon: Clock,
+      title: "No ongoing meetings",
+      desc: "Nothing happening right now",
+    },
+    Rescheduled: {
+      icon: RefreshCw,
+      title: "No rescheduled meetings",
+      desc: "All sessions are on their original schedule",
+    },
+    Cancelled: {
+      icon: XCircle,
+      title: "No cancelled meetings",
+      desc: "Everything is running smoothly",
+    },
+    Completed: {
+      icon: CheckCircle2,
+      title: "No completed meetings yet",
+      desc: "Finished sessions will appear here",
+    },
+  };
+  const { icon: Icon, title, desc } = meta[filter];
 
   return (
     <motion.div
@@ -125,56 +194,93 @@ function EmptyState({ filter, onSchedule }: { filter: ScheduleFilter; onSchedule
       className="mt-[10rem] p-10 text-center border border-[var(--border)] dark:border-white/[0.06] bg-[var(--bg-card)] dark:bg-white/[0.02] rounded-lg"
     >
       <div className="w-12 h-12 mx-auto mb-3 rounded-full bg-[var(--bg-subtle)] dark:bg-white/[0.04] border border-[var(--border)] dark:border-white/[0.08] flex items-center justify-center">
-        <Icon size={20} className="text-[var(--text-tertiary)] dark:text-[var(--text-secondary)]" />
+        <Icon
+          size={20}
+          className="text-[var(--text-tertiary)] dark:text-[var(--text-secondary)]"
+        />
       </div>
-      <p className="text-[14px] font-semibold text-[var(--text-primary)] dark:text-[var(--text-primary)] mb-1">{title}</p>
-      <p className="text-[12px] text-[var(--text-tertiary)] dark:text-[var(--text-tertiary)] mb-5">{desc}</p>
-      {filter !== 'Completed' && filter !== 'Cancelled' && (
-        <button onClick={onSchedule}
-          className="inline-flex items-center gap-1.5 px-5 py-2.5 text-[12px] rounded-s-xl font-semibold bg-brand-600 hover:bg-brand-700 text-white transition-colors">
+      <p className="text-[14px] font-semibold text-[var(--text-primary)] dark:text-[var(--text-primary)] mb-1">
+        {title}
+      </p>
+      <p className="text-[12px] text-[var(--text-tertiary)] dark:text-[var(--text-tertiary)] mb-5">
+        {desc}
+      </p>
+      {filter !== "Completed" && filter !== "Cancelled" && (
+        <button
+          onClick={onSchedule}
+          className="inline-flex items-center gap-1.5 px-5 py-2.5 text-[12px] rounded-s-xl font-semibold bg-brand-600 hover:bg-brand-700 text-white transition-colors"
+        >
           <Plus size={14} /> Schedule First Meeting
         </button>
       )}
     </motion.div>
-  )
+  );
 }
 
 export function ClientScheduleTab({
-  client, checkins, scheduleFilter, setScheduleFilter,
-  activeChatId, setActiveChatId,
-  allMessages, msg, setMsg, onSend, chatEndRef,
-  socketConnected, isDeleteCheckinPending,
-  onOpenScheduleModal, onReschedule, onCancel,
+  client,
+  checkins,
+  scheduleFilter,
+  setScheduleFilter,
+  activeChatId,
+  setActiveChatId,
+  allMessages,
+  msg,
+  setMsg,
+  onSend,
+  chatEndRef,
+  socketConnected,
+  isDeleteCheckinPending,
+  onOpenScheduleModal,
+  onReschedule,
+  onCancel,
 }: Props) {
-  const allCheckins = checkins ?? []
-  const filtered = allCheckins.filter(getStatusFilter(scheduleFilter))
+  const allCheckins = checkins ?? [];
+  const filtered = allCheckins.filter(getStatusFilter(scheduleFilter));
 
-  const grouped = filtered.reduce<Record<string, CheckinMeeting[]>>((acc, c) => {
-    const d = new Date(c.scheduled_at)
-    const today = new Date()
-    const isToday = d.toDateString() === today.toDateString()
-    const key = isToday
-      ? `Today, ${d.toLocaleDateString('en-US', { day: 'numeric', month: 'long', year: 'numeric' })}`
-      : d.toLocaleDateString('en-US', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
-    if (!acc[key]) acc[key] = []
-    acc[key].push(c)
-    return acc
-  }, {})
+  const grouped = filtered.reduce<Record<string, CheckinMeeting[]>>(
+    (acc, c) => {
+      const d = new Date(c.scheduled_at);
+      const today = new Date();
+      const isToday = d.toDateString() === today.toDateString();
+      const key = isToday
+        ? `Today, ${d.toLocaleDateString("en-US", { day: "numeric", month: "long", year: "numeric" })}`
+        : d.toLocaleDateString("en-US", {
+            weekday: "long",
+            day: "numeric",
+            month: "long",
+            year: "numeric",
+          });
+      if (!acc[key]) acc[key] = [];
+      acc[key].push(c);
+      return acc;
+    },
+    {},
+  );
 
-  const sortedGroups = Object.entries(grouped).sort(([, a], [, b]) =>
-    new Date(a[0].scheduled_at).getTime() - new Date(b[0].scheduled_at).getTime()
-  )
+  const sortedGroups = Object.entries(grouped).sort(
+    ([, a], [, b]) =>
+      new Date(a[0].scheduled_at).getTime() -
+      new Date(b[0].scheduled_at).getTime(),
+  );
 
   return (
     <div className="space-y-5">
       {/* Header */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h3 className="text-[16px] font-semibold text-[var(--text-primary)]">Schedule</h3>
-          <p className="text-[12px] text-[var(--text-secondary)] mt-0.5">Manage all sessions and meetings for this client</p>
+          <h3 className="text-[16px] font-semibold text-[var(--text-primary)]">
+            Schedule
+          </h3>
+          <p className="text-[12px] text-[var(--text-secondary)] mt-0.5">
+            Manage all sessions and meetings for this client
+          </p>
         </div>
-        <motion.button onClick={() => onOpenScheduleModal(new Date())} whileTap={{ scale: 0.97 }}
-          className="flex items-center gap-1.5 px-4 py-2 rounded-s-xl text-[12px] font-semibold bg-brand-600 hover:bg-brand-700 text-white transition-colors self-start sm:self-auto">
+        <motion.button
+          onClick={() => onOpenScheduleModal(new Date())}
+          whileTap={{ scale: 0.97 }}
+          className="flex items-center gap-1.5 px-4 py-2 rounded-s-xl text-[12px] font-semibold bg-brand-600 hover:bg-brand-700 text-white transition-colors self-start sm:self-auto"
+        >
           <Plus size={14} /> Create Appointment
         </motion.button>
       </div>
@@ -182,39 +288,62 @@ export function ClientScheduleTab({
       {/* Filter tabs */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-0.5 overflow-x-auto pb-1 sm:pb-0">
-          {FILTER_TABS.map(f => (
-            <button key={f} onClick={() => setScheduleFilter(f)}
-              className={`px-3 py-1.5 text-[12px] rounded-s-xl font-medium whitespace-nowrap transition-colors ${
-                scheduleFilter === f
-                  ? 'text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 font-semibold'
-                  : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-subtle)] dark:hover:bg-white/[0.04]'
-              }`}>{f}</button>
-          ))}
+          <FilterBreadcrumb
+            items={FILTER_TABS.map((f) => ({ key: f, label: f }))}
+            value={scheduleFilter}
+            onChange={setScheduleFilter}
+          />
         </div>
         <div className="flex items-center gap-1 text-[11px] text-[var(--text-secondary)]">
-          {socketConnected
-            ? <><Wifi size={10} className="text-emerald-400" /><span className="text-emerald-400">Live</span></>
-            : <><WifiOff size={10} className="text-[var(--text-tertiary)]" /><span>Offline</span></>}
+          {socketConnected ? (
+            <>
+              <Wifi size={10} className="text-emerald-400" />
+              <span className="text-emerald-400">Live</span>
+            </>
+          ) : (
+            <>
+              <WifiOff size={10} className="text-[var(--text-tertiary)]" />
+              <span>Offline</span>
+            </>
+          )}
         </div>
       </div>
 
       {/* Empty state */}
       <AnimatePresence mode="wait">
         {filtered.length === 0 ? (
-          <EmptyState key={scheduleFilter} filter={scheduleFilter} onSchedule={() => onOpenScheduleModal(new Date())} />
+          <EmptyState
+            key={scheduleFilter}
+            filter={scheduleFilter}
+            onSchedule={() => onOpenScheduleModal(new Date())}
+          />
         ) : (
-          <motion.div key={scheduleFilter} className="space-y-6"
-            initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.3 }}>
+          <motion.div
+            key={scheduleFilter}
+            className="space-y-6"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.3 }}
+          >
             {sortedGroups.map(([dateLabel, events]) => (
               <div key={dateLabel}>
-                <p className="text-[11px] font-semibold uppercase tracking-widest text-[var(--text-tertiary)] dark:text-[var(--text-tertiary)] mb-3 pl-1">{dateLabel}</p>
+                <p className="text-[11px] font-semibold uppercase tracking-widest text-[var(--text-tertiary)] dark:text-[var(--text-tertiary)] mb-3 pl-1">
+                  {dateLabel}
+                </p>
                 <div className="space-y-3">
                   {events.map((c, i) => {
-                    const isExpanded = activeChatId === c.id
-                    const chatOpen = activeChatId === `chat-${c.id}`
-                    const meta = statusMeta(c)
-                    const typeLabel = c.type === 'video' ? 'Video Call' : c.type === 'call' ? 'Phone Call' : 'Chat Session'
-                    const endTime = new Date(new Date(c.scheduled_at).getTime() + 60 * 60 * 1000)
+                    const isExpanded = activeChatId === c.id;
+                    const chatOpen = activeChatId === `chat-${c.id}`;
+                    const meta = statusMeta(c);
+                    const typeLabel =
+                      c.type === "video"
+                        ? "Video Call"
+                        : c.type === "call"
+                          ? "Phone Call"
+                          : "Chat Session";
+                    const endTime = new Date(
+                      new Date(c.scheduled_at).getTime() + 60 * 60 * 1000,
+                    );
 
                     return (
                       <motion.div
@@ -228,35 +357,75 @@ export function ClientScheduleTab({
                         {/* Card header */}
                         <div className="flex flex-col gap-3 p-4 sm:p-5">
                           <div className="flex items-start gap-3 sm:gap-4">
-                            <div className={`w-10 h-10 flex items-center justify-center flex-shrink-0 rounded-md ${
-                              c.type === 'video' ? 'bg-blue-500/10 dark:bg-blue-900/20' : c.type === 'call' ? 'bg-emerald-500/10 dark:bg-emerald-900/20' : 'bg-purple-500/10 dark:bg-purple-900/20'
-                            }`}>
-                              {c.type === 'video' ? <Video size={16} className="text-blue-500 dark:text-blue-400" />
-                                : c.type === 'call' ? <PhoneCall size={16} className="text-emerald-500 dark:text-emerald-400" />
-                                : <Hash size={16} className="text-purple-500 dark:text-purple-400" />}
+                            <div
+                              className={`w-10 h-10 flex items-center justify-center flex-shrink-0 rounded-md ${
+                                c.type === "video"
+                                  ? "bg-blue-500/10 dark:bg-blue-900/20"
+                                  : c.type === "call"
+                                    ? "bg-emerald-500/10 dark:bg-emerald-900/20"
+                                    : "bg-purple-500/10 dark:bg-purple-900/20"
+                              }`}
+                            >
+                              {c.type === "video" ? (
+                                <Video
+                                  size={16}
+                                  className="text-blue-500 dark:text-blue-400"
+                                />
+                              ) : c.type === "call" ? (
+                                <PhoneCall
+                                  size={16}
+                                  className="text-emerald-500 dark:text-emerald-400"
+                                />
+                              ) : (
+                                <Hash
+                                  size={16}
+                                  className="text-purple-500 dark:text-purple-400"
+                                />
+                              )}
                             </div>
                             <div className="flex-1 min-w-0">
-                              <p className="text-[14px] font-semibold text-[var(--text-primary)] leading-snug">{typeLabel}</p>
+                              <p className="text-[14px] font-semibold text-[var(--text-primary)] leading-snug">
+                                {typeLabel}
+                              </p>
                               <p className="text-[12px] text-[var(--text-secondary)] mt-0.5 line-clamp-1">
-                                {c.notes || `Session with ${client?.name ?? 'client'}`}
+                                {c.notes ||
+                                  `Session with ${client?.name ?? "client"}`}
                               </p>
                             </div>
                             <div className="flex items-center gap-2 flex-shrink-0 flex-wrap justify-end">
-                              <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 text-[11px] font-semibold border ${meta.border} ${meta.color} ${meta.bgSoft}`}>
-                                <span className={`w-1.5 h-1.5 rounded-full ${meta.bg}`} />
+                              <span
+                                className={`inline-flex items-center gap-1.5 px-2.5 py-1 text-[11px] font-semibold border ${meta.border} ${meta.color} ${meta.bgSoft}`}
+                              >
+                                <span
+                                  className={`w-1.5 h-1.5 rounded-full ${meta.bg}`}
+                                />
                                 {meta.label}
                               </span>
-                              <button onClick={() => setActiveChatId(isExpanded ? null : c.id)}
-                                className="hidden sm:flex items-center gap-1 px-3 py-1.5 rounded-s-xl border border-[var(--border)] dark:border-white/[0.08] bg-[var(--bg-card)] dark:bg-white/[0.03] text-[11px] font-semibold text-[var(--text-secondary)] dark:text-slate-300 hover:bg-[var(--bg-hover)] dark:hover:bg-white/[0.06] transition-colors">
+                              <button
+                                onClick={() =>
+                                  setActiveChatId(isExpanded ? null : c.id)
+                                }
+                                className="hidden sm:flex items-center gap-1 px-3 py-1.5 rounded-s-xl border border-[var(--border)] dark:border-white/[0.08] bg-[var(--bg-card)] dark:bg-white/[0.03] text-[11px] font-semibold text-[var(--text-secondary)] dark:text-slate-300 hover:bg-[var(--bg-hover)] dark:hover:bg-white/[0.06] transition-colors"
+                              >
                                 View Details
-                                <ChevronDown size={12} className={`transition-transform ${isExpanded ? 'rotate-180' : ''}`} />
+                                <ChevronDown
+                                  size={12}
+                                  className={`transition-transform ${isExpanded ? "rotate-180" : ""}`}
+                                />
                               </button>
                             </div>
                           </div>
-                          <button onClick={() => setActiveChatId(isExpanded ? null : c.id)}
-                            className="sm:hidden flex items-center justify-center gap-1 px-3 py-1.5 border border-[var(--border)] dark:border-white/[0.08] bg-[var(--bg-card)] dark:bg-white/[0.03] text-[11px] font-semibold text-[var(--text-secondary)] dark:text-slate-300">
-                            {isExpanded ? 'Hide Details' : 'View Details'}
-                            <ChevronDown size={12} className={`transition-transform ${isExpanded ? 'rotate-180' : ''}`} />
+                          <button
+                            onClick={() =>
+                              setActiveChatId(isExpanded ? null : c.id)
+                            }
+                            className="sm:hidden flex items-center justify-center gap-1 px-3 py-1.5 border border-[var(--border)] dark:border-white/[0.08] bg-[var(--bg-card)] dark:bg-white/[0.03] text-[11px] font-semibold text-[var(--text-secondary)] dark:text-slate-300"
+                          >
+                            {isExpanded ? "Hide Details" : "View Details"}
+                            <ChevronDown
+                              size={12}
+                              className={`transition-transform ${isExpanded ? "rotate-180" : ""}`}
+                            />
                           </button>
                         </div>
 
@@ -265,7 +434,7 @@ export function ClientScheduleTab({
                           {isExpanded && (
                             <motion.div
                               initial={{ opacity: 0, height: 0 }}
-                              animate={{ opacity: 1, height: 'auto' }}
+                              animate={{ opacity: 1, height: "auto" }}
                               exit={{ opacity: 0, height: 0 }}
                               transition={{ duration: 0.3, ease: "easeInOut" }}
                               className="border-t border-[var(--border)] dark:border-white/[0.06]"
@@ -274,47 +443,109 @@ export function ClientScheduleTab({
                                 <div className="space-y-3">
                                   <div className="flex gap-6">
                                     <div>
-                                      <p className="text-[10px] font-semibold uppercase tracking-widest text-[var(--text-tertiary)] dark:text-[var(--text-tertiary)]">Start</p>
-                                      <p className="text-[13px] font-medium text-[var(--text-primary)] dark:text-white mt-0.5" style={{ fontFamily: 'var(--font-mono)' }}>{formatDate(c.scheduled_at, 'h:mm a')}</p>
+                                      <p className="text-[10px] font-semibold uppercase tracking-widest text-[var(--text-tertiary)] dark:text-[var(--text-tertiary)]">
+                                        Start
+                                      </p>
+                                      <p
+                                        className="text-[13px] font-medium text-[var(--text-primary)] dark:text-white mt-0.5"
+                                        style={{
+                                          fontFamily: "var(--font-mono)",
+                                        }}
+                                      >
+                                        {formatDate(c.scheduled_at, "h:mm a")}
+                                      </p>
                                     </div>
                                     <div>
-                                      <p className="text-[10px] font-semibold uppercase tracking-widest text-[var(--text-tertiary)] dark:text-[var(--text-tertiary)]">End</p>
-                                      <p className="text-[13px] font-medium text-[var(--text-primary)] dark:text-white mt-0.5" style={{ fontFamily: 'var(--font-mono)' }}>{formatDate(endTime.toISOString(), 'h:mm a')}</p>
+                                      <p className="text-[10px] font-semibold uppercase tracking-widest text-[var(--text-tertiary)] dark:text-[var(--text-tertiary)]">
+                                        End
+                                      </p>
+                                      <p
+                                        className="text-[13px] font-medium text-[var(--text-primary)] dark:text-white mt-0.5"
+                                        style={{
+                                          fontFamily: "var(--font-mono)",
+                                        }}
+                                      >
+                                        {formatDate(
+                                          endTime.toISOString(),
+                                          "h:mm a",
+                                        )}
+                                      </p>
                                     </div>
                                   </div>
                                   <div>
-                                    <p className="text-[10px] font-semibold uppercase tracking-widest text-[var(--text-tertiary)]">Date</p>
-                                    <p className="text-[12px] text-[var(--text-secondary)] dark:text-slate-300">{formatDate(c.scheduled_at, 'EEE, MMM d yyyy')}</p>
+                                    <p className="text-[10px] font-semibold uppercase tracking-widest text-[var(--text-tertiary)]">
+                                      Date
+                                    </p>
+                                    <p className="text-[12px] text-[var(--text-secondary)] dark:text-slate-300">
+                                      {formatDate(
+                                        c.scheduled_at,
+                                        "EEE, MMM d yyyy",
+                                      )}
+                                    </p>
                                   </div>
                                 </div>
                                 <div className="space-y-3">
                                   <div>
-                                    <p className="text-[10px] font-semibold uppercase tracking-widest text-[var(--text-tertiary)] dark:text-[var(--text-tertiary)]">Meeting Link</p>
-                                    <a href={getVideoRoom(c)} target="_blank" rel="noopener noreferrer"
-                                      className="inline-flex items-center gap-1.5 text-[12px] font-medium text-blue-600 dark:text-blue-400 hover:text-blue-700 mt-0.5 transition-colors">
+                                    <p className="text-[10px] font-semibold uppercase tracking-widest text-[var(--text-tertiary)] dark:text-[var(--text-tertiary)]">
+                                      Meeting Link
+                                    </p>
+                                    <a
+                                      href={getVideoRoom(c)}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="inline-flex items-center gap-1.5 text-[12px] font-medium text-blue-600 dark:text-blue-400 hover:text-blue-700 mt-0.5 transition-colors"
+                                    >
                                       <Video size={12} />
-                                      {c.type === 'video' ? 'Connect Meeting' : 'Join Session'}
+                                      {c.type === "video"
+                                        ? "Connect Meeting"
+                                        : "Join Session"}
                                     </a>
                                   </div>
                                   <div>
-                                    <p className="text-[10px] font-semibold uppercase tracking-widest text-[var(--text-tertiary)] dark:text-[var(--text-tertiary)]">Email</p>
-                                    <p className="text-[12px] text-[var(--text-secondary)] dark:text-slate-300 mt-0.5">{client?.email ?? '—'}</p>
+                                    <p className="text-[10px] font-semibold uppercase tracking-widest text-[var(--text-tertiary)] dark:text-[var(--text-tertiary)]">
+                                      Email
+                                    </p>
+                                    <p className="text-[12px] text-[var(--text-secondary)] dark:text-slate-300 mt-0.5">
+                                      {client?.email ?? "—"}
+                                    </p>
                                   </div>
                                 </div>
                                 <div className="space-y-3">
                                   <div>
-                                    <p className="text-[10px] font-semibold uppercase tracking-widest text-[var(--text-tertiary)] dark:text-[var(--text-tertiary)]">Client Response</p>
-                                    <span className={`inline-flex items-center mt-1 px-2 py-0.5 text-[11px] font-semibold capitalize border ${
-                                      c.client_response === 'accepted' ? 'border-emerald-500/20 bg-emerald-500/8 text-emerald-400'
-                                      : c.client_response === 'declined' ? 'border-rose-500/20 bg-rose-500/8 text-rose-400'
-                                      : c.client_response === 'reschedule_requested' ? 'border-amber-500/20 bg-amber-500/8 text-amber-400'
-                                      : 'border-[var(--border)] bg-[var(--bg-subtle)] text-[var(--text-tertiary)]'
-                                    }`}>{c.client_response.replace('_', ' ')}</span>
+                                    <p className="text-[10px] font-semibold uppercase tracking-widest text-[var(--text-tertiary)] dark:text-[var(--text-tertiary)]">
+                                      Client Response
+                                    </p>
+                                    <span
+                                      className={`inline-flex items-center mt-1 px-2 py-0.5 text-[11px] font-semibold capitalize border ${
+                                        c.client_response === "accepted"
+                                          ? "border-emerald-500/20 bg-emerald-500/8 text-emerald-400"
+                                          : c.client_response === "declined"
+                                            ? "border-rose-500/20 bg-rose-500/8 text-rose-400"
+                                            : c.client_response ===
+                                                "reschedule_requested"
+                                              ? "border-amber-500/20 bg-amber-500/8 text-amber-400"
+                                              : "border-[var(--border)] bg-[var(--bg-subtle)] text-[var(--text-tertiary)]"
+                                      }`}
+                                    >
+                                      {c.client_response.replace("_", " ")}
+                                    </span>
                                   </div>
                                   {c.proposed_scheduled_at && (
                                     <div>
-                                      <p className="text-[10px] font-semibold uppercase tracking-widest text-amber-500">Proposed Time</p>
-                                      <p className="text-[12px] text-amber-600 dark:text-amber-400 mt-0.5" style={{ fontFamily: 'var(--font-mono)' }}>{formatDate(c.proposed_scheduled_at, 'EEE, MMM d · h:mm a')}</p>
+                                      <p className="text-[10px] font-semibold uppercase tracking-widest text-amber-500">
+                                        Proposed Time
+                                      </p>
+                                      <p
+                                        className="text-[12px] text-amber-600 dark:text-amber-400 mt-0.5"
+                                        style={{
+                                          fontFamily: "var(--font-mono)",
+                                        }}
+                                      >
+                                        {formatDate(
+                                          c.proposed_scheduled_at,
+                                          "EEE, MMM d · h:mm a",
+                                        )}
+                                      </p>
                                     </div>
                                   )}
                                 </div>
@@ -322,45 +553,72 @@ export function ClientScheduleTab({
 
                               {(c.notes || c.client_response_note) && (
                                 <div className="px-4 sm:px-5 pb-4">
-                                  <p className="text-[10px] font-semibold uppercase tracking-widest text-[var(--text-tertiary)] mb-1.5">Meeting Notes</p>
+                                  <p className="text-[10px] font-semibold uppercase tracking-widest text-[var(--text-tertiary)] mb-1.5">
+                                    Meeting Notes
+                                  </p>
                                   <p className="text-[12px] text-[var(--text-secondary)] dark:text-[var(--text-tertiary)] leading-relaxed bg-[var(--bg-subtle)] dark:bg-white/[0.02] p-3 border border-[var(--border)] dark:border-white/[0.04]">
                                     {c.notes}
-                                    {c.client_response_note && <span className="block mt-2 text-[var(--text-tertiary)] italic">Client: {c.client_response_note}</span>}
+                                    {c.client_response_note && (
+                                      <span className="block mt-2 text-[var(--text-tertiary)] italic">
+                                        Client: {c.client_response_note}
+                                      </span>
+                                    )}
                                   </p>
                                 </div>
                               )}
 
                               <div className="flex items-center gap-2 px-4 sm:px-5 pb-4 flex-wrap bg-[var(--bg-card)]">
-                                {c.status === 'scheduled' && (
+                                {c.status === "scheduled" && (
                                   <>
-                                    {c.type === 'video' && (
-                                      <a href={getVideoRoom(c)} target="_blank" rel="noopener noreferrer"
-                                        className="flex items-center gap-1.5 px-4 py-2 text-[12px] font-semibold bg-brand-600 hover:bg-brand-700 text-white transition-colors">
+                                    {c.type === "video" && (
+                                      <a
+                                        href={getVideoRoom(c)}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="flex items-center gap-1.5 px-4 py-2 text-[12px] font-semibold bg-brand-600 hover:bg-brand-700 text-white transition-colors"
+                                      >
                                         <Video size={13} /> Join Call
                                       </a>
                                     )}
-                                    {c.type === 'call' && client?.phone && (
-                                      <a href={`tel:${client.phone}`}
-                                        className="flex items-center gap-1.5 rounded-s-xl px-4 py-2 text-[12px] font-semibold bg-emerald-600 hover:bg-emerald-500 text-white transition-colors">
+                                    {c.type === "call" && client?.phone && (
+                                      <a
+                                        href={`tel:${client.phone}`}
+                                        className="flex items-center gap-1.5 rounded-s-xl px-4 py-2 text-[12px] font-semibold bg-emerald-600 hover:bg-emerald-500 text-white transition-colors"
+                                      >
                                         <PhoneCall size={13} /> Call Now
                                       </a>
                                     )}
-                                    <button onClick={() => onReschedule(c)}
-                                      className="flex items-center gap-1.5 px-4 rounded-s-xl py-2 text-[12px] font-semibold bg-[var(--bg-subtle)] dark:bg-white/[0.05] hover:bg-[var(--bg-hover)] dark:hover:bg-white/[0.08] text-[var(--text-primary)] border border-[var(--border)] dark:border-white/[0.08] transition-colors">
+                                    <button
+                                      onClick={() => onReschedule(c)}
+                                      className="flex items-center gap-1.5 px-4 rounded-s-xl py-2 text-[12px] font-semibold bg-[var(--bg-subtle)] dark:bg-white/[0.05] hover:bg-[var(--bg-hover)] dark:hover:bg-white/[0.08] text-[var(--text-primary)] border border-[var(--border)] dark:border-white/[0.08] transition-colors"
+                                    >
                                       <RefreshCw size={13} /> Reschedule
                                     </button>
-                                    <button onClick={() => onCancel(c)} disabled={isDeleteCheckinPending}
-                                      className="flex items-center gap-1.5 px-3 py-2 text-[12px] rounded-s-xl font-medium text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/15 transition-colors border border-transparent hover:border-red-200 dark:hover:border-red-800/30 disabled:opacity-50">
-                                      {isDeleteCheckinPending ? 'Cancelling…' : 'Cancel'}
+                                    <button
+                                      onClick={() => onCancel(c)}
+                                      disabled={isDeleteCheckinPending}
+                                      className="flex items-center gap-1.5 px-3 py-2 text-[12px] rounded-s-xl font-medium text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/15 transition-colors border border-transparent hover:border-red-200 dark:hover:border-red-800/30 disabled:opacity-50"
+                                    >
+                                      {isDeleteCheckinPending
+                                        ? "Cancelling…"
+                                        : "Cancel"}
                                     </button>
                                   </>
                                 )}
-                                <button onClick={() => setActiveChatId(chatOpen ? null : `chat-${c.id}`)}
+                                <button
+                                  onClick={() =>
+                                    setActiveChatId(
+                                      chatOpen ? null : `chat-${c.id}`,
+                                    )
+                                  }
                                   className={`flex items-center gap-1.5 px-3 py-2 rounded-s-xl text-[12px] font-medium transition-colors ml-auto ${
-                                    chatOpen ? 'bg-purple-600 text-white' : 'text-[var(--text-secondary)] border border-[var(--border)] dark:border-white/[0.08] hover:bg-[var(--bg-hover)] dark:hover:bg-white/[0.04]'
-                                  }`}>
+                                    chatOpen
+                                      ? "bg-purple-600 text-white"
+                                      : "text-[var(--text-secondary)] border border-[var(--border)] dark:border-white/[0.08] hover:bg-[var(--bg-hover)] dark:hover:bg-white/[0.04]"
+                                  }`}
+                                >
                                   <MessageCircle size={13} />
-                                  {chatOpen ? 'Close Chat' : 'Open Chat'}
+                                  {chatOpen ? "Close Chat" : "Open Chat"}
                                 </button>
                               </div>
 
@@ -371,34 +629,88 @@ export function ClientScheduleTab({
                                     initial={{ opacity: 0, height: 0 }}
                                     animate={{ opacity: 1, height: 300 }}
                                     exit={{ opacity: 0, height: 0 }}
-                                    transition={{ duration: 0.3, ease: "easeInOut" }}
+                                    transition={{
+                                      duration: 0.3,
+                                      ease: "easeInOut",
+                                    }}
                                     className="border-t border-[var(--border)] dark:border-white/[0.06] flex flex-col"
                                   >
                                     <div className="flex items-center gap-2 px-4 py-2 bg-[var(--bg-page)] dark:bg-[var(--bg-page)] border-b border-[var(--border)] dark:border-white/[0.05]">
-                                      {socketConnected
-                                        ? <><Wifi size={10} className="text-emerald-400" /><span className="text-[10px] text-emerald-400">Connected · live chat</span></>
-                                        : <><WifiOff size={10} className="text-[var(--text-tertiary)]" /><span className="text-[10px] text-[var(--text-tertiary)]">Offline — messages saved via REST</span></>}
+                                      {socketConnected ? (
+                                        <>
+                                          <Wifi
+                                            size={10}
+                                            className="text-emerald-400"
+                                          />
+                                          <span className="text-[10px] text-emerald-400">
+                                            Connected · live chat
+                                          </span>
+                                        </>
+                                      ) : (
+                                        <>
+                                          <WifiOff
+                                            size={10}
+                                            className="text-[var(--text-tertiary)]"
+                                          />
+                                          <span className="text-[10px] text-[var(--text-tertiary)]">
+                                            Offline — messages saved via REST
+                                          </span>
+                                        </>
+                                      )}
                                     </div>
                                     <div className="flex-1 overflow-y-auto p-3 space-y-2 bg-[var(--bg-page)] dark:bg-[var(--bg-page)]">
                                       {allMessages
-                                        .filter((m: any, i: number, arr: any[]) => arr.findIndex((x: any) => x.id === m.id) === i)
-                                        .sort((a: any, b: any) => new Date(a.sent_at).getTime() - new Date(b.sent_at).getTime())
+                                        .filter(
+                                          (m: any, i: number, arr: any[]) =>
+                                            arr.findIndex(
+                                              (x: any) => x.id === m.id,
+                                            ) === i,
+                                        )
+                                        .sort(
+                                          (a: any, b: any) =>
+                                            new Date(a.sent_at).getTime() -
+                                            new Date(b.sent_at).getTime(),
+                                        )
                                         .map((m: any) => (
-                                          <div key={m.id} className={`flex ${m.sender_role === 'coach' ? 'justify-end' : 'justify-start'}`}>
-                                            <div className={`max-w-[80%] px-3 py-2 text-[12px] ${m.sender_role === 'coach' ? 'bg-brand-600 text-white' : 'bg-[var(--bg-subtle)] border border-[var(--border)] dark:border-white/[0.07] text-[var(--text-secondary)] dark:text-slate-300'}`}>
+                                          <div
+                                            key={m.id}
+                                            className={`flex ${m.sender_role === "coach" ? "justify-end" : "justify-start"}`}
+                                          >
+                                            <div
+                                              className={`max-w-[80%] px-3 py-2 text-[12px] ${m.sender_role === "coach" ? "bg-brand-600 text-white" : "bg-[var(--bg-subtle)] border border-[var(--border)] dark:border-white/[0.07] text-[var(--text-secondary)] dark:text-slate-300"}`}
+                                            >
                                               <p>{m.content}</p>
-                                              <p className={`text-[10px] mt-0.5 ${m.sender_role === 'coach' ? 'text-blue-200' : 'text-[var(--text-tertiary)]'}`}>{timeAgo(m.sent_at)}</p>
+                                              <p
+                                                className={`text-[10px] mt-0.5 ${m.sender_role === "coach" ? "text-blue-200" : "text-[var(--text-tertiary)]"}`}
+                                              >
+                                                {timeAgo(m.sent_at)}
+                                              </p>
                                             </div>
                                           </div>
                                         ))}
-                                      {allMessages.length === 0 && <p className="text-center text-[12px] text-[var(--text-tertiary)] py-6">No messages yet — say hello!</p>}
+                                      {allMessages.length === 0 && (
+                                        <p className="text-center text-[12px] text-[var(--text-tertiary)] py-6">
+                                          No messages yet — say hello!
+                                        </p>
+                                      )}
                                       <div ref={chatEndRef} />
                                     </div>
                                     <div className="p-3 border-t border-[var(--border)] dark:border-white/[0.05] bg-[var(--bg-card)] flex gap-2">
-                                      <input value={msg} onChange={e => setMsg(e.target.value)} onKeyDown={e => e.key === 'Enter' && onSend()}
+                                      <input
+                                        value={msg}
+                                        onChange={(e) => setMsg(e.target.value)}
+                                        onKeyDown={(e) =>
+                                          e.key === "Enter" && onSend()
+                                        }
                                         placeholder="Send a message…"
-                                        className="flex-1 bg-[var(--bg-page)] dark:bg-[var(--bg-page)] border border-[var(--border)] dark:border-white/[0.07] px-3 py-2 text-[12px] text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)] outline-none focus:border-[var(--energy)] dark:focus:border-[#a3e635]/40" />
-                                      <motion.button onClick={onSend} disabled={!msg.trim()} whileTap={{ scale: 0.92 }} className="px-3 py-2 bg-brand-600 hover:bg-brand-700 rounded-s-xl text-white transition-colors disabled:opacity-40">
+                                        className="flex-1 bg-[var(--bg-page)] dark:bg-[var(--bg-page)] border border-[var(--border)] dark:border-white/[0.07] px-3 py-2 text-[12px] text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)] outline-none focus:border-[var(--energy)] dark:focus:border-[#a3e635]/40"
+                                      />
+                                      <motion.button
+                                        onClick={onSend}
+                                        disabled={!msg.trim()}
+                                        whileTap={{ scale: 0.92 }}
+                                        className="px-3 py-2 bg-brand-600 hover:bg-brand-700 rounded-s-xl text-white transition-colors disabled:opacity-40"
+                                      >
                                         <Send size={13} />
                                       </motion.button>
                                     </div>
@@ -409,7 +721,7 @@ export function ClientScheduleTab({
                           )}
                         </AnimatePresence>
                       </motion.div>
-                    )
+                    );
                   })}
                 </div>
               </div>
@@ -418,5 +730,5 @@ export function ClientScheduleTab({
         )}
       </AnimatePresence>
     </div>
-  )
+  );
 }

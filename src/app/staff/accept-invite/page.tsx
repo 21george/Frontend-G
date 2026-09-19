@@ -89,9 +89,10 @@ function AcceptInviteForm() {
         password: data.password,
       });
       const { staff, access_token } = res.data || {};
-      if (staff && access_token) {
-        setStaff(staff, access_token);
+      if (!staff || !access_token) {
+        throw new Error("Invite accepted but no credentials were returned.");
       }
+      setStaff(staff, access_token);
       setSuccess(true);
       setTimeout(() => router.push("/dashboard"), 1200);
     } catch (e: unknown) {
@@ -111,7 +112,7 @@ function AcceptInviteForm() {
   const inputCls =
     "w-full border border-white/[0.08] rounded-lg pl-9 pr-4 py-[11px] text-[13px] bg-white/[0.03] " +
     "text-white placeholder:text-white/20 " +
-    "focus:outline-none focus:ring-1 focus:ring-[#a3e635]/40 focus:border-[#a3e635]/40 " +
+    "focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus:ring-[#a3e635]/40 focus:border-[#a3e635]/40 " +
     "disabled:opacity-40 transition-all duration-200 hover:border-white/[0.12]";
 
   // Avoid rendering token-dependent UI until after hydration so the server
@@ -128,7 +129,7 @@ function AcceptInviteForm() {
         transition={{ duration: 0.5 }}
         className="relative z-10 w-full max-w-[340px] mx-4 bg-[#0a1114]/80 backdrop-blur-xl border border-white/[0.06] rounded-2xl px-8 py-9 text-center"
       >
-        <CheckCircle className="w-12 h-12 text-[#a3e635] mx-auto mb-4" />
+        <CheckCircle className="w-12 h-12 text-energy mx-auto mb-4" />
         <h1 className="text-xl font-bold text-white mb-2">Account Activated</h1>
         <p className="text-[13px] text-white/50 mb-6">
           Your invite has been accepted. Redirecting to your dashboard...
@@ -271,7 +272,7 @@ function AcceptInviteForm() {
         <motion.div variants={itemVariants}>
           <motion.button
             type="submit"
-                disabled={isLoading || !token || !isClient}
+            disabled={isLoading || !token || !isClient}
             className="w-full bg-[#a3e635] hover:bg-[#bef264] active:bg-[#8bc52f] text-[#0a1114] font-bold text-[14px] py-[11px] rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 mt-1"
             style={{ fontFamily: "var(--font-mono)", letterSpacing: "0.05em" }}
             whileHover={{ scale: 1.02 }}
@@ -310,10 +311,7 @@ export default function AcceptInvitePage() {
   return (
     <div className="relative min-h-screen flex items-center justify-center overflow-hidden bg-[#060d10]">
       {/* Background image overlay */}
-      <div
-        className="absolute inset-0 bg-[#060d10]/85"
-        aria-hidden
-      />
+      <div className="absolute inset-0 bg-[#060d10]/85" aria-hidden />
 
       {/* Breathing radial glow */}
       <motion.div

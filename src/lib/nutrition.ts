@@ -24,31 +24,60 @@ export const emptyMeal = (): Meal => ({
   foods: [emptyFood()],
 });
 
-export function parseQuantityToGrams(quantityStr: string): number {
+// Parses a plain, fractional ("1/2"), or mixed-number ("1 1/2") quantity into a float.
+function parseQuantityValue(raw: string): number {
+  const mixed = raw.match(/^(\d+)\s+(\d+)\/(\d+)$/);
+  if (mixed) {
+    return (
+      parseInt(mixed[1], 10) + parseInt(mixed[2], 10) / parseInt(mixed[3], 10)
+    );
+  }
+  const fraction = raw.match(/^(\d+)\/(\d+)$/);
+  if (fraction) {
+    return parseInt(fraction[1], 10) / parseInt(fraction[2], 10);
+  }
+  return parseFloat(raw);
+}
+
+// Volume units are density-dependent; without a density we'd silently
+// assume water (1ml = 1g), which is wrong for foods like oil or flour.
+export function parseQuantityToGrams(
+  quantityStr: string,
+  gramsPerMl?: number,
+): number {
   if (!quantityStr) return 0;
   const match = quantityStr.match(
-    /^\s*(\d+(?:\.\d+)?)\s*(g|kg|ml|l|oz|lb|cup|tbsp|tsp)?\s*$/i,
+    /^\s*(\d+\s+\d+\/\d+|\d+\/\d+|\d+(?:\.\d+)?)\s*(g|kg|ml|l|oz|lb|cup|tbsp|tsp)?\s*$/i,
   );
-  if (!match) return 0;
-  const val = parseFloat(match[1]);
+  if (!match) {
+    throw new Error(`Unrecognized quantity: "${quantityStr}"`);
+  }
+  const val = parseQuantityValue(match[1]);
   const unit = (match[2] ?? "g").toLowerCase();
+
+  const volumeToMl: Record<string, number> = {
+    l: 1000,
+    ml: 1,
+    cup: 240,
+    tbsp: 15,
+    tsp: 5,
+  };
+  if (unit in volumeToMl) {
+    if (gramsPerMl === undefined) {
+      throw new Error(
+        `Cannot convert volume unit "${unit}" to grams without a density (gramsPerMl).`,
+      );
+    }
+    return val * volumeToMl[unit] * gramsPerMl;
+  }
+
   switch (unit) {
     case "kg":
       return val * 1000;
-    case "l":
-      return val * 1000;
-    case "ml":
-      return val;
     case "oz":
       return val * 28.35;
     case "lb":
       return val * 453.6;
-    case "cup":
-      return val * 240;
-    case "tbsp":
-      return val * 15;
-    case "tsp":
-      return val * 5;
     default:
       return val;
   }
@@ -127,7 +156,8 @@ export function healthScore(plan: NutritionPlan): number {
   const pR = (protein_g * 4) / calories;
   const cR = (carbs_g * 4) / calories;
   const fR = (fat_g * 9) / calories;
-  const bal = 1 - Math.abs(pR - 0.3) - Math.abs(cR - 0.45) - Math.abs(fR - 0.25);
+  const bal =
+    1 - Math.abs(pR - 0.3) - Math.abs(cR - 0.45) - Math.abs(fR - 0.25);
   return Math.min(10, Math.max(1, Math.round(bal * 12)));
 }
 
@@ -146,12 +176,36 @@ export interface MealColorSet {
 }
 
 export const mealColors: MealColorSet[] = [
-  { bg: "bg-orange-50 dark:bg-orange-900/15", border: "border-orange-200 dark:border-orange-800/30", icon: "text-orange-500" },
-  { bg: "bg-blue-50 dark:bg-blue-900/15", border: "border-blue-200 dark:border-blue-800/30", icon: "text-blue-500" },
-  { bg: "bg-purple-50 dark:bg-purple-900/15", border: "border-purple-200 dark:border-purple-800/30", icon: "text-purple-500" },
-  { bg: "bg-indigo-50 dark:bg-indigo-900/15", border: "border-indigo-200 dark:border-indigo-800/30", icon: "text-indigo-500" },
-  { bg: "bg-emerald-50 dark:bg-emerald-900/15", border: "border-emerald-200 dark:border-emerald-800/30", icon: "text-emerald-500" },
-  { bg: "bg-rose-50 dark:bg-rose-900/15", border: "border-rose-200 dark:border-rose-800/30", icon: "text-rose-500" },
+  {
+    bg: "bg-orange-50 dark:bg-orange-900/15",
+    border: "border-orange-200 dark:border-orange-800/30",
+    icon: "text-orange-500",
+  },
+  {
+    bg: "bg-blue-50 dark:bg-blue-900/15",
+    border: "border-blue-200 dark:border-blue-800/30",
+    icon: "text-blue-500",
+  },
+  {
+    bg: "bg-purple-50 dark:bg-purple-900/15",
+    border: "border-purple-200 dark:border-purple-800/30",
+    icon: "text-purple-500",
+  },
+  {
+    bg: "bg-indigo-50 dark:bg-indigo-900/15",
+    border: "border-indigo-200 dark:border-indigo-800/30",
+    icon: "text-indigo-500",
+  },
+  {
+    bg: "bg-emerald-50 dark:bg-emerald-900/15",
+    border: "border-emerald-200 dark:border-emerald-800/30",
+    icon: "text-emerald-500",
+  },
+  {
+    bg: "bg-rose-50 dark:bg-rose-900/15",
+    border: "border-rose-200 dark:border-rose-800/30",
+    icon: "text-rose-500",
+  },
 ];
 
 const MEAL_TYPES = ["Breakfast", "Lunch", "Snack", "Dinner"] as const;
@@ -162,7 +216,8 @@ export function classifyMealName(name: string): MealType | "Other" {
   if (n.includes("breakfast") || n.includes("morning")) return "Breakfast";
   if (n.includes("lunch") || n.includes("midday")) return "Lunch";
   if (n.includes("snack") || n.includes("bite")) return "Snack";
-  if (n.includes("dinner") || n.includes("supper") || n.includes("evening")) return "Dinner";
+  if (n.includes("dinner") || n.includes("supper") || n.includes("evening"))
+    return "Dinner";
   return "Other";
 }
 

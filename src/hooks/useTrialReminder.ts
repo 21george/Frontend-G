@@ -41,7 +41,7 @@ export interface TrialReminderState {
 
 export function useTrialReminder(): TrialReminderState {
   const coach = useAuthStore((s) => s.coach);
-  const toastFiredRef = useRef(false);
+  const toastFiredRef = useRef<string | null>(null);
 
   const { showReminder, daysLeft, trialEndsAt } = useMemo(() => {
     const trialEnds = coach?.trial_ends_at ?? null;
@@ -74,7 +74,12 @@ export function useTrialReminder(): TrialReminderState {
   useEffect(() => {
     const trialEnds = coach?.trial_ends_at ?? null;
     const status = coach?.subscription_status ?? null;
-    if (!trialEnds || status !== "trialing" || toastFiredRef.current) return;
+    if (
+      !trialEnds ||
+      status !== "trialing" ||
+      toastFiredRef.current === trialEnds
+    )
+      return;
 
     const end = new Date(trialEnds);
     const now = new Date();
@@ -86,7 +91,7 @@ export function useTrialReminder(): TrialReminderState {
     // Only show once for this specific trial end date
     if (getToastShownForTrial() === trialEnds) return;
 
-    toastFiredRef.current = true;
+    toastFiredRef.current = trialEnds;
     setToastShownForTrial(trialEnds);
 
     const formattedDate = end.toLocaleDateString("en-US", {
@@ -125,6 +130,7 @@ export function useTrialReminder(): TrialReminderState {
     if (typeof window === "undefined") return;
     window.localStorage.removeItem(MODAL_STORAGE_KEY);
     window.localStorage.removeItem(TOAST_STORAGE_KEY);
+    toastFiredRef.current = null;
   };
 
   return { showReminder, daysLeft, trialEndsAt, dismiss, clearDismiss };

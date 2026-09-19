@@ -19,6 +19,7 @@ import {
   MoreHorizontal,
 } from "lucide-react";
 import { AnimatedSearch } from "@/components/ui/AnimatedSearch";
+import FilterBreadcrumb from "@/components/ui/Breadcrumb";
 import { NutritionListCard } from "@/components/clients/NutritionListCard";
 import type { NutritionPlan } from "@/types";
 
@@ -61,10 +62,16 @@ function getMealTypes(plan: NutritionPlan): MealTab[] {
   plan.days?.forEach((day) =>
     day.meals.forEach((meal) => {
       const n = meal.meal_name.toLowerCase().trim();
-      if (n.includes("breakfast") || n.includes("morning")) types.add("Breakfast");
+      if (n.includes("breakfast") || n.includes("morning"))
+        types.add("Breakfast");
       else if (n.includes("lunch") || n.includes("midday")) types.add("Lunch");
       else if (n.includes("snack") || n.includes("bite")) types.add("Snack");
-      else if (n.includes("dinner") || n.includes("supper") || n.includes("evening")) types.add("Dinner");
+      else if (
+        n.includes("dinner") ||
+        n.includes("supper") ||
+        n.includes("evening")
+      )
+        types.add("Dinner");
     }),
   );
   return Array.from(types);
@@ -409,7 +416,9 @@ export default function NutritionPlansPage() {
   const [sortBy, setSortBy] = useState<"calories" | "score" | "name">(
     "calories",
   );
-  const [statusFilter, setStatusFilter] = useState<"all" | "active" | "draft" | "completed">("all");
+  const [statusFilter, setStatusFilter] = useState<
+    "all" | "active" | "draft" | "completed"
+  >("all");
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
 
   const togglePlan = (id: string) => {
@@ -424,21 +433,24 @@ export default function NutritionPlansPage() {
   const plans = rawPlans as NutritionPlan[];
 
   // Resolve clients for each plan from client_ids or single client_id
-  const getPlanClients = useCallback((plan: NutritionPlan) => {
-    const ids = plan.client_ids ?? (plan.client_id ? [plan.client_id] : []);
-    return ids
-      .map((id) => {
-        const c = clients.find((client) => client.id === id);
-        return c
-          ? { id: c.id, name: c.name, profile_photo_url: c.profile_photo_url }
-          : null;
-      })
-      .filter(Boolean) as {
-      id: string;
-      name: string;
-      profile_photo_url?: string | null;
-    }[];
-  }, [clients]);
+  const getPlanClients = useCallback(
+    (plan: NutritionPlan) => {
+      const ids = plan.client_ids ?? (plan.client_id ? [plan.client_id] : []);
+      return ids
+        .map((id) => {
+          const c = clients.find((client) => client.id === id);
+          return c
+            ? { id: c.id, name: c.name, profile_photo_url: c.profile_photo_url }
+            : null;
+        })
+        .filter(Boolean) as {
+        id: string;
+        name: string;
+        profile_photo_url?: string | null;
+      }[];
+    },
+    [clients],
+  );
 
   const filtered = useMemo(() => {
     let result = plans;
@@ -533,7 +545,11 @@ export default function NutritionPlansPage() {
             </AnimatedSearch>
             {/* Reset filters */}
             <button
-              onClick={() => { setSearch(""); setActiveTab("All"); setSortBy("calories"); }}
+              onClick={() => {
+                setSearch("");
+                setActiveTab("All");
+                setSortBy("calories");
+              }}
               className="w-9 h-9 rounded-md border border-[var(--border)] dark:border-white/[0.08] flex items-center justify-center text-[var(--text-secondary)] dark:text-[var(--text-secondary)] hover:bg-slate-50 dark:hover:bg-white/[0.05] transition-colors bg-[var(--bg-card)]"
               title="Reset filters"
             >
@@ -560,41 +576,51 @@ export default function NutritionPlansPage() {
             <div className=" bg-[var(--bg-card)] ">
               {/* Tabs + sort */}
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-4 pt-4 pb-3 border-b border-slate-100 dark:border-white/[0.05]">
-                <div className="flex items-center gap-1 flex-wrap">
-                  {/* Status filter */}
-                  <div className="flex items-center gap-1 mr-3 pr-3 border-r border-slate-200 dark:border-white/[0.08]">
-                    {(["all", "active", "draft", "completed"] as const).map((s) => (
-                      <button
-                        key={s}
-                        onClick={() => setStatusFilter(s)}
-                        className={`px-2.5 py-1 text-xs font-semibold rounded-md transition-all capitalize ${
-                          statusFilter === s
-                            ? "bg-slate-200 dark:bg-white/[0.08] text-slate-800 dark:text-slate-200"
-                            : "text-[var(--text-secondary)] dark:text-[var(--text-secondary)] hover:bg-slate-100 dark:hover:bg-white/[0.04]"
-                        }`}>
-                        {s}
-                      </button>
-                    ))}
-                  </div>
-                  <span className="text-sm font-semibold text-slate-700 dark:text-slate-200 mr-1">
-                    All Menu
-                  </span>
-                  {MEAL_TABS.map((tab) => {
-                    const active = activeTab === tab;
-                    return (
-                      <button
-                        key={tab}
-                        onClick={() => setActiveTab(tab)}
-                        className={`px-3 py-1 text-xs font-semibold rounded-md transition-all ${
-                          active
-                            ? "bg-brand-600 text-white shadow-sm"
-                            : "text-[var(--text-secondary)] dark:text-[var(--text-secondary)] hover:text-slate-700 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/[0.04]"
-                        }`}
-                      >
-                        {tab}
-                      </button>
-                    );
-                  })}
+                <div className="flex items-center gap-2 flex-wrap">
+                  {/* Status pills */}
+                  <FilterBreadcrumb
+                    items={[
+                      { key: "all", label: "All", count: plans.length },
+                      {
+                        key: "active",
+                        label: "Active",
+                        count: plans.filter(
+                          (p) => (p.status ?? "draft") === "active",
+                        ).length,
+                      },
+                      {
+                        key: "draft",
+                        label: "Draft",
+                        count: plans.filter(
+                          (p) => (p.status ?? "draft") === "draft",
+                        ).length,
+                      },
+                      {
+                        key: "completed",
+                        label: "Completed",
+                        count: plans.filter(
+                          (p) => (p.status ?? "draft") === "completed",
+                        ).length,
+                      },
+                    ]}
+                    value={statusFilter}
+                    onChange={setStatusFilter}
+                  />
+                  <div className="w-px h-5 bg-[var(--border)] dark:border-white/[0.08] mx-1 hidden sm:block" />
+                  {/* Meal type pills */}
+                  <FilterBreadcrumb
+                    items={MEAL_TABS.map((tab) => ({
+                      key: tab,
+                      label: tab,
+                      count:
+                        tab === "All"
+                          ? plans.length
+                          : plans.filter((p) => getMealTypes(p).includes(tab))
+                              .length,
+                    }))}
+                    value={activeTab}
+                    onChange={setActiveTab}
+                  />
                 </div>
                 {/* Sort */}
                 <div className="flex items-center gap-1.5 text-[var(--text-secondary)] dark:text-[var(--text-secondary)]">

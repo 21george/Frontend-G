@@ -248,19 +248,15 @@ export default function ClientDetailPage() {
           />
 
           {/* ══════════ RIGHT PANEL ══════════ */}
-          <main className="flex-1 flex flex-col overflow-hidden relative bg-[var(--bg-page)] dark:bg-[#060d10]">
+          <main className="flex-1 flex flex-col overflow-hidden relative bg-[var(--bg-page)] ">
             <div
               aria-hidden
               className="absolute inset-0 pointer-events-none opacity-0 dark:opacity-[0.04]"
-              style={{
-                backgroundImage:
-                  "radial-gradient(ellipse 80% 50% at 20% 40%, #a3e635 0%, transparent 60%), radial-gradient(ellipse 60% 70% at 80% 80%, #22d3ee 0%, transparent 55%)",
-              }}
             />
 
             <div className="flex-1 overflow-y-auto relative z-10">
               {/* Tab navigation */}
-              <div className="sticky top-0 z-20 flex items-center border-b border-[var(--border)] dark:border-white/[0.06] bg-[var(--bg-card)]/90 dark:bg-[#0a1114]/90 backdrop-blur-xl px-2 sm:px-5 overflow-x-auto scrollbar-hide shadow-[0_2px_16px_-4px_rgba(0,0,0,0.1)] dark:shadow-[0_4px_24px_-6px_rgba(0,0,0,0.4)]">
+              <div className="sticky top-0 z-20 flex items-center  dark:border-white/[0.06] bg-[var(--bg-card)]/90 dark:bg-[#0a1114]/90 backdrop-blur-xl px-2 sm:px-5 overflow-x-auto scrollbar-hide shadow-[0_2px_16px_-4px_rgba(0,0,0,0.1)] dark:shadow-[0_4px_24px_-6px_rgba(0,0,0,0.4)]">
                 <div
                   aria-hidden
                   className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[var(--energy)]/30 dark:via-[#a3e635]/20 to-transparent"
@@ -271,7 +267,7 @@ export default function ClientDetailPage() {
                     onClick={() => setTab(key)}
                     className={`relative px-3 sm:px-4 py-2.5 sm:py-3 text-[11px] sm:text-[12px] font-bold whitespace-nowrap transition-all ${
                       tab === key
-                        ? "text-[var(--energy)] dark:text-[#a3e635]"
+                        ? "text-[var(--energy)] dark:text-[#c5c7d2]"
                         : "text-[var(--text-tertiary)] hover:text-[var(--text-secondary)] dark:text-white/30 dark:hover:text-white/60"
                     }`}
                     style={{
@@ -283,7 +279,7 @@ export default function ClientDetailPage() {
                     {tab === key && (
                       <motion.div
                         layoutId="activeClientTab"
-                        className="absolute bottom-0 left-2 right-2 h-0.5 bg-[var(--energy)] dark:bg-[#a3e635] rounded-full"
+                        className="absolute bottom-0 left-2 right-2 h-0.5 bg-[var(--energy)] dark:bg-[#0a061e] rounded-full"
                         transition={{
                           type: "spring",
                           stiffness: 400,
@@ -377,7 +373,11 @@ export default function ClientDetailPage() {
       </div>
 
       {/* Modals */}
-      <ScheduleModal open={showScheduleModal} onClose={closeScheduleModal} clientId={id} />
+      <ScheduleModal
+        open={showScheduleModal}
+        onClose={closeScheduleModal}
+        clientId={id}
+      />
 
       <DeleteConfirmModal
         open={deleteModal.open}

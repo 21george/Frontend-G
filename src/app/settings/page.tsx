@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useAuthStore } from "@/store/auth";
+import { useAuthStore, canViewTeam } from "@/store/auth";
 import { useThemeStore } from "@/store/theme";
 import {
   useSubscription,
@@ -500,7 +500,7 @@ export default function SettingsPage() {
           {/* ── Right Column ── */}
           <div className="space-y-6">
             {/* Team Management — only for owner / admin */}
-            {(!isStaff || staffRole === "admin") && (
+            {canViewTeam(isStaff, staffRole) && (
               <Card>
                 <CardHeader
                   icon={<Users className="w-5 h-5 text-white" />}
@@ -651,8 +651,7 @@ export default function SettingsPage() {
                   <div className="mb-4 p-3 bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-900/30 rounded-lg">
                     <p className="text-sm text-amber-700 dark:text-amber-400">
                       Trial active until{" "}
-                      <ClientDate date={subscription?.trial_ends_at} />
-                      .
+                      <ClientDate date={subscription?.trial_ends_at} />.
                     </p>
                   </div>
                 )}

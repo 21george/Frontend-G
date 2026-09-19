@@ -30,6 +30,7 @@ import {
 } from "lucide-react";
 import { humanDate } from "@/lib/formatDate";
 import { motion } from "framer-motion";
+import FilterBreadcrumb from "@/components/ui/Breadcrumb";
 
 /* ── Icon & colour maps ─────────────────────────────────────────────── */
 
@@ -172,29 +173,15 @@ export default function NotificationsPage() {
         </div>
 
         <div className="flex items-center gap-2 flex-wrap">
-          {/* Filter */}
-          <div className="flex border border-[var(--border)] dark:border-white/[0.08] overflow-hidden rounded-lg">
-            <button
-              onClick={() => setFilter("all")}
-              className={`px-3 py-1.5 text-sm font-medium transition-colors ${
-                filter === "all"
-                  ? "bg-slate-900 text-white dark:bg-white dark:text-slate-900"
-                  : "bg-white text-slate-600 hover:bg-[var(--bg-hover)] dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-white/[0.04]"
-              }`}
-            >
-              All
-            </button>
-            <button
-              onClick={() => setFilter("unread")}
-              className={`px-3 py-1.5 text-sm font-medium transition-colors ${
-                filter === "unread"
-                  ? "bg-slate-900 text-white dark:bg-white dark:text-slate-900"
-                  : "bg-white text-slate-600 hover:bg-[var(--bg-hover)] dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-white/[0.04]"
-              }`}
-            >
-              Unread{totalUnread > 0 ? ` (${totalUnread})` : ""}
-            </button>
-          </div>
+          {/* Filter pills */}
+          <FilterBreadcrumb
+            items={[
+              { key: "all", label: "All" },
+              { key: "unread", label: "Unread", count: totalUnread },
+            ]}
+            value={filter}
+            onChange={setFilter}
+          />
 
           {totalUnread > 0 && (
             <button

@@ -23,6 +23,8 @@ import { Button } from "@/components/ui/button";
 import { SegmentedProgressBar } from "@/components/ui/SegmentedProgressBar";
 import { motion } from "framer-motion";
 import { MessageDrawer } from "@/components/messages/MessageDrawer";
+import Breadcrumb from "@/components/Breadcrumb/Breadcrumb";
+import FilterBreadcrumb from "@/components/ui/Breadcrumb";
 
 const MS_PER_DAY = 1000 * 60 * 60 * 24;
 const NEW_CLIENT_THRESHOLD_DAYS = 14;
@@ -313,7 +315,11 @@ export default function ClientsPage() {
     <DashboardLayout>
       <div className="min-h-screen">
         {/* Search Bar */}
-        <AnimatedSearch className="relative mb-4" iconClassName="left-4 w-4 h-4" active={search.length > 0}>
+        <AnimatedSearch
+          className="relative mb-4"
+          iconClassName="left-4 w-4 h-4"
+          active={search.length > 0}
+        >
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
@@ -323,43 +329,20 @@ export default function ClientsPage() {
         </AnimatedSearch>
 
         {/* Filter Pills — count display */}
-        <div className="flex flex-wrap items-center gap-2 mb-6">
-          {(
-            [
-              { key: "all", label: "All", count: stats.total },
-              { key: "active", label: "Active", count: stats.active },
-              { key: "new", label: "New", count: stats.newClients },
-              { key: "attention", label: "Attention", count: stats.attention },
-              { key: "group", label: "Group", count: stats.groupProgram },
-              {
-                key: "needs-plan",
-                label: "Needs Plan",
-                count: stats.needsPlan,
-              },
-            ] as { key: FilterKey; label: string; count: number }[]
-          ).map((f) => (
-            <button
-              key={f.key}
-              onClick={() => setFilter(f.key)}
-              className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold transition-all border ${
-                filter === f.key
-                  ? "bg-brand-600 text-white border-brand-600 shadow-sm"
-                  : "bg-white dark:bg-neutral-900 text-[var(--text-secondary)] border-[var(--border)] hover:border-brand-400 hover:text-brand-600 dark:hover:text-brand-400"
-              }`}
-            >
-              {f.label}
-              <span
-                className={`inline-flex items-center justify-center min-w-[1.25rem] h-5 px-1 rounded-full text-[10px] font-bold ${
-                  filter === f.key
-                    ? "bg-white/20 text-white"
-                    : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400"
-                }`}
-              >
-                {f.count}
-              </span>
-            </button>
-          ))}
-        </div>
+
+        <FilterBreadcrumb
+          items={[
+            { key: "all", label: "All", count: stats.total },
+            { key: "active", label: "Active", count: stats.active },
+            { key: "new", label: "New", count: stats.newClients },
+            { key: "attention", label: "Attention", count: stats.attention },
+            { key: "group", label: "Group", count: stats.groupProgram },
+            { key: "needs-plan", label: "Needs Plan", count: stats.needsPlan },
+          ]}
+          value={filter}
+          onChange={setFilter}
+          className="mb-4"
+        />
 
         {/* Clients Table — Card-based grid matching server-management style */}
         <QueryWrapper
@@ -617,9 +600,15 @@ export default function ClientsPage() {
                                 </div>
                                 <div className="text-xs text-[var(--text-secondary)]">
                                   {client.last_staff_activity
-                                    ? client.last_staff_activity.replace(/_/g, " ")
+                                    ? client.last_staff_activity.replace(
+                                        /_/g,
+                                        " ",
+                                      )
                                     : client.last_staff_role
-                                      ? client.last_staff_role.replace(/_/g, " ")
+                                      ? client.last_staff_role.replace(
+                                          /_/g,
+                                          " ",
+                                        )
                                       : "Instructor"}
                                 </div>
                               </div>

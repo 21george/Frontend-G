@@ -20,6 +20,7 @@ import { NearbyGymsButton } from "./NearbyGyms";
 import NotificationsButton from "@/components/notifications";
 import WeatherForecast from "@/components/weather";
 import { Avatar } from "@/components/ui/Avatar";
+import { GlobalSearch } from "@/components/GlobalSearch";
 
 interface QuickAction {
   href?: string;
@@ -254,6 +255,8 @@ export default function DashboardHeader({
           {subtitle}
         </p>
       </div>
+
+      <GlobalSearch pathname={pathname} />
 
       <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0 flex-wrap">
         <WeatherForecast />

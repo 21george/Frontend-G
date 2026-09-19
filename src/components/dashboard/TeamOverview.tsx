@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { Users, Activity, Clock, ArrowRight } from "lucide-react";
 import Link from "next/link";
@@ -23,8 +24,8 @@ function actionLabel(action: string): string {
   return labels[action] ?? action.replace(/_/g, " ");
 }
 
-function formatTimeAgo(iso: string): string {
-  const diff = Date.now() - new Date(iso).getTime();
+function formatTimeAgo(iso: string, now: number): string {
+  const diff = now - new Date(iso).getTime();
   const minutes = Math.floor(diff / 60000);
   if (minutes < 1) return "just now";
   if (minutes < 60) return `${minutes}m ago`;
@@ -39,8 +40,8 @@ function StatusDot({ status }: { status: StaffMember["status"] }) {
     status === "active"
       ? "bg-emerald-500"
       : status === "invited"
-      ? "bg-amber-500"
-      : "bg-red-500";
+        ? "bg-amber-500"
+        : "bg-red-500";
   return (
     <span
       className={`inline-block w-2 h-2 rounded-full ${color}`}
@@ -50,11 +51,28 @@ function StatusDot({ status }: { status: StaffMember["status"] }) {
 }
 
 export function TeamOverview({ clients }: { clients: Client[] }) {
-  const { data: activitiesData, isLoading: activitiesLoading } = useStaffActivities(1);
-  const { data: staff, isLoading: staffLoading } = useStaffList();
+  const {
+    data: activitiesData,
+    isLoading: activitiesLoading,
+    isError: activitiesError,
+    refetch: refetchActivities,
+  } = useStaffActivities(1);
+  const {
+    data: staff,
+    isLoading: staffLoading,
+    isError: staffError,
+    refetch: refetchStaff,
+  } = useStaffList();
   const activities: StaffActivity[] = activitiesData?.data ?? [];
 
   const clientsWithStaff = clients.filter((c) => c.last_staff_id);
+
+  // Refresh relative timestamps ('Xm ago') periodically while the dashboard stays open.
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    const id = setInterval(() => setNow(Date.now()), 60_000);
+    return () => clearInterval(id);
+  }, []);
 
   return (
     <motion.div
@@ -92,10 +110,24 @@ export function TeamOverview({ clients }: { clients: Client[] }) {
               </div>
             ))}
           </div>
+        ) : staffError ? (
+          <div className="text-sm text-[var(--text-secondary)]">
+            <p>Failed to load team members.</p>
+            <button
+              type="button"
+              onClick={() => refetchStaff()}
+              className="text-[var(--accent)] hover:underline mt-1"
+            >
+              Retry
+            </button>
+          </div>
         ) : (staff ?? []).length === 0 ? (
           <p className="text-sm text-[var(--text-secondary)]">
             No team members yet.{" "}
-            <Link href="/settings/team" className="text-[var(--accent)] hover:underline">
+            <Link
+              href="/settings/team"
+              className="text-[var(--accent)] hover:underline"
+            >
               Invite staff
             </Link>
             .
@@ -108,7 +140,9 @@ export function TeamOverview({ clients }: { clients: Client[] }) {
                 className="flex items-center gap-3 p-2 rounded-lg hover:bg-white/[0.03] transition-colors"
               >
                 <div className="w-8 h-8 flex items-center justify-center rounded-full bg-[var(--accent)]/10 text-[var(--accent)] text-xs font-bold flex-shrink-0">
-                  {s.name?.[0]?.toUpperCase() ?? s.email?.[0]?.toUpperCase() ?? "S"}
+                  {s.name?.[0]?.toUpperCase() ??
+                    s.email?.[0]?.toUpperCase() ??
+                    "S"}
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm text-[var(--text-primary)] truncate font-medium">
@@ -146,6 +180,17 @@ export function TeamOverview({ clients }: { clients: Client[] }) {
               </div>
             ))}
           </div>
+        ) : activitiesError ? (
+          <div className="text-sm text-[var(--text-secondary)]">
+            <p>Failed to load recent activity.</p>
+            <button
+              type="button"
+              onClick={() => refetchActivities()}
+              className="text-[var(--accent)] hover:underline mt-1"
+            >
+              Retry
+            </button>
+          </div>
         ) : activities.length === 0 ? (
           <p className="text-sm text-[var(--text-secondary)]">
             No recent activity.
@@ -162,14 +207,16 @@ export function TeamOverview({ clients }: { clients: Client[] }) {
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm text-[var(--text-primary)] truncate">
-                    <span className="font-medium">{a.staff_name ?? "Staff"}</span>
-                    {" "}
+                    <span className="font-medium">
+                      {a.staff_name ?? "Staff"}
+                    </span>{" "}
                     <span className="text-[var(--text-secondary)]">
                       {actionLabel(a.action)}
                     </span>
                     {a.client_name && (
                       <span className="text-[var(--text-secondary)]">
-                        {" "}for{" "}
+                        {" "}
+                        for{" "}
                         <span className="font-medium text-[var(--text-primary)]">
                           {a.client_name}
                         </span>
@@ -178,7 +225,7 @@ export function TeamOverview({ clients }: { clients: Client[] }) {
                   </p>
                   <p className="text-[11px] text-[var(--text-secondary)] mt-0.5 flex items-center gap-1">
                     <Clock className="w-3 h-3" />
-                    {a.created_at ? formatTimeAgo(a.created_at) : ""}
+                    {a.created_at ? formatTimeAgo(a.created_at, now) : ""}
                   </p>
                 </div>
               </div>
@@ -218,14 +265,14 @@ export function TeamOverview({ clients }: { clients: Client[] }) {
                     Last worked with{" "}
                     <span className="font-medium text-[var(--text-primary)]">
                       {c.last_staff_name ?? "Unknown"}
-                    </span>
-                    {" "}·{" "}
+                    </span>{" "}
+                    ·{" "}
                     {c.last_staff_activity
                       ? actionLabel(c.last_staff_activity)
                       : ""}
                     {c.last_staff_activity_at && (
                       <span className="ml-1">
-                        · {formatTimeAgo(c.last_staff_activity_at)}
+                        · {formatTimeAgo(c.last_staff_activity_at, now)}
                       </span>
                     )}
                   </p>

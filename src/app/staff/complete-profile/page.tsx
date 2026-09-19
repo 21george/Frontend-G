@@ -30,6 +30,7 @@ type ProfileValues = z.infer<typeof profileSchema>;
 export default function CompleteStaffProfilePage() {
   const router = useRouter();
   const staff = useAuthStore((s) => s.staff);
+  const accessToken = useAuthStore((s) => s.accessToken);
   const setStaff = useAuthStore((s) => s.setStaff);
   const isStaff = useAuthStore((s) => s.isStaff);
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
@@ -73,7 +74,7 @@ export default function CompleteStaffProfilePage() {
             role: updated.role ?? staff?.role ?? "instructor_coach",
             status: updated.status ?? staff?.status ?? "active",
           },
-          undefined,
+          accessToken ?? undefined,
         );
       }
       setSuccess(true);
@@ -93,7 +94,7 @@ export default function CompleteStaffProfilePage() {
   if (!isHydrated) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#060d10]">
-        <Loader2 className="w-8 h-8 text-[#a3e635] animate-spin" />
+        <Loader2 className="w-8 h-8 text-energy animate-spin" />
       </div>
     );
   }
@@ -101,7 +102,7 @@ export default function CompleteStaffProfilePage() {
   const inputCls =
     "w-full border border-white/[0.08] rounded-lg pl-9 pr-4 py-[11px] text-[13px] bg-white/[0.03] " +
     "text-white placeholder:text-white/20 " +
-    "focus:outline-none focus:ring-1 focus:ring-[#a3e635]/40 focus:border-[#a3e635]/40 " +
+    "focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus:ring-[#a3e635]/40 focus:border-[#a3e635]/40 " +
     "disabled:opacity-40 transition-all duration-200 hover:border-white/[0.12]";
 
   return (
