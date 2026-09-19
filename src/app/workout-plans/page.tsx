@@ -326,8 +326,11 @@ export default function WorkoutPlansPage() {
     filter !== "all" ? filter : undefined,
     typeFilter !== "all" ? typeFilter : undefined,
   );
+  // Unfiltered dataset used only to compute accurate filter-pill counts.
+  const allPlansQuery = useWorkoutPlans();
   const { data: clientsData } = useClients();
   const plans = query.data?.data ?? [];
+  const allPlans = allPlansQuery.data?.data ?? [];
   const clients = clientsData?.data ?? [];
 
   const filtered = useMemo(() => {
@@ -357,26 +360,22 @@ export default function WorkoutPlansPage() {
           <div className="flex items-center gap-2 flex-wrap">
             <FilterBreadcrumb
               items={[
-                { key: "all", label: "All", count: plans.length },
+                { key: "all", label: "All", count: allPlans.length },
                 {
                   key: "active",
                   label: "Active",
-                  count: plans.filter((p) => p.status === "active").length,
+                  count: allPlans.filter((p) => p.status === "active").length,
                 },
                 {
                   key: "draft",
                   label: "Draft",
-                  count: plans.filter((p) => p.status === "draft").length,
+                  count: allPlans.filter((p) => p.status === "draft").length,
                 },
                 {
                   key: "completed",
                   label: "Completed",
-                  count: plans.filter((p) => p.status === "completed").length,
-                },
-                {
-                  key: "saved",
-                  label: "Saved",
-                  count: plans.filter((p) => p.status === "saved").length,
+                  count: allPlans.filter((p) => p.status === "completed")
+                    .length,
                 },
               ]}
               value={filter}
@@ -385,28 +384,22 @@ export default function WorkoutPlansPage() {
             <div className="w-px h-5 bg-[var(--border)] dark:border-white/[0.08] mx-1 hidden sm:block" />
             <FilterBreadcrumb
               items={[
-                { key: "all", label: "All Types", count: plans.length },
-                {
-                  key: "individual",
-                  label: "Individual",
-                  count: plans.filter((p) => p.plan_type === "individual")
-                    .length,
-                },
                 {
                   key: "group",
                   label: "Group",
-                  count: plans.filter((p) => p.plan_type === "group").length,
+                  count: allPlans.filter((p) => p.plan_type === "group").length,
                 },
                 {
                   key: "team",
                   label: "Team",
-                  count: plans.filter((p) => p.plan_type === "team").length,
+                  count: allPlans.filter((p) => p.plan_type === "team").length,
                 },
               ]}
               value={typeFilter}
               onChange={setTypeFilter}
             />
           </div>
+
           <AnimatedSearch className="relative" active={search.length > 0}>
             <input
               type="text"

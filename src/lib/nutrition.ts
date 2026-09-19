@@ -28,13 +28,19 @@ export const emptyMeal = (): Meal => ({
 function parseQuantityValue(raw: string): number {
   const mixed = raw.match(/^(\d+)\s+(\d+)\/(\d+)$/);
   if (mixed) {
-    return (
-      parseInt(mixed[1], 10) + parseInt(mixed[2], 10) / parseInt(mixed[3], 10)
-    );
+    const denominator = parseInt(mixed[3], 10);
+    if (denominator === 0) {
+      throw new Error(`Unrecognized quantity: "${raw}"`);
+    }
+    return parseInt(mixed[1], 10) + parseInt(mixed[2], 10) / denominator;
   }
   const fraction = raw.match(/^(\d+)\/(\d+)$/);
   if (fraction) {
-    return parseInt(fraction[1], 10) / parseInt(fraction[2], 10);
+    const denominator = parseInt(fraction[2], 10);
+    if (denominator === 0) {
+      throw new Error(`Unrecognized quantity: "${raw}"`);
+    }
+    return parseInt(fraction[1], 10) / denominator;
   }
   return parseFloat(raw);
 }

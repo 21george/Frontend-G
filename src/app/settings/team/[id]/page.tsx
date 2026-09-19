@@ -20,10 +20,12 @@ import {
 } from "lucide-react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { Skeleton } from "@/components/ui/Skeleton";
+import { DeactivateStaffModal } from "@/components/DeactivateStaffModal";
 import { useAuthStore } from "@/store/auth";
 import {
   useStaffMember,
   useStaffActivities,
+  useStaffList,
   useDeactivateStaff,
   useUpdateStaffRole,
 } from "@/hooks/useStaff";
@@ -31,6 +33,7 @@ import { useClients, useCheckins, useWorkoutPlans } from "@/lib/hooks";
 import {
   STAFF_ROLE_LABELS,
   type StaffRole,
+  type StaffMember,
   type Client,
   type StaffActivity,
 } from "@/types";
@@ -100,16 +103,20 @@ export default function StaffMemberPage() {
 
   const [tab, setTab] = useState("clients");
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [toDeactivate, setToDeactivate] = useState<StaffMember | null>(null);
 
   const { data: staff, isLoading: staffLoading } = useStaffMember(staffId);
   const { data: activitiesData, isLoading: activitiesLoading } =
     useStaffActivities(1);
+  const { data: allStaffData } = useStaffList();
   const { data: clientsData, isLoading: clientsLoading } = useClients();
   const { data: checkinsData, isLoading: checkinsLoading } = useCheckins();
   const { data: plansData, isLoading: plansLoading } = useWorkoutPlans();
 
   const deactivateStaff = useDeactivateStaff();
   const updateRole = useUpdateStaffRole();
+
+  const allStaff: StaffMember[] = allStaffData ?? [];
 
   const allClients: Client[] =
     (clientsData as PaginatedResponse<Client> | undefined)?.data ?? [];
@@ -134,9 +141,7 @@ export default function StaffMemberPage() {
   });
 
   const staffPlans = allPlans.filter((p) =>
-    p.client_ids?.some((cid) =>
-      staffClients.some((c) => c.id === cid),
-    ),
+    p.client_ids?.some((cid) => staffClients.some((c) => c.id === cid)),
   );
 
   if (!isClient) {
@@ -156,10 +161,28 @@ export default function StaffMemberPage() {
 
   const statusColor =
     staff?.status === "active"
-      ? { text: "text-emerald-400", bg: "bg-emerald-400", border: "border-emerald-500/25", bgSoft: "bg-emerald-500/5", label: "Active" }
+      ? {
+          text: "text-emerald-400",
+          bg: "bg-emerald-400",
+          border: "border-emerald-500/25",
+          bgSoft: "bg-emerald-500/5",
+          label: "Active",
+        }
       : staff?.status === "invited"
-        ? { text: "text-blue-400", bg: "bg-blue-400", border: "border-blue-500/25", bgSoft: "bg-blue-500/5", label: "Invited" }
-        : { text: "text-slate-400", bg: "bg-slate-400", border: "border-slate-500/25", bgSoft: "bg-slate-500/5", label: "Deactivated" };
+        ? {
+            text: "text-blue-400",
+            bg: "bg-blue-400",
+            border: "border-blue-500/25",
+            bgSoft: "bg-blue-500/5",
+            label: "Invited",
+          }
+        : {
+            text: "text-slate-400",
+            bg: "bg-slate-400",
+            border: "border-slate-500/25",
+            bgSoft: "bg-slate-500/5",
+            label: "Deactivated",
+          };
 
   if (staffLoading) {
     return (
@@ -217,7 +240,7 @@ export default function StaffMemberPage() {
           <div className="flex items-center gap-1.5 sm:gap-2 flex-shrink-0">
             {staff.status !== "deactivated" && (
               <button
-                onClick={() => deactivateStaff.mutate({ id: staff.id })}
+                onClick={() => setToDeactivate(staff)}
                 disabled={deactivateStaff.isPending}
                 title="Deactivate staff member"
                 className="inline-flex items-center gap-1.5 border border-red-200 dark:border-red-900/40 rounded-lg px-2 sm:px-3 py-1.5 text-xs font-semibold text-red-600 dark:text-red-300 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors disabled:opacity-50"
@@ -282,7 +305,11 @@ export default function StaffMemberPage() {
                           "0 0 0 0px rgba(163,230,53,0)",
                         ],
                       }}
-                      transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut" }}
+                      transition={{
+                        duration: 2.5,
+                        repeat: Infinity,
+                        ease: "easeInOut",
+                      }}
                     />
                   )}
                 </div>
@@ -292,8 +319,12 @@ export default function StaffMemberPage() {
                 <p className="text-xs text-[var(--text-secondary)] mt-0.5">
                   {staff.email}
                 </p>
-                <div className={`mt-2 inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-tight border ${statusColor.border} ${statusColor.bgSoft} ${statusColor.text}`}>
-                  <span className={`relative flex h-1.5 w-1.5 rounded-full ${statusColor.bg}`}>
+                <div
+                  className={`mt-2 inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-tight border ${statusColor.border} ${statusColor.bgSoft} ${statusColor.text}`}
+                >
+                  <span
+                    className={`relative flex h-1.5 w-1.5 rounded-full ${statusColor.bg}`}
+                  >
                     {staff.status === "active" && (
                       <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
                     )}
@@ -313,20 +344,26 @@ export default function StaffMemberPage() {
                 </div>
                 <div className="space-y-2.5">
                   <div className="flex items-center justify-between">
-                    <span className="text-[11px] text-[var(--text-tertiary)]">Role</span>
+                    <span className="text-[11px] text-[var(--text-tertiary)]">
+                      Role
+                    </span>
                     <span className="text-[12px] text-[var(--text-secondary)] dark:text-slate-300 flex items-center gap-1">
                       <RoleIcon className="w-3 h-3" />
                       {STAFF_ROLE_LABELS[staff.role]}
                     </span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-[11px] text-[var(--text-tertiary)]">Email</span>
+                    <span className="text-[11px] text-[var(--text-tertiary)]">
+                      Email
+                    </span>
                     <span className="text-[12px] text-[var(--text-secondary)] dark:text-slate-300 truncate max-w-[140px]">
                       {staff.email}
                     </span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-[11px] text-[var(--text-tertiary)]">Invited</span>
+                    <span className="text-[11px] text-[var(--text-tertiary)]">
+                      Invited
+                    </span>
                     <span className="text-[12px] text-[var(--text-secondary)] dark:text-slate-300">
                       {staff.invited_at
                         ? new Date(staff.invited_at).toLocaleDateString("en-US")
@@ -335,9 +372,13 @@ export default function StaffMemberPage() {
                   </div>
                   {staff.activated_at && (
                     <div className="flex items-center justify-between">
-                      <span className="text-[11px] text-[var(--text-tertiary)]">Activated</span>
+                      <span className="text-[11px] text-[var(--text-tertiary)]">
+                        Activated
+                      </span>
                       <span className="text-[12px] text-[var(--text-secondary)] dark:text-slate-300">
-                        {new Date(staff.activated_at).toLocaleDateString("en-US")}
+                        {new Date(staff.activated_at).toLocaleDateString(
+                          "en-US",
+                        )}
                       </span>
                     </div>
                   )}
@@ -347,16 +388,35 @@ export default function StaffMemberPage() {
               {/* Quick stats in sidebar */}
               <div className="space-y-3">
                 <div className="flex items-center gap-1.5 mb-2">
-                  <Activity size={12} className="text-[var(--text-secondary)]" />
+                  <Activity
+                    size={12}
+                    className="text-[var(--text-secondary)]"
+                  />
                   <span className="text-[10px] font-semibold uppercase tracking-widest text-[var(--text-secondary)]">
                     Overview
                   </span>
                 </div>
                 <div className="grid grid-cols-2 gap-2">
-                  <SidebarStat label="Clients" value={staffClients.length} isLoading={clientsLoading} />
-                  <SidebarStat label="Plans" value={staffPlans.length} isLoading={plansLoading} />
-                  <SidebarStat label="Today" value={todaySchedule.length} isLoading={checkinsLoading} />
-                  <SidebarStat label="Activities" value={staffActivities.length} isLoading={activitiesLoading} />
+                  <SidebarStat
+                    label="Clients"
+                    value={staffClients.length}
+                    isLoading={clientsLoading}
+                  />
+                  <SidebarStat
+                    label="Plans"
+                    value={staffPlans.length}
+                    isLoading={plansLoading}
+                  />
+                  <SidebarStat
+                    label="Today"
+                    value={todaySchedule.length}
+                    isLoading={checkinsLoading}
+                  />
+                  <SidebarStat
+                    label="Activities"
+                    value={staffActivities.length}
+                    isLoading={activitiesLoading}
+                  />
                 </div>
               </div>
             </div>
@@ -477,10 +537,13 @@ export default function StaffMemberPage() {
                               className="flex items-center gap-3 p-2 rounded-lg hover:bg-white/[0.03] transition-colors"
                             >
                               <div className="w-8 h-8 flex items-center justify-center rounded-full bg-[var(--accent)]/10 text-[var(--accent)] text-xs font-bold flex-shrink-0">
-                                {new Date(s.scheduled_at).toLocaleTimeString([], {
-                                  hour: "2-digit",
-                                  minute: "2-digit",
-                                })}
+                                {new Date(s.scheduled_at).toLocaleTimeString(
+                                  [],
+                                  {
+                                    hour: "2-digit",
+                                    minute: "2-digit",
+                                  },
+                                )}
                               </div>
                               <div className="flex-1 min-w-0">
                                 <p className="text-sm font-medium text-[var(--text-primary)] truncate">
@@ -570,7 +633,8 @@ export default function StaffMemberPage() {
                                   {actionLabel(a.action)}
                                   {a.client_name && (
                                     <span className="text-[var(--text-secondary)]">
-                                      {" "}for{" "}
+                                      {" "}
+                                      for{" "}
                                       <span className="font-medium text-[var(--text-primary)]">
                                         {a.client_name}
                                       </span>
@@ -578,7 +642,9 @@ export default function StaffMemberPage() {
                                   )}
                                 </p>
                                 <p className="text-[11px] text-[var(--text-secondary)] mt-0.5">
-                                  {a.created_at ? formatTimeAgo(a.created_at) : ""}
+                                  {a.created_at
+                                    ? formatTimeAgo(a.created_at)
+                                    : ""}
                                 </p>
                               </div>
                             </div>
@@ -593,6 +659,12 @@ export default function StaffMemberPage() {
           </main>
         </div>
       </div>
+
+      <DeactivateStaffModal
+        staff={toDeactivate}
+        allStaff={allStaff}
+        onClose={() => setToDeactivate(null)}
+      />
     </DashboardLayout>
   );
 }
@@ -618,7 +690,9 @@ function SidebarStat({
       {isLoading ? (
         <Skeleton className="h-5 w-8 mx-auto" />
       ) : (
-        <div className="text-lg font-bold text-[var(--text-primary)]">{value}</div>
+        <div className="text-lg font-bold text-[var(--text-primary)]">
+          {value}
+        </div>
       )}
     </div>
   );

@@ -1,7 +1,6 @@
 "use client";
 
 import DashboardLayout from "@/components/layout/DashboardLayout";
-import { Button } from "@/components/ui/button";
 import {
   useCheckins,
   useClients,
@@ -26,7 +25,6 @@ import {
   ChevronDown,
   X,
   RotateCcw,
-  Play,
   CheckCircle2,
   XCircle,
   AlertTriangle,
@@ -456,21 +454,6 @@ function CheckinCard({
             </button>
           )}
 
-          {statusKey === "completed" && (
-            <>
-              <Button
-                variant="secondary"
-                size="sm"
-                className="rounded-lg text-[11px]"
-              >
-                <Play size={12} fill="currentColor" /> View Recording
-              </Button>
-              <button className="p-1.5 text-[var(--text-tertiary)] dark:text-white/40 hover:bg-[var(--bg-page)] dark:hover:bg-white/[0.04] rounded-lg transition-colors">
-                <X size={14} />
-              </button>
-            </>
-          )}
-
           {statusKey === "cancelled" && (
             <button
               onClick={() => onReschedule(checkin)}
@@ -602,19 +585,34 @@ export default function CheckinsPage() {
         {/* Main Content */}
         <main className="max-w-[1400px] mx-auto px-4 sm:px-6 py-6">
           {/* Filter Tabs */}
-          <div className="flex flex-wrap items-center gap-2 mb-5">
-            <FilterBreadcrumb
-              items={FILTER_TABS.map((t) => ({
-                key: t.key,
-                label: t.label,
-                count: counts[t.key],
-              }))}
-              value={filter}
-              onChange={setFilter}
-            />
-          </div>
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-5">
+            <div className="flex flex-wrap items-center gap-2">
+              <FilterBreadcrumb
+                items={FILTER_TABS.map((t) => ({
+                  key: t.key,
+                  label: t.label,
+                  count: counts[t.key],
+                }))}
+                value={filter}
+                onChange={setFilter}
+              />
+            </div>
 
-          {/* Toolbar */}
+            {/* Search */}
+            <div className="relative sm:w-64">
+              <Search
+                size={14}
+                className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-tertiary)] dark:text-white/30"
+              />
+              <input
+                type="text"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Search check-ins..."
+                className="w-full pl-9 pr-3 py-2 rounded-xl text-sm bg-[var(--bg-card)] dark:bg-white/[0.03] border border-[var(--border)] dark:border-white/[0.08] text-[var(--text-primary)] dark:text-white placeholder:text-[var(--text-tertiary)] dark:placeholder:text-white/20 focus:outline-none focus:ring-2 focus:ring-brand-700/20 dark:focus:ring-[var(--energy)]/20 transition-all"
+              />
+            </div>
+          </div>
 
           {grouped.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-24">

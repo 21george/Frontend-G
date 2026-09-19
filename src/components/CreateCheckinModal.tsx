@@ -81,10 +81,19 @@ export function CreateCheckinModal({
 
   const handleCopy = useCallback(() => {
     if (!meetingLink) return;
-    navigator.clipboard.writeText(meetingLink).then(() => {
-      setCopied(true);
-      setTimeout(() => setCopied(false), 1500);
-    });
+    if (!navigator.clipboard?.writeText) {
+      setCopied(false);
+      return;
+    }
+    navigator.clipboard
+      .writeText(meetingLink)
+      .then(() => {
+        setCopied(true);
+        setTimeout(() => setCopied(false), 1500);
+      })
+      .catch(() => {
+        setCopied(false);
+      });
   }, [meetingLink]);
 
   const selectedClient = clients.find((c) => c.id === clientId) ?? null;
@@ -157,7 +166,10 @@ export function CreateCheckinModal({
                 onClick={handleClose}
                 className="p-2 hover:bg-[var(--bg-page)] dark:hover:bg-white/[0.06] rounded-full transition-colors"
               >
-                <X size={18} className="text-[var(--text-tertiary)] dark:text-white/40" />
+                <X
+                  size={18}
+                  className="text-[var(--text-tertiary)] dark:text-white/40"
+                />
               </button>
             </div>
 
@@ -461,8 +473,13 @@ export function CreateCheckinModal({
                   </p>
                   <div className="space-y-3">
                     <div className="flex items-center gap-2 text-sm text-[var(--text-secondary)] dark:text-white/60">
-                      <User size={14} className="text-[var(--text-tertiary)] dark:text-white/30 shrink-0" />
-                      <span className="text-[var(--text-tertiary)] dark:text-white/30">Participant</span>
+                      <User
+                        size={14}
+                        className="text-[var(--text-tertiary)] dark:text-white/30 shrink-0"
+                      />
+                      <span className="text-[var(--text-tertiary)] dark:text-white/30">
+                        Participant
+                      </span>
                     </div>
                     <div className="flex items-center gap-2 pl-6">
                       <div className="w-6 h-6 rounded-full bg-[var(--border)] dark:bg-white/[0.08] shrink-0" />
@@ -476,9 +493,14 @@ export function CreateCheckinModal({
                     </div>
                     {meetingLink && (
                       <div className="flex items-start gap-2 text-sm">
-                        <Globe size={14} className="text-[var(--text-tertiary)] dark:text-white/30 mt-0.5 shrink-0" />
+                        <Globe
+                          size={14}
+                          className="text-[var(--text-tertiary)] dark:text-white/30 mt-0.5 shrink-0"
+                        />
                         <div className="min-w-0">
-                          <p className="text-xs text-[var(--text-tertiary)] dark:text-white/30 mb-0.5">Location</p>
+                          <p className="text-xs text-[var(--text-tertiary)] dark:text-white/30 mb-0.5">
+                            Location
+                          </p>
                           <a
                             href={meetingLink}
                             target="_blank"
@@ -492,9 +514,14 @@ export function CreateCheckinModal({
                     )}
                     {notes && (
                       <div className="flex items-start gap-2 text-sm text-[var(--text-secondary)] dark:text-white/60">
-                        <FileText size={14} className="text-[var(--text-tertiary)] dark:text-white/30 mt-0.5 shrink-0" />
+                        <FileText
+                          size={14}
+                          className="text-[var(--text-tertiary)] dark:text-white/30 mt-0.5 shrink-0"
+                        />
                         <div className="min-w-0">
-                          <p className="text-xs text-[var(--text-tertiary)] dark:text-white/30 mb-0.5">Note</p>
+                          <p className="text-xs text-[var(--text-tertiary)] dark:text-white/30 mb-0.5">
+                            Note
+                          </p>
                           <p className="line-clamp-3">{notes}</p>
                         </div>
                       </div>

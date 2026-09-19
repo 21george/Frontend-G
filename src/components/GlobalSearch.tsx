@@ -1,6 +1,13 @@
 "use client";
 
-import { useState, useRef, useEffect, useMemo, useCallback } from "react";
+import {
+  useState,
+  useRef,
+  useEffect,
+  useMemo,
+  useCallback,
+  useId,
+} from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
@@ -24,6 +31,7 @@ import {
 } from "lucide-react";
 import { useAllClients } from "@/hooks/useClients";
 import { useStaffList } from "@/hooks/useStaff";
+import { useAuthStore, canViewTeam } from "@/store/auth";
 import type { Client, StaffMember } from "@/types";
 
 interface SearchResult {
@@ -37,19 +45,80 @@ interface SearchResult {
 }
 
 const STATIC_PAGES: Omit<SearchResult, "id">[] = [
-  { type: "page", title: "Dashboard", href: "/dashboard", icon: <LayoutDashboard size={16} /> },
-  { type: "page", title: "Clients", href: "/clients", icon: <Users size={16} /> },
-  { type: "page", title: "Workout Plans", href: "/workout-plans", icon: <Dumbbell size={16} /> },
-  { type: "page", title: "Nutrition Plans", href: "/nutrition-plans", icon: <Apple size={16} /> },
-  { type: "page", title: "Check-ins", href: "/checkins", icon: <CalendarDays size={16} /> },
-  { type: "page", title: "Live Training", href: "/live-training", icon: <Video size={16} /> },
-  { type: "page", title: "Media", href: "/media", icon: <ImageIcon size={16} /> },
-  { type: "page", title: "Messages", href: "/messages", icon: <MessageSquare size={16} /> },
-  { type: "page", title: "Notifications", href: "/notifications", icon: <Bell size={16} /> },
-  { type: "page", title: "Settings — Team", href: "/settings/team", icon: <Users size={16} /> },
-  { type: "page", title: "Settings — Billing", href: "/billing", icon: <CreditCard size={16} /> },
-  { type: "page", title: "Profile Settings", href: "/settings/edit", icon: <Settings size={16} /> },
+  {
+    type: "page",
+    title: "Dashboard",
+    href: "/dashboard",
+    icon: <LayoutDashboard size={16} />,
+  },
+  {
+    type: "page",
+    title: "Clients",
+    href: "/clients",
+    icon: <Users size={16} />,
+  },
+  {
+    type: "page",
+    title: "Workout Plans",
+    href: "/workout-plans",
+    icon: <Dumbbell size={16} />,
+  },
+  {
+    type: "page",
+    title: "Nutrition Plans",
+    href: "/nutrition-plans",
+    icon: <Apple size={16} />,
+  },
+  {
+    type: "page",
+    title: "Check-ins",
+    href: "/checkins",
+    icon: <CalendarDays size={16} />,
+  },
+  {
+    type: "page",
+    title: "Live Training",
+    href: "/live-training",
+    icon: <Video size={16} />,
+  },
+  {
+    type: "page",
+    title: "Media",
+    href: "/media",
+    icon: <ImageIcon size={16} />,
+  },
+  {
+    type: "page",
+    title: "Messages",
+    href: "/messages",
+    icon: <MessageSquare size={16} />,
+  },
+  {
+    type: "page",
+    title: "Notifications",
+    href: "/notifications",
+    icon: <Bell size={16} />,
+  },
+  {
+    type: "page",
+    title: "Settings — Billing",
+    href: "/billing",
+    icon: <CreditCard size={16} />,
+  },
+  {
+    type: "page",
+    title: "Profile Settings",
+    href: "/settings/edit",
+    icon: <Settings size={16} />,
+  },
 ];
+
+const TEAM_PAGE: Omit<SearchResult, "id"> = {
+  type: "page",
+  title: "Settings — Team",
+  href: "/settings/team",
+  icon: <Users size={16} />,
+};
 
 function useDebounce<T>(value: T, delay = 200) {
   const [debounced, setDebounced] = useState(value);
@@ -87,15 +156,28 @@ export function GlobalSearch({ pathname }: GlobalSearchProps) {
   const [selectedIndex, setSelectedIndex] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const listboxRef = useRef<HTMLDivElement>(null);
+  const activeOptionRef = useRef<HTMLButtonElement>(null);
+  const listboxId = useId();
   const debouncedQuery = useDebounce(query, 150);
 
+  const { isStaff, staffRole } = useAuthStore();
+  const canSeeTeam = canViewTeam(isStaff, staffRole);
+
   const { data: allClients, isLoading: clientsLoading } = useAllClients();
-  const { data: staffList, isLoading: staffLoading } = useStaffList();
+  const { data: staffList, isLoading: staffLoading } = useStaffList({
+    enabled: canSeeTeam,
+  });
+
+  const staticPages = useMemo(
+    () => (canSeeTeam ? [...STATIC_PAGES, TEAM_PAGE] : STATIC_PAGES),
+    [canSeeTeam],
+  );
 
   const isLoading =
     (scope === "clients" && clientsLoading) ||
-    (scope === "staff" && staffLoading) ||
-    (scope === "all" && (clientsLoading || staffLoading));
+    (scope === "staff" && canSeeTeam && staffLoading) ||
+    (scope === "all" && (clientsLoading || (canSeeTeam && staffLoading)));
 
   const results = useMemo(() => {
     const q = debouncedQuery.trim().toLowerCase();
@@ -103,7 +185,10 @@ export function GlobalSearch({ pathname }: GlobalSearchProps) {
 
     if (!q) {
       // Show recent pages when empty
-      return STATIC_PAGES.slice(0, 6).map((p, i) => ({ ...p, id: `page-${i}` }));
+      return staticPages.slice(0, 6).map((p, i) => ({
+        ...p,
+        id: `page-${i}`,
+      }));
     }
 
     if (scope === "clients" || scope === "all") {
@@ -129,7 +214,7 @@ export function GlobalSearch({ pathname }: GlobalSearchProps) {
       }
     }
 
-    if (scope === "staff" || scope === "all") {
+    if ((scope === "staff" || scope === "all") && canSeeTeam) {
       if (staffList?.length) {
         staffList.forEach((s: StaffMember) => {
           if (
@@ -151,18 +236,23 @@ export function GlobalSearch({ pathname }: GlobalSearchProps) {
     }
 
     // Pages — always shown, but lower priority
-    STATIC_PAGES.forEach((p, i) => {
+    staticPages.forEach((p, i) => {
       if (p.title.toLowerCase().includes(q)) {
         out.push({ ...p, id: `page-${i}` });
       }
     });
 
     return out.slice(0, 12);
-  }, [debouncedQuery, allClients, staffList, scope]);
+  }, [debouncedQuery, allClients, staffList, scope, canSeeTeam, staticPages]);
 
   useEffect(() => {
     setSelectedIndex(0);
   }, [results.length]);
+
+  // Keep the highlighted option visible when navigating by keyboard
+  useEffect(() => {
+    activeOptionRef.current?.scrollIntoView({ block: "nearest" });
+  }, [selectedIndex]);
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
@@ -202,7 +292,10 @@ export function GlobalSearch({ pathname }: GlobalSearchProps) {
   useEffect(() => {
     if (!open) return;
     const onClick = (e: MouseEvent) => {
-      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+      if (
+        containerRef.current &&
+        !containerRef.current.contains(e.target as Node)
+      ) {
         setOpen(false);
       }
     };
@@ -260,17 +353,33 @@ export function GlobalSearch({ pathname }: GlobalSearchProps) {
             <input
               ref={inputRef}
               type="text"
+              aria-label={getPlaceholder(scope)}
+              role="combobox"
+              aria-expanded={open}
+              aria-controls={listboxId}
+              aria-autocomplete="list"
+              aria-activedescendant={
+                open && results[selectedIndex]
+                  ? `${listboxId}-option-${results[selectedIndex].id}`
+                  : undefined
+              }
               placeholder={getPlaceholder(scope)}
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              onFocus={() => { setFocused(true); setOpen(true); }}
+              onFocus={() => {
+                setFocused(true);
+                setOpen(true);
+              }}
               onBlur={() => setFocused(false)}
               onKeyDown={handleKeyDown}
               className="w-full pl-9 pr-9 py-2 bg-[var(--bg-page)] dark:bg-white/[0.03] border border-[var(--border)] dark:border-white/[0.08] rounded-xl text-sm text-[var(--text-primary)] dark:text-white placeholder:text-[var(--text-tertiary)] dark:placeholder:text-white/20 focus:outline-none focus:ring-2 focus:ring-brand-700/20 focus:border-brand-400 transition-colors"
             />
             {query ? (
               <button
-                onClick={() => { setQuery(""); inputRef.current?.focus(); }}
+                onClick={() => {
+                  setQuery("");
+                  inputRef.current?.focus();
+                }}
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--text-tertiary)] dark:text-white/30 hover:text-[var(--text-primary)] dark:hover:text-white transition-colors"
               >
                 <X size={14} />
@@ -300,11 +409,20 @@ export function GlobalSearch({ pathname }: GlobalSearchProps) {
               </div>
             ) : results.length === 0 ? (
               <div className="p-6 text-center">
-                <p className="text-sm font-medium text-[var(--text-primary)]">No results found</p>
-                <p className="text-xs text-[var(--text-tertiary)] mt-1">Try a different search term</p>
+                <p className="text-sm font-medium text-[var(--text-primary)]">
+                  No results found
+                </p>
+                <p className="text-xs text-[var(--text-tertiary)] mt-1">
+                  Try a different search term
+                </p>
               </div>
             ) : (
-              <div className="max-h-[60vh] overflow-y-auto py-2">
+              <div
+                className="max-h-[60vh] overflow-y-auto py-2"
+                role="listbox"
+                id={listboxId}
+                ref={listboxRef}
+              >
                 {groupOrder.map((group) => {
                   const items = grouped[group];
                   if (!items?.length) return null;
@@ -319,6 +437,10 @@ export function GlobalSearch({ pathname }: GlobalSearchProps) {
                         return (
                           <button
                             key={item.id}
+                            id={`${listboxId}-option-${item.id}`}
+                            ref={isSelected ? activeOptionRef : undefined}
+                            role="option"
+                            aria-selected={isSelected}
                             onMouseEnter={() => setSelectedIndex(globalIdx)}
                             onClick={() => {
                               router.push(item.href);
@@ -343,23 +465,29 @@ export function GlobalSearch({ pathname }: GlobalSearchProps) {
                                 />
                               </div>
                             ) : (
-                              <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${
-                                item.type === "client"
-                                  ? "bg-blue-50 text-blue-600 dark:bg-blue-900/20 dark:text-blue-300"
-                                  : item.type === "staff"
-                                    ? "bg-emerald-50 text-emerald-600 dark:bg-emerald-900/20 dark:text-emerald-300"
-                                    : "bg-slate-100 text-slate-500 dark:bg-slate-800/50 dark:text-slate-400"
-                              }`}>
+                              <div
+                                className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${
+                                  item.type === "client"
+                                    ? "bg-blue-50 text-blue-600 dark:bg-blue-900/20 dark:text-blue-300"
+                                    : item.type === "staff"
+                                      ? "bg-emerald-50 text-emerald-600 dark:bg-emerald-900/20 dark:text-emerald-300"
+                                      : "bg-slate-100 text-slate-500 dark:bg-slate-800/50 dark:text-slate-400"
+                                }`}
+                              >
                                 {item.icon}
                               </div>
                             )}
 
                             <div className="flex-1 min-w-0">
-                              <p className={`text-sm font-medium truncate ${isSelected ? "text-brand-700 dark:text-brand-300" : "text-[var(--text-primary)] dark:text-white"}`}>
+                              <p
+                                className={`text-sm font-medium truncate ${isSelected ? "text-brand-700 dark:text-brand-300" : "text-[var(--text-primary)] dark:text-white"}`}
+                              >
                                 {item.title}
                               </p>
                               {item.subtitle && (
-                                <p className="text-xs text-[var(--text-tertiary)] truncate">{item.subtitle}</p>
+                                <p className="text-xs text-[var(--text-tertiary)] truncate">
+                                  {item.subtitle}
+                                </p>
                               )}
                             </div>
 
@@ -379,10 +507,25 @@ export function GlobalSearch({ pathname }: GlobalSearchProps) {
             {/* Footer hint */}
             <div className="px-3 py-2 border-t border-[var(--border)] dark:border-white/[0.06] flex items-center justify-between text-[10px] text-[var(--text-tertiary)] dark:text-white/30">
               <div className="flex items-center gap-2">
-                <span><kbd className="font-mono bg-[var(--bg-page)] dark:bg-white/[0.04] px-1 rounded">↑↓</kbd> to navigate</span>
-                <span><kbd className="font-mono bg-[var(--bg-page)] dark:bg-white/[0.04] px-1 rounded">↵</kbd> to select</span>
+                <span>
+                  <kbd className="font-mono bg-[var(--bg-page)] dark:bg-white/[0.04] px-1 rounded">
+                    ↑↓
+                  </kbd>{" "}
+                  to navigate
+                </span>
+                <span>
+                  <kbd className="font-mono bg-[var(--bg-page)] dark:bg-white/[0.04] px-1 rounded">
+                    ↵
+                  </kbd>{" "}
+                  to select
+                </span>
               </div>
-              <span><kbd className="font-mono bg-[var(--bg-page)] dark:bg-white/[0.04] px-1 rounded">esc</kbd> to close</span>
+              <span>
+                <kbd className="font-mono bg-[var(--bg-page)] dark:bg-white/[0.04] px-1 rounded">
+                  esc
+                </kbd>{" "}
+                to close
+              </span>
             </div>
           </motion.div>
         )}

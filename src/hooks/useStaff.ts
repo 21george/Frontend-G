@@ -10,11 +10,12 @@ import type {
 const STAFF_KEY = ["org-staff"];
 const ACTIVITIES_KEY = ["org-staff-activities"];
 
-export const useStaffList = () =>
+export const useStaffList = (options?: { enabled?: boolean }) =>
   useQuery({
     queryKey: STAFF_KEY,
     queryFn: () => staffApi.list(),
     staleTime: 30_000,
+    enabled: options?.enabled ?? true,
   });
 
 export const useStaffMember = (id: string) =>

@@ -142,7 +142,14 @@ export default function TeamSettingsPage() {
   }, [search, filter]);
 
   const totalPages = Math.max(1, Math.ceil(filteredStaff.length / PER_PAGE));
-  const startIndex = (page - 1) * PER_PAGE;
+
+  // Clamp page if the filtered list shrinks below the current page (e.g. a staff member is removed)
+  useEffect(() => {
+    setPage((p) => Math.min(p, totalPages));
+  }, [totalPages]);
+
+  const currentPage = Math.min(page, totalPages);
+  const startIndex = (currentPage - 1) * PER_PAGE;
   const paginatedStaff = filteredStaff.slice(startIndex, startIndex + PER_PAGE);
 
   // Stats
@@ -262,15 +269,23 @@ export default function TeamSettingsPage() {
             </div>
           }
           emptyIcon={Users}
-          emptyTitle="No staff yet"
-          emptyDescription="You're currently the only member of your organization. Invite trainers, managers or front-desk staff to collaborate."
+          emptyTitle={
+            allStaff.length === 0 ? "No staff yet" : "No matching staff"
+          }
+          emptyDescription={
+            allStaff.length === 0
+              ? "You're currently the only member of your organization. Invite trainers, managers or front-desk staff to collaborate."
+              : "Try adjusting your search or filters to find who you're looking for."
+          }
           emptyAction={
-            <Button
-              onClick={() => setInviteOpen(true)}
-              className="bg-brand-600 text-white hover:bg-brand-700"
-            >
-              <Plus className="w-4 h-4" /> Invite Staff
-            </Button>
+            allStaff.length === 0 ? (
+              <Button
+                onClick={() => setInviteOpen(true)}
+                className="bg-brand-600 text-white hover:bg-brand-700"
+              >
+                <Plus className="w-4 h-4" /> Invite Staff
+              </Button>
+            ) : undefined
           }
           isEmpty={() => filteredStaff.length === 0}
         >
@@ -492,19 +507,19 @@ export default function TeamSettingsPage() {
                 </span>
                 <div className="flex items-center gap-2">
                   <span className="text-xs text-[var(--text-secondary)] mr-2">
-                    Page {page} of {totalPages}
+                    Page {currentPage} of {totalPages}
                   </span>
                   <button
                     onClick={() => setPage((p) => Math.max(1, p - 1))}
                     className="p-1.5 border rounded-xl border-[var(--border)] text-[var(--text-tertiary)] hover:bg-[var(--bg-subtle)] transition-colors disabled:opacity-50"
-                    disabled={page <= 1}
+                    disabled={currentPage <= 1}
                   >
                     <ChevronLeft className="w-4 h-4" />
                   </button>
                   <button
                     onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                     className="p-1.5 border rounded-xl border-[var(--border)] text-[var(--text-tertiary)] hover:bg-[var(--bg-subtle)] transition-colors disabled:opacity-50"
-                    disabled={page >= totalPages}
+                    disabled={currentPage >= totalPages}
                   >
                     <ChevronRight className="w-4 h-4" />
                   </button>

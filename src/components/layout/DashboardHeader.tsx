@@ -5,17 +5,7 @@ import { useAuthStore } from "@/store/auth";
 import { useThemeStore } from "@/store/theme";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import {
-  LucideIcon,
-  Upload,
-  Sun,
-  Moon,
-  User,
-  Calendar,
-  Video,
-  FileText,
-  ChevronRight,
-} from "lucide-react";
+import { LucideIcon,Upload,Sun,Moon,User,Calendar,Video, FileText, ChevronRight,} from "lucide-react";
 import { NearbyGymsButton } from "./NearbyGyms";
 import NotificationsButton from "@/components/notifications";
 import WeatherForecast from "@/components/weather";

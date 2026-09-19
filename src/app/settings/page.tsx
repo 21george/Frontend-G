@@ -249,7 +249,7 @@ function InfoRow({
 /* ── Main Page ─────────────────────────────────────────────────── */
 
 export default function SettingsPage() {
-  const { coach, isStaff, staffRole } = useAuthStore();
+  const { coach, isStaff, staffRole, hasHydrated } = useAuthStore();
   const { theme, toggle: toggleTheme } = useThemeStore();
   const { data: subscription, isLoading: subLoading } = useSubscription();
   const manageBilling = useManageBilling();
@@ -500,7 +500,7 @@ export default function SettingsPage() {
           {/* ── Right Column ── */}
           <div className="space-y-6">
             {/* Team Management — only for owner / admin */}
-            {canViewTeam(isStaff, staffRole) && (
+            {hasHydrated && canViewTeam(isStaff, staffRole) && (
               <Card>
                 <CardHeader
                   icon={<Users className="w-5 h-5 text-white" />}

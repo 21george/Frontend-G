@@ -25,9 +25,9 @@ export default function FilterBreadcrumb<T extends string = string>({
 }: FilterBreadcrumbProps<T>) {
   return (
     <div
-      role="tablist"
+      role="group"
       aria-label="Filter options"
-      className={`flex items-center ${className}`}
+      className={`flex items-center min-w-0 max-w-full overflow-x-auto ${className}`}
     >
       {items.map((item, index) => {
         const isActive = value === item.key;
@@ -38,8 +38,7 @@ export default function FilterBreadcrumb<T extends string = string>({
           <button
             key={item.key}
             type="button"
-            role="tab"
-            aria-selected={isActive}
+            aria-pressed={isActive}
             disabled={item.disabled}
             onClick={() => onChange(item.key)}
             className={`

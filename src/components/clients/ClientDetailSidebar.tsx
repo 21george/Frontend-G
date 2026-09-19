@@ -174,7 +174,7 @@ export function ClientDetailSidebar({
   return (
     <aside
       className={`
-      fixed inset-y-0 left-0 z-40 w-[85vw] max-w-[320px] sm:w-[300px] transform transition-transform duration-200 ease-out
+      fixed inset-y-0 left-0 z-40 w-[85vw] max-w-[320px] sm:w-[300px] transform transition-transform duration-200 ease-out overflow-y-auto
       md:relative md:inset-auto md:z-auto md:translate-x-0 md:w-[300px] md:top-auto md:bottom-auto
       ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}
      
