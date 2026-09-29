@@ -1,0 +1,8 @@
+# Allow all crawlers
+User-agent: *
+Allow: /
+
+# Disallow admin paths (if any)
+# Disallow: /admin
+
+Sitemap: https://your-demo-domain.com/sitemap.xml
