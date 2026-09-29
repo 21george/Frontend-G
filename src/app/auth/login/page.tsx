@@ -167,7 +167,7 @@ export default function LoginPage() {
         />
       )}
 
-      <div className="relative min-h-screen flex flex-col items-center justify-center overflow-hidden bg-[#060d10]">
+      <div className="relative min-h-screen flex flex-col items-center justify-center overflow-hidden bg-[#0c1d21]">
         {/* Brand mark above the card */}
         <motion.div
           initial={{ opacity: 0, y: -10 }}
@@ -197,7 +197,7 @@ export default function LoginPage() {
           transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
           className="relative z-10 w-full max-w-[400px] mx-4"
         >
-          <div className="bg-[#0c1d21]/90 backdrop-blur-xl border border-white/[0.06] rounded-2xl shadow-2xl shadow-black/50 overflow-hidden">
+          <div className="bg-[#0c1d21]/90 backdrop-blur-xl overflow-hidden">
             {/* Top sheen */}
             <div
               aria-hidden
@@ -347,14 +347,18 @@ export default function LoginPage() {
                     <motion.button
                       type="submit"
                       disabled={isLoading}
-                      className="w-full bg-[var(--energy)] text-[#0c1d21] font-bold text-[14px] py-3 rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 overflow-hidden relative hover:shadow-[0_0_20px_rgba(163,230,53,0.25)]"
+                      className="w-full bg-[var(--energy)] text-[#0c1d21] border-r-orange-300 font-bold text-[14px] py-3 rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 overflow-hidden relative hover:shadow-[0_0_20px_rgba(163,230,53,0.25)]"
                       style={{
                         fontFamily: "var(--font-mono)",
                         letterSpacing: "0.04em",
                       }}
                       whileHover={{ scale: 1.01 }}
                       whileTap={{ scale: 0.98 }}
-                      transition={{ type: "spring", stiffness: 400, damping: 17 }}
+                      transition={{
+                        type: "spring",
+                        stiffness: 400,
+                        damping: 17,
+                      }}
                     >
                       {isLoading && (
                         <Loader2 className="w-4 h-4 animate-spin" />

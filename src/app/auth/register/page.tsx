@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useEffect } from "react";
+import { useRef, useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import RegistrationNav from "@/components/layout/RegistrationNav";
@@ -27,13 +27,14 @@ export default function RegisterPage() {
   const clearAuth = useAuthStore((s) => s.clearAuth);
   const { step } = useSignupStore();
   const prevStep = useRef<number>(step);
-  const direction = step > prevStep.current ? 1 : -1;
+  const [direction, setDirection] = useState(1);
 
   useEffect(() => {
     clearAuth();
   }, [clearAuth]);
 
   useEffect(() => {
+    setDirection(step > prevStep.current ? 1 : -1);
     prevStep.current = step;
   }, [step]);
 
@@ -67,7 +68,9 @@ export default function RegisterPage() {
         {/* Subtle radial glow behind card */}
         <div
           className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full pointer-events-none opacity-20 blur-[120px]"
-          style={{ background: "radial-gradient(circle, #a3e635 0%, transparent 70%)" }}
+          style={{
+            background: "radial-gradient(circle, #a3e635 0%, transparent 70%)",
+          }}
           aria-hidden
         />
 

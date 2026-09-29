@@ -416,9 +416,12 @@ function IntlPhoneField({
     destroy: () => void;
   } | null>(null);
   const onChangeRef = useRef(onChange);
-  onChangeRef.current = onChange;
 
   const [phoneError, setPhoneError] = useState<string | null>(null);
+
+  useEffect(() => {
+    onChangeRef.current = onChange;
+  }, [onChange]);
 
   useEffect(() => {
     const el = inputRef.current;
@@ -577,9 +580,13 @@ export default function NewClientPage() {
           setChecking(false);
           return;
         }
-      } catch (err: any) {
+      } catch (err: unknown) {
+        const axiosError = err as {
+          response?: { data?: { message?: string } };
+          message?: string;
+        };
         setSubmitError(
-          err?.response?.data?.message ||
+          axiosError?.response?.data?.message ||
             "Unable to verify duplicates. Please try again.",
         );
         setChecking(false);

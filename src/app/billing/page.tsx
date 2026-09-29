@@ -2,25 +2,21 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { useAuthStore } from "@/store/auth";
 import {
   useSubscription,
+  useBillingInformation,
+  useUpdateBillingInformation,
   usePaymentMethods,
   useManageBilling,
   useSetDefaultPaymentMethod,
   useDeletePaymentMethod,
 } from "@/hooks/useSubscription";
 import { useInvoices } from "@/hooks/useInvoices";
-import {
-  PLANS,
-  getPlanPricing,
-  PERIOD_LABELS,
-} from "@/components/billing/PlanMeta";
-import { BillingDetailsModal } from "./BillingDetailsModal";
 import { AddPaymentMethodModal } from "./AddPaymentMethodModal";
+import { Modal } from "@/components/ui/Modal";
 import { Skeleton } from "@/components/ui/Skeleton";
-import { Receipt, Download, Zap, Plus } from "lucide-react";
-import type { Invoice } from "@/types";
+import { AlertTriangle, Download, Receipt, Zap, Plus } from "lucide-react";
+import type { BillingInformation, Invoice, SubscriptionTier } from "@/types";
 import type { PaymentMethod } from "@/lib/api/services/subscription";
 
 /* ── Formatters ─────────────────────────────────────────────────────────── */
@@ -42,13 +38,30 @@ function formatCurrency(amount: number, currency = "EUR"): string {
   }).format(amount);
 }
 
+function formatRemainingTrialTime(
+  trialEndsAt: string | null | undefined,
+): string | null {
+  if (!trialEndsAt) return null;
+  const remainingMs = new Date(trialEndsAt).getTime() - Date.now();
+  if (remainingMs <= 0) return "Expired";
+  const days = Math.ceil(remainingMs / 86_400_000);
+  return days === 1 ? "1 day remaining" : `${days} days remaining`;
+}
+
+const PLAN_NAMES: Record<SubscriptionTier, string> = {
+  none: "No Plan",
+  free: "Free",
+  pro: "Personal Trainer",
+  business: "Business",
+};
+
 /* ── Skeleton ──────────────────────────────────────────────────────────── */
 
 function HubSkeleton() {
   return (
     <div className="space-y-8 max-w-6xl">
       <Skeleton className="h-9 w-48 rounded-md" />
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
         <Skeleton className="h-72 rounded-lg" />
         <Skeleton className="h-72 rounded-lg" />
       </div>
@@ -220,28 +233,38 @@ function AddCardPlaceholder({
 /* ── Main page ─────────────────────────────────────────────────────────── */
 
 export default function BillingHubPage() {
-  const { data: subscription, isLoading: subLoading } = useSubscription();
-  const { data: invoices = [], isLoading: invLoading } = useInvoices();
-  const { data: paymentMethods = [], isLoading: pmLoading } =
-    usePaymentMethods();
+  const {
+    data: subscription,
+    isLoading: subLoading,
+    isError: subscriptionError,
+  } = useSubscription();
+  const {
+    data: invoices = [],
+    isLoading: invLoading,
+    isError: invoicesError,
+  } = useInvoices();
+  const {
+    data: paymentMethods = [],
+    isLoading: pmLoading,
+    isError: paymentMethodsError,
+  } = usePaymentMethods();
+  const {
+    data: billingInformation,
+    isLoading: billingLoading,
+    isError: billingError,
+  } = useBillingInformation();
   const manageBilling = useManageBilling();
-  const coach = useAuthStore((s) => s.coach);
-
-  const [showManageModal, setShowManageModal] = useState(false);
+  const [showBillingInformationModal, setShowBillingInformationModal] =
+    useState(false);
   const [showAddPaymentModal, setShowAddPaymentModal] = useState(false);
-  const [selectedInvoices, setSelectedInvoices] = useState<Set<string>>(
-    new Set(),
-  );
 
   if (subLoading) return <HubSkeleton />;
 
   const currentTier = subscription?.tier ?? "none";
-  const currentPeriod = subscription?.period ?? "monthly";
-  const currentPlan = PLANS.find((p) => p.tier === currentTier) ?? PLANS[0];
-  const currentPricing = getPlanPricing(currentTier, currentPeriod);
   const isTrialing = subscription?.status === "trialing";
   const isCancelling = subscription?.cancel_at_period_end;
   const hasNoPlan = currentTier === "none" || currentTier === "free";
+  const trialRemaining = formatRemainingTrialTime(subscription?.trial_ends_at);
 
   const nextPaymentDateRaw =
     subscription?.next_payment_date || subscription?.current_period_end;
@@ -251,36 +274,34 @@ export default function BillingHubPage() {
   const trialEndDate = subscription?.trial_ends_at
     ? formatDate(subscription.trial_ends_at)
     : "—";
-
-  const toggleInvoice = (id: string) => {
-    setSelectedInvoices((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
-    });
-  };
-
-  const toggleAll = () => {
-    if (selectedInvoices.size === invoices.length && invoices.length > 0) {
-      setSelectedInvoices(new Set());
-    } else {
-      setSelectedInvoices(new Set(invoices.map((i: Invoice) => i.id)));
-    }
-  };
+  const hasUpcomingPayment = Boolean(
+    subscription?.provider_available && nextPaymentDateRaw && !isCancelling,
+  );
 
   return (
     <div className="space-y-8 ">
+      {subscriptionError && (
+        <div className="flex items-start gap-3 rounded-lg border border-red-200 bg-red-50 px-5 py-4 text-sm text-red-700 dark:border-red-900/40 dark:bg-red-950/20 dark:text-red-300">
+          <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
+          <p>
+            Subscription details could not be loaded. Refresh the page to try
+            again.
+          </p>
+        </div>
+      )}
+
       {/* ── Trial Banner ── */}
       {isTrialing && (
         <div className="rounded-lg border border-amber-200 bg-amber-50 dark:bg-amber-900/20 dark:border-amber-700 px-5 py-4 flex flex-col sm:flex-row sm:items-center gap-3">
           <div className="flex-1">
             <p className="text-sm font-semibold text-amber-900 dark:text-amber-200">
-              🎉 Free trial active — ends {trialEndDate}
+              Free Trial active — ends {trialEndDate}
             </p>
             <p className="text-xs text-amber-700 dark:text-amber-300 mt-0.5">
-              Your card will be charged automatically when the trial ends.
-              Cancel anytime before then.
+              {trialRemaining ? `${trialRemaining}. ` : ""}
+              {hasUpcomingPayment
+                ? "Your scheduled first payment is shown below."
+                : "Add a payment method or choose an upgrade option before your trial ends."}
             </p>
           </div>
           <Link
@@ -293,7 +314,7 @@ export default function BillingHubPage() {
       )}
 
       {/* ── Two-column row: Current Plan + Billing Information ── */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
         {/* Current Plan */}
         <div className="rounded-lg border border-[var(--border)] bg-[var(--bg-card)] p-6">
           <h2 className="text-lg font-normal text-[var(--text-primary)] mb-5">
@@ -309,7 +330,7 @@ export default function BillingHubPage() {
                 No Active Plan
               </h3>
               <p className="text-sm text-[var(--text-secondary)] mb-6 max-w-xs">
-                Start your 30-day free trial to unlock all features.
+                Choose a subscription plan to continue with secure checkout.
               </p>
               <Link
                 href="/billing/upgrade"
@@ -326,7 +347,7 @@ export default function BillingHubPage() {
                   Plan Type
                 </span>
                 <span className="text-sm font-medium text-[var(--text-primary)]">
-                  {currentPlan.name} Plan
+                  {isTrialing ? "Free Trial" : PLAN_NAMES[currentTier]}
                 </span>
               </div>
               <div className="flex items-start">
@@ -335,21 +356,10 @@ export default function BillingHubPage() {
                 </span>
                 <div>
                   <span className="text-sm font-medium text-[var(--text-primary)]">
-                    {currentPricing.priceLabel} billed{" "}
-                    {currentPeriod === "monthly"
-                      ? "monthly"
-                      : PERIOD_LABELS[currentPeriod]?.toLowerCase()}
+                    {subscription?.amount != null && subscription.currency
+                      ? `${formatCurrency(subscription.amount, subscription.currency)} billed ${subscription.period.replace("_", " ")}`
+                      : "Pricing is confirmed by the payment provider"}
                   </span>
-                  {currentPricing.discountPct > 0 && (
-                    <p className="mt-0.5">
-                      <Link
-                        href="/billing/upgrade"
-                        className="text-sm text-[#0066cc] hover:underline"
-                      >
-                        Switch to annual & save {currentPricing.discountPct}%
-                      </Link>
-                    </p>
-                  )}
                 </div>
               </div>
               <div className="flex items-start">
@@ -367,10 +377,13 @@ export default function BillingHubPage() {
               <div className="flex items-center gap-3 pt-2">
                 {!isCancelling && (
                   <button
-                    onClick={() => setShowManageModal(true)}
+                    onClick={() => manageBilling.mutate()}
+                    disabled={manageBilling.isPending}
                     className="px-4 py-2 rounded border border-[var(--border)] text-sm font-medium text-[var(--text-primary)] hover:bg-[var(--bg-subtle)] transition-colors"
                   >
-                    Cancel Plan
+                    {manageBilling.isPending
+                      ? "Opening..."
+                      : "Manage Subscription"}
                   </button>
                 )}
                 {isCancelling && (
@@ -401,7 +414,9 @@ export default function BillingHubPage() {
                 Name
               </span>
               <span className="text-sm font-medium text-[var(--text-primary)]">
-                {coach?.name ?? "—"}
+                {[billingInformation?.first_name, billingInformation?.last_name]
+                  .filter(Boolean)
+                  .join(" ") || "—"}
               </span>
             </div>
             <div className="flex items-start">
@@ -409,7 +424,9 @@ export default function BillingHubPage() {
                 Email
               </span>
               <span className="text-sm font-medium text-[var(--text-primary)]">
-                {coach?.email ?? "—"}
+                {billingLoading
+                  ? "Loading..."
+                  : billingInformation?.email || "—"}
               </span>
             </div>
             <div className="flex items-start">
@@ -417,7 +434,7 @@ export default function BillingHubPage() {
                 Phone
               </span>
               <span className="text-sm font-medium text-[var(--text-primary)]">
-                {coach?.phone ?? "—"}
+                {billingInformation?.phone || "—"}
               </span>
             </div>
             <div className="flex items-start">
@@ -425,7 +442,7 @@ export default function BillingHubPage() {
                 Street
               </span>
               <span className="text-sm font-medium text-[var(--text-primary)]">
-                {coach?.address ?? "—"}
+                {billingInformation?.address || "—"}
               </span>
             </div>
             <div className="flex items-start">
@@ -433,8 +450,9 @@ export default function BillingHubPage() {
                 City/State
               </span>
               <span className="text-sm font-medium text-[var(--text-primary)]">
-                {[coach?.city, coach?.postal_code].filter(Boolean).join(", ") ||
-                  "—"}
+                {[billingInformation?.city, billingInformation?.postal_code]
+                  .filter(Boolean)
+                  .join(", ") || "—"}
               </span>
             </div>
             <div className="flex items-start">
@@ -442,27 +460,53 @@ export default function BillingHubPage() {
                 Country
               </span>
               <span className="text-sm font-medium text-[var(--text-primary)]">
-                {coach?.country ?? coach?.nationality ?? "—"}
+                {billingInformation?.country || "—"}
               </span>
             </div>
           </div>
           <div className="pt-4 mt-2">
             <button
-              onClick={() => setShowManageModal(true)}
+              onClick={() => setShowBillingInformationModal(true)}
               className="px-4 py-2 rounded border border-[var(--border)] text-sm font-medium text-[var(--text-primary)] hover:bg-[var(--bg-subtle)] transition-colors"
             >
-              Update Billing Address
+              Edit Billing Information
             </button>
           </div>
         </div>
       </div>
+
+      {hasUpcomingPayment && (
+        <div className="rounded-lg border border-[var(--border)] bg-[var(--bg-card)] p-6">
+          <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <h2 className="text-lg font-normal text-[var(--text-primary)]">
+                Upcoming Payment
+              </h2>
+              <p className="mt-1 text-sm text-[var(--text-secondary)]">
+                {isTrialing ? "First payment" : "Next payment"}{" "}
+                {subscription?.amount != null && subscription.currency
+                  ? formatCurrency(subscription.amount, subscription.currency)
+                  : "amount unavailable"}{" "}
+                on {nextPaymentDate}.
+              </p>
+            </div>
+            <span className="text-sm font-medium text-[var(--text-primary)]">
+              {isTrialing ? "Free Trial" : PLAN_NAMES[currentTier]}
+            </span>
+          </div>
+        </div>
+      )}
 
       {/* ── Payment Methods ── */}
       <div>
         <h2 className="text-lg font-normal text-[var(--text-primary)] mb-4">
           Payment Methods
         </h2>
-        {pmLoading ? (
+        {paymentMethodsError ? (
+          <div className="rounded-lg border border-red-200 bg-red-50 px-5 py-4 text-sm text-red-700 dark:border-red-900/40 dark:bg-red-950/20 dark:text-red-300">
+            Payment methods could not be loaded. Please refresh and try again.
+          </div>
+        ) : pmLoading ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {[...Array(4)].map((_, i) => (
               <Skeleton key={i} className="h-40 rounded-lg" />
@@ -475,7 +519,7 @@ export default function BillingHubPage() {
             ))}
             <AddCardPlaceholder
               onClick={() => setShowAddPaymentModal(true)}
-              disabled={manageBilling.isPending}
+              disabled={!subscription?.provider_available}
             />
           </div>
         )}
@@ -487,18 +531,17 @@ export default function BillingHubPage() {
           <h2 className="text-lg font-normal text-[var(--text-primary)]">
             Payment History
           </h2>
-          {selectedInvoices.size > 0 && (
-            <button className="text-sm font-medium text-[#0066cc] hover:underline inline-flex items-center gap-1.5">
-              <Download className="w-3.5 h-3.5" />
-              Download selected receipts ({selectedInvoices.size})
-            </button>
-          )}
         </div>
         <p className="text-sm text-[var(--text-secondary)] mb-4 max-w-2xl">
           You can find below your charges from the last 12 months.
         </p>
         <div className="rounded-lg border border-[var(--border)] bg-[var(--bg-card)] overflow-hidden">
-          {invLoading ? (
+          {invoicesError ? (
+            <div className="flex items-center gap-3 px-5 py-8 text-sm text-red-700 dark:text-red-300">
+              <AlertTriangle className="h-4 w-4 shrink-0" /> Payment history
+              could not be loaded. Please refresh and try again.
+            </div>
+          ) : invLoading ? (
             <div className="divide-y divide-[var(--border)]">
               {[...Array(4)].map((_, i) => (
                 <div key={i} className="px-5 py-4">
@@ -521,17 +564,6 @@ export default function BillingHubPage() {
               <table className="w-full min-w-[640px]">
                 <thead>
                   <tr className="border-b border-[var(--border)]">
-                    <th className="px-5 py-3 text-left w-12">
-                      <input
-                        type="checkbox"
-                        checked={
-                          selectedInvoices.size === invoices.length &&
-                          invoices.length > 0
-                        }
-                        onChange={toggleAll}
-                        className="w-4 h-4 rounded border-[var(--border)] text-[#0066cc]"
-                      />
-                    </th>
                     <th className="text-left px-5 py-3 text-[11px] font-semibold uppercase tracking-wider text-[var(--text-tertiary)]">
                       Date
                     </th>
@@ -540,6 +572,9 @@ export default function BillingHubPage() {
                     </th>
                     <th className="text-left px-5 py-3 text-[11px] font-semibold uppercase tracking-wider text-[var(--text-tertiary)]">
                       Payment
+                    </th>
+                    <th className="text-left px-5 py-3 text-[11px] font-semibold uppercase tracking-wider text-[var(--text-tertiary)]">
+                      Status
                     </th>
                     <th className="text-left px-5 py-3 text-[11px] font-semibold uppercase tracking-wider text-[var(--text-tertiary)]">
                       Receipt #
@@ -553,20 +588,12 @@ export default function BillingHubPage() {
                       key={inv.id}
                       className="hover:bg-[var(--bg-subtle)]/30 transition-colors"
                     >
-                      <td className="px-5 py-3.5">
-                        <input
-                          type="checkbox"
-                          checked={selectedInvoices.has(inv.id)}
-                          onChange={() => toggleInvoice(inv.id)}
-                          className="w-4 h-4 rounded border-[var(--border)] text-[#0066cc]"
-                        />
-                      </td>
                       <td className="px-5 py-3.5 text-sm text-[var(--text-secondary)] whitespace-nowrap">
                         {formatDate(inv.date)}
                       </td>
                       <td className="px-5 py-3.5">
                         <span className="text-sm font-medium text-[var(--text-primary)]">
-                          {inv.description ?? "Plan subscription"}
+                          {inv.description ?? "Subscription"}
                         </span>
                       </td>
                       <td className="px-5 py-3.5 text-sm text-[var(--text-primary)] whitespace-nowrap">
@@ -575,9 +602,12 @@ export default function BillingHubPage() {
                         </span>
                         {inv.last4 && (
                           <span className="text-xs text-[var(--text-secondary)] ml-1">
-                            (Mastercard {inv.last4})
+                            (Card ending {inv.last4})
                           </span>
                         )}
+                      </td>
+                      <td className="px-5 py-3.5 text-sm capitalize text-[var(--text-secondary)]">
+                        {inv.status}
                       </td>
                       <td className="px-5 py-3.5 text-sm text-[var(--text-secondary)] font-mono whitespace-nowrap">
                         {inv.number}
@@ -605,14 +635,108 @@ export default function BillingHubPage() {
       </div>
 
       {/* Modals */}
-      <BillingDetailsModal
-        open={showManageModal}
-        onClose={() => setShowManageModal(false)}
-      />
       <AddPaymentMethodModal
         open={showAddPaymentModal}
         onClose={() => setShowAddPaymentModal(false)}
       />
+      {showBillingInformationModal && (
+        <BillingInformationModal
+          billingInformation={billingInformation}
+          error={billingError}
+          onClose={() => setShowBillingInformationModal(false)}
+        />
+      )}
     </div>
+  );
+}
+
+function BillingInformationModal({
+  billingInformation,
+  error,
+  onClose,
+}: {
+  billingInformation?: BillingInformation;
+  error: boolean;
+  onClose: () => void;
+}) {
+  const updateBillingInformation = useUpdateBillingInformation();
+  const [form, setForm] = useState<Partial<BillingInformation>>(
+    billingInformation ?? {},
+  );
+
+  const fields: Array<[keyof BillingInformation, string, string]> = [
+    ["first_name", "First name", "text"],
+    ["last_name", "Last name", "text"],
+    ["company", "Company", "text"],
+    ["email", "Billing email", "email"],
+    ["phone", "Phone", "tel"],
+    ["address", "Address", "text"],
+    ["postal_code", "Postal code", "text"],
+    ["city", "City", "text"],
+    ["country", "Country code", "text"],
+    ["vat_id", "VAT ID", "text"],
+  ];
+
+  return (
+    <Modal
+      open={true}
+      onClose={onClose}
+      title="Edit Billing Information"
+      size="lg"
+    >
+      {error ? (
+        <p className="text-sm text-red-500">
+          Billing information could not be loaded. Please try again.
+        </p>
+      ) : (
+        <form
+          className="space-y-4"
+          onSubmit={(event) => {
+            event.preventDefault();
+            updateBillingInformation.mutate(form, { onSuccess: onClose });
+          }}
+        >
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {fields.map(([key, label, type]) => (
+              <label
+                key={key}
+                className="block text-sm text-[var(--text-secondary)]"
+              >
+                <span>{label}</span>
+                <input
+                  type={type}
+                  value={form[key] ?? ""}
+                  onChange={(event) =>
+                    setForm((current) => ({
+                      ...current,
+                      [key]: event.target.value,
+                    }))
+                  }
+                  className="mt-1.5 w-full rounded-lg border border-[var(--border)] bg-[var(--bg-subtle)] px-3 py-2 text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--energy)]/30"
+                />
+              </label>
+            ))}
+          </div>
+          <div className="flex justify-end gap-3">
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-4 py-2 text-sm text-[var(--text-secondary)]"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={updateBillingInformation.isPending}
+              className="rounded-lg bg-[var(--btn-bg)] px-4 py-2 text-sm font-semibold text-white disabled:opacity-50"
+            >
+              {updateBillingInformation.isPending
+                ? "Saving..."
+                : "Save changes"}
+            </button>
+          </div>
+        </form>
+      )}
+    </Modal>
   );
 }

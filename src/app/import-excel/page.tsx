@@ -19,7 +19,7 @@ import { clientsApi } from "@/lib/api";
 import toast from "react-hot-toast";
 
 // Dynamic import xlsx only when needed
-let XLSX: any = null;
+let XLSX: typeof import("xlsx") | null = null;
 async function getXLSX() {
   if (!XLSX) {
     XLSX = await import("xlsx");

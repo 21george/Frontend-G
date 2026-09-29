@@ -1,6 +1,7 @@
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useQueries } from '@tanstack/react-query'
 import { mediaApi } from '@/lib/api'
 import { useToastMutation } from './useToastMutation'
+import type { LiveProgressResponse } from '@/types'
 
 export const useClientMedia = (clientId: string) =>
   useQuery({
@@ -30,6 +31,16 @@ export const useLiveProgress = (clientId: string) =>
     enabled: !!clientId,
     refetchInterval: 5_000,
     staleTime: 5_000,
+  })
+
+export const useLiveProgresses = (clientIds: string[]) =>
+  useQueries({
+    queries: clientIds.map((id) => ({
+      queryKey: ['live-progress', id] as const,
+      queryFn: () => mediaApi.clientLiveProgress(id),
+      enabled: !!id,
+      staleTime: 30_000,
+    })),
   })
 
 export const useStoreMeasurement = (clientId: string) =>

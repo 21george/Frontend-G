@@ -111,7 +111,7 @@ function ManageSkeleton() {
         <Skeleton className="h-7 w-20 rounded-md" />
         <Skeleton className="h-7 w-20 rounded-md" />
       </div>
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
         <Skeleton className="h-80 rounded-xl" />
         <Skeleton className="h-80 rounded-xl" />
       </div>
@@ -357,7 +357,7 @@ export function BillingDetailsModal({ open, onClose }: Props) {
         )}
 
         {activeTab === "billing" && (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             {/* Payment Methods */}
             <div className="space-y-3">
               <h3 className="text-sm font-bold text-[var(--text-primary)]">Payment method</h3>

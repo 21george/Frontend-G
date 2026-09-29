@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { loadStripe } from "@stripe/stripe-js";
 import {
   Elements,
@@ -210,11 +210,13 @@ export function AddPaymentMethodModal({
   const [clientSecret, setClientSecret] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const isDark = useDarkMode();
+  const initiatedRef = useRef(false);
 
   const appearance = useMemo(() => getStripeAppearance(isDark), [isDark]);
 
   useEffect(() => {
-    if (open && !clientSecret && !isLoading) {
+    if (open && !clientSecret && !initiatedRef.current) {
+      initiatedRef.current = true;
       setIsLoading(true);
       createSetupIntent.mutate(undefined, {
         onSuccess: (data) => {
@@ -224,7 +226,12 @@ export function AddPaymentMethodModal({
         onError: () => setIsLoading(false),
       });
     }
+  }, [open, clientSecret, createSetupIntent]);
+
+  // Separate effect for cleanup when modal closes
+  useEffect(() => {
     if (!open) {
+      initiatedRef.current = false;
       setClientSecret(null);
       setIsLoading(false);
     }

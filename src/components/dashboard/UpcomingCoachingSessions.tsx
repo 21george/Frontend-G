@@ -20,8 +20,7 @@ export function UpcomingCoachingSessions() {
       .filter(
         (s: CoachingSession) =>
           s.status === "live" ||
-          (s.status === "upcoming" &&
-            !isBefore(new Date(s.scheduled_at), now)),
+          (s.status === "upcoming" && !isBefore(new Date(s.scheduled_at), now)),
       )
       .sort(
         (a: CoachingSession, b: CoachingSession) =>
@@ -41,7 +40,7 @@ export function UpcomingCoachingSessions() {
         initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.18 }}
-        className="bg-[var(--bg-card)] border border-[var(--border)] dark:border-white/[0.07] flex flex-col rounded-xl overflow-hidden"
+        className="bg-[var(--bg-card)] border border-[var(--border)] dark:border-white/[0.07] flex flex-col overflow-hidden"
       >
         {/* Header */}
         <div className="flex items-center justify-between px-5 py-4 border-b border-[var(--border)] dark:border-white/[0.07]">

@@ -4,7 +4,7 @@ import DashboardLayout from "@/components/layout/DashboardLayout";
 import { useWorkoutPlan, useClient } from "@/lib/hooks";
 import Link from "next/link";
 import { Avatar } from "@/components/ui/Avatar";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   ChevronRight,
   Edit,
@@ -66,6 +66,13 @@ const SESSION_STYLES = {
 
 function normalizeDay(value: string) {
   return value.trim().toLowerCase();
+}
+
+function sanitizeTitle(title: string): string {
+  if (!title || /^[a-f0-9]{24}$/i.test(title.trim())) {
+    return "Untitled Plan";
+  }
+  return title;
 }
 
 function getSessionStyle(exercises: Exercise[]) {
@@ -180,6 +187,18 @@ export default function WorkoutPlanDetailPage() {
   const { data: plan, isLoading, error } = useWorkoutPlan(id);
   const { data: client } = useClient(plan?.client_id || "");
   const [expandedDay, setExpandedDay] = useState<string | null>(null);
+
+  // Update browser tab title when plan loads
+  useEffect(() => {
+    if (plan?.title) {
+      document.title = `${sanitizeTitle(plan.title)} — CoachPro`;
+    } else {
+      document.title = "Workout Plan — CoachPro";
+    }
+    return () => {
+      document.title = "CoachPro";
+    };
+  }, [plan?.title]);
 
   // Use assigned_client from API response if available, fallback to separate client fetch
   const assignedClient =
@@ -300,14 +319,14 @@ export default function WorkoutPlanDetailPage() {
                   </Link>
                   <ChevronRight className="h-3 w-3" />
                   <span className="truncate text-brand-600 dark:text-brand-300">
-                    {plan.title}
+                    {sanitizeTitle(plan.title)}
                   </span>
                 </nav>
                 <h1 className="text-2xl font-bold tracking-tight text-[var(--text-primary)] dark:text-[var(--text-primary)] sm:text-4xl">
                   Weekly Training Menu
                 </h1>
                 <p className="mt-2 text-sm text-[var(--text-secondary)] dark:text-[var(--text-secondary)]">
-                  {plan.title}
+                  {sanitizeTitle(plan.title)}
                   {assignedClient
                     ? ` for ${assignedClient.name}`
                     : " — Not assigned to any client"}

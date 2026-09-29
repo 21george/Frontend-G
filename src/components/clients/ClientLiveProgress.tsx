@@ -8,6 +8,7 @@ import {
   User,
 } from "lucide-react";
 import { timeAgo } from "@/lib/utils";
+import { SegmentedProgressBar } from "@/components/ui/SegmentedProgressBar";
 import type { LiveProgressResponse } from "@/types";
 
 interface Props {
@@ -55,7 +56,6 @@ export function ClientLiveProgress({ liveProgress, isLoading }: Props) {
 
   const { client, active_plan, latest_log, last_activity_at } = liveProgress;
   const progressPct = active_plan.progress_pct ?? 0;
-  const isComplete = progressPct >= 100;
 
   return (
     <div className="border border-[var(--border)] dark:border-white/[0.06] bg-[var(--bg-card)] overflow-hidden">
@@ -104,13 +104,13 @@ export function ClientLiveProgress({ liveProgress, isLoading }: Props) {
           </div>
         </div>
 
-        {/* Progress bar */}
-        <div className="h-2 w-full bg-[var(--bg-subtle)] dark:bg-slate-800 overflow-hidden mb-4">
-          <div
-            className={`h-full transition-all ${isComplete ? "bg-emerald-500" : "bg-amber-500"}`}
-            style={{ width: `${Math.min(progressPct, 100)}%` }}
-          />
-        </div>
+        <SegmentedProgressBar
+          percentage={progressPct}
+          segments={10}
+          completedDays={active_plan.completed_days}
+          totalDays={active_plan.total_days}
+          className="mb-4"
+        />
 
         {/* Days */}
         <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">

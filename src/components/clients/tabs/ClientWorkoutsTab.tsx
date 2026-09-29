@@ -28,6 +28,7 @@ import type {
 import { getWorkoutCategory, CATEGORY_CONFIG } from "@/lib/workoutCategories";
 import { DailyProtocol } from "@/components/clients/DailyProtocol";
 import { ClientLiveProgress } from "@/components/clients/ClientLiveProgress";
+import { SegmentedProgressBar } from "@/components/ui/SegmentedProgressBar";
 import { formatDate, timeAgo } from "@/lib/utils";
 
 interface Props {
@@ -443,13 +444,13 @@ export function ClientWorkoutsTab({
                         exercises
                       </p>
                     </div>
-                    <div className="w-20 flex-shrink-0">
-                      <div className="h-1.5 w-full bg-[var(--bg-subtle)] dark:bg-slate-800 overflow-hidden">
-                        <div
-                          className="h-full bg-amber-500 transition-all"
-                          style={{ width: `${plan.progress_pct}%` }}
-                        />
-                      </div>
+                    <div className="w-24 flex-shrink-0">
+                      <SegmentedProgressBar
+                        percentage={plan.progress_pct}
+                        segments={8}
+                        completedDays={plan.completed_days}
+                        totalDays={plan.total_days}
+                      />
                     </div>
                     <Link
                       href={`/workout-plans/${plan.id}`}

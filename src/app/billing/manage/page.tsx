@@ -96,7 +96,7 @@ function ManageSkeleton() {
     <DashboardLayout>
       <div className="space-y-6 max-w-5xl">
         <Skeleton className="h-8 w-48 rounded-lg" />
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <Skeleton className="h-72 rounded-2xl" />
           <Skeleton className="h-72 rounded-2xl" />
         </div>
@@ -201,7 +201,7 @@ export default function BillingManagePage() {
         />
 
         {/* Two-column top: Plan + Payment */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Plan Details */}
           <div className="rounded-2xl bg-white dark:bg-[var(--bg-card)] border border-[var(--border)] p-6 sm:p-8">
             <p className="text-base font-semibold text-[var(--text-primary)] mb-5">

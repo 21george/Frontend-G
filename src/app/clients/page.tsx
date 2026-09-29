@@ -1,9 +1,14 @@
 "use client";
 
 import DashboardLayout from "@/components/layout/DashboardLayout";
-import { useAllClients, useAllWorkoutPlans } from "@/lib/hooks";
+import {
+  useAllClients,
+  useAllWorkoutPlans,
+  useLiveProgresses,
+} from "@/lib/hooks";
 import { useState, useMemo, useEffect } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import {
   Plus,
   Users,
@@ -23,7 +28,6 @@ import { Button } from "@/components/ui/button";
 import { SegmentedProgressBar } from "@/components/ui/SegmentedProgressBar";
 import { motion } from "framer-motion";
 import { MessageDrawer } from "@/components/messages/MessageDrawer";
-import Breadcrumb from "@/components/Breadcrumb/Breadcrumb";
 import FilterBreadcrumb from "@/components/ui/Breadcrumb";
 
 const MS_PER_DAY = 1000 * 60 * 60 * 24;
@@ -133,6 +137,7 @@ export default function ClientsPage() {
     const map = new Map<
       string,
       {
+        hasAssignedPlan: boolean;
         hasActivePlan: boolean;
         activePlanTitle?: string;
         progressPct: number;
@@ -150,17 +155,16 @@ export default function ClientsPage() {
 
       for (const cid of planClientIds) {
         const existing = map.get(cid);
+        const totalDays = plan.days?.length ?? 0;
+        const completedDays =
+          plan.days?.filter((d) => d.is_completed).length ?? 0;
+        const progressPct =
+          totalDays > 0 ? Math.round((completedDays / totalDays) * 100) : 0;
 
-        // Only update if this plan is active and we don't have an active one yet
+        // Active plan takes priority; draft/saved fills in if no active yet
         if (plan.status === "active") {
-          const totalDays = plan.days?.length ?? 0;
-          // Calculate completed days from plan data if available
-          const completedDays =
-            plan.days?.filter((d: any) => d.is_completed).length ?? 0;
-          const progressPct =
-            totalDays > 0 ? Math.round((completedDays / totalDays) * 100) : 0;
-
           map.set(cid, {
+            hasAssignedPlan: true,
             hasActivePlan: true,
             activePlanTitle: plan.title,
             progressPct,
@@ -169,14 +173,8 @@ export default function ClientsPage() {
             status: plan.status,
           });
         } else if (!existing?.hasActivePlan) {
-          // Only set non-active plan if no active plan exists
-          const totalDays = plan.days?.length ?? 0;
-          const completedDays =
-            plan.days?.filter((d: any) => d.is_completed).length ?? 0;
-          const progressPct =
-            totalDays > 0 ? Math.round((completedDays / totalDays) * 100) : 0;
-
           map.set(cid, {
+            hasAssignedPlan: true,
             hasActivePlan: false,
             activePlanTitle: plan.title,
             progressPct,
@@ -267,6 +265,48 @@ export default function ClientsPage() {
     startIndex,
     startIndex + PER_PAGE,
   );
+
+  // Fetch real live progress for visible clients
+  const liveProgressResults = useLiveProgresses(
+    paginatedClients.map((c) => c.id),
+  );
+  const liveProgressMap = useMemo(() => {
+    const map = new Map<
+      string,
+      {
+        hasAssignedPlan: boolean;
+        hasActivePlan: boolean;
+        planTitle: string;
+        progressPct: number;
+        completedDays: number;
+        totalDays: number;
+      }
+    >();
+    paginatedClients.forEach((client, i) => {
+      const res = liveProgressResults[i]?.data;
+      if (res?.active_plan) {
+        const ap = res.active_plan;
+        map.set(client.id, {
+          hasAssignedPlan: true,
+          hasActivePlan: true,
+          planTitle: ap.title,
+          progressPct: ap.progress_pct ?? 0,
+          completedDays: ap.completed_days ?? 0,
+          totalDays: ap.total_days ?? 0,
+        });
+      } else {
+        map.set(client.id, {
+          hasAssignedPlan: false,
+          hasActivePlan: false,
+          planTitle: "",
+          progressPct: 0,
+          completedDays: 0,
+          totalDays: 0,
+        });
+      }
+    });
+    return map;
+  }, [paginatedClients, liveProgressResults]);
 
   // Calculate stats from the full client list (accurate across pages)
   const stats = useMemo(() => {
@@ -364,7 +404,7 @@ export default function ClientsPage() {
               ))}
             </div>
           }
-          emptyIcon={Users}
+          emptyIcon={<Users className="w-8 h-8" />}
           emptyTitle="Add your first client to get started."
           emptyDescription="Create client profiles to manage workouts, nutrition, and progress."
           emptyAction={
@@ -436,11 +476,31 @@ export default function ClientsPage() {
               >
                 {paginatedClients.map((client: any) => {
                   const status = getClientStatus(client);
-                  const progress = clientProgressMap.get(client.id);
-                  const hasActivePlan = progress?.hasActivePlan ?? false;
-                  const progressPct = progress?.progressPct ?? 0;
+                  const planProgress = clientProgressMap.get(client.id);
+                  const liveProgress = liveProgressMap.get(client.id);
+                  const hasActivePlan =
+                    liveProgress?.hasActivePlan ??
+                    planProgress?.hasActivePlan ??
+                    false;
+                  const hasAssignedPlan =
+                    liveProgress?.hasAssignedPlan ??
+                    planProgress?.hasAssignedPlan ??
+                    false;
+                  const progressPct = hasActivePlan
+                    ? (liveProgress?.progressPct ?? planProgress?.progressPct ?? 0)
+                    : (planProgress?.progressPct ?? 0);
+                  const completedDays = hasActivePlan
+                    ? (liveProgress?.completedDays ?? planProgress?.completedDays ?? 0)
+                    : (planProgress?.completedDays ?? 0);
+                  const totalDays = hasActivePlan
+                    ? (liveProgress?.totalDays ?? planProgress?.totalDays ?? 0)
+                    : (planProgress?.totalDays ?? 0);
+                  const planTitle = hasActivePlan
+                    ? (liveProgress?.planTitle ?? planProgress?.activePlanTitle ?? "Plan")
+                    : (planProgress?.activePlanTitle ?? "Plan");
+                  const planStatus = planProgress?.status ?? "draft";
                   const isInGroupProgram = groupClientIds.has(client.id);
-                  const needsNewPlan = !hasActivePlan;
+                  const needsNewPlan = !hasAssignedPlan;
 
                   const statusGradient =
                     status.label === "Blocked" ||
@@ -499,9 +559,11 @@ export default function ClientsPage() {
                           <div className="col-span-12 sm:col-span-3">
                             <div className="flex items-center gap-3">
                               {client.profile_photo_url ? (
-                                <img
+                                <Image
                                   src={client.profile_photo_url}
                                   alt={client.name}
+                                  width={40}
+                                  height={40}
                                   className="h-10 w-10 object-cover rounded-full bg-slate-100 dark:bg-slate-800 flex-shrink-0"
                                 />
                               ) : (
@@ -528,7 +590,7 @@ export default function ClientsPage() {
                                   {needsNewPlan && (
                                     <span className="inline-flex items-center gap-1 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-tight bg-red-50 text-red-700 border border-red-200/60 rounded-lg dark:bg-red-900/30 dark:text-red-400 dark:border-red-800">
                                       <AlertCircle className="w-3 h-3" />
-                                      No Plan
+                                      Need Plan
                                     </span>
                                   )}
                                 </div>
@@ -554,37 +616,45 @@ export default function ClientsPage() {
 
                           {/* Progress */}
                           <div className="col-span-6 sm:col-span-3 hidden sm:block">
-                            <div className="w-full max-w-[220px]">
-                              {hasActivePlan ? (
-                                <div className="w-full max-w-[240px]">
-                                  <div className="flex justify-between items-center mb-1.5 text-xs">
-                                    <span className="text-[var(--text-primary)] font-semibold">
-                                      {progressPct}%
+                            <div className="w-full max-w-[260px]">
+                              {hasAssignedPlan ? (
+                                <div className="w-full space-y-1">
+                                  <div className="flex items-center justify-between">
+                                    <span className="text-[11px] font-semibold text-[var(--text-primary)] truncate max-w-[140px]">
+                                      {planTitle}
                                     </span>
-                                    <span className="text-[var(--text-secondary)]">
-                                      {progress?.completedDays ?? 0}/
-                                      {progress?.totalDays ?? 0} days
-                                    </span>
+                                    {hasActivePlan ? (
+                                      progressPct > 0 ? (
+                                        <span className="inline-flex items-center gap-1 text-[9px] font-bold uppercase tracking-tight text-emerald-600 dark:text-emerald-400">
+                                          <span className="relative flex h-1.5 w-1.5">
+                                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                                            <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500"></span>
+                                          </span>
+                                          Live
+                                        </span>
+                                      ) : (
+                                        <span className="text-[9px] font-medium text-[var(--text-tertiary)]">
+                                          Assigned
+                                        </span>
+                                      )
+                                    ) : (
+                                      <span className="inline-flex items-center gap-1 text-[9px] font-bold uppercase tracking-tight text-slate-500 dark:text-slate-400">
+                                        Draft
+                                      </span>
+                                    )}
                                   </div>
                                   <SegmentedProgressBar
                                     percentage={progressPct}
                                     segments={10}
-                                    activeColor={
-                                      progressPct >= 80
-                                        ? "bg-emerald-500"
-                                        : progressPct >= 50
-                                          ? "bg-blue-500"
-                                          : progressPct >= 25
-                                            ? "bg-amber-500"
-                                            : "bg-slate-400"
-                                    }
+                                    completedDays={completedDays}
+                                    totalDays={totalDays}
                                   />
                                 </div>
                               ) : (
-                                <div className="flex items-center gap-2 text-amber-800 dark:text-amber-900">
+                                <div className="flex items-center gap-2 text-amber-700 dark:text-amber-400">
                                   <AlertCircle className="w-4 h-4" />
                                   <span className="text-xs font-medium">
-                                    No Plan
+                                    Need Plan
                                   </span>
                                 </div>
                               )}

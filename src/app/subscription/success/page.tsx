@@ -1,11 +1,11 @@
-'use client';
+"use client";
 
-import { useEffect, useState } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
-import { motion } from 'framer-motion';
-import { CheckCircle2, Loader2, ArrowRight } from 'lucide-react';
-import apiClient from '@/lib/api';
-import { Button } from '@/components/ui/button';
+import { useEffect, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { motion } from "framer-motion";
+import { CheckCircle2, Loader2, ArrowRight } from "lucide-react";
+import apiClient from "@/lib/api";
+import { Button } from "@/components/ui/button";
 
 export default function SubscriptionSuccessPage() {
   const router = useRouter();
@@ -15,38 +15,39 @@ export default function SubscriptionSuccessPage() {
 
   useEffect(() => {
     const verifySubscription = async () => {
-      const sessionId = searchParams.get('session_id');
+      const sessionId = searchParams.get("session_id");
 
       if (!sessionId) {
-        setError('Invalid session');
+        setError("Invalid session");
         setIsVerifying(false);
         return;
       }
 
       try {
         // Verify the subscription status
-        const res = await apiClient.get('/subscription');
+        const res = await apiClient.get("/subscription");
         const { status, tier } = res.data.data;
 
-        if (status === 'active' || status === 'trialing') {
+        if (status === "active" || status === "trialing") {
           // Subscription verified, redirect to dashboard
           setTimeout(() => {
-            router.replace('/dashboard');
+            router.replace("/dashboard");
           }, 2000);
         } else {
-          setError('Subscription not yet activated. Please contact support.');
+          setError("Subscription not yet activated. Please contact support.");
           setIsVerifying(false);
         }
-      } catch (e: any) {
+      } catch (e: unknown) {
         // If not authenticated, they may need to log in
-        if (e?.response?.status === 401) {
+        const axiosError = e as { response?: { status?: number } };
+        if (axiosError?.response?.status === 401) {
           // User might not have cookies set yet - this is expected after Stripe redirect
           // We'll show a message and redirect
           setTimeout(() => {
-            router.replace('/dashboard');
+            router.replace("/dashboard");
           }, 3000);
         } else {
-          setError('Failed to verify subscription');
+          setError("Failed to verify subscription");
           setIsVerifying(false);
         }
       }
@@ -68,7 +69,7 @@ export default function SubscriptionSuccessPage() {
             <motion.div
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
-              transition={{ delay: 0.2, type: 'spring', stiffness: 200 }}
+              transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
             >
               <CheckCircle2 className="h-24 w-24 text-green-500 mx-auto mb-6" />
             </motion.div>
@@ -93,7 +94,7 @@ export default function SubscriptionSuccessPage() {
               Verification Issue
             </h1>
             <p className="text-[var(--text-secondary)] mb-6">{error}</p>
-            <Button onClick={() => router.push('/dashboard')}>
+            <Button onClick={() => router.push("/dashboard")}>
               Go to Dashboard
               <ArrowRight className="ml-2 h-4 w-4" />
             </Button>

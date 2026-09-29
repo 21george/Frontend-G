@@ -77,6 +77,13 @@ const STATUS_CONFIG: Record<
 };
 
 /* ── Folder Visual ─────────────────────────────────────────────────────────── */
+function sanitizeTitle(title: string | undefined): string {
+  if (!title || /^[a-f0-9]{24}$/i.test(title.trim())) {
+    return "Untitled Plan";
+  }
+  return title;
+}
+
 function FolderIcon({ planId }: { planId: string }) {
   const gradId = `folder-grad-${planId}`;
   const shadowId = `folder-shadow-${planId}`;
@@ -224,7 +231,7 @@ function PlanFolderCard({ plan, index }: { plan: WorkoutPlan; index: number }) {
       {/* Info */}
       <div className="mt-1 px-1">
         <h3 className="text-sm font-semibold text-[var(--text-primary)] truncate leading-tight">
-          {plan.title}
+          {sanitizeTitle(plan.title)}
         </h3>
         {plan.group_name && (
           <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 truncate">
@@ -258,24 +265,9 @@ function UnassignedPlansCard({
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="card overflow-hidden border-none "
+      className="overflow-hidden border-none "
     >
       {/* Header */}
-      <div className="px-6 py-5">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <WarningAmberIcon className="w-8 h-8 text-amber-500" />
-            <div>
-              <h2 className="text-base font-bold text-[var(--text-primary)]">
-                Workout Plans Not Assigned
-              </h2>
-              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                {unassignedPlans.length} plans waiting to be assigned
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
 
       {unassignedPlans.length === 0 ? (
         <div className="p-8 text-center">
@@ -389,11 +381,6 @@ export default function WorkoutPlansPage() {
                   label: "Group",
                   count: allPlans.filter((p) => p.plan_type === "group").length,
                 },
-                {
-                  key: "team",
-                  label: "Team",
-                  count: allPlans.filter((p) => p.plan_type === "team").length,
-                },
               ]}
               value={typeFilter}
               onChange={setTypeFilter}
@@ -433,7 +420,7 @@ export default function WorkoutPlansPage() {
               ))}
             </div>
           }
-          emptyIcon={FitnessCenterIcon}
+          emptyIcon={<FitnessCenterIcon className="w-8 h-8" />}
           emptyTitle="You haven't created any plans yet."
           emptyDescription="Create your first workout plan to get started."
           emptyAction={
@@ -500,13 +487,18 @@ export default function WorkoutPlansPage() {
                                   {plan.group_name
                                     ? `${plan.group_name} — `
                                     : ""}
-                                  {plan.title}
+                                  {sanitizeTitle(plan.title)}
                                 </div>
                                 <div className="text-xs text-slate-500 dark:text-neutral-400 mt-0.5">
                                   Week of {plan.week_start} ·{" "}
                                   {plan.days?.length ?? 0} days
-                                  {(plan.client_ids?.length ?? 0) > 0 &&
-                                    ` · ${plan.client_ids?.length ?? 0} clients`}
+                                  {(() => {
+                                    const count =
+                                      (plan.client_ids?.length ?? 0) +
+                                      (plan.client_id ? 1 : 0);
+                                    if (count <= 0) return null;
+                                    return ` · ${count} client${count > 1 ? "s" : ""}`;
+                                  })()}
                                 </div>
                               </div>
                             </div>

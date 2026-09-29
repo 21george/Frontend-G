@@ -9,6 +9,15 @@ import Sidebar from "@/components/layout/Sidebar";
 import DashboardHeader from "@/components/layout/DashboardHeader";
 import { PageSkeleton } from "@/components/ui/skeletons";
 import { motion } from "framer-motion";
+import type { LucideIcon } from "lucide-react";
+
+interface QuickAction {
+  label: string;
+  icon: LucideIcon;
+  color: string;
+  onClick?: () => void;
+  href?: string;
+}
 
 function AuthLayout({
   children,
@@ -19,13 +28,7 @@ function AuthLayout({
   children: React.ReactNode;
   showHeader?: boolean;
   showGreeting?: boolean;
-  quickActions?: {
-    label: string;
-    icon: any;
-    color: string;
-    onClick?: () => void;
-    href?: string;
-  }[];
+  quickActions?: QuickAction[];
 }) {
   const {
     isAuthenticated,
@@ -33,6 +36,7 @@ function AuthLayout({
     refreshAccessToken,
     clearAuth,
     coach,
+    isStaff,
     updateCoach,
   } = useAuthStore();
   const { setupToken } = useSubscriptionStore();
@@ -55,13 +59,17 @@ function AuthLayout({
     // After mount, the store is fully wired. Check the current hydration
     // state, or subscribe to the finish-hydration event for the first
     // paint after a fresh page load.
-    if (useAuthStore.persist?.hasHydrated?.()) {
+    const checkHydration = () => {
+      if (useAuthStore.persist?.hasHydrated?.()) {
+        setIsHydrated(true);
+      }
+    };
+
+    checkHydration();
+
+    const unsub = useAuthStore.persist?.onFinishHydration?.(() => {
       setIsHydrated(true);
-      return;
-    }
-    const unsub = useAuthStore.persist?.onFinishHydration?.(() =>
-      setIsHydrated(true),
-    );
+    });
     return () => unsub?.();
   }, []);
 
@@ -70,7 +78,9 @@ function AuthLayout({
   // in (silent token refresh keeps sessions alive indefinitely) loses their
   // avatar a day after login even though nothing is actually wrong with the
   // photo. See useCoachProfile / settingsApi.getProfile for details.
-  const { data: freshCoach } = useCoachProfile(isHydrated && isAuthenticated);
+  const { data: freshCoach } = useCoachProfile(
+    isHydrated && isAuthenticated && !isStaff,
+  );
 
   useEffect(() => {
     if (freshCoach) updateCoach(freshCoach);
@@ -151,8 +161,8 @@ function AuthLayout({
     >
       <Sidebar />
       <main className="flex-1 min-h-screen overflow-x-hidden">
-        {/* Mobile top padding accounts for the fixed hamburger button (lg:hidden) */}
-        <div className="px-3 sm:px-5 md:px-8 lg:px-10 pt-16 sm:pt-12 lg:pt-8 pb-6 sm:pb-10">
+        {/* Mobile top padding accounts for the fixed hamburger button (md:hidden) */}
+        <div className="px-3 sm:px-5 md:px-8 lg:px-10 pt-16 sm:pt-12 md:pt-8 pb-6 sm:pb-10">
           {showHeader && (
             <DashboardHeader
               showGreeting={showGreeting}

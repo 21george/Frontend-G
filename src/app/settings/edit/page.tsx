@@ -259,8 +259,10 @@ export default function EditProfilePage() {
       } else {
         showToast(`${resultChanged.length} fields updated`);
       }
-    } catch (err: any) {
-      const msg = err?.response?.data?.message || "Failed to save settings";
+    } catch (err: unknown) {
+      const axiosError = err as { response?: { data?: { message?: string } } };
+      const msg =
+        axiosError?.response?.data?.message || "Failed to save settings";
       showToast(msg, "error");
     } finally {
       setSaving(false);

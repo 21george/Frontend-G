@@ -1,41 +1,41 @@
-'use client'
+"use client";
 
-import { type UseQueryResult } from '@tanstack/react-query'
-import { LoadingSpinner } from './LoadingSpinner'
-import { EmptyState } from './EmptyState'
-import { AlertCircle } from 'lucide-react'
+import { type UseQueryResult } from "@tanstack/react-query";
+import { LoadingSpinner } from "./LoadingSpinner";
+import { EmptyState } from "./EmptyState";
+import { AlertCircle } from "lucide-react";
 
 interface QueryWrapperProps<T> {
-  query: UseQueryResult<T, Error>
-  children: (data: T) => React.ReactNode
-  loadingClassName?: string
+  query: UseQueryResult<T, Error>;
+  children: (data: T) => React.ReactNode;
+  loadingClassName?: string;
   /** Custom skeleton to show while loading. Falls back to spinner if omitted. */
-  skeleton?: React.ReactNode
-  emptyIcon?: any
-  emptyTitle?: string
-  emptyDescription?: string
-  emptyAction?: React.ReactNode
-  isEmpty?: (data: T) => boolean
+  skeleton?: React.ReactNode;
+  emptyIcon?: React.ReactNode;
+  emptyTitle?: string;
+  emptyDescription?: string;
+  emptyAction?: React.ReactNode;
+  isEmpty?: (data: T) => boolean;
 }
 
 export function QueryWrapper<T>({
   query,
   children,
-  loadingClassName = 'h-64',
+  loadingClassName = "h-64",
   skeleton,
   emptyIcon,
-  emptyTitle = 'No data found',
+  emptyTitle = "No data found",
   emptyDescription,
   emptyAction,
   isEmpty,
 }: QueryWrapperProps<T>) {
   if (query.isLoading) {
-    if (skeleton) return <>{skeleton}</>
+    if (skeleton) return <>{skeleton}</>;
     return (
       <div className={`flex items-center justify-center ${loadingClassName}`}>
         <LoadingSpinner />
       </div>
-    )
+    );
   }
 
   if (query.isError) {
@@ -44,9 +44,11 @@ export function QueryWrapper<T>({
         <div className="w-16 h-16 bg-red-50 dark:bg-red-500/10 flex items-center justify-center mb-4">
           <AlertCircle className="w-8 h-8 text-red-500" />
         </div>
-        <h3 className="text-base font-semibold text-[var(--text-primary)] dark:text-white mb-1">Something went wrong</h3>
+        <h3 className="text-base font-semibold text-[var(--text-primary)] dark:text-white mb-1">
+          Something went wrong
+        </h3>
         <p className="text-sm text-[var(--text-secondary)] dark:text-gray-400 max-w-xs">
-          {query.error?.message || 'Failed to load data. Please try again.'}
+          {query.error?.message || "Failed to load data. Please try again."}
         </p>
         <button
           onClick={() => query.refetch()}
@@ -55,10 +57,10 @@ export function QueryWrapper<T>({
           Try again
         </button>
       </div>
-    )
+    );
   }
 
-  if (!query.data) return null
+  if (!query.data) return null;
 
   if (isEmpty && isEmpty(query.data) && emptyIcon) {
     return (
@@ -68,8 +70,8 @@ export function QueryWrapper<T>({
         description={emptyDescription}
         action={emptyAction}
       />
-    )
+    );
   }
 
-  return <>{children(query.data)}</>
+  return <>{children(query.data)}</>;
 }

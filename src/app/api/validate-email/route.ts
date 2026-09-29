@@ -1,38 +1,43 @@
-import { NextRequest, NextResponse } from 'next/server'
-import emailValidator from 'node-email-verifier'
+import { NextRequest, NextResponse } from "next/server";
+import emailValidator from "node-email-verifier";
 
 // Node.js runtime required for DNS MX record lookups
-export const runtime = 'nodejs'
+export const runtime = "nodejs";
 
-const FORMAT_RE = /^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$/
+const FORMAT_RE = /^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$/;
 
 export async function POST(req: NextRequest) {
-  let email = ''
+  let email = "";
   try {
-    const body = await req.json()
-    email = (body?.email ?? '').toString().trim()
+    const body = await req.json();
+    email = (body?.email ?? "").toString().trim();
   } catch {
-    return NextResponse.json({ valid: false }, { status: 400 })
+    return NextResponse.json({ valid: false }, { status: 400 });
   }
 
-  if (!email) return NextResponse.json({ valid: false })
+  if (!email) return NextResponse.json({ valid: false });
 
   // Fast format check — return immediately if obviously invalid
-  const formatOk = FORMAT_RE.test(email)
-  if (!formatOk) return NextResponse.json({ valid: false, reason: 'invalid_format' })
+  const formatOk = FORMAT_RE.test(email);
+  if (!formatOk)
+    return NextResponse.json({ valid: false, reason: "invalid_format" });
 
   try {
     // Does format check + DNS MX record lookup with 5s timeout
-    const valid = await emailValidator(email, { checkMx: true, timeout: 5000 })
-    return NextResponse.json({ valid })
-  } catch (err: any) {
+    const valid = await emailValidator(email, { checkMx: true, timeout: 5000 });
+    return NextResponse.json({ valid });
+  } catch (err: unknown) {
     // ENOTFOUND means the domain has no DNS records at all — deterministic failure.
     // All other thrown errors (ETIMEDOUT, ECONNRESET, ENETUNREACH, etc.) are transient
     // network issues; fall back to format-only so valid addresses are not blocked.
-    const isTransient = err?.code !== 'ENOTFOUND'
+    const error = err as { code?: string };
+    const isTransient = error?.code !== "ENOTFOUND";
     if (isTransient) {
-      return NextResponse.json({ valid: formatOk, reason: 'dns_unavailable_format_only' })
+      return NextResponse.json({
+        valid: formatOk,
+        reason: "dns_unavailable_format_only",
+      });
     }
-    return NextResponse.json({ valid: false, reason: 'dns_lookup_failed' })
+    return NextResponse.json({ valid: false, reason: "dns_lookup_failed" });
   }
 }

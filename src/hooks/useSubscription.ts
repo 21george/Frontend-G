@@ -1,9 +1,9 @@
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { subscriptionApi } from "@/lib/api";
 import api from "@/lib/api/client";
 import { useToastMutation } from "./useToastMutation";
 import { safeRedirect } from "@/lib/validateUrl";
-import type { SubscriptionPeriod } from "@/types";
+import type { BillingInformation, SubscriptionPeriod } from "@/types";
 
 export const useSubscription = () =>
   useQuery({
@@ -12,10 +12,31 @@ export const useSubscription = () =>
     staleTime: 60_000,
   });
 
+export const useBillingInformation = () =>
+  useQuery({
+    queryKey: ["billing-information"],
+    queryFn: () => subscriptionApi.billingInformation(),
+    staleTime: 60_000,
+  });
+
+export const useUpdateBillingInformation = () =>
+  useToastMutation({
+    mutationFn: (billing: Partial<BillingInformation>) =>
+      subscriptionApi.updateBillingInformation(billing),
+    successMessage: "Billing information updated",
+    errorMessage: "Failed to update billing information",
+    invalidateKeys: [["billing-information"]],
+  });
+
 export const useCheckout = () =>
   useToastMutation({
-    mutationFn: ({ tier, period }: { tier: "pro" | "business"; period?: SubscriptionPeriod }) =>
-      subscriptionApi.checkout(tier, period),
+    mutationFn: ({
+      tier,
+      period,
+    }: {
+      tier: "pro" | "business";
+      period?: SubscriptionPeriod;
+    }) => subscriptionApi.checkout(tier, period),
     errorMessage: "Failed to start checkout",
     onSuccess: (data) => {
       if (data.checkout_url) {
@@ -48,7 +69,13 @@ export const useCancelSubscription = () =>
 
 export const useUpgradeSubscription = () =>
   useToastMutation({
-    mutationFn: ({ tier, period }: { tier: "pro" | "business"; period?: SubscriptionPeriod }) =>
+    mutationFn: ({
+      tier,
+      period,
+    }: {
+      tier: "pro" | "business";
+      period?: SubscriptionPeriod;
+    }) =>
       api
         .post<{
           message: string;
@@ -77,8 +104,13 @@ export const useCreateSetupIntent = () =>
 
 export const useAddPaymentMethod = () =>
   useToastMutation({
-    mutationFn: ({ paymentMethodId, isDefault }: { paymentMethodId: string; isDefault?: boolean }) =>
-      subscriptionApi.addPaymentMethod(paymentMethodId, isDefault),
+    mutationFn: ({
+      paymentMethodId,
+      isDefault,
+    }: {
+      paymentMethodId: string;
+      isDefault?: boolean;
+    }) => subscriptionApi.addPaymentMethod(paymentMethodId, isDefault),
     successMessage: "Card added successfully",
     errorMessage: "Failed to add card",
     invalidateKeys: [["payment-methods"]],

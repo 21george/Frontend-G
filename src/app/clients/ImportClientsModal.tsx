@@ -21,7 +21,7 @@ import toast from "react-hot-toast";
 import { useQueryClient } from "@tanstack/react-query";
 
 // Dynamic import xlsx only when needed
-let XLSX: any = null;
+let XLSX: typeof import("xlsx") | null = null;
 async function getXLSX() {
   if (!XLSX) {
     XLSX = await import("xlsx");
@@ -47,15 +47,35 @@ function detectSheetType(headers: string[]): string {
   const h = headers.map((h) => h.toLowerCase());
   const hStr = h.join(" ");
 
-  if (hStr.includes("exercise") && hStr.includes("sets") && hStr.includes("reps"))
+  if (
+    hStr.includes("exercise") &&
+    hStr.includes("sets") &&
+    hStr.includes("reps")
+  )
     return "Exercise Details";
-  if (hStr.includes("client") && hStr.includes("age") && hStr.includes("weight"))
+  if (
+    hStr.includes("client") &&
+    hStr.includes("age") &&
+    hStr.includes("weight")
+  )
     return "Client Overview";
-  if (hStr.includes("nutrition") || hStr.includes("calories") || hStr.includes("protein"))
+  if (
+    hStr.includes("nutrition") ||
+    hStr.includes("calories") ||
+    hStr.includes("protein")
+  )
     return "Nutrition Plans";
-  if (hStr.includes("schedule") || hStr.includes("monday") || hStr.includes("tuesday"))
+  if (
+    hStr.includes("schedule") ||
+    hStr.includes("monday") ||
+    hStr.includes("tuesday")
+  )
     return "Weekly Schedule";
-  if (hStr.includes("completed") || hStr.includes("duration") || hStr.includes("rating"))
+  if (
+    hStr.includes("completed") ||
+    hStr.includes("duration") ||
+    hStr.includes("rating")
+  )
     return "Completed Workouts";
   if (hStr.includes("completion") || hStr.includes("performance"))
     return "Completion Summary";
@@ -74,7 +94,11 @@ async function parseExcelFile(file: File): Promise<ParsedExcel> {
 
   for (const sheetName of workbook.SheetNames) {
     const sheet = workbook.Sheets[sheetName];
-    const json = xlsx.utils.sheet_to_json(sheet, { header: 1 }) as any[][];
+    const json = xlsx.utils.sheet_to_json(sheet, { header: 1 }) as (
+      | string
+      | number
+      | null
+    )[][];
 
     if (json.length < 2) continue;
 
@@ -164,34 +188,31 @@ export function ImportClientsModal({ open, onClose }: Props) {
     onClose();
   }, [resetState, onClose]);
 
-  const onDrop = useCallback(
-    async (files: File[]) => {
-      const f = files[0];
-      if (!f) return;
+  const onDrop = useCallback(async (files: File[]) => {
+    const f = files[0];
+    if (!f) return;
 
-      setFile(f);
-      setError("");
-      setParsed(null);
-      setSelectedSheet(null);
-      setImportResult(null);
-      setLoading(true);
+    setFile(f);
+    setError("");
+    setParsed(null);
+    setSelectedSheet(null);
+    setImportResult(null);
+    setLoading(true);
 
-      try {
-        const result = await parseExcelFile(f);
-        setParsed(result);
-      } catch (err) {
-        if (process.env.NODE_ENV === "development") {
-          console.error("Failed to parse Excel:", err);
-        }
-        setError(
-          "Failed to parse Excel file. Make sure it's a valid .xlsx or .xls file.",
-        );
-      } finally {
-        setLoading(false);
+    try {
+      const result = await parseExcelFile(f);
+      setParsed(result);
+    } catch (err) {
+      if (process.env.NODE_ENV === "development") {
+        console.error("Failed to parse Excel:", err);
       }
-    },
-    [],
-  );
+      setError(
+        "Failed to parse Excel file. Make sure it's a valid .xlsx or .xls file.",
+      );
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
@@ -394,10 +415,14 @@ export function ImportClientsModal({ open, onClose }: Props) {
           { duration: 8000 },
         );
       }
-    } catch (e: any) {
+    } catch (error: unknown) {
+      const axiosError = error as {
+        response?: { data?: { message?: string } };
+        message?: string;
+      };
       const msg =
-        e?.response?.data?.message ||
-        e?.message ||
+        axiosError?.response?.data?.message ||
+        axiosError?.message ||
         "Import failed. Please try again.";
       setImportResult({
         success: false,
@@ -409,7 +434,12 @@ export function ImportClientsModal({ open, onClose }: Props) {
   };
 
   return (
-    <Modal open={open} onClose={handleClose} title="Import from Excel" size="xl">
+    <Modal
+      open={open}
+      onClose={handleClose}
+      title="Import from Excel"
+      size="xl"
+    >
       <div className="max-h-[70vh] overflow-y-auto pr-1">
         <p className="text-[var(--text-secondary)] text-sm mb-6">
           Upload an Excel file to bulk-import clients. We auto-detect columns

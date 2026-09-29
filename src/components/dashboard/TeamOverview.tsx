@@ -82,7 +82,7 @@ export function TeamOverview({ clients }: { clients: Client[] }) {
       className="grid grid-cols-1 xl:grid-cols-3 gap-4 mb-4"
     >
       {/* Team Members */}
-      <div className="rounded-xl border border-[var(--border)] bg-[var(--bg-card)] p-5">
+      <div className="border border-[var(--border)] bg-[var(--bg-card)] p-5">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
             <Users className="w-4 h-4 text-[var(--accent)]" />
@@ -160,7 +160,7 @@ export function TeamOverview({ clients }: { clients: Client[] }) {
       </div>
 
       {/* Recent Staff Activities */}
-      <div className="rounded-xl border border-[var(--border)] bg-[var(--bg-card)] p-5">
+      <div className="border border-[var(--border)] bg-[var(--bg-card)] p-5">
         <div className="flex items-center gap-2 mb-4">
           <Activity className="w-4 h-4 text-[var(--accent)]" />
           <h3 className="text-sm font-semibold text-[var(--text-primary)]">
@@ -235,7 +235,8 @@ export function TeamOverview({ clients }: { clients: Client[] }) {
       </div>
 
       {/* Client — Last Instructor */}
-      <div className="rounded-xl border border-[var(--border)] bg-[var(--bg-card)] p-5">
+
+      {/*<div className="rounded-xl border border-[var(--border)] bg-[var(--bg-card)] p-5">
         <div className="flex items-center gap-2 mb-4">
           <Users className="w-4 h-4 text-[var(--accent)]" />
           <h3 className="text-sm font-semibold text-[var(--text-primary)]">
@@ -281,7 +282,7 @@ export function TeamOverview({ clients }: { clients: Client[] }) {
             ))}
           </div>
         )}
-      </div>
+      </div>*/}
     </motion.div>
   );
 }

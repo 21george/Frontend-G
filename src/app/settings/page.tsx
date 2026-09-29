@@ -246,6 +246,17 @@ function InfoRow({
   );
 }
 
+function formatSubscriptionAmount(
+  amount: number | null | undefined,
+  currency: string | null | undefined,
+) {
+  if (amount == null || !currency) return null;
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: currency.toUpperCase(),
+  }).format(amount);
+}
+
 /* ── Main Page ─────────────────────────────────────────────────── */
 
 export default function SettingsPage() {
@@ -282,6 +293,10 @@ export default function SettingsPage() {
     tier === "business" ? Building2 : tier === "pro" ? Crown : Zap;
   const isTrialing = subscription?.status === "trialing";
   const isPastDue = subscription?.status === "past_due";
+  const subscriptionAmount = formatSubscriptionAmount(
+    subscription?.amount,
+    subscription?.currency,
+  );
 
   return (
     <DashboardLayout>
@@ -290,7 +305,7 @@ export default function SettingsPage() {
         <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-8" />
 
         {/* Main Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {/* ── Left Column ── */}
           <div className="lg:col-span-2 space-y-6">
             {/* Profile Card */}
@@ -549,7 +564,7 @@ export default function SettingsPage() {
                   label="New Clients"
                   description="When a new client signs up"
                   checked={notifNewClient}
-                  onChange={(v) => updateNotif.mutate({ consultation: v })}
+                  onChange={(v) => updateNotif.mutate({ new_client: v })}
                 />
                 <ToggleRow
                   label="Messages"
@@ -628,11 +643,11 @@ export default function SettingsPage() {
                       {tierLabel} Plan
                     </h3>
                     <p className="text-sm text-[var(--text-secondary)]">
-                      {tier === "pro"
-                        ? "$29 / month"
-                        : tier === "business"
-                          ? "$79 / month"
-                          : "Free forever"}
+                      {subscriptionAmount
+                        ? `${subscriptionAmount} / ${subscription?.period.replace("_", " ")}`
+                        : tier === "free"
+                          ? "Free"
+                          : "Pricing available in billing"}
                     </p>
                   </div>
                 </div>

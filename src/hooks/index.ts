@@ -53,6 +53,7 @@ export {
   useWorkoutLogs,
   useWorkoutProgress,
   useLiveProgress,
+  useLiveProgresses,
   useStoreMeasurement,
 } from "./useMedia";
 export {

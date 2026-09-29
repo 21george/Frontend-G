@@ -268,7 +268,7 @@ export default function TeamSettingsPage() {
               ))}
             </div>
           }
-          emptyIcon={Users}
+          emptyIcon={<Users className="w-8 h-8" />}
           emptyTitle={
             allStaff.length === 0 ? "No staff yet" : "No matching staff"
           }

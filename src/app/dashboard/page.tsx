@@ -48,10 +48,7 @@ export default function DashboardPage() {
   // Instructors, managers, and admins (plus the owner coach) can see the team
   // overview on the dashboard. Front-desk staff do not need this view.
   const canViewTeamOverview =
-    !isStaff ||
-    (staffRole === "admin" ||
-      staffRole === "manager" ||
-      staffRole === "instructor_coach");
+    !isStaff || staffRole === "admin" || staffRole === "manager";
 
   const clients: Client[] = useMemo(
     () => (clientsData as PaginatedResponse<Client> | undefined)?.data ?? [],
@@ -120,12 +117,7 @@ export default function DashboardPage() {
     <DashboardLayout>
       <div className="min-h-screen bg-[var(--bg-page)] px-6 sm:px-10 py-8">
         {/* Welcome header */}
-        <motion.div
-          initial={{ opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0 }}
-          className="flex items-start justify-between mb-6"
-        >
+        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0 }} className="flex items-start justify-between mb-6" >
           <div>
             <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#888780] dark:text-[#FAFAFA]/40 mb-1">
               {todayStr}
@@ -138,39 +130,29 @@ export default function DashboardPage() {
           inactiveCount={inactiveCount}
           todayCount={todaySessions}
         />
+        <div className="mb-4 border-[#132E35]/20 dark:border-[#132E35]/60">
+          <SessionVolumeHeatmap checkins={checkins} />
+        </div>
+
+        {/* Row 1b: Upcoming 1-on-1 Coaching Sessions */}
+        <div className="mb-4 grid  grid-flow-col gap-2">
+          <UpcomingCoachingSessions />
+          <UpcomingSessions checkins={checkins} clientMap={clientMap} />
+        </div>
 
         {/* Team Overview — owner / admin only */}
         {canViewTeamOverview && !clientsLoading && (
           <TeamOverview clients={clients} />
         )}
 
-        {/* Row 1: Session Volume Heatmap + Upcoming Sessions */}
-        <div className="grid grid-cols-1 xl:grid-cols-5 gap-4 mb-4">
-          <SessionVolumeHeatmap checkins={checkins} />
-          <UpcomingSessions checkins={checkins} clientMap={clientMap} />
-        </div>
-
-        {/* Row 1b: Upcoming 1-on-1 Coaching Sessions */}
-        <div className="mb-4">
-          <UpcomingCoachingSessions />
-        </div>
-
         {/* Row 2: Client Workload + KPI 2x2 Grid */}
         <div className="grid grid-cols-1 xl:grid-cols-5 gap-4">
           <ClientWorkload clients={clients} checkins={checkins} />
 
-          <motion.div
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.24 }}
-            className="xl:col-span-2 grid grid-cols-2 gap-4 content-start"
-          >
+          <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.24 }} className="xl:col-span-2 grid grid-cols-2 gap-4 content-start" >
             {kpiLoading ? (
               [...Array(4)].map((_, i) => (
-                <div
-                  key={i}
-                  className="rounded-xl border border-[var(--border)] bg-[var(--bg-card)] p-4 space-y-3"
-                >
+                <div key={i} className="rounded-xl border border-[var(--border)] bg-[var(--bg-card)] p-4 space-y-3" >
                   <Skeleton className="h-3 w-20" />
                   <Skeleton className="h-7 w-12" />
                   <Skeleton className="h-3 w-24" />
@@ -180,14 +162,11 @@ export default function DashboardPage() {
               <>
                 <KpiCard
                   label="Total Clients"
-                  value={
-                    (clientsData as PaginatedResponse<Client> | undefined)
-                      ?.pagination?.total ?? clients.length
-                  }
+                  value={ (clientsData as PaginatedResponse<Client> | undefined) ?.pagination?.total ?? clients.length }
                   icon={Users}
                   trend={{ value: `${activeClients} active`, up: true }}
-                  delay={0.24}
-                />
+                  delay={0.24} />
+
                 <KpiCard
                   label="Active Plans"
                   value={activePlans}

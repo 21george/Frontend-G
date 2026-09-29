@@ -291,7 +291,7 @@ export default function Sidebar() {
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
         onClick={() => setMobileOpen(true)}
-        className="lg:hidden fixed top-4 left-4 z-50 p-2.5 bg-white dark:bg-[#192230] text-[var(--text-primary)] border border-slate-200 dark:border-white/10"
+        className="md:hidden fixed top-4 left-4 z-50 p-2.5 bg-white dark:bg-[#192230] text-[var(--text-primary)] border border-slate-200 dark:border-white/10"
         aria-label="Open menu"
       >
         <Menu className="w-5 h-5" />
@@ -304,7 +304,7 @@ export default function Sidebar() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="lg:hidden fixed inset-0 z-40 bg-black/40 backdrop-blur-sm"
+            className="md:hidden fixed inset-0 z-40 bg-black/40 backdrop-blur-sm"
             onClick={() => setMobileOpen(false)}
             aria-hidden="true"
           />
@@ -319,7 +319,7 @@ export default function Sidebar() {
             animate={{ x: 0 }}
             exit={{ x: "-100%" }}
             transition={{ type: "spring", damping: 25, stiffness: 300 }}
-            className="lg:hidden fixed inset-y-0 left-0 z-50 w-64 flex flex-col border-r"
+            className="md:hidden fixed inset-y-0 left-0 z-50 w-64 flex flex-col border-r"
             style={{
               backgroundColor: "var(--sidebar-bg)",
               borderColor: "var(--sidebar-bdr)",
@@ -337,7 +337,7 @@ export default function Sidebar() {
       <motion.aside
         initial={false}
         animate={{ width: collapsed ? 80 : 256 }}
-        className="hidden lg:flex flex-col h-screen fixed left-0 top-0 z-30 border-r overflow-hidden"
+        className="hidden md:flex flex-col h-screen fixed left-0 top-0 z-30 border-r overflow-hidden"
         style={{
           backgroundColor: "var(--sidebar-bg)",
           borderColor: "var(--sidebar-bdr)",
@@ -363,7 +363,7 @@ export default function Sidebar() {
 
       {/* Spacer for main content */}
       <div
-        className="hidden lg:block flex-shrink-0"
+        className="hidden md:block flex-shrink-0"
         style={{ width: collapsed ? 80 : 256 }}
       />
     </>

@@ -1,13 +1,21 @@
-'use client';
+"use client";
 
-import { useCallback, useEffect, useRef, useState, type KeyboardEvent, type ClipboardEvent } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
-import { motion } from 'framer-motion';
-import { Loader2, Mail, RotateCcw } from 'lucide-react';
-import Link from 'next/link';
-import apiClient from '@/lib/api';
-import { useAuthStore } from '@/store/auth';
-import { Button } from '@/components/ui/button';
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type KeyboardEvent,
+  type ClipboardEvent,
+} from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { motion } from "framer-motion";
+import { Loader2, Mail, RotateCcw } from "lucide-react";
+import Link from "next/link";
+import apiClient from "@/lib/api";
+import { useAuthStore } from "@/store/auth";
+import { Button } from "@/components/ui/button";
+import type { AxiosError } from "axios";
 
 const CODE_LENGTH = 6;
 const RESEND_COOLDOWN = 60; // seconds
@@ -24,10 +32,10 @@ const itemVariants = {
 export default function VerifyEmailPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const coachId = searchParams.get('id');
+  const coachId = searchParams.get("id");
   const setCoach = useAuthStore((s) => s.setCoach);
 
-  const [digits, setDigits] = useState<string[]>(Array(CODE_LENGTH).fill(''));
+  const [digits, setDigits] = useState<string[]>(Array(CODE_LENGTH).fill(""));
   const [error, setError] = useState<string | null>(null);
   const [isVerifying, setIsVerifying] = useState(false);
   const [isResending, setIsResending] = useState(false);
@@ -37,7 +45,7 @@ export default function VerifyEmailPage() {
 
   // Redirect if no coach_id
   useEffect(() => {
-    if (!coachId) router.replace('/auth/register');
+    if (!coachId) router.replace("/auth/register");
   }, [coachId, router]);
 
   // Resend cooldown timer
@@ -47,39 +55,39 @@ export default function VerifyEmailPage() {
     return () => clearTimeout(timer);
   }, [resendCooldown]);
 
-  const handleChange = useCallback(
-    (index: number, value: string) => {
-      // Only allow single digit
-      const digit = value.replace(/\D/g, '').slice(-1);
-      setDigits((prev) => {
-        const next = [...prev];
-        next[index] = digit;
-        return next;
-      });
-      setError(null);
+  const handleChange = useCallback((index: number, value: string) => {
+    // Only allow single digit
+    const digit = value.replace(/\D/g, "").slice(-1);
+    setDigits((prev) => {
+      const next = [...prev];
+      next[index] = digit;
+      return next;
+    });
+    setError(null);
 
-      // Auto-advance focus
-      if (digit && index < CODE_LENGTH - 1) {
-        inputRefs.current[index + 1]?.focus();
-      }
-    },
-    []
-  );
+    // Auto-advance focus
+    if (digit && index < CODE_LENGTH - 1) {
+      inputRefs.current[index + 1]?.focus();
+    }
+  }, []);
 
   const handleKeyDown = useCallback(
     (index: number, e: KeyboardEvent<HTMLInputElement>) => {
-      if (e.key === 'Backspace' && !digits[index] && index > 0) {
+      if (e.key === "Backspace" && !digits[index] && index > 0) {
         inputRefs.current[index - 1]?.focus();
       }
     },
-    [digits]
+    [digits],
   );
 
   const handlePaste = useCallback((e: ClipboardEvent) => {
     e.preventDefault();
-    const pasted = e.clipboardData.getData('text').replace(/\D/g, '').slice(0, CODE_LENGTH);
+    const pasted = e.clipboardData
+      .getData("text")
+      .replace(/\D/g, "")
+      .slice(0, CODE_LENGTH);
     if (!pasted) return;
-    const newDigits = Array(CODE_LENGTH).fill('');
+    const newDigits = Array(CODE_LENGTH).fill("");
     for (let i = 0; i < pasted.length; i++) {
       newDigits[i] = pasted[i];
     }
@@ -89,16 +97,16 @@ export default function VerifyEmailPage() {
   }, []);
 
   const handleVerify = async () => {
-    const code = digits.join('');
+    const code = digits.join("");
     if (code.length !== CODE_LENGTH) {
-      setError('Please enter all 6 digits');
+      setError("Please enter all 6 digits");
       return;
     }
 
     setError(null);
     setIsVerifying(true);
     try {
-      const res = await apiClient.post('/auth/verify-email', {
+      const res = await apiClient.post("/auth/verify-email", {
         coach_id: coachId,
         code,
       });
@@ -106,11 +114,14 @@ export default function VerifyEmailPage() {
       setSuccess(true);
       setCoach(coach);
       // Brief success moment before redirect
-      setTimeout(() => router.push('/dashboard'), 800);
-    } catch (e: any) {
-      const msg = e?.response?.data?.message || 'Verification failed. Please try again.';
+      setTimeout(() => router.push("/dashboard"), 800);
+    } catch (error: unknown) {
+      const axiosError = error as AxiosError<{ message?: string }>;
+      const msg =
+        axiosError?.response?.data?.message ||
+        "Verification failed. Please try again.";
       setError(msg);
-      setDigits(Array(CODE_LENGTH).fill(''));
+      setDigits(Array(CODE_LENGTH).fill(""));
       inputRefs.current[0]?.focus();
     } finally {
       setIsVerifying(false);
@@ -122,10 +133,12 @@ export default function VerifyEmailPage() {
     setIsResending(true);
     setError(null);
     try {
-      await apiClient.post('/auth/resend-verification', { coach_id: coachId });
+      await apiClient.post("/auth/resend-verification", { coach_id: coachId });
       setResendCooldown(RESEND_COOLDOWN);
-    } catch (e: any) {
-      const msg = e?.response?.data?.message || 'Failed to resend code.';
+    } catch (error: unknown) {
+      const axiosError = error as AxiosError<{ message?: string }>;
+      const msg =
+        axiosError?.response?.data?.message || "Failed to resend code.";
       setError(msg);
     } finally {
       setIsResending(false);
@@ -134,9 +147,12 @@ export default function VerifyEmailPage() {
 
   // Auto-submit when all digits are entered
   useEffect(() => {
-    if (digits.every((d) => d !== '') && !isVerifying) {
-      handleVerify();
-    }
+    const autoVerify = async () => {
+      if (digits.every((d) => d !== "") && !isVerifying) {
+        await handleVerify();
+      }
+    };
+    autoVerify();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [digits]);
 
@@ -157,8 +173,13 @@ export default function VerifyEmailPage() {
         className="w-full max-w-md text-center"
       >
         {/* Icon */}
-        <motion.div variants={itemVariants} className="flex justify-center mb-6">
-          <div className={`w-16 h-16 flex items-center justify-center transition-colors duration-500 ${success ? 'bg-emerald-100 dark:bg-emerald-900' : 'bg-blue-50 dark:bg-blue-900'}`}>
+        <motion.div
+          variants={itemVariants}
+          className="flex justify-center mb-6"
+        >
+          <div
+            className={`w-16 h-16 flex items-center justify-center transition-colors duration-500 ${success ? "bg-emerald-100 dark:bg-emerald-900" : "bg-blue-50 dark:bg-blue-900"}`}
+          >
             {success ? (
               <motion.svg
                 initial={{ scale: 0 }}
@@ -169,7 +190,11 @@ export default function VerifyEmailPage() {
                 stroke="currentColor"
                 strokeWidth={2.5}
               >
-                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M5 13l4 4L19 7"
+                />
               </motion.svg>
             ) : (
               <Mail className="w-8 h-8 text-blue-600" />
@@ -180,23 +205,28 @@ export default function VerifyEmailPage() {
         {/* Title */}
         <motion.div variants={itemVariants}>
           <h1 className="text-2xl font-semibold tracking-tight">
-            {success ? 'Email Verified!' : 'Check your email'}
+            {success ? "Email Verified!" : "Check your email"}
           </h1>
           <p className="text-sm text-muted-foreground mt-2">
             {success
-              ? 'Redirecting to your dashboard...'
-              : 'We sent a 6-digit verification code to your email'}
+              ? "Redirecting to your dashboard..."
+              : "We sent a 6-digit verification code to your email"}
           </p>
         </motion.div>
 
         {/* Code inputs */}
         {!success && (
           <>
-            <motion.div variants={itemVariants} className="flex justify-center gap-3 mt-8">
+            <motion.div
+              variants={itemVariants}
+              className="flex justify-center gap-3 mt-8"
+            >
               {digits.map((digit, i) => (
                 <input
                   key={i}
-                  ref={(el) => { inputRefs.current[i] = el; }}
+                  ref={(el) => {
+                    inputRefs.current[i] = el;
+                  }}
                   type="text"
                   inputMode="numeric"
                   autoComplete="one-time-code"
@@ -232,7 +262,9 @@ export default function VerifyEmailPage() {
                 disabled={isVerifying || digits.some((d) => !d)}
                 onClick={handleVerify}
               >
-                {isVerifying && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                {isVerifying && (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                )}
                 Verify Email
               </Button>
             </motion.div>
@@ -258,7 +290,10 @@ export default function VerifyEmailPage() {
 
             {/* Back link */}
             <motion.div variants={itemVariants} className="mt-6">
-              <Link href="/auth/register" className="text-sm text-[var(--text-tertiary)] hover:text-[var(--text-secondary)] transition-colors">
+              <Link
+                href="/auth/register"
+                className="text-sm text-[var(--text-tertiary)] hover:text-[var(--text-secondary)] transition-colors"
+              >
                 ← Back to registration
               </Link>
             </motion.div>

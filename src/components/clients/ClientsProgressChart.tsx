@@ -4,6 +4,7 @@ import { useMemo } from 'react'
 import { motion } from 'framer-motion'
 import { CheckCircle2, Clock, AlertCircle, Dumbbell, ChevronRight } from 'lucide-react'
 import Link from 'next/link'
+import { SegmentedProgressBar } from '@/components/ui/SegmentedProgressBar'
 
 interface ClientProgressPlan {
   id: string
@@ -39,20 +40,6 @@ export function ClientsProgressChart({ clients, isLoading }: ClientsProgressChar
       return (b.current_plan?.progress_pct ?? 0) - (a.current_plan?.progress_pct ?? 0)
     })
   }, [clients])
-
-  const getProgressColor = (pct: number) => {
-    if (pct >= 80) return 'bg-emerald-500'
-    if (pct >= 50) return 'bg-blue-500'
-    if (pct >= 25) return 'bg-amber-500'
-    return 'bg-slate-400'
-  }
-
-  const getProgressTextColor = (pct: number) => {
-    if (pct >= 80) return 'text-emerald-600 dark:text-emerald-400'
-    if (pct >= 50) return 'text-blue-600 dark:text-blue-400'
-    if (pct >= 25) return 'text-amber-600 dark:text-amber-400'
-    return 'text-[var(--text-tertiary)] dark:text-slate-400'
-  }
 
   if (isLoading) {
     return (
@@ -167,44 +154,12 @@ export function ClientsProgressChart({ clients, isLoading }: ClientsProgressChar
 
                   {/* Progress Bar */}
                   {plan && (
-                    <div className="relative">
-                      <div className="flex items-center gap-3">
-                        <div className="flex-1 h-2 bg-[var(--bg-subtle)] dark:bg-slate-800 rounded-full overflow-hidden">
-                          <motion.div
-                            initial={{ width: 0 }}
-                            animate={{ width: `${Math.min(100, pct)}%` }}
-                            transition={{ duration: 0.8, ease: "easeOut" }}
-                            className={`h-full rounded-full ${
-                              needsPlan ? 'bg-red-500' : getProgressColor(pct)
-                            }`}
-                          />
-                        </div>
-                        <span className={`text-xs font-semibold w-10 text-right ${getProgressTextColor(pct)}`}>
-                          {Math.round(pct)}%
-                        </span>
-                      </div>
-
-                      {/* Day markers */}
-                      {plan.total_days > 0 && (
-                        <div className="flex mt-1.5">
-                          {Array.from({ length: Math.min(plan.total_days, 7) }).map((_, i) => {
-                            const dayPct = ((i + 1) / plan.total_days) * 100
-                            const isDone = pct >= dayPct
-                            return (
-                              <div key={i} className="flex-1 flex justify-center">
-                                <div
-                                  className={`w-1 h-1 rounded-full ${
-                                    isDone
-                                      ? needsPlan ? 'bg-red-400' : 'bg-emerald-400'
-                                      : 'bg-[var(--bg-subtle)] dark:bg-slate-700'
-                                  }`}
-                                />
-                              </div>
-                            )
-                          })}
-                        </div>
-                      )}
-                    </div>
+                    <SegmentedProgressBar
+                      percentage={Math.round(pct)}
+                      segments={10}
+                      completedDays={plan.completed_days}
+                      totalDays={plan.total_days}
+                    />
                   )}
                 </div>
 

@@ -1,5 +1,4 @@
 "use client";
-
 import { useMemo, useState, useEffect } from "react";
 import { useAuthStore } from "@/store/auth";
 import { useThemeStore } from "@/store/theme";
@@ -56,16 +55,15 @@ function useClientGreeting() {
 
 function ThemeToggle() {
   const { theme, toggle } = useThemeStore();
-  const isDark = theme === "dark";
   return (
     <button
       onClick={toggle}
-      title={isDark ? "Light mode" : "Dark mode"}
+      title={theme === "dark" ? "Light mode" : "Dark mode"}
       className={`
         relative w-14 h-7 border transition-all duration-300 ease-in-out
         focus:outline-none focus:ring-2 focus:ring-brand-700/40
         ${
-          isDark
+          theme === "dark"
             ? "bg-slate-800 border-white/[0.12] rounded-xl"
             : "bg-[var(--bg-subtle)] border-[var(--border-hover)] rounded-xl"
         }
@@ -73,20 +71,20 @@ function ThemeToggle() {
     >
       <Sun
         size={12}
-        className={`absolute left-1.5 top-1/2 -translate-y-1/2  transition-opacity duration-200 ${isDark ? "opacity-30 text-neutral-400" : "opacity-100 text-amber-500"}`}
+        className={`absolute left-1.5 top-1/2 -translate-y-1/2  transition-opacity duration-200 ${theme === "dark" ? "opacity-30 text-neutral-400" : "opacity-100 text-amber-500"}`}
       />
       <Moon
         size={12}
-        className={`absolute right-1.5 top-1/2 -translate-y-1/2 transition-opacity duration-200 ${isDark ? "opacity-100 text-blue-300" : "opacity-30 text-slate-400"}`}
+        className={`absolute right-1.5 top-1/2 -translate-y-1/2 transition-opacity duration-200 ${theme === "dark" ? "opacity-100 text-blue-300" : "opacity-30 text-slate-400"}`}
       />
       <span
         className={`
           absolute top-0.5 w-6 h-6 flex items-center justify-center
           transition-all duration-300 ease-in-out rounded-xl
-          ${isDark ? "translate-x-7 bg-slate-700" : "translate-x-0.5 bg-white"}
+          ${theme === "dark" ? "translate-x-7 bg-slate-700" : "translate-x-0.5 bg-white"}
         `}
       >
-        {isDark ? (
+        {theme === "dark" ? (
           <Moon size={11} className="text-white" />
         ) : (
           <Sun size={11} className="text-amber-500" />
@@ -214,7 +212,7 @@ export default function DashboardHeader({
   const fullName = [userName, userSurname].filter(Boolean).join(" ");
 
   return (
-    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 mb-6 sm:mb-8">
+    <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 lg:gap-4 mb-6 lg:mb-8">
       <div className="min-w-0">
         <nav
           className="flex items-center gap-2 text-xs text-[var(--text-tertiary)] mb-1"
@@ -246,9 +244,8 @@ export default function DashboardHeader({
         </p>
       </div>
 
-      <GlobalSearch pathname={pathname} />
-
       <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0 flex-wrap">
+        <GlobalSearch pathname={pathname} />
         <WeatherForecast />
         <NotificationsButton />
         <NearbyGymsButton />
@@ -290,10 +287,7 @@ export default function DashboardHeader({
                 surname={userSurname}
                 photo={userPhoto}
                 size="h-12 w-12"
-                variant="colored"
-                shape="squircle"
-                className="ring-2 ring-white/10"
-              />
+                variant="colored" shape="squircle" className="ring-2 ring-white/10" />
               {fullName && (
                 <div className="hidden sm:flex flex-col">
                   <span className="text-[13px] font-semibold text-[var(--text-primary)] leading-tight">

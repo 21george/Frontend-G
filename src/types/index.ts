@@ -100,6 +100,9 @@ export interface Exercise {
 export interface WorkoutDay {
   day: string;
   exercises: Exercise[];
+  /** Present when the plan is fetched in a client-specific context. */
+  is_completed?: boolean;
+  completed_at?: string | null;
 }
 
 export type WorkoutPlanType = "individual" | "group" | "team";
@@ -569,10 +572,26 @@ export interface SubscriptionInfo {
   client_limit: number | null;
   client_count: number;
   trial_ends_at: string | null;
+  trial_starts_at: string | null;
   current_period_end: string | null;
   next_payment_date: string | null;
+  amount: number | null;
+  currency: string | null;
+  provider_available: boolean;
   cancel_at_period_end: boolean;
-  stripe_customer_id: string | null;
+}
+
+export interface BillingInformation {
+  first_name: string | null;
+  last_name: string | null;
+  company: string | null;
+  address: string | null;
+  postal_code: string | null;
+  city: string | null;
+  country: string | null;
+  vat_id: string | null;
+  email: string | null;
+  phone: string | null;
 }
 
 export interface Invoice {

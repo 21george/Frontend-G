@@ -7,6 +7,7 @@ export interface NotificationSettings {
   consultation: boolean;
   test_result: boolean;
   login_alerts: boolean;
+  new_client?: boolean;
   dnd_enabled: boolean;
   dnd_from: string;
   dnd_to: string;
