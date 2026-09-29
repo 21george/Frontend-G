@@ -50,8 +50,8 @@ export default function LoginPage() {
   const [pendingAlert, setPendingAlert] = useState<
     "update_payment" | "resubscribe" | "renew_subscription" | null
   >(null);
-  const [isHydrated, setIsHydrated] = useState(
-    useAuthStore.persist.hasHydrated(),
+  const [isHydrated, setIsHydrated] = useState(() =>
+    typeof window !== "undefined" && useAuthStore.persist?.hasHydrated?.(),
   );
 
   const form = useForm<LoginValues>({

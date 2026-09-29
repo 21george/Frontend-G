@@ -41,8 +41,8 @@ export default function StaffLoginPage() {
   const setStaff = useAuthStore((s) => s.setStaff);
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   const isStaff = useAuthStore((s) => s.isStaff);
-  const [isHydrated, setIsHydrated] = useState(
-    useAuthStore.persist.hasHydrated(),
+  const [isHydrated, setIsHydrated] = useState(() =>
+    typeof window !== "undefined" && useAuthStore.persist?.hasHydrated?.(),
   );
 
   const [error, setError] = useState<string | null>(null);
