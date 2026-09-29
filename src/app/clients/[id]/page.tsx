@@ -256,10 +256,10 @@ export default function ClientDetailPage() {
 
             <div className="flex-1 overflow-y-auto relative z-10">
               {/* Tab navigation */}
-              <div className="sticky top-0 z-20 flex items-center  dark:border-white/[0.06] bg-[var(--bg-card)]/90 dark:bg-[#0a1114]/90 backdrop-blur-xl px-2 sm:px-5 overflow-x-auto scrollbar-hide shadow-[0_2px_16px_-4px_rgba(0,0,0,0.1)] dark:shadow-[0_4px_24px_-6px_rgba(0,0,0,0.4)]">
+              <div className="sticky top-0 z-20 flex items-center  dark:border-white/[0.06]  px-2 sm:px-5 overflow-x-auto scrollbar-hide">
                 <div
                   aria-hidden
-                  className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[var(--energy)]/30 dark:via-[#a3e635]/20 to-transparent"
+                  className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent to-transparent"
                 />
                 {TABS.map(({ key, label }) => (
                   <button

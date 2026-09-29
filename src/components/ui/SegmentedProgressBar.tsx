@@ -25,7 +25,7 @@ export function SegmentedProgressBar({
   if (percentage >= 100) {
     activeColor = "bg-emerald-500";
   } else if (percentage > 0) {
-    activeColor = "bg-amber-600";
+    activeColor = "bg-[#5e85bc]";
   }
 
   const inactiveColor = "bg-[var(--bg-subtle)] dark:bg-white/[0.06]";

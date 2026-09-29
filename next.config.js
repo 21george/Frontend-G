@@ -48,6 +48,15 @@ const nextConfig = {
       },
     ],
   },
+  async redirects() {
+    return [
+      {
+        source: "/billing/manage",
+        destination: "/billing",
+        permanent: true,
+      },
+    ];
+  },
   async headers() {
     const headers = [
       { key: "X-Frame-Options", value: "DENY" },

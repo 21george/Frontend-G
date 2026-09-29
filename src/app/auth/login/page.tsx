@@ -377,8 +377,17 @@ export default function LoginPage() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.4, duration: 0.4 }}
-          className="mt-5 text-center"
+          className="mt-5 text-center space-y-1"
         >
+          <p className="text-xs text-white/30">
+            Team member?{" "}
+            <Link
+              href="/staff/login"
+              className="text-[var(--energy)]/80 hover:text-[var(--energy)] transition-colors font-semibold"
+            >
+              Staff Login
+            </Link>
+          </p>
           <p className="text-xs text-white/30">
             Don&apos;t have an account?{" "}
             <Link

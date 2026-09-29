@@ -215,22 +215,26 @@ export function PaymentMethodManager() {
                     Default
                   </span>
                 ) : (
-                  <button
+                  <Button
+                    variant="ghost"
+                    size="sm"
                     onClick={() => setDefault.mutate(method.id)}
                     disabled={setDefault.isPending}
-                    className="px-3 py-1 rounded-full text-xs font-medium border border-[var(--border)] text-[var(--text-secondary)] hover:border-[var(--energy)] hover:text-[var(--energy)] transition-colors disabled:opacity-50"
+                    className="rounded-full text-xs font-medium border border-[var(--border)] text-[var(--text-secondary)] hover:border-[var(--energy)] hover:text-[var(--energy)] hover:bg-transparent"
                   >
                     Set as default
-                  </button>
+                  </Button>
                 )}
-                <button
+                <Button
+                  variant="ghost"
+                  size="sm"
                   onClick={() => deleteMethod.mutate(method.id)}
                   disabled={deleteMethod.isPending}
-                  className="p-1.5 rounded-md text-[var(--text-tertiary)] hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors"
+                  className="p-1.5 h-auto text-[var(--text-tertiary)] hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10"
                   title="Remove card"
                 >
                   <Trash2 className="w-3.5 h-3.5" />
-                </button>
+                </Button>
               </div>
             </motion.div>
           ))}
@@ -273,10 +277,12 @@ export function PaymentMethodManager() {
 
       {/* Add new card button */}
       {!showAddForm && (
-        <button
+        <Button
+          variant="ghost"
+          size="md"
           onClick={startAddingCard}
           disabled={createSetupIntent.isPending}
-          className="w-full flex items-center justify-center gap-2 py-2.5 rounded-lg border border-dashed border-[var(--border-hover)] text-sm font-medium text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:border-[var(--text-tertiary)] hover:bg-[var(--bg-subtle)]/30 transition-all disabled:opacity-50"
+          className="w-full flex items-center justify-center gap-2 rounded-lg border border-dashed border-[var(--border-hover)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:border-[var(--text-tertiary)] hover:bg-[var(--bg-subtle)]/30"
         >
           {createSetupIntent.isPending ? (
             <Loader2 className="w-4 h-4 animate-spin" />
@@ -284,7 +290,7 @@ export function PaymentMethodManager() {
             <Plus className="w-4 h-4" />
           )}
           Add new card
-        </button>
+        </Button>
       )}
     </div>
   );

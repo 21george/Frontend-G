@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
-const PUBLIC_PATHS = ["/auth", "/_next", "/favicon.ico", "/theme-init.js"];
+const PUBLIC_PATHS = ["/auth", "/staff", "/_next", "/favicon.ico", "/theme-init.js"];
 
 /**
  * Lightweight JWT validation for Edge Middleware.
@@ -60,7 +60,8 @@ export function middleware(request: NextRequest) {
     isJwtStructurallyValid(refreshToken) || isJwtStructurallyValid(accessToken);
 
   if (!hasValidToken) {
-    const loginUrl = new URL("/auth/login", request.url);
+    const isStaffPath = pathname.startsWith("/staff/");
+    const loginUrl = new URL(isStaffPath ? "/staff/login" : "/auth/login", request.url);
     loginUrl.searchParams.set("redirect", pathname);
     return NextResponse.redirect(loginUrl);
   }

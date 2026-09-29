@@ -90,7 +90,7 @@ export function PaymentCardVisual({
               </p>
               <p className="text-sm font-mono">{exp}</p>
             </div>
-            <button className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 transition-colors text-xs font-medium">
+            <button type="button" className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 transition-colors text-xs font-medium">
               <Pencil className="w-3 h-3" />
               Edit
             </button>
@@ -129,13 +129,14 @@ export function PaymentCardVisual({
         <div className="flex items-center gap-2">
           {onSetDefault && (
             <button
+              type="button"
               onClick={onSetDefault}
               className="px-3 py-1.5 rounded-lg text-xs font-medium text-[var(--text-secondary)] hover:text-[var(--energy)] hover:bg-white dark:hover:bg-white/5 transition-colors"
             >
               Set as default
             </button>
           )}
-          <button className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg hover:bg-white dark:hover:bg-white/5 transition-colors text-xs font-medium text-[var(--text-secondary)]">
+          <button type="button" className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg hover:bg-white dark:hover:bg-white/5 transition-colors text-xs font-medium text-[var(--text-secondary)]">
             <Pencil className="w-3 h-3" />
             Edit
           </button>

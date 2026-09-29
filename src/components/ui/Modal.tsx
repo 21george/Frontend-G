@@ -152,13 +152,12 @@ export function Modal({ open, onClose, title, children, size = "md" }: Props) {
         aria-modal="true"
         aria-labelledby={title ? titleId : undefined}
         className={cn(
-          "relative w-full animate-scale-in rounded-2xl overflow-hidden",
+          "relative w-full animate-scale-in rounded-sm overflow-hidden",
           "bg-[var(--bg-card)] border border-[var(--border)] shadow-2xl dark:shadow-dark-elevated",
           sizes[size],
         )}
       >
         {/* Top accent gradient */}
-        <div className="absolute inset-x-0 top-0 h-[3px] bg-gradient-to-r from-brand-600 via-energy-400 to-brand-600 z-10" />
 
         {/* Close button */}
         <button

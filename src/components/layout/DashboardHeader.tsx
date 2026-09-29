@@ -4,7 +4,17 @@ import { useAuthStore } from "@/store/auth";
 import { useThemeStore } from "@/store/theme";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LucideIcon,Upload,Sun,Moon,User,Calendar,Video, FileText, ChevronRight,} from "lucide-react";
+import {
+  LucideIcon,
+  Upload,
+  Sun,
+  Moon,
+  User,
+  Calendar,
+  Video,
+  FileText,
+  ChevronRight,
+} from "lucide-react";
 import { NearbyGymsButton } from "./NearbyGyms";
 import NotificationsButton from "@/components/notifications";
 import WeatherForecast from "@/components/weather";
@@ -34,22 +44,18 @@ function getGreetingLabel(): string {
 }
 
 function useClientDateLabel() {
-  const [label, setLabel] = useState("");
-  useEffect(() => {
+  const [label, setLabel] = useState(() => {
     const now = new Date();
     const dayName = now.toLocaleDateString("en-US", { weekday: "long" });
     const dayNum = now.getDate();
     const monthName = now.toLocaleDateString("en-US", { month: "long" });
-    setLabel(`${dayName}, ${dayNum} ${monthName}`);
-  }, []);
+    return `${dayName}, ${dayNum} ${monthName}`;
+  });
   return label;
 }
 
 function useClientGreeting() {
-  const [greeting, setGreeting] = useState("");
-  useEffect(() => {
-    setGreeting(getGreetingLabel());
-  }, []);
+  const [greeting, setGreeting] = useState(() => getGreetingLabel());
   return greeting;
 }
 
@@ -57,6 +63,7 @@ function ThemeToggle() {
   const { theme, toggle } = useThemeStore();
   return (
     <button
+      type="button"
       onClick={toggle}
       title={theme === "dark" ? "Light mode" : "Dark mode"}
       className={`
@@ -109,8 +116,10 @@ export default function DashboardHeader({
   const userEmail = isStaff ? staff?.email : coach?.email;
   const userPhoto = isStaff ? undefined : coach?.profile_photo;
 
+  const safePath = pathname ?? "";
+
   const getPageTitle = () => {
-    const path = pathname.split("/").pop() || "";
+    const path = safePath.split("/").pop() || "";
     const titleMap: Record<string, string> = {
       settings: "Settings",
       dashboard: "Dashboard",
@@ -119,14 +128,14 @@ export default function DashboardHeader({
       "nutrition-plans": "Nutrition Plans",
       checkins: "Check-ins",
       "live-training": "Live Training",
-      billing: "Billing",
+      billing: "Manage Subscription",
       media: "Media",
       notifications: "Notifications",
       messages: "Messages",
     };
     return (
       titleMap[path] ||
-      path?.replace(/-/g, " ").replace(/\b\w/g, (l) => l.toUpperCase()) ||
+      path.replace(/-/g, " ").replace(/\b\w/g, (l) => l.toUpperCase()) ||
       "Dashboard"
     );
   };
@@ -139,7 +148,7 @@ export default function DashboardHeader({
 
     const actions: QuickAction[] = [];
 
-    if (pathname.startsWith("/workout-plans")) {
+    if (safePath.startsWith("/workout-plans")) {
       actions.push(
         {
           href: "/workout-plans/new",
@@ -156,7 +165,7 @@ export default function DashboardHeader({
             "bg-emerald-50 text-emerald-700 hover:bg-emerald-100 dark:bg-emerald-900/30 dark:text-emerald-400 dark:hover:bg-emerald-900/50",
         },
       );
-    } else if (pathname.startsWith("/clients")) {
+    } else if (safePath.startsWith("/clients")) {
       actions.push({
         href: "/clients/new",
         label: "Add a client",
@@ -164,7 +173,7 @@ export default function DashboardHeader({
         color:
           "bg-blue-50 text-blue-700 hover:bg-blue-100 dark:bg-blue-900/30 dark:text-blue-400 dark:hover:bg-blue-900/50",
       });
-    } else if (pathname.startsWith("/nutrition-plans")) {
+    } else if (safePath.startsWith("/nutrition-plans")) {
       actions.push({
         href: "/nutrition-plans/new",
         label: "Create plan",
@@ -172,7 +181,7 @@ export default function DashboardHeader({
         color:
           "bg-blue-50 text-blue-700 hover:bg-blue-100 dark:bg-blue-900/30 dark:text-blue-400 dark:hover:bg-blue-900/50",
       });
-    } else if (pathname.startsWith("/checkins")) {
+    } else if (safePath.startsWith("/checkins")) {
       actions.push({
         href: "/checkins/new",
         label: "Book a check-in",
@@ -180,7 +189,7 @@ export default function DashboardHeader({
         color:
           "bg-blue-50 text-blue-700 hover:bg-blue-100 dark:bg-blue-900/30 dark:text-blue-400 dark:hover:bg-blue-900/50",
       });
-    } else if (pathname.startsWith("/live-training")) {
+    } else if (safePath.startsWith("/live-training")) {
       actions.push({
         href: "/live-training/new",
         label: "New Session",
@@ -188,7 +197,7 @@ export default function DashboardHeader({
         color:
           "bg-blue-50 text-blue-700 hover:bg-blue-100 dark:bg-blue-900/30 dark:text-blue-400 dark:hover:bg-blue-900/50",
       });
-    } else if (pathname.startsWith("/coaching-sessions")) {
+    } else if (safePath.startsWith("/coaching-sessions")) {
       actions.push({
         href: "/coaching-sessions/new",
         label: "New 1-on-1",
@@ -196,7 +205,7 @@ export default function DashboardHeader({
         color:
           "bg-cyan-50 text-cyan-700 hover:bg-cyan-100 dark:bg-cyan-900/30 dark:text-cyan-400 dark:hover:bg-cyan-900/50",
       });
-    } else if (pathname.startsWith("/media")) {
+    } else if (safePath.startsWith("/media")) {
       actions.push({
         href: "/media",
         label: "Upload files",
@@ -207,102 +216,125 @@ export default function DashboardHeader({
     }
 
     return actions;
-  }, [quickActions, pathname]);
+  }, [quickActions, safePath]);
 
   const fullName = [userName, userSurname].filter(Boolean).join(" ");
 
   return (
-    <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 lg:gap-4 mb-6 lg:mb-8">
-      <div className="min-w-0">
-        <nav
-          className="flex items-center gap-2 text-xs text-[var(--text-tertiary)] mb-1"
-          aria-label="Breadcrumb"
-        >
-          <span>Dashboard</span>
-          <ChevronRight className="w-3 h-3" />
-          <span className="text-blue-600 dark:text-blue-400 font-medium">
+    <div className="flex flex-col gap-3 sm:gap-4 mb-6 lg:mb-8">
+      {/* Top row: title + actions */}
+      <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3 sm:gap-4">
+        <div className="min-w-0 flex-1">
+          <nav
+            className="flex items-center gap-2 text-xs text-[var(--text-tertiary)] mb-1"
+            aria-label="Breadcrumb"
+          >
+            <span>Dashboard</span>
+            <ChevronRight className="w-3 h-3 flex-shrink-0" />
+            <span className="text-blue-600 dark:text-blue-400 font-medium truncate">
+              {heading}
+            </span>
+          </nav>
+          {showGreeting && (
+            <div className="mb-1">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#888780] dark:text-[#FAFAFA]/40 mb-0.5">
+                {greeting
+                  ? `Good ${greeting}, ${userName ?? "there"}`
+                  : "Welcome"}
+              </p>
+              <p className="text-[10px] text-[var(--text-tertiary)]">
+                {dateLabel}
+              </p>
+            </div>
+          )}
+          <h1 className="text-lg sm:text-xl lg:text-2xl font-bold text-[var(--text-primary)] tracking-tight">
             {heading}
-          </span>
-        </nav>
-        {showGreeting && (
-          <div className="mb-1">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#888780] dark:text-[#FAFAFA]/40 mb-0.5">
-              {greeting
-                ? `Good ${greeting}, ${userName ?? "there"}`
-                : "Welcome"}
+          </h1>
+          {subtitle && (
+            <p className="text-slate-500 dark:text-neutral-200 text-xs sm:text-sm mt-1">
+              {subtitle}
             </p>
-            <p className="text-[10px] text-[var(--text-tertiary)]">
-              {dateLabel}
-            </p>
+          )}
+        </div>
+
+        {/* Actions bar */}
+        <div className="flex items-center gap-2 flex-shrink-0 flex-wrap sm:flex-nowrap">
+          <div className="hidden sm:block">
+            <GlobalSearch pathname={pathname} />
           </div>
-        )}
-        <h1 className="text-xl sm:text-2xl font-bold text-[var(--text-primary)] tracking-tight">
-          {heading}
-        </h1>
-        <p className="text-slate-500 dark:text-neutral-200 text-xs sm:text-sm mt-1">
-          {subtitle}
-        </p>
+          <div className="hidden md:block">
+            <WeatherForecast />
+          </div>
+          <NotificationsButton />
+          <div className="hidden lg:block">
+            <NearbyGymsButton />
+          </div>
+          {defaultQuickActions.length > 0 &&
+            defaultQuickActions.map(
+              ({ href, onClick, label, icon: Icon, color }) => {
+                const className = `inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 sm:py-2 text-xs rounded-lg sm:rounded-xl font-medium transition-colors ${color}`;
+                const content = (
+                  <>
+                    <Icon className="w-4 h-4" />
+                    <span className="hidden sm:inline">{label}</span>
+                  </>
+                );
+                if (onClick) {
+                  return (
+                    <button key={label} type="button" onClick={onClick} className={className}>
+                      {content}
+                    </button>
+                  );
+                }
+                if (href) {
+                  return (
+                    <Link key={label} href={href} className={className}>
+                      {content}
+                    </Link>
+                  );
+                }
+                return null;
+              },
+            )}
+          <div className="rounded-sm">
+            <ThemeToggle />
+          </div>
+          <Link
+            href="/settings/edit"
+            className="flex items-center gap-2 pl-1 border-l border-slate-200 dark:border-white/[0.1] hover:opacity-80 transition-opacity"
+          >
+            {hasHydrated ? (
+              <>
+                <Avatar
+                  name={userName}
+                  surname={userSurname}
+                  photo={userPhoto}
+                  size="h-9 w-9 sm:h-10 sm:w-10 lg:h-12 lg:w-12"
+                  variant="colored"
+                  shape="squircle"
+                  className="ring-2 ring-white/10"
+                />
+                {fullName && (
+                  <div className="hidden md:flex flex-col">
+                    <span className="text-[12px] lg:text-[13px] font-semibold text-[var(--text-primary)] leading-tight">
+                      {fullName}
+                    </span>
+                    <span className="text-[10px] lg:text-[11px] text-slate-500 dark:text-neutral-400 leading-tight">
+                      {userEmail}
+                    </span>
+                  </div>
+                )}
+              </>
+            ) : (
+              <div className="h-9 w-9 sm:h-10 sm:w-10 lg:h-12 lg:w-12 rounded-lg bg-white/10 animate-pulse" />
+            )}
+          </Link>
+        </div>
       </div>
 
-      <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0 flex-wrap">
+      {/* Mobile search row */}
+      <div className="sm:hidden">
         <GlobalSearch pathname={pathname} />
-        <WeatherForecast />
-        <NotificationsButton />
-        <NearbyGymsButton />
-        {defaultQuickActions.length > 0 &&
-          defaultQuickActions.map(
-            ({ href, onClick, label, icon: Icon, color }) => {
-              const className = `inline-flex items-center gap-1.5 px-2.5 sm:px-3.5 py-1.5 sm:py-2 text-xs rounded-xl sm:text-sm font-medium transition-colors ${color}`;
-              const content = (
-                <>
-                  <Icon className="w-4 h-4" />
-                  <span className="hidden sm:inline">{label}</span>
-                </>
-              );
-              if (onClick) {
-                return (
-                  <button key={label} onClick={onClick} className={className}>
-                    {content}
-                  </button>
-                );
-              }
-              return (
-                <Link key={href} href={href!} className={className}>
-                  {content}
-                </Link>
-              );
-            },
-          )}
-        <div className="rounded-sm">
-          <ThemeToggle />
-        </div>
-        <Link
-          href="/settings/edit"
-          className="flex items-center gap-2.5 pl-1 border-l border-slate-200 rounded-sm dark:border-white/[0.1] hover:opacity-80 transition-opacity"
-        >
-          {hasHydrated ? (
-            <>
-              <Avatar
-                name={userName}
-                surname={userSurname}
-                photo={userPhoto}
-                size="h-12 w-12"
-                variant="colored" shape="squircle" className="ring-2 ring-white/10" />
-              {fullName && (
-                <div className="hidden sm:flex flex-col">
-                  <span className="text-[13px] font-semibold text-[var(--text-primary)] leading-tight">
-                    {fullName}
-                  </span>
-                  <span className="text-[11px] text-slate-500 dark:text-neutral-400 leading-tight">
-                    {userEmail}
-                  </span>
-                </div>
-              )}
-            </>
-          ) : (
-            <div className="h-12 w-12 rounded-lg bg-white/10 animate-pulse" />
-          )}
-        </Link>
       </div>
     </div>
   );

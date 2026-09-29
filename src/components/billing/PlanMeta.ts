@@ -75,6 +75,43 @@ export const PLANS: PlanDefinition[] = [
     cta: "Choose Plan",
   },
   {
+    tier: "free",
+    name: "Free",
+    periods: {
+      monthly: {
+        price: 0,
+        priceLabel: "$0",
+        periodLabel: "/mo",
+        discountPct: 0,
+      },
+      quarterly: {
+        price: 0,
+        priceLabel: "$0",
+        periodLabel: "/3 mo",
+        discountPct: 0,
+      },
+      semi_annual: {
+        price: 0,
+        priceLabel: "$0",
+        periodLabel: "/6 mo",
+        discountPct: 0,
+      },
+      annual: {
+        price: 0,
+        priceLabel: "$0",
+        periodLabel: "/yr",
+        discountPct: 0,
+      },
+    },
+    icon: Zap,
+    accent: "#94a3b8",
+    energy: false,
+    popular: false,
+    description: "For coaches just getting started",
+    features: ["Up to 3 clients", "Basic platform access"],
+    cta: "Upgrade Plan",
+  },
+  {
     tier: "pro",
     name: "Pro",
     periods: {
@@ -169,8 +206,7 @@ export function getPlanPricing(
   tier: SubscriptionTier,
   period: SubscriptionPeriod,
 ): PeriodPricing {
-  const normalizedTier = tier === "free" ? "none" : tier;
-  const plan = PLANS.find((p) => p.tier === normalizedTier);
+  const plan = PLANS.find((p) => p.tier === tier);
   if (!plan) throw new Error(`getPlanPricing: unknown tier "${tier}"`);
   return plan.periods[period] ?? plan.periods.monthly;
 }

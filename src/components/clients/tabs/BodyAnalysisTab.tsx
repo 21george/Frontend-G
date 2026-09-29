@@ -239,6 +239,7 @@ function AnatomicalPin({
         className="relative flex items-center justify-center cursor-pointer"
         onMouseEnter={() => setHovered(true)}
         onMouseLeave={() => setHovered(false)}
+        onClick={() => setHovered((v) => !v)}
       >
         {/* Pulse ring */}
         <span
@@ -431,8 +432,8 @@ export function BodyAnalysisTab({ clientId }: Props) {
       map[k] = measurements
         .slice()
         .reverse()
-        .map((m) => (m as any)[k])
-        .filter((v) => v != null);
+        .map((m) => (m as Record<string, number | null>)[k])
+        .filter((v): v is number => v != null);
     });
     return map;
   }, [measurements]);
@@ -590,17 +591,9 @@ export function BodyAnalysisTab({ clientId }: Props) {
                     />
                   </div>
                 )}
-                <img
-                  src={`/img/anatomy-${gender}.png`}
-                  alt={`${gender} anatomical view`}
-                  className={`max-h-[480px] w-auto object-contain transition-opacity duration-500 z-[1] ${
-                    imageLoaded ? "opacity-100" : "opacity-0"
-                  }`}
-                  onLoad={() => setImageLoaded(true)}
-                  onError={() => setImageError(true)}
-                />
-                {imageError && (
-                  <div className="absolute inset-0 flex flex-col items-center justify-center z-0 text-center p-6">
+
+                {imageError ? (
+                  <div className="flex flex-col items-center justify-center text-center p-6">
                     <div className="w-32 h-48 rounded-full border-2 border-dashed border-[var(--border)] flex items-center justify-center mb-3">
                       <User size={32} className="text-[var(--text-tertiary)]" />
                     </div>
@@ -612,19 +605,39 @@ export function BodyAnalysisTab({ clientId }: Props) {
                       to display the anatomical figure
                     </p>
                   </div>
-                )}
+                ) : (
+                  <div className="relative inline-block">
+                    <img
+                      src={`/img/anatomy-${gender}.png`}
+                      alt={`${gender} anatomical view`}
+                      className={`max-h-[480px] w-auto object-contain transition-opacity duration-500 z-[1] ${
+                        imageLoaded ? "opacity-100" : "opacity-0"
+                      }`}
+                      onLoad={() => setImageLoaded(true)}
+                      onError={() => setImageError(true)}
+                    />
 
-                {/* Floating measurement pins */}
-                {MEASUREMENT_POINTS.map((point, i) => (
-                  <AnatomicalPin
-                    key={point.key}
-                    point={point}
-                    value={(latest as any)?.[point.key]}
-                    prevValue={(previous as any)?.[point.key]}
-                    gender={gender}
-                    delay={0.3 + i * 0.1}
-                  />
-                ))}
+                    {/* Floating measurement pins */}
+                    {imageLoaded && MEASUREMENT_POINTS.map((point, i) => (
+                      <AnatomicalPin
+                        key={point.key}
+                        point={point}
+                        value={
+                          (latest as Record<string, number | null> | undefined)?.[
+                            point.key
+                          ]
+                        }
+                        prevValue={
+                          (previous as Record<string, number | null> | undefined)?.[
+                            point.key
+                          ]
+                        }
+                        gender={gender}
+                        delay={0.3 + i * 0.1}
+                      />
+                    ))}
+                  </div>
+                )}
               </div>
 
               {/* Bottom label */}
@@ -847,7 +860,7 @@ export function BodyAnalysisTab({ clientId }: Props) {
                 {measurements.slice(0, 8).map((m, i) => {
                   const prev = measurements[i + 1];
                   return (
-                    <div key={m.date ?? i} className="px-4 py-3">
+                    <div key={`${m.date ?? "unknown"}-${i}`} className="px-4 py-3">
                       <div className="flex items-center gap-2 mb-2">
                         <Calendar
                           size={10}
@@ -876,8 +889,10 @@ export function BodyAnalysisTab({ clientId }: Props) {
                           { key: "hips_cm", label: "Hips", unit: "cm" },
                           { key: "body_fat_pct", label: "Body Fat", unit: "%" },
                         ].map((col) => {
-                          const val = (m as any)[col.key];
-                          const pval = prev ? (prev as any)[col.key] : null;
+                          const val = (m as Record<string, number | null>)[col.key];
+                          const pval = prev
+                            ? (prev as Record<string, number | null>)[col.key]
+                            : null;
                           const t =
                             val != null && pval != null
                               ? trendSymbol(val, pval)

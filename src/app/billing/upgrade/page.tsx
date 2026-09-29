@@ -155,7 +155,8 @@ export default function BillingUpgradePage() {
   };
 
   const handlePlanAction = (tier: SubscriptionTier) => {
-    if (currentStatus === "active" || currentStatus === "trialing") {
+    const hasStripeSub = currentTier !== "free" && currentTier !== "none";
+    if (hasStripeSub && (currentStatus === "active" || currentStatus === "trialing")) {
       upgradeSub.mutate({
         tier: tier as "pro" | "business",
         period: selectedPeriod,

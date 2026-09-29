@@ -1,35 +1,40 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import Link from "next/link";
+import DashboardLayout from "@/components/layout/DashboardLayout";
 import {
   useSubscription,
-  useBillingInformation,
-  useUpdateBillingInformation,
-  usePaymentMethods,
   useManageBilling,
-  useSetDefaultPaymentMethod,
-  useDeletePaymentMethod,
-} from "@/hooks/useSubscription";
-import { useInvoices } from "@/hooks/useInvoices";
-import { AddPaymentMethodModal } from "./AddPaymentMethodModal";
+  useCancelSubscription,
+  useUpgradeSubscription,
+} from "@/lib/hooks";
+import { useInvoices, useDownloadInvoice } from "@/hooks/useInvoices";
+import {
+  PLANS,
+  getPlanPricing,
+  PERIOD_LABELS,
+} from "@/components/billing/PlanMeta";
+import { SubscriptionAlerts } from "@/components/billing/SubscriptionAlerts";
+import { PaymentMethodManager } from "@/components/billing/PaymentMethodManager";
+import { Button } from "@/components/ui/button";
 import { Modal } from "@/components/ui/Modal";
 import { Skeleton } from "@/components/ui/Skeleton";
-import { AlertTriangle, Download, Receipt, Zap, Plus } from "lucide-react";
-import type { BillingInformation, Invoice, SubscriptionTier } from "@/types";
-import type { PaymentMethod } from "@/lib/api/services/subscription";
+import { motion } from "framer-motion";
+import {
+  Download,
+  X,
+  Users,
+  AlertTriangle,
+  Receipt,
+  Zap,
+  Eye,
+  CalendarClock,
+} from "lucide-react";
+import { AnimatedSearch } from "@/components/ui/AnimatedSearch";
+import type { Invoice } from "@/types";
 
-/* ── Formatters ─────────────────────────────────────────────────────────── */
-
-function formatDate(dateStr: string | null | undefined): string {
-  if (!dateStr) return "—";
-  const d = new Date(dateStr);
-  return d.toLocaleDateString("en-US", {
-    month: "long",
-    day: "numeric",
-    year: "numeric",
-  });
-}
+/* ── Currency formatter ─────────────────────────────────────────────────── */
 
 function formatCurrency(amount: number, currency = "EUR"): string {
   return new Intl.NumberFormat("en-US", {
@@ -38,705 +43,724 @@ function formatCurrency(amount: number, currency = "EUR"): string {
   }).format(amount);
 }
 
-function formatRemainingTrialTime(
-  trialEndsAt: string | null | undefined,
-): string | null {
-  if (!trialEndsAt) return null;
-  const remainingMs = new Date(trialEndsAt).getTime() - Date.now();
-  if (remainingMs <= 0) return "Expired";
-  const days = Math.ceil(remainingMs / 86_400_000);
-  return days === 1 ? "1 day remaining" : `${days} days remaining`;
-}
+/* ── Status badge with dot ───────────────────────────────────────────────── */
 
-const PLAN_NAMES: Record<SubscriptionTier, string> = {
-  none: "No Plan",
-  free: "Free",
-  pro: "Personal Trainer",
-  business: "Business",
-};
-
-/* ── Skeleton ──────────────────────────────────────────────────────────── */
-
-function HubSkeleton() {
-  return (
-    <div className="space-y-8 max-w-6xl">
-      <Skeleton className="h-9 w-48 rounded-md" />
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-        <Skeleton className="h-72 rounded-lg" />
-        <Skeleton className="h-72 rounded-lg" />
-      </div>
-      <Skeleton className="h-56 rounded-lg" />
-      <Skeleton className="h-96 rounded-lg" />
-    </div>
-  );
-}
-
-/* ── Card brand components (match image exactly) ──────────────────────── */
-
-function MastercardLogo() {
-  return (
-    <div className="flex items-center" style={{ transform: "translateX(4px)" }}>
-      <div className="w-8 h-8 rounded-full bg-[#eb001b]" />
-      <div className="w-8 h-8 rounded-full bg-[#f79e1b] -ml-4 opacity-90" />
-    </div>
-  );
-}
-
-function VisaLogo() {
+function StatusBadge({ status }: { status: Invoice["status"] }) {
+  const configs: Record<
+    string,
+    { label: string; dot: string; bg: string; text: string; border: string }
+  > = {
+    paid: {
+      label: "Paid",
+      dot: "bg-emerald-500",
+      bg: "bg-emerald-50 dark:bg-emerald-500/10",
+      text: "text-emerald-700 dark:text-emerald-400",
+      border: "border-emerald-200/50 dark:border-emerald-500/20",
+    },
+    open: {
+      label: "Pending",
+      dot: "bg-amber-500",
+      bg: "bg-amber-50 dark:bg-amber-500/10",
+      text: "text-amber-700 dark:text-amber-400",
+      border: "border-amber-200/50 dark:border-amber-500/20",
+    },
+    void: {
+      label: "Void",
+      dot: "bg-slate-400",
+      bg: "bg-slate-50 dark:bg-white/5",
+      text: "text-slate-600 dark:text-slate-400",
+      border: "border-slate-200/50 dark:border-white/10",
+    },
+    uncollectible: {
+      label: "Failed",
+      dot: "bg-red-500",
+      bg: "bg-red-50 dark:bg-red-500/10",
+      text: "text-red-700 dark:text-red-400",
+      border: "border-red-200/50 dark:border-red-500/20",
+    },
+  };
+  const c = configs[status] ?? configs.open;
   return (
     <span
-      className="text-white font-black text-lg tracking-tighter italic"
-      style={{ fontFamily: "sans-serif" }}
+      className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold border ${c.bg} ${c.text} ${c.border}`}
     >
-      VISA
+      <span className={`w-1.5 h-1.5 rounded-full ${c.dot}`} />
+      {c.label}
     </span>
   );
 }
 
-function AmexLogo() {
+/* ── Skeleton ────────────────────────────────────────────────────────────── */
+
+function ManageSkeleton() {
   return (
-    <div className="text-center" style={{ transform: "translateX(2px)" }}>
-      <span
-        className="block text-white font-black text-[10px] tracking-tight leading-tight"
-        style={{ fontFamily: "sans-serif" }}
-      >
-        AMERICAN
-      </span>
-      <span
-        className="block text-white font-black text-[10px] tracking-tight leading-tight"
-        style={{ fontFamily: "sans-serif" }}
-      >
-        EXPRESS
-      </span>
-    </div>
+    <DashboardLayout>
+      <div className="space-y-6 max-w-5xl">
+        <Skeleton className="h-8 w-48 rounded-lg" />
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <Skeleton className="h-72 rounded-2xl" />
+          <Skeleton className="h-72 rounded-2xl" />
+        </div>
+        <Skeleton className="h-96 rounded-2xl" />
+      </div>
+    </DashboardLayout>
   );
 }
 
-/* ── Payment Card (image style) ───────────────────────────────────────── */
+/* ── Invoice Detail Modal ───────────────────────────────────────────────── */
 
-function PaymentCard({ pm }: { pm: PaymentMethod }) {
-  const brand = pm.brand.toLowerCase();
-  const isMastercard = brand === "mastercard" || brand === "master_card";
-  const isVisa = brand === "visa";
-  const isAmex =
-    brand === "amex" ||
-    brand === "american_express" ||
-    brand === "american express";
-
-  const setDefault = useSetDefaultPaymentMethod();
-  const deleteMethod = useDeletePaymentMethod();
-
-  const topBg = isMastercard
-    ? "bg-[#1a1a2e]"
-    : isVisa
-      ? "bg-[#1a1f71]"
-      : isAmex
-        ? "bg-[#016fd0]"
-        : "bg-[#2d2d2d]";
-
-  const isBusy = setDefault.isPending || deleteMethod.isPending;
-
-  return (
-    <div
-      className="rounded-lg border border-[var(--border)] bg-[var(--bg-card)] overflow-hidden flex flex-col"
-      style={{ minHeight: 160 }}
-    >
-      <div className={`${topBg} h-20 flex items-center justify-center`}>
-        {isMastercard && <MastercardLogo />}
-        {isVisa && <VisaLogo />}
-        {isAmex && <AmexLogo />}
-        {!isMastercard && !isVisa && !isAmex && (
-          <span className="text-white font-bold text-sm uppercase">
-            {pm.brand}
-          </span>
-        )}
-      </div>
-      <div className="flex-1 p-4 flex flex-col justify-between">
-        <div>
-          <p
-            className="text-sm font-medium text-[var(--text-primary)] tracking-widest"
-            style={{ fontFamily: "monospace", letterSpacing: "0.1em" }}
-          >
-            **** **** **** {pm.last4}
-          </p>
-          <p className="text-xs text-[var(--text-secondary)] mt-1">
-            Expires {String(pm.exp_month ?? 0).padStart(2, "0")}/
-            {String(pm.exp_year ?? 0).slice(-2)}
-          </p>
-        </div>
-        <div className="flex items-center gap-3 mt-3 pt-3 border-t border-[var(--border)]">
-          {pm.is_default ? (
-            <span className="inline-flex items-center gap-1 text-xs font-semibold text-emerald-600 dark:text-emerald-400">
-              <svg
-                className="w-3.5 h-3.5"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                strokeWidth={3}
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M5 13l4 4L19 7"
-                />
-              </svg>
-              Default
-            </span>
-          ) : (
-            <button
-              onClick={() => setDefault.mutate(pm.id)}
-              disabled={isBusy}
-              className="text-xs font-medium text-[#0066cc] hover:underline disabled:opacity-50"
-            >
-              Make Default
-            </button>
-          )}
-          <button
-            onClick={() => {
-              if (confirm("Remove this card?")) deleteMethod.mutate(pm.id);
-            }}
-            disabled={isBusy}
-            className="text-xs font-medium text-red-500 hover:underline ml-auto disabled:opacity-50"
-          >
-            Remove
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-/* ── Add new card placeholder ───────────────────────────────────────────── */
-
-function AddCardPlaceholder({
-  onClick,
-  disabled,
+function InvoiceDetailModal({
+  invoice,
+  open,
+  onClose,
+  onDownload,
+  isDownloading,
 }: {
-  onClick: () => void;
-  disabled?: boolean;
+  invoice: Invoice | null;
+  open: boolean;
+  onClose: () => void;
+  onDownload: (id: string) => void;
+  isDownloading: boolean;
 }) {
+  if (!invoice) return null;
+
   return (
-    <button
-      onClick={onClick}
-      disabled={disabled}
-      className="rounded-lg border-2 border-dashed border-[var(--border)] hover:border-[var(--text-tertiary)] flex flex-col items-center justify-center gap-2 text-sm text-[var(--text-tertiary)] hover:text-[var(--text-secondary)] transition-colors disabled:opacity-50"
-      style={{ minHeight: 160 }}
-    >
-      <div className="w-10 h-10 rounded-full border-2 border-[var(--border)] flex items-center justify-center">
-        <Plus className="w-5 h-5" />
+    <Modal open={open} onClose={onClose} title="Payment Details" size="md">
+      <div className="space-y-5">
+        <div className="flex items-start justify-between">
+          <div>
+            <p className="text-xs text-[var(--text-tertiary)] uppercase tracking-wider font-semibold">
+              Invoice Number
+            </p>
+            <p className="text-sm font-bold text-[var(--text-primary)] mt-0.5">
+              {invoice.number}
+            </p>
+          </div>
+          <StatusBadge status={invoice.status} />
+        </div>
+
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <p className="text-xs text-[var(--text-tertiary)] uppercase tracking-wider font-semibold">
+              Date
+            </p>
+            <p className="text-sm font-medium text-[var(--text-primary)] mt-0.5">
+              {new Date(invoice.date).toLocaleDateString("en-US", {
+                month: "long",
+                day: "numeric",
+                year: "numeric",
+              })}
+            </p>
+          </div>
+          <div>
+            <p className="text-xs text-[var(--text-tertiary)] uppercase tracking-wider font-semibold">
+              Amount
+            </p>
+            <p className="text-sm font-bold text-[var(--text-primary)] mt-0.5">
+              {formatCurrency(invoice.amount, invoice.currency)}
+            </p>
+          </div>
+        </div>
+
+        <div>
+          <p className="text-xs text-[var(--text-tertiary)] uppercase tracking-wider font-semibold">
+            Description
+          </p>
+          <p className="text-sm text-[var(--text-secondary)] mt-0.5">
+            {invoice.description ?? "Plan subscription"}
+          </p>
+        </div>
+
+        <div>
+          <p className="text-xs text-[var(--text-tertiary)] uppercase tracking-wider font-semibold">
+            Payment Method
+          </p>
+          <p className="text-sm text-[var(--text-secondary)] mt-0.5">
+            {invoice.last4 ? `Card ending in ${invoice.last4}` : "Card on file"}
+          </p>
+        </div>
+
+        <div className="flex items-center justify-end gap-3 pt-2">
+          <Button variant="ghost" size="md" onClick={onClose}>
+            Close
+          </Button>
+          <Button
+            variant="primary"
+            size="md"
+            loading={isDownloading}
+            onClick={() => onDownload(invoice.id)}
+          >
+            {!isDownloading && <Download className="w-4 h-4" />}
+            {isDownloading ? "Downloading…" : "Download Invoice"}
+          </Button>
+        </div>
       </div>
-      <span className="font-medium text-xs">Add a new card</span>
-    </button>
+    </Modal>
   );
 }
 
-/* ── Main page ─────────────────────────────────────────────────────────── */
+/* ── Main page ───────────────────────────────────────────────────────────── */
 
-export default function BillingHubPage() {
-  const {
-    data: subscription,
-    isLoading: subLoading,
-    isError: subscriptionError,
-  } = useSubscription();
-  const {
-    data: invoices = [],
-    isLoading: invLoading,
-    isError: invoicesError,
-  } = useInvoices();
-  const {
-    data: paymentMethods = [],
-    isLoading: pmLoading,
-    isError: paymentMethodsError,
-  } = usePaymentMethods();
-  const {
-    data: billingInformation,
-    isLoading: billingLoading,
-    isError: billingError,
-  } = useBillingInformation();
+export default function BillingPage() {
+  const { data: subscription, isLoading: subLoading } = useSubscription();
+  const { data: invoices = [], isLoading: invLoading } = useInvoices();
   const manageBilling = useManageBilling();
-  const [showBillingInformationModal, setShowBillingInformationModal] =
-    useState(false);
-  const [showAddPaymentModal, setShowAddPaymentModal] = useState(false);
+  const cancelSub = useCancelSubscription();
+  const upgradeSub = useUpgradeSubscription();
+  const downloadInvoice = useDownloadInvoice();
 
-  if (subLoading) return <HubSkeleton />;
+  const [showCancelModal, setShowCancelModal] = useState(false);
+  const [invoiceSearch, setInvoiceSearch] = useState("");
+  const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
 
   const currentTier = subscription?.tier ?? "none";
-  const isTrialing = subscription?.status === "trialing";
+  const currentPeriod = subscription?.period ?? "monthly";
+  const currentStatus = subscription?.status ?? "none";
+  const isTrialing = currentStatus === "trialing";
   const isCancelling = subscription?.cancel_at_period_end;
-  const hasNoPlan = currentTier === "none" || currentTier === "free";
-  const trialRemaining = formatRemainingTrialTime(subscription?.trial_ends_at);
+  const hasNoPlan = currentTier === "none";
+  const isFreePlan = currentTier === "free";
+
+  const currentPlan = PLANS.find((p) => p.tier === currentTier) ?? PLANS[0];
+  const currentPricing = getPlanPricing(currentTier, currentPeriod);
 
   const nextPaymentDateRaw =
     subscription?.next_payment_date || subscription?.current_period_end;
   const nextPaymentDate = nextPaymentDateRaw
-    ? formatDate(nextPaymentDateRaw)
+    ? new Date(nextPaymentDateRaw).toLocaleDateString("en-US", {
+        month: "long",
+        day: "numeric",
+        year: "numeric",
+      })
     : "—";
+
   const trialEndDate = subscription?.trial_ends_at
-    ? formatDate(subscription.trial_ends_at)
+    ? new Date(subscription.trial_ends_at).toLocaleDateString("en-US", {
+        month: "long",
+        day: "numeric",
+        year: "numeric",
+      })
     : "—";
-  const hasUpcomingPayment = Boolean(
-    subscription?.provider_available && nextPaymentDateRaw && !isCancelling,
-  );
+
+  const filteredInvoices = useMemo(() => {
+    const q = invoiceSearch.trim().toLowerCase();
+    if (!q) return invoices;
+    return invoices.filter(
+      (inv) =>
+        inv.number.toLowerCase().includes(q) ||
+        inv.status.toLowerCase().includes(q) ||
+        (inv.description ?? "").toLowerCase().includes(q),
+    );
+  }, [invoices, invoiceSearch]);
+
+  const clientCount = subscription?.client_count ?? 0;
+  const clientLimit = subscription?.client_limit;
+  const isUnlimited = clientLimit === null;
+  const progressPct = isUnlimited
+    ? 0
+    : Math.min(100, (clientCount / Math.max(1, clientLimit ?? 1)) * 100);
+
+  const handleDownload = async (id: string) => {
+    try {
+      const data = await downloadInvoice.mutateAsync(id);
+      const url = data?.download_url || data?.hosted_invoice_url;
+      if (url) {
+        window.open(url, "_blank");
+      }
+    } catch {
+      // Error handled by mutation
+    }
+  };
+
+  if (subLoading) return <ManageSkeleton />;
 
   return (
-    <div className="space-y-8 ">
-      {subscriptionError && (
-        <div className="flex items-start gap-3 rounded-lg border border-red-200 bg-red-50 px-5 py-4 text-sm text-red-700 dark:border-red-900/40 dark:bg-red-950/20 dark:text-red-300">
-          <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
-          <p>
-            Subscription details could not be loaded. Refresh the page to try
-            again.
+    <DashboardLayout>
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="space-y-6 p-11"
+      >
+        {/* Header */}
+        <div>
+          <p className="text-sm text-[var(--text-secondary)] mt-1">
+            Manage your plan details and payment methods.
           </p>
         </div>
-      )}
 
-      {/* ── Trial Banner ── */}
-      {isTrialing && (
-        <div className="rounded-lg border border-amber-200 bg-amber-50 dark:bg-amber-900/20 dark:border-amber-700 px-5 py-4 flex flex-col sm:flex-row sm:items-center gap-3">
-          <div className="flex-1">
-            <p className="text-sm font-semibold text-amber-900 dark:text-amber-200">
-              Free Trial active — ends {trialEndDate}
+        {/* Alerts */}
+        <SubscriptionAlerts
+          subscription={subscription}
+          onManageBilling={() => manageBilling.mutate()}
+        />
+
+        {/* Two-column top: Plan + Payment */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Plan Details */}
+          <div className="rounded-2xl bg-white dark:bg-[var(--bg-card)] border border-[var(--border)] p-6 sm:p-8">
+            <p className="text-base font-semibold text-[var(--text-primary)] mb-5">
+              Plan Details
             </p>
-            <p className="text-xs text-amber-700 dark:text-amber-300 mt-0.5">
-              {trialRemaining ? `${trialRemaining}. ` : ""}
-              {hasUpcomingPayment
-                ? "Your scheduled first payment is shown below."
-                : "Add a payment method or choose an upgrade option before your trial ends."}
-            </p>
-          </div>
-          <Link
-            href="/billing/upgrade"
-            className="shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold bg-amber-600 text-white hover:bg-amber-700 transition-colors"
-          >
-            <Zap className="w-3.5 h-3.5" /> Upgrade Now
-          </Link>
-        </div>
-      )}
 
-      {/* ── Two-column row: Current Plan + Billing Information ── */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-        {/* Current Plan */}
-        <div className="rounded-lg border border-[var(--border)] bg-[var(--bg-card)] p-6">
-          <h2 className="text-lg font-normal text-[var(--text-primary)] mb-5">
-            Current Plan
-          </h2>
-
-          {hasNoPlan ? (
-            <div className="flex flex-col items-center text-center py-4">
-              <div className="w-12 h-12 rounded-xl bg-[var(--bg-subtle)] flex items-center justify-center mb-4">
-                <Zap className="w-6 h-6 text-[var(--text-tertiary)]" />
-              </div>
-              <h3 className="text-lg font-bold text-[var(--text-primary)] mb-1">
-                No Active Plan
-              </h3>
-              <p className="text-sm text-[var(--text-secondary)] mb-6 max-w-xs">
-                Choose a subscription plan to continue with secure checkout.
-              </p>
-              <Link
-                href="/billing/upgrade"
-                className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-md text-sm font-semibold bg-[var(--btn-bg)] text-white hover:bg-[var(--btn-hover)] transition-colors"
-              >
-                <Zap className="w-4 h-4" />
-                Start Free Trial
-              </Link>
-            </div>
-          ) : (
-            <div className="space-y-4">
-              <div className="flex items-start">
-                <span className="text-sm text-[var(--text-secondary)] w-28 shrink-0">
-                  Plan Type
-                </span>
-                <span className="text-sm font-medium text-[var(--text-primary)]">
-                  {isTrialing ? "Free Trial" : PLAN_NAMES[currentTier]}
-                </span>
-              </div>
-              <div className="flex items-start">
-                <span className="text-sm text-[var(--text-secondary)] w-28 shrink-0">
-                  Plan Pricing
-                </span>
-                <div>
-                  <span className="text-sm font-medium text-[var(--text-primary)]">
-                    {subscription?.amount != null && subscription.currency
-                      ? `${formatCurrency(subscription.amount, subscription.currency)} billed ${subscription.period.replace("_", " ")}`
-                      : "Pricing is confirmed by the payment provider"}
-                  </span>
+            {hasNoPlan ? (
+              <div className="flex flex-col items-center text-center py-6">
+                <div className="w-12 h-12 rounded-xl bg-[var(--bg-subtle)] flex items-center justify-center mb-4">
+                  <Zap className="w-6 h-6 text-[var(--text-tertiary)]" />
                 </div>
-              </div>
-              <div className="flex items-start">
-                <span className="text-sm text-[var(--text-secondary)] w-28 shrink-0">
-                  {isTrialing
-                    ? "Trial Ends"
-                    : isCancelling
-                      ? "Cancels On"
-                      : "Next Charge"}
-                </span>
-                <span className="text-sm font-medium text-[var(--text-primary)]">
-                  {isTrialing ? trialEndDate : nextPaymentDate}
-                </span>
-              </div>
-              <div className="flex items-center gap-3 pt-2">
-                {!isCancelling && (
-                  <button
-                    onClick={() => manageBilling.mutate()}
-                    disabled={manageBilling.isPending}
-                    className="px-4 py-2 rounded border border-[var(--border)] text-sm font-medium text-[var(--text-primary)] hover:bg-[var(--bg-subtle)] transition-colors"
-                  >
-                    {manageBilling.isPending
-                      ? "Opening..."
-                      : "Manage Subscription"}
-                  </button>
-                )}
-                {isCancelling && (
-                  <span className="px-4 py-2 rounded border border-amber-200 dark:border-amber-500/30 text-sm font-medium text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-500/10">
-                    Cancels on {nextPaymentDate}
-                  </span>
-                )}
-                <span className="text-sm text-[var(--text-tertiary)]">or</span>
+                <h3 className="text-lg font-bold text-[var(--text-primary)] mb-1">
+                  No Active Plan
+                </h3>
+                <p className="text-sm text-[var(--text-secondary)] mb-6 max-w-xs">
+                  Start your 14-day free trial to unlock all platform features.
+                </p>
                 <Link
                   href="/billing/upgrade"
-                  className="text-sm font-medium text-[#0066cc] hover:underline"
+                  className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-sm font-semibold bg-[#132e35] text-black hover:bg-[var(--energy-dark)] transition-colors"
                 >
-                  View Other Plans
+                  <Zap className="w-4 h-4" />
+                  Start Free Trial
                 </Link>
               </div>
-            </div>
-          )}
-        </div>
-
-        {/* Billing Information */}
-        <div className="rounded-lg border border-[var(--border)] bg-[var(--bg-card)] p-6">
-          <h2 className="text-lg font-normal text-[var(--text-primary)] mb-5">
-            Billing Information
-          </h2>
-          <div className="space-y-3">
-            <div className="flex items-start">
-              <span className="text-sm text-[var(--text-secondary)] w-28 shrink-0">
-                Name
-              </span>
-              <span className="text-sm font-medium text-[var(--text-primary)]">
-                {[billingInformation?.first_name, billingInformation?.last_name]
-                  .filter(Boolean)
-                  .join(" ") || "—"}
-              </span>
-            </div>
-            <div className="flex items-start">
-              <span className="text-sm text-[var(--text-secondary)] w-28 shrink-0">
-                Email
-              </span>
-              <span className="text-sm font-medium text-[var(--text-primary)]">
-                {billingLoading
-                  ? "Loading..."
-                  : billingInformation?.email || "—"}
-              </span>
-            </div>
-            <div className="flex items-start">
-              <span className="text-sm text-[var(--text-secondary)] w-28 shrink-0">
-                Phone
-              </span>
-              <span className="text-sm font-medium text-[var(--text-primary)]">
-                {billingInformation?.phone || "—"}
-              </span>
-            </div>
-            <div className="flex items-start">
-              <span className="text-sm text-[var(--text-secondary)] w-28 shrink-0">
-                Street
-              </span>
-              <span className="text-sm font-medium text-[var(--text-primary)]">
-                {billingInformation?.address || "—"}
-              </span>
-            </div>
-            <div className="flex items-start">
-              <span className="text-sm text-[var(--text-secondary)] w-28 shrink-0">
-                City/State
-              </span>
-              <span className="text-sm font-medium text-[var(--text-primary)]">
-                {[billingInformation?.city, billingInformation?.postal_code]
-                  .filter(Boolean)
-                  .join(", ") || "—"}
-              </span>
-            </div>
-            <div className="flex items-start">
-              <span className="text-sm text-[var(--text-secondary)] w-28 shrink-0">
-                Country
-              </span>
-              <span className="text-sm font-medium text-[var(--text-primary)]">
-                {billingInformation?.country || "—"}
-              </span>
-            </div>
-          </div>
-          <div className="pt-4 mt-2">
-            <button
-              onClick={() => setShowBillingInformationModal(true)}
-              className="px-4 py-2 rounded border border-[var(--border)] text-sm font-medium text-[var(--text-primary)] hover:bg-[var(--bg-subtle)] transition-colors"
-            >
-              Edit Billing Information
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {hasUpcomingPayment && (
-        <div className="rounded-lg border border-[var(--border)] bg-[var(--bg-card)] p-6">
-          <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <h2 className="text-lg font-normal text-[var(--text-primary)]">
-                Upcoming Payment
-              </h2>
-              <p className="mt-1 text-sm text-[var(--text-secondary)]">
-                {isTrialing ? "First payment" : "Next payment"}{" "}
-                {subscription?.amount != null && subscription.currency
-                  ? formatCurrency(subscription.amount, subscription.currency)
-                  : "amount unavailable"}{" "}
-                on {nextPaymentDate}.
-              </p>
-            </div>
-            <span className="text-sm font-medium text-[var(--text-primary)]">
-              {isTrialing ? "Free Trial" : PLAN_NAMES[currentTier]}
-            </span>
-          </div>
-        </div>
-      )}
-
-      {/* ── Payment Methods ── */}
-      <div>
-        <h2 className="text-lg font-normal text-[var(--text-primary)] mb-4">
-          Payment Methods
-        </h2>
-        {paymentMethodsError ? (
-          <div className="rounded-lg border border-red-200 bg-red-50 px-5 py-4 text-sm text-red-700 dark:border-red-900/40 dark:bg-red-950/20 dark:text-red-300">
-            Payment methods could not be loaded. Please refresh and try again.
-          </div>
-        ) : pmLoading ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            {[...Array(4)].map((_, i) => (
-              <Skeleton key={i} className="h-40 rounded-lg" />
-            ))}
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            {paymentMethods.map((pm: PaymentMethod) => (
-              <PaymentCard key={pm.id} pm={pm} />
-            ))}
-            <AddCardPlaceholder
-              onClick={() => setShowAddPaymentModal(true)}
-              disabled={!subscription?.provider_available}
-            />
-          </div>
-        )}
-      </div>
-
-      {/* ── Payment History ── */}
-      <div className="relative">
-        <div className="flex items-center justify-between mb-2">
-          <h2 className="text-lg font-normal text-[var(--text-primary)]">
-            Payment History
-          </h2>
-        </div>
-        <p className="text-sm text-[var(--text-secondary)] mb-4 max-w-2xl">
-          You can find below your charges from the last 12 months.
-        </p>
-        <div className="rounded-lg border border-[var(--border)] bg-[var(--bg-card)] overflow-hidden">
-          {invoicesError ? (
-            <div className="flex items-center gap-3 px-5 py-8 text-sm text-red-700 dark:text-red-300">
-              <AlertTriangle className="h-4 w-4 shrink-0" /> Payment history
-              could not be loaded. Please refresh and try again.
-            </div>
-          ) : invLoading ? (
-            <div className="divide-y divide-[var(--border)]">
-              {[...Array(4)].map((_, i) => (
-                <div key={i} className="px-5 py-4">
-                  <Skeleton className="h-5 w-full rounded" />
+            ) : (
+              <>
+                <div className="flex items-start justify-between mb-4">
+                  <div>
+                    <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200/50 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/20 mb-2">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                      Current Plan
+                    </span>
+                    <h3 className="text-lg font-bold text-[var(--text-primary)] mt-1">
+                      {currentPlan.name} Plan
+                    </h3>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-2xl font-bold text-[var(--text-primary)]">
+                      {currentPricing.priceLabel}
+                    </p>
+                    <p className="text-xs text-[var(--text-tertiary)]">
+                      {isFreePlan ? "" : currentPricing.periodLabel}
+                    </p>
+                  </div>
                 </div>
-              ))}
-            </div>
-          ) : invoices.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-14 text-center">
-              <Receipt className="w-10 h-10 mb-3 text-[var(--text-tertiary)]/40" />
-              <p className="text-sm font-semibold text-[var(--text-secondary)]">
-                No invoices yet
+
+                {/* Upcoming Dates — prominently displayed */}
+                {!isFreePlan && (
+                  <div className="space-y-2 mb-4">
+                    {isTrialing && (
+                      <div className="flex items-center gap-3 p-3 rounded-xl bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700">
+                        <div className="w-9 h-9 rounded-lg bg-amber-100 dark:bg-amber-800/30 flex items-center justify-center shrink-0">
+                          <CalendarClock className="w-4 h-4 text-amber-600 dark:text-amber-400" />
+                        </div>
+                        <div>
+                          <p className="text-xs text-amber-700 dark:text-amber-300 font-semibold uppercase tracking-wider">
+                            Free Trial Ends
+                          </p>
+                          <p className="text-sm font-bold text-amber-900 dark:text-amber-200">
+                            {trialEndDate}
+                          </p>
+                        </div>
+                      </div>
+                    )}
+                    <div className="flex items-center gap-3 p-3 rounded-xl bg-[var(--bg-subtle)] border border-[var(--border)]">
+                      <div className="w-9 h-9 rounded-lg bg-[var(--energy)]/10 flex items-center justify-center shrink-0">
+                        <CalendarClock className="w-4 h-4 text-[var(--energy)]" />
+                      </div>
+                      <div>
+                        <p className="text-xs text-[var(--text-tertiary)] font-semibold uppercase tracking-wider">
+                          {isTrialing ? "First Payment Due" : "Next Payment Due"}
+                        </p>
+                        <p className="text-sm font-bold text-[var(--text-primary)]">
+                          {isTrialing ? trialEndDate : nextPaymentDate}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                <p className="text-sm text-[var(--text-secondary)] mb-4">
+                  Client limit: {isUnlimited ? "Unlimited" : clientLimit}
+                </p>
+
+                {/* Client usage */}
+                {!isUnlimited && (
+                  <div className="mb-6">
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex -space-x-2">
+                        {[...Array(Math.min(3, clientCount))].map((_, i) => (
+                          <div
+                            key={i}
+                            className="w-7 h-7 rounded-full bg-[var(--bg-subtle)] border-2 border-white dark:border-[var(--bg-card)] flex items-center justify-center text-[10px] font-bold text-[var(--text-tertiary)]"
+                          >
+                            <Users className="w-3 h-3" />
+                          </div>
+                        ))}
+                        {clientCount > 3 && (
+                          <div className="w-7 h-7 rounded-full bg-[var(--bg-subtle)] border-2 border-white dark:border-[var(--bg-card)] flex items-center justify-center text-[10px] font-bold text-[var(--text-tertiary)]">
+                            +{clientCount - 3}
+                          </div>
+                        )}
+                      </div>
+                      <span className="text-xs font-semibold text-[var(--text-primary)]">
+                        {clientCount}/{clientLimit}
+                      </span>
+                    </div>
+                    <div className="w-full h-2 rounded-full bg-[var(--bg-subtle)] overflow-hidden">
+                      <div
+                        className="h-full rounded-full transition-all"
+                        style={{
+                          width: `${progressPct}%`,
+                          backgroundColor: currentPlan.accent,
+                        }}
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {/* Billing Period — hide for free plan */}
+                {!isFreePlan && (
+                  <div className="space-y-3 pt-2 border-t border-[var(--border)]">
+                    <p className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider">
+                      Billing Period
+                    </p>
+                    <div className="grid grid-cols-2 gap-2">
+                      {(
+                        [
+                          "monthly",
+                          "quarterly",
+                          "semi_annual",
+                          "annual",
+                        ] as const
+                      ).map((period) => (
+                        <Button
+                          key={period}
+                          variant={currentPeriod === period ? "primary" : "ghost"}
+                          size="sm"
+                          onClick={() => {
+                            if (period === currentPeriod) return;
+                            upgradeSub.mutate({
+                              tier: currentTier as "pro" | "business",
+                              period,
+                            });
+                          }}
+                          disabled={upgradeSub.isPending}
+                          className={`w-full text-xs font-semibold border ${
+                            currentPeriod === period
+                              ? "bg-[var(--energy)]/10 border-[var(--energy)]/30 text-[var(--energy)] hover:bg-[var(--energy)]/20"
+                              : "border-[var(--border)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-subtle)]"
+                          }`}
+                        >
+                          {PERIOD_LABELS[period]}
+                        </Button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Actions */}
+                <div className="space-y-2.5 mt-4">
+                  {isFreePlan && (
+                    <Link
+                      href="/billing/upgrade"
+                      className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-sm font-semibold bg-[#132e35] text-[#ffffff] hover:bg-[#132e35] transition-colors"
+                    >
+                      <Zap className="w-4 h-4" />
+                      Upgrade Plan
+                    </Link>
+                  )}
+                  {!isFreePlan && !isCancelling && (
+                    <Button
+                      variant="ghost"
+                      size="md"
+                      onClick={() => setShowCancelModal(true)}
+                      className="w-full border border-[var(--border)] text-[var(--text-secondary)] hover:text-red-500 hover:border-red-300 hover:bg-red-50 dark:hover:bg-red-500/5"
+                    >
+                      Cancel Plan
+                    </Button>
+                  )}
+                  {!isFreePlan && isCancelling && (
+                    <div className="w-full text-center py-2.5 rounded-lg text-sm font-medium text-amber-600 bg-amber-50 border border-amber-200/50 dark:bg-amber-500/10 dark:text-amber-400 dark:border-amber-500/20">
+                      Cancels on {nextPaymentDate}
+                    </div>
+                  )}
+                </div>
+              </>
+            )}
+          </div>
+
+          {/* Payment Method */}
+          <div className="rounded-2xl bg-white dark:bg-[var(--bg-card)] border border-[var(--border)] p-6 sm:p-8">
+            <div className="flex items-center justify-between mb-5">
+              <p className="text-base font-semibold text-[var(--text-primary)]">
+                Payment Method
               </p>
-              <p className="text-xs text-[var(--text-tertiary)] mt-1">
-                Billing history will appear here after your first payment.
-              </p>
+              <span className="text-sm font-semibold text-[#635BFF]">
+                stripe
+              </span>
             </div>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full min-w-[640px]">
+
+            <PaymentMethodManager />
+
+            {/* Next payment / Trial info */}
+            {!isCancelling && !hasNoPlan && (
+              <div className="mt-4 pt-4 border-t border-[var(--border)] space-y-1">
+                {isTrialing && (
+                  <p className="text-sm">
+                    <span className="font-medium text-amber-600 dark:text-amber-400">
+                      Free trial ends:
+                    </span>{" "}
+                    <span className="text-[var(--text-primary)] font-semibold">{trialEndDate}</span>
+                  </p>
+                )}
+                <p className="text-sm text-[var(--text-secondary)]">
+                  <span className="font-medium text-[var(--text-primary)]">
+                    {isTrialing ? "First payment due:" : "Next payment due:"}
+                  </span>{" "}
+                  <span className="text-[var(--text-primary)] font-semibold">
+                    {isTrialing ? trialEndDate : nextPaymentDate}
+                  </span>
+                </p>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Payment History */}
+        <div className="rounded-2xl bg-white dark:bg-[var(--bg-card)] border border-[var(--border)] overflow-hidden">
+          <div className="px-6 py-4 border-b border-[var(--border)] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="flex items-center gap-2">
+              <Receipt className="w-4 h-4 text-[var(--text-tertiary)]" />
+              <h3 className="text-base font-semibold text-[var(--text-primary)]">
+                Payment History
+              </h3>
+              {invoices.length > 0 && (
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-[var(--bg-subtle)] text-[var(--text-secondary)]">
+                  {invoices.length}
+                </span>
+              )}
+            </div>
+            <AnimatedSearch
+              className="max-w-xs"
+              active={invoiceSearch.length > 0}
+            >
+              <input
+                type="text"
+                placeholder="Search invoices…"
+                value={invoiceSearch}
+                onChange={(e) => setInvoiceSearch(e.target.value)}
+                className="w-full pl-9 pr-8 py-2 rounded-lg bg-[var(--bg-subtle)] border border-[var(--border)] text-sm text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:ring-2 focus:ring-[var(--energy)]/20 focus:border-[var(--energy)]/30 transition-all"
+              />
+              {invoiceSearch && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setInvoiceSearch("")}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 z-10 h-auto p-0.5"
+                >
+                  <X className="w-3.5 h-3.5 text-[var(--text-tertiary)]" />
+                </Button>
+              )}
+            </AnimatedSearch>
+          </div>
+
+          <div className="overflow-x-auto">
+            {invLoading ? (
+              <div className="divide-y divide-[var(--border)]">
+                {[...Array(4)].map((_, i) => (
+                  <div
+                    key={i}
+                    className="grid grid-cols-[1.5fr_1fr_1fr_1fr_auto_auto] gap-4 px-6 py-4 items-center min-w-[720px]"
+                  >
+                    <Skeleton className="h-4 w-28 rounded" />
+                    <Skeleton className="h-4 w-20 rounded" />
+                    <Skeleton className="h-4 w-24 rounded" />
+                    <Skeleton className="h-4 w-16 rounded" />
+                    <Skeleton className="h-5 w-16 rounded-full" />
+                    <Skeleton className="h-8 w-20 rounded" />
+                  </div>
+                ))}
+              </div>
+            ) : filteredInvoices.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-16 text-center">
+                <Receipt className="w-10 h-10 mb-3 text-[var(--text-tertiary)]/30" />
+                <p className="text-sm font-semibold text-[var(--text-secondary)]">
+                  {invoiceSearch ? "No matching invoices" : "No invoices yet"}
+                </p>
+                <p className="text-xs text-[var(--text-tertiary)] mt-1">
+                  {invoiceSearch
+                    ? ""
+                    : "Billing history appears after your first payment."}
+                </p>
+              </div>
+            ) : (
+              <table className="w-full min-w-[720px]">
                 <thead>
                   <tr className="border-b border-[var(--border)]">
-                    <th className="text-left px-5 py-3 text-[11px] font-semibold uppercase tracking-wider text-[var(--text-tertiary)]">
-                      Date
-                    </th>
-                    <th className="text-left px-5 py-3 text-[11px] font-semibold uppercase tracking-wider text-[var(--text-tertiary)]">
-                      Plan
-                    </th>
-                    <th className="text-left px-5 py-3 text-[11px] font-semibold uppercase tracking-wider text-[var(--text-tertiary)]">
-                      Payment
-                    </th>
-                    <th className="text-left px-5 py-3 text-[11px] font-semibold uppercase tracking-wider text-[var(--text-tertiary)]">
-                      Status
-                    </th>
-                    <th className="text-left px-5 py-3 text-[11px] font-semibold uppercase tracking-wider text-[var(--text-tertiary)]">
-                      Receipt #
-                    </th>
-                    <th className="px-5 py-3 w-20" />
+                    {[
+                      "Description",
+                      "Payment Method",
+                      "Date",
+                      "Amount",
+                      "Status",
+                      "Actions",
+                    ].map((h) => (
+                      <th
+                        key={h}
+                        className="text-left px-6 py-3 text-[10px] font-bold uppercase tracking-wider text-[var(--text-tertiary)]"
+                      >
+                        {h}
+                      </th>
+                    ))}
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-[var(--border)]">
-                  {invoices.map((inv: Invoice) => (
-                    <tr
+                  {filteredInvoices.map((inv, i) => (
+                    <motion.tr
                       key={inv.id}
-                      className="hover:bg-[var(--bg-subtle)]/30 transition-colors"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ delay: i * 0.03 }}
+                      className="hover:bg-[var(--bg-subtle)]/40 transition-colors"
                     >
-                      <td className="px-5 py-3.5 text-sm text-[var(--text-secondary)] whitespace-nowrap">
-                        {formatDate(inv.date)}
-                      </td>
-                      <td className="px-5 py-3.5">
+                      <td className="px-6 py-4">
                         <span className="text-sm font-medium text-[var(--text-primary)]">
-                          {inv.description ?? "Subscription"}
+                          {inv.description ?? "Plan subscription"}
                         </span>
                       </td>
-                      <td className="px-5 py-3.5 text-sm text-[var(--text-primary)] whitespace-nowrap">
-                        <span className="font-medium">
-                          {formatCurrency(inv.amount, inv.currency)}
+                      <td className="px-6 py-4">
+                        <span className="text-sm text-[var(--text-secondary)]">
+                          {inv.last4
+                            ? `Card ending ${inv.last4}`
+                            : "Card on file"}
                         </span>
-                        {inv.last4 && (
-                          <span className="text-xs text-[var(--text-secondary)] ml-1">
-                            (Card ending {inv.last4})
-                          </span>
-                        )}
                       </td>
-                      <td className="px-5 py-3.5 text-sm capitalize text-[var(--text-secondary)]">
-                        {inv.status}
+                      <td className="px-6 py-4 text-sm text-[var(--text-secondary)]">
+                        {new Date(inv.date).toLocaleDateString("en-US", {
+                          month: "short",
+                          day: "numeric",
+                          year: "numeric",
+                        })}
                       </td>
-                      <td className="px-5 py-3.5 text-sm text-[var(--text-secondary)] font-mono whitespace-nowrap">
-                        {inv.number}
+                      <td className="px-6 py-4 text-sm font-bold text-[var(--text-primary)]">
+                        {formatCurrency(inv.amount, inv.currency)}
                       </td>
-                      <td className="px-5 py-3.5 text-right">
-                        {inv.pdf_url && (
-                          <a
-                            href={inv.pdf_url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded border border-[var(--border)] text-xs font-medium text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-subtle)] transition-colors"
+                      <td className="px-6 py-4">
+                        <StatusBadge status={inv.status} />
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="flex items-center gap-2">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setSelectedInvoice(inv)}
+                            className="inline-flex items-center gap-1 border border-[var(--border)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-subtle)]"
+                            title="View details"
+                          >
+                            <Eye className="w-3.5 h-3.5" />
+                            View
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleDownload(inv.id)}
+                            className="inline-flex items-center gap-1 border border-[var(--border)] text-[var(--text-secondary)] hover:text-[var(--energy)] hover:bg-[var(--energy)]/5 hover:border-[var(--energy)]/20"
+                            title="Download invoice"
                           >
                             <Download className="w-3.5 h-3.5" />
-                            Download
-                          </a>
-                        )}
+                          </Button>
+                        </div>
                       </td>
-                    </tr>
+                    </motion.tr>
                   ))}
                 </tbody>
               </table>
+            )}
+          </div>
+
+          {!invLoading && filteredInvoices.length > 0 && (
+            <div className="px-6 py-3 border-t border-[var(--border)] text-[10px] uppercase tracking-wider text-[var(--text-tertiary)]">
+              Showing {filteredInvoices.length} of {invoices.length} invoice
+              {invoices.length !== 1 ? "s" : ""}
             </div>
           )}
         </div>
-      </div>
 
-      {/* Modals */}
-      <AddPaymentMethodModal
-        open={showAddPaymentModal}
-        onClose={() => setShowAddPaymentModal(false)}
+        {/* Danger Zone */}
+        {!hasNoPlan && !isFreePlan && !isCancelling && (
+          <div className="rounded-2xl bg-red-50 dark:bg-red-500/[0.03] border border-red-200/50 dark:border-red-500/10 p-6 sm:p-8">
+            <div className="flex items-start gap-4">
+              <div className="w-10 h-10 rounded-xl bg-red-100 dark:bg-red-500/10 flex items-center justify-center shrink-0">
+                <AlertTriangle className="w-5 h-5 text-red-500 dark:text-red-400" />
+              </div>
+              <div className="flex-1">
+                <h3 className="text-sm font-bold text-red-600 dark:text-red-400">
+                  Cancel Subscription
+                </h3>
+                <p className="text-sm text-[var(--text-secondary)] mt-1 max-w-lg">
+                  Your subscription will remain active until {nextPaymentDate}.
+                  After that, you will be downgraded to no active plan.
+                </p>
+                <Button
+                  variant="danger"
+                  size="sm"
+                  className="mt-4"
+                  onClick={() => setShowCancelModal(true)}
+                >
+                  Cancel Subscription
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
+      </motion.div>
+
+      {/* Cancel Confirmation Modal */}
+      <Modal
+        open={showCancelModal}
+        onClose={() => setShowCancelModal(false)}
+        title="Cancel subscription?"
+        size="md"
+      >
+        <div className="space-y-5">
+          <div className="flex items-start gap-4 p-4 rounded-xl bg-red-50 dark:bg-red-500/10 border border-red-200/50 dark:border-red-500/20">
+            <AlertTriangle className="w-5 h-5 text-red-500 dark:text-red-400 shrink-0 mt-0.5" />
+            <p className="text-sm text-red-700 dark:text-red-300 leading-relaxed">
+              You will keep full access until {nextPaymentDate}. After that,
+              your account will downgrade to no active plan. This action cannot
+              be undone early.
+            </p>
+          </div>
+
+          <div className="flex items-center justify-end gap-3">
+            <Button
+              variant="ghost"
+              size="md"
+              onClick={() => setShowCancelModal(false)}
+            >
+              Keep Plan
+            </Button>
+            <Button
+              variant="danger"
+              size="md"
+              loading={cancelSub.isPending}
+              onClick={() => {
+                cancelSub.mutate();
+                setShowCancelModal(false);
+              }}
+            >
+              {cancelSub.isPending ? "Cancelling…" : "Yes, Cancel"}
+            </Button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* Invoice Detail Modal */}
+      <InvoiceDetailModal
+        invoice={selectedInvoice}
+        open={!!selectedInvoice}
+        onClose={() => setSelectedInvoice(null)}
+        onDownload={handleDownload}
+        isDownloading={downloadInvoice.isPending}
       />
-      {showBillingInformationModal && (
-        <BillingInformationModal
-          billingInformation={billingInformation}
-          error={billingError}
-          onClose={() => setShowBillingInformationModal(false)}
-        />
-      )}
-    </div>
-  );
-}
-
-function BillingInformationModal({
-  billingInformation,
-  error,
-  onClose,
-}: {
-  billingInformation?: BillingInformation;
-  error: boolean;
-  onClose: () => void;
-}) {
-  const updateBillingInformation = useUpdateBillingInformation();
-  const [form, setForm] = useState<Partial<BillingInformation>>(
-    billingInformation ?? {},
-  );
-
-  const fields: Array<[keyof BillingInformation, string, string]> = [
-    ["first_name", "First name", "text"],
-    ["last_name", "Last name", "text"],
-    ["company", "Company", "text"],
-    ["email", "Billing email", "email"],
-    ["phone", "Phone", "tel"],
-    ["address", "Address", "text"],
-    ["postal_code", "Postal code", "text"],
-    ["city", "City", "text"],
-    ["country", "Country code", "text"],
-    ["vat_id", "VAT ID", "text"],
-  ];
-
-  return (
-    <Modal
-      open={true}
-      onClose={onClose}
-      title="Edit Billing Information"
-      size="lg"
-    >
-      {error ? (
-        <p className="text-sm text-red-500">
-          Billing information could not be loaded. Please try again.
-        </p>
-      ) : (
-        <form
-          className="space-y-4"
-          onSubmit={(event) => {
-            event.preventDefault();
-            updateBillingInformation.mutate(form, { onSuccess: onClose });
-          }}
-        >
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {fields.map(([key, label, type]) => (
-              <label
-                key={key}
-                className="block text-sm text-[var(--text-secondary)]"
-              >
-                <span>{label}</span>
-                <input
-                  type={type}
-                  value={form[key] ?? ""}
-                  onChange={(event) =>
-                    setForm((current) => ({
-                      ...current,
-                      [key]: event.target.value,
-                    }))
-                  }
-                  className="mt-1.5 w-full rounded-lg border border-[var(--border)] bg-[var(--bg-subtle)] px-3 py-2 text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--energy)]/30"
-                />
-              </label>
-            ))}
-          </div>
-          <div className="flex justify-end gap-3">
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-4 py-2 text-sm text-[var(--text-secondary)]"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={updateBillingInformation.isPending}
-              className="rounded-lg bg-[var(--btn-bg)] px-4 py-2 text-sm font-semibold text-white disabled:opacity-50"
-            >
-              {updateBillingInformation.isPending
-                ? "Saving..."
-                : "Save changes"}
-            </button>
-          </div>
-        </form>
-      )}
-    </Modal>
+    </DashboardLayout>
   );
 }

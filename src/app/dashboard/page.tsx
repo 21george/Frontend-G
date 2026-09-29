@@ -1,9 +1,8 @@
 "use client";
 
 import DashboardLayout from "@/components/layout/DashboardLayout";
-import { Skeleton } from "@/components/ui/Skeleton";
 import { useClients, useCheckins, useWorkoutPlans } from "@/lib/hooks";
-import { useMemo, useState, useEffect } from "react";
+import { useMemo } from "react";
 import { Users, Calendar, TrendingUp, Briefcase } from "lucide-react";
 import { parseDateValue } from "@/lib/utils";
 import type {
@@ -23,19 +22,18 @@ import { KpiCard } from "@/components/dashboard/KpiCard";
 import { TeamOverview } from "@/components/dashboard/TeamOverview";
 import { DashboardSkeleton } from "@/components/ui/skeletons";
 import { useAuthStore } from "@/store/auth";
+import { PaymentMethodPrompt } from "@/components/billing/PaymentMethodPrompt";
 
 function useTodayString() {
-  const [str, setStr] = useState("");
-  useEffect(() => {
-    setStr(
+  return useMemo(
+    () =>
       new Date().toLocaleDateString("en-US", {
         weekday: "long",
         month: "long",
         day: "numeric",
       }),
-    );
-  }, []);
-  return str;
+    [],
+  );
 }
 
 export default function DashboardPage() {
@@ -125,6 +123,9 @@ export default function DashboardPage() {
           </div>
         </motion.div>
 
+        {/* Payment Method Prompt */}
+        <PaymentMethodPrompt />
+
         {/* AI Insight Banner */}
         <AISuggestionBanner
           inactiveCount={inactiveCount}
@@ -135,70 +136,57 @@ export default function DashboardPage() {
         </div>
 
         {/* Row 1b: Upcoming 1-on-1 Coaching Sessions */}
-        <div className="mb-4 grid  grid-flow-col gap-2">
+        <div className="mb-4 grid grid-cols-1 md:grid-cols-2 gap-4">
           <UpcomingCoachingSessions />
           <UpcomingSessions checkins={checkins} clientMap={clientMap} />
         </div>
 
         {/* Team Overview — owner / admin only */}
-        {canViewTeamOverview && !clientsLoading && (
-          <TeamOverview clients={clients} />
-        )}
+        {canViewTeamOverview && <TeamOverview clients={clients} />}
 
         {/* Row 2: Client Workload + KPI 2x2 Grid */}
         <div className="grid grid-cols-1 xl:grid-cols-5 gap-4">
           <ClientWorkload clients={clients} checkins={checkins} />
 
-          <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.24 }} className="xl:col-span-2 grid grid-cols-2 gap-4 content-start" >
-            {kpiLoading ? (
-              [...Array(4)].map((_, i) => (
-                <div key={i} className="rounded-xl border border-[var(--border)] bg-[var(--bg-card)] p-4 space-y-3" >
-                  <Skeleton className="h-3 w-20" />
-                  <Skeleton className="h-7 w-12" />
-                  <Skeleton className="h-3 w-24" />
-                </div>
-              ))
-            ) : (
-              <>
-                <KpiCard
-                  label="Total Clients"
-                  value={ (clientsData as PaginatedResponse<Client> | undefined) ?.pagination?.total ?? clients.length }
-                  icon={Users}
-                  trend={{ value: `${activeClients} active`, up: true }}
-                  delay={0.24} />
+          <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.24 }} className="xl:col-span-2 grid grid-cols-2 gap-4 content-start">
+            <KpiCard
+              label="Total Clients"
+              value={(clientsData as PaginatedResponse<Client> | undefined)?.pagination?.total ?? clients.length}
+              icon={Users}
+              trend={{ value: `${activeClients} active`, up: true }}
+              delay={0.24}
+            />
 
-                <KpiCard
-                  label="Active Plans"
-                  value={activePlans}
-                  icon={Briefcase}
-                  trend={{
-                    value: `${workoutPlans.length > 0 ? Math.round((activePlans / workoutPlans.length) * 100) : 0}% of total`,
-                    up: activePlans > 0,
-                  }}
-                  delay={0.3}
-                />
-                <KpiCard
-                  label="Today's Sessions"
-                  value={todaySessions}
-                  icon={Calendar}
-                  trend={{
-                    value: String(todaySessions),
-                    up: todaySessions > 0,
-                  }}
-                  delay={0.36}
-                />
-                <KpiCard
-                  label="This Week"
-                  value={thisWeekSessions}
-                  icon={TrendingUp}
-                  trend={{
-                    value: `${todaySessions} today`,
-                    up: thisWeekSessions > 0,
-                  }}
-                  delay={0.42}
-                />
-              </>
-            )}
+            <KpiCard
+              label="Active Plans"
+              value={activePlans}
+              icon={Briefcase}
+              trend={{
+                value: `${workoutPlans.length > 0 ? Math.round((activePlans / workoutPlans.length) * 100) : 0}% of total`,
+                up: activePlans > 0,
+              }}
+              delay={0.3}
+            />
+            <KpiCard
+              label="Today's Sessions"
+              value={todaySessions}
+              icon={Calendar}
+              trend={{
+                value: String(todaySessions),
+                up: todaySessions > 0,
+              }}
+              delay={0.36}
+            />
+            <KpiCard
+              label="This Week"
+              value={thisWeekSessions}
+              icon={TrendingUp}
+              trend={{
+                value: `${todaySessions} today`,
+                up: thisWeekSessions > 0,
+              }}
+              delay={0.42}
+            />
           </motion.div>
         </div>
       </div>
