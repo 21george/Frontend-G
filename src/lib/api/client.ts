@@ -40,6 +40,8 @@ const AUTH_PATHS = [
   '/auth/refresh',
   '/auth/verify-email',
   '/auth/resend-verification',
+  '/auth/forgot-password',
+  '/auth/reset-password',
   '/org/staff/accept-invite',
 ]
 

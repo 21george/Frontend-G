@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -21,96 +21,20 @@ const loginSchema = z.object({
 });
 type LoginValues = z.infer<typeof loginSchema>;
 
-/* ── Deterministic seeded random (avoids hydration mismatch & impure-render lint) ── */
-function seededRandom(seed: number) {
-  let s = seed;
-  return () => {
-    s = (s * 16807) % 2147483647;
-    return (s - 1) / 2147483646;
-  };
-}
-
-/* ── Ambient floating particles ── */
-function FloatingParticles() {
-  const particles = useMemo(() => {
-    const rand = seededRandom(42);
-    return Array.from({ length: 12 }, (_, i) => ({
-      id: i,
-      size: rand() * 3 + 1,
-      x: rand() * 100,
-      y: rand() * 100,
-      duration: rand() * 8 + 12,
-      delay: rand() * 5,
-    }));
-  }, []);
-
-  return (
-    <div
-      className="absolute inset-0 pointer-events-none overflow-hidden"
-      aria-hidden
-    >
-      {particles.map((p) => (
-        <motion.div
-          key={p.id}
-          className="absolute rounded-full bg-[#a3e635]"
-          style={{
-            width: p.size,
-            height: p.size,
-            left: `${p.x}%`,
-            top: `${p.y}%`,
-            filter: "blur(0.5px)",
-          }}
-          animate={{
-            y: [0, -40, 20, -30, 0],
-            x: [0, 15, -10, 20, 0],
-            opacity: [0.1, 0.35, 0.15, 0.4, 0.1],
-            scale: [1, 1.3, 0.8, 1.2, 1],
-          }}
-          transition={{
-            duration: p.duration,
-            repeat: Infinity,
-            delay: p.delay,
-            ease: "easeInOut",
-          }}
-        />
-      ))}
-    </div>
-  );
-}
-
-/* ── Animated gradient ring behind logo ── */
-function LogoRing() {
-  return (
-    <motion.div
-      className="absolute inset-0 rounded-xl"
-      animate={{
-        boxShadow: [
-          "0 0 0 0px rgba(163,230,53,0)",
-          "0 0 0 4px rgba(163,230,53,0.15)",
-          "0 0 0 0px rgba(163,230,53,0)",
-        ],
-      }}
-      transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-    />
-  );
-}
-
-/* ── Staggered entrance variants ── */
 const containerVariants = {
   hidden: { opacity: 0 },
   visible: {
     opacity: 1,
-    transition: { staggerChildren: 0.08, delayChildren: 0.2 },
+    transition: { staggerChildren: 0.05, delayChildren: 0.1 },
   },
 };
 
 const itemVariants = {
-  hidden: { opacity: 0, y: 20, scale: 0.95 },
+  hidden: { opacity: 0, y: 12 },
   visible: {
     opacity: 1,
     y: 0,
-    scale: 1,
-    transition: { duration: 0.5, ease: "easeOut" as const },
+    transition: { duration: 0.4, ease: "easeOut" as const },
   },
 };
 
@@ -154,7 +78,7 @@ export default function LoginPage() {
           animate={{ rotate: 360 }}
           transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
         >
-          <Loader2 className="w-8 h-8 text-[#a3e635]" />
+          <Loader2 className="w-8 h-8 text-[var(--energy)]" />
         </motion.div>
       </div>
     );
@@ -169,7 +93,6 @@ export default function LoginPage() {
       const { coach, access_token, setup_token } = res.data?.data || {};
       if (!coach) throw new Error("Invalid response from server");
 
-      // Pending subscription: setup_token is returned instead of access_token
       if (coach.subscription_status === "pending") {
         if (!setup_token) throw new Error("Invalid response from server");
         setSetupToken(setup_token, coach.id);
@@ -227,10 +150,10 @@ export default function LoginPage() {
   };
 
   const inputCls =
-    "w-full border border-white/[0.08] rounded-lg pl-9 pr-4 py-[11px] text-[13px] bg-white/[0.03] " +
-    "text-white placeholder:text-white/20 " +
-    "focus:outline-none focus:ring-1 focus:ring-[#a3e635]/40 focus:border-[#a3e635]/40 " +
-    "disabled:opacity-40 transition-all duration-200 hover:border-white/[0.12]";
+    "w-full border border-white/[0.08] rounded-lg pl-10 pr-4 py-3 text-[13px] bg-white/[0.03] " +
+    "text-white placeholder:text-white/25 " +
+    "focus:outline-none focus:ring-1 focus:ring-[var(--energy)]/40 focus:border-[var(--energy)]/40 " +
+    "disabled:opacity-40 transition-all duration-200 hover:border-white/[0.14]";
 
   return (
     <>
@@ -244,263 +167,223 @@ export default function LoginPage() {
         />
       )}
 
-      <div
-        className="relative min-h-screen flex items-center justify-center overflow-hidden"
-        style={{
-          backgroundImage: "url('/img/360fit-bg.png')",
-          backgroundSize: "cover",
-          backgroundPosition: "center",
-        }}
-      >
-        {/* Heavy dark overlay */}
-        <div className="absolute inset-0 bg-[#060d10]/85" aria-hidden />
-
-        {/* Grain texture */}
-        <div
-          className="absolute inset-0 opacity-[0.03] pointer-events-none"
-          style={{
-            backgroundImage:
-              "url(\"data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E\")",
-            backgroundRepeat: "repeat",
-          }}
-          aria-hidden
-        />
-
-        {/* Floating particles */}
-        <FloatingParticles />
-
-        {/* Breathing radial glow */}
+      <div className="relative min-h-screen flex flex-col items-center justify-center overflow-hidden bg-[#060d10]">
+        {/* Brand mark above the card */}
         <motion.div
-          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] rounded-full pointer-events-none blur-[100px]"
-          style={{
-            background: "radial-gradient(circle, #a3e635 0%, transparent 70%)",
-          }}
-          animate={{
-            opacity: [0.1, 0.2, 0.1],
-            scale: [1, 1.1, 1],
-          }}
-          transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
-          aria-hidden
-        />
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, ease: "easeOut" }}
+          className="mb-6 flex items-center gap-2.5"
+        >
+          <div className="w-9 h-9 rounded-xl overflow-hidden ring-1 ring-white/10 bg-[#0a1114]">
+            <img
+              src="/img/360fit-bg.png"
+              alt="360Fit"
+              className="w-full h-full object-cover"
+            />
+          </div>
+          <span
+            className="text-sm font-bold text-white tracking-wider uppercase"
+            style={{ fontFamily: "var(--font-mono)" }}
+          >
+            360Fit
+          </span>
+        </motion.div>
 
         {/* ── Login card ── */}
         <motion.div
-          initial={{ opacity: 0, y: 40, scale: 0.95 }}
-          animate={{ opacity: 1, y: 0, scale: 1 }}
-          transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
-          className="relative z-10 w-full max-w-[340px] mx-4 bg-[#0a1114]/80 backdrop-blur-xl border border-white/[0.06] rounded-2xl px-8 py-9 shadow-2xl shadow-black/50"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+          className="relative z-10 w-full max-w-[400px] mx-4"
         >
-          {/* Top sheen with shimmer */}
-          <motion.div
-            aria-hidden
-            className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[#a3e635]/30 to-transparent"
-            animate={{
-              backgroundPosition: ["0%", "200%"],
-            }}
-            style={{ backgroundSize: "200% 100%" }}
-            transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
-          />
+          <div className="bg-[#0c1d21]/90 backdrop-blur-xl border border-white/[0.06] rounded-2xl shadow-2xl shadow-black/50 overflow-hidden">
+            {/* Top sheen */}
+            <div
+              aria-hidden
+              className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[var(--energy)]/25 to-transparent"
+            />
 
-          <motion.div
-            variants={containerVariants}
-            initial="hidden"
-            animate="visible"
-          >
-            {/* Logo */}
-            <motion.div
-              variants={itemVariants}
-              className="flex items-center justify-center mb-1"
-            >
-              <div className="relative w-16 h-16 rounded-xl overflow-hidden ring-1 ring-white/10">
-                <LogoRing />
-                <motion.img
-                  src="/img/360fit-bg.png"
-                  alt="360Fit"
-                  className="w-full h-full object-cover"
-                  whileHover={{ scale: 1.05 }}
-                  transition={{ duration: 0.3 }}
-                />
-              </div>
-            </motion.div>
-
-            {/* Title */}
-            <motion.h1
-              variants={itemVariants}
-              className="text-[22px] font-bold text-white text-center mt-5 mb-1 tracking-tight"
-              style={{ fontFamily: "var(--font-display)" }}
-            >
-              Welcome Back
-            </motion.h1>
-
-            {/* Subtitle */}
-            <motion.p
-              variants={itemVariants}
-              className="text-[12.5px] text-white/40 text-center mb-7"
-            >
-              Don&apos;t have an account yet?{" "}
-              <Link
-                href="/auth/register"
-                className="text-[#a3e635] hover:text-[#bef264] font-semibold transition-colors"
+            <div className="px-8 pt-8 pb-8">
+              <motion.div
+                variants={containerVariants}
+                initial="hidden"
+                animate="visible"
               >
-                Sign up
-              </Link>
-            </motion.p>
-
-            {/* Error banner */}
-            <AnimatePresence>
-              {error && (
-                <motion.div
-                  initial={{ opacity: 0, height: 0, y: -10 }}
-                  animate={{ opacity: 1, height: "auto", y: 0 }}
-                  exit={{ opacity: 0, height: 0, y: -10 }}
-                  transition={{ duration: 0.3, ease: "easeOut" }}
-                  className="mb-4 px-3 py-2.5 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 text-[12px] text-center overflow-hidden"
+                {/* Title */}
+                <motion.h1
+                  variants={itemVariants}
+                  className="text-xl font-bold text-white text-center mb-6 tracking-tight"
+                  style={{ fontFamily: "var(--font-display)" }}
                 >
-                  {error}
-                </motion.div>
-              )}
-            </AnimatePresence>
+                  Welcome Back!
+                </motion.h1>
 
-            {/* Form */}
-            <form
-              onSubmit={form.handleSubmit(handleLogin)}
-              className="space-y-3"
-              noValidate
-            >
-              {/* Email */}
-              <motion.div variants={itemVariants}>
-                <div className="relative">
-                  <motion.div
-                    animate={{ rotate: [0, -10, 10, 0] }}
-                    transition={{ duration: 0.5, repeat: 0 }}
-                  >
-                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-[15px] h-[15px] text-white/20" />
-                  </motion.div>
-                  <input
-                    type="email"
-                    placeholder="email address"
-                    autoComplete="email"
-                    {...form.register("email")}
-                    className={inputCls}
-                    style={{ fontFamily: "var(--font-mono)" }}
-                  />
-                </div>
+                {/* Error banner */}
                 <AnimatePresence>
-                  {form.formState.errors.email && (
-                    <motion.p
-                      initial={{ opacity: 0, height: 0 }}
-                      animate={{ opacity: 1, height: "auto" }}
-                      exit={{ opacity: 0, height: 0 }}
-                      className="mt-1 text-[11px] text-red-400"
-                    >
-                      {form.formState.errors.email.message}
-                    </motion.p>
-                  )}
-                </AnimatePresence>
-              </motion.div>
-
-              {/* Password */}
-              <motion.div variants={itemVariants}>
-                <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-[15px] h-[15px] text-white/20" />
-                  <input
-                    type={showPassword ? "text" : "password"}
-                    placeholder="Password"
-                    autoComplete="current-password"
-                    {...form.register("password")}
-                    className={`${inputCls} pr-10`}
-                    style={{ fontFamily: "var(--font-mono)" }}
-                  />
-                  <motion.button
-                    type="button"
-                    aria-label={
-                      showPassword ? "Hide password" : "Show password"
-                    }
-                    onClick={() => setShowPassword((v) => !v)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-white/20 hover:text-white/50 transition-colors"
-                    whileTap={{ scale: 0.85 }}
-                  >
-                    <AnimatePresence mode="wait">
-                      {showPassword ? (
-                        <motion.div
-                          key="eyeoff"
-                          initial={{ opacity: 0, scale: 0.5 }}
-                          animate={{ opacity: 1, scale: 1 }}
-                          exit={{ opacity: 0, scale: 0.5 }}
-                          transition={{ duration: 0.15 }}
-                        >
-                          <EyeOff size={14} />
-                        </motion.div>
-                      ) : (
-                        <motion.div
-                          key="eye"
-                          initial={{ opacity: 0, scale: 0.5 }}
-                          animate={{ opacity: 1, scale: 1 }}
-                          exit={{ opacity: 0, scale: 0.5 }}
-                          transition={{ duration: 0.15 }}
-                        >
-                          <Eye size={14} />
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
-                  </motion.button>
-                </div>
-                <AnimatePresence>
-                  {form.formState.errors.password && (
-                    <motion.p
-                      initial={{ opacity: 0, height: 0 }}
-                      animate={{ opacity: 1, height: "auto" }}
-                      exit={{ opacity: 0, height: 0 }}
-                      className="mt-1 text-[11px] text-red-400"
-                    >
-                      {form.formState.errors.password.message}
-                    </motion.p>
-                  )}
-                </AnimatePresence>
-              </motion.div>
-
-              {/* Login button */}
-              <motion.div variants={itemVariants}>
-                <motion.button
-                  type="submit"
-                  disabled={isLoading}
-                  className="w-full bg-[#a3e635] hover:bg-[#bef264] active:bg-[#8bc52f] text-[#0a1114] font-bold text-[14px] py-[11px] rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 mt-1 overflow-hidden relative"
-                  style={{
-                    fontFamily: "var(--font-mono)",
-                    letterSpacing: "0.05em",
-                  }}
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  transition={{ type: "spring", stiffness: 400, damping: 17 }}
-                >
-                  {/* Button shimmer effect */}
-                  <motion.div
-                    className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent"
-                    initial={{ x: "-100%" }}
-                    animate={isLoading ? { x: "200%" } : { x: "-100%" }}
-                    transition={{
-                      duration: 1.2,
-                      repeat: Infinity,
-                      ease: "linear",
-                    }}
-                  />
-                  {isLoading && (
+                  {error && (
                     <motion.div
-                      animate={{ rotate: 360 }}
-                      transition={{
-                        duration: 1,
-                        repeat: Infinity,
-                        ease: "linear",
-                      }}
+                      initial={{ opacity: 0, height: 0, y: -6 }}
+                      animate={{ opacity: 1, height: "auto", y: 0 }}
+                      exit={{ opacity: 0, height: 0, y: -6 }}
+                      transition={{ duration: 0.2 }}
+                      className="mb-4 px-3 py-2 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 text-xs text-center overflow-hidden"
                     >
-                      <Loader2 className="w-4 h-4" />
+                      {error}
                     </motion.div>
                   )}
-                  <span className="relative z-10">LOGIN</span>
-                </motion.button>
+                </AnimatePresence>
+
+                {/* Form */}
+                <form
+                  onSubmit={form.handleSubmit(handleLogin)}
+                  className="space-y-4"
+                  noValidate
+                >
+                  {/* Email */}
+                  <motion.div variants={itemVariants}>
+                    <label className="block text-xs font-medium text-white/60 mb-1.5">
+                      Email <span className="text-red-400">*</span>
+                    </label>
+                    <div className="relative">
+                      <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30 pointer-events-none" />
+                      <input
+                        type="email"
+                        placeholder="Enter your email"
+                        autoComplete="email"
+                        {...form.register("email")}
+                        className={inputCls}
+                        style={{ fontFamily: "var(--font-mono)" }}
+                      />
+                    </div>
+                    <AnimatePresence>
+                      {form.formState.errors.email && (
+                        <motion.p
+                          initial={{ opacity: 0, height: 0 }}
+                          animate={{ opacity: 1, height: "auto" }}
+                          exit={{ opacity: 0, height: 0 }}
+                          className="mt-1 text-[11px] text-red-400"
+                        >
+                          {form.formState.errors.email.message}
+                        </motion.p>
+                      )}
+                    </AnimatePresence>
+                  </motion.div>
+
+                  {/* Password */}
+                  <motion.div variants={itemVariants}>
+                    <label className="block text-xs font-medium text-white/60 mb-1.5">
+                      Password <span className="text-red-400">*</span>
+                    </label>
+                    <div className="relative">
+                      <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30 pointer-events-none" />
+                      <input
+                        type={showPassword ? "text" : "password"}
+                        placeholder="Enter your password"
+                        autoComplete="current-password"
+                        {...form.register("password")}
+                        className={`${inputCls} pr-10`}
+                        style={{ fontFamily: "var(--font-mono)" }}
+                      />
+                      <button
+                        type="button"
+                        aria-label={
+                          showPassword ? "Hide password" : "Show password"
+                        }
+                        onClick={() => setShowPassword((v) => !v)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-white/30 hover:text-white/60 transition-colors"
+                      >
+                        <AnimatePresence mode="wait">
+                          {showPassword ? (
+                            <motion.div
+                              key="eyeoff"
+                              initial={{ opacity: 0, scale: 0.6 }}
+                              animate={{ opacity: 1, scale: 1 }}
+                              exit={{ opacity: 0, scale: 0.6 }}
+                              transition={{ duration: 0.12 }}
+                            >
+                              <EyeOff size={15} />
+                            </motion.div>
+                          ) : (
+                            <motion.div
+                              key="eye"
+                              initial={{ opacity: 0, scale: 0.6 }}
+                              animate={{ opacity: 1, scale: 1 }}
+                              exit={{ opacity: 0, scale: 0.6 }}
+                              transition={{ duration: 0.12 }}
+                            >
+                              <Eye size={15} />
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
+                      </button>
+                    </div>
+                    <AnimatePresence>
+                      {form.formState.errors.password && (
+                        <motion.p
+                          initial={{ opacity: 0, height: 0 }}
+                          animate={{ opacity: 1, height: "auto" }}
+                          exit={{ opacity: 0, height: 0 }}
+                          className="mt-1 text-[11px] text-red-400"
+                        >
+                          {form.formState.errors.password.message}
+                        </motion.p>
+                      )}
+                    </AnimatePresence>
+
+                    {/* Forgot password */}
+                    <div className="flex justify-end mt-1.5">
+                      <Link
+                        href="/auth/forgot-password"
+                        className="text-[11px] text-[var(--energy)]/70 hover:text-[var(--energy)] transition-colors"
+                      >
+                        Forgot Password?
+                      </Link>
+                    </div>
+                  </motion.div>
+
+                  {/* Login button */}
+                  <motion.div variants={itemVariants} className="pt-1">
+                    <motion.button
+                      type="submit"
+                      disabled={isLoading}
+                      className="w-full bg-[var(--energy)] text-[#0c1d21] font-bold text-[14px] py-3 rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 overflow-hidden relative hover:shadow-[0_0_20px_rgba(163,230,53,0.25)]"
+                      style={{
+                        fontFamily: "var(--font-mono)",
+                        letterSpacing: "0.04em",
+                      }}
+                      whileHover={{ scale: 1.01 }}
+                      whileTap={{ scale: 0.98 }}
+                      transition={{ type: "spring", stiffness: 400, damping: 17 }}
+                    >
+                      {isLoading && (
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                      )}
+                      <span className="relative z-10">Login</span>
+                    </motion.button>
+                  </motion.div>
+                </form>
               </motion.div>
-            </form>
-          </motion.div>
+            </div>
+          </div>
+        </motion.div>
+
+        {/* Footer below the card */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.4, duration: 0.4 }}
+          className="mt-5 text-center"
+        >
+          <p className="text-xs text-white/30">
+            Don&apos;t have an account?{" "}
+            <Link
+              href="/auth/register"
+              className="text-[var(--energy)]/80 hover:text-[var(--energy)] transition-colors font-semibold"
+            >
+              Sign up
+            </Link>
+          </p>
         </motion.div>
       </div>
     </>
