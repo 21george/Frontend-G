@@ -23,6 +23,10 @@ import {
   BodyAnalysisTab,
   ClientAdherenceTab,
   PredictionWidget,
+  ClientPrsTab,
+  ClientProgressPhotosTab,
+  ClientHabitsTab,
+  ClientGoalsTab,
   ScheduleModal,
   DeleteConfirmModal,
   ClientEditModal,
@@ -321,6 +325,10 @@ export default function ClientDetailPage() {
                 {tab === "body" && <BodyAnalysisTab clientId={id} />}
                 {tab === "adherence" && <ClientAdherenceTab clientId={id} />}
                 {tab === "prediction" && <PredictionWidget clientId={id} />}
+                {tab === "prs" && <ClientPrsTab clientId={id} />}
+                {tab === "progress-photos" && <ClientProgressPhotosTab clientId={id} />}
+                {tab === "habits" && <ClientHabitsTab clientId={id} />}
+                {tab === "goals" && <ClientGoalsTab clientId={id} />}
 
                 {tab === "analytics" && (
                   <ClientAnalyticsTab analytics={analytics} client={client} />

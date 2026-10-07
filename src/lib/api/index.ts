@@ -22,4 +22,7 @@ export { notificationsApi } from "./services/notifications";
 export { workoutAnalysisApi } from "./services/workout-analysis";
 export { foodsApi } from "./services/foods";
 export { staffApi } from "./services/staff";
+export { teamMeetingsApi } from "./services/team-meetings";
+export { dashboardApi } from "./services/dashboard";
 export type { NotificationSettings } from "./services/settings";
+export type { CreateTeamMeetingPayload, UpdateTeamMeetingPayload } from "./services/team-meetings";

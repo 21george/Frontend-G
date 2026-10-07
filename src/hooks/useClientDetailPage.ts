@@ -39,7 +39,11 @@ export type TabKey =
   | "plan-analysis"
   | "body"
   | "adherence"
-  | "prediction";
+  | "prediction"
+  | "prs"
+  | "progress-photos"
+  | "habits"
+  | "goals";
 
 const TABS: { key: TabKey; label: string }[] = [
   { key: "workouts", label: "Workouts" },
@@ -47,6 +51,10 @@ const TABS: { key: TabKey; label: string }[] = [
   { key: "body", label: "Body" },
   { key: "adherence", label: "Adherence" },
   { key: "prediction", label: "Prediction" },
+  { key: "prs", label: "PRs" },
+  { key: "progress-photos", label: "Photos" },
+  { key: "habits", label: "Habits" },
+  { key: "goals", label: "Goals" },
   { key: "analytics", label: "Analytics" },
   { key: "plan-analysis", label: "Plan Analysis" },
   { key: "messages", label: "Messages" },

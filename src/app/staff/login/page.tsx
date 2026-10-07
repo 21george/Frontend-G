@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -9,6 +9,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Mail, Lock, Loader2, Eye, EyeOff } from "lucide-react";
 import Link from "next/link";
 import apiClient from "@/lib/api";
+import { staffApi } from "@/lib/api/services/staff";
 import { useAuthStore } from "@/store/auth";
 
 const loginSchema = z.object({
@@ -41,9 +42,13 @@ export default function StaffLoginPage() {
   const setStaff = useAuthStore((s) => s.setStaff);
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   const isStaff = useAuthStore((s) => s.isStaff);
-  const [isHydrated, setIsHydrated] = useState(() =>
-    typeof window !== "undefined" && useAuthStore.persist?.hasHydrated?.(),
-  );
+  // Always start false; set true after effect runs so server/client initial HTML match.
+  const [isHydrated, setIsHydrated] = useState(false);
+
+  // Track whether the user was already authenticated when this page mounted.
+  // Prevents the post-login useEffect from overriding redirects performed
+  // by the login handler (e.g. /staff/complete-profile).
+  const wasAlreadyAuthenticated = useRef<boolean | null>(null);
 
   const [error, setError] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
@@ -56,6 +61,10 @@ export default function StaffLoginPage() {
 
   useEffect(() => {
     if (isHydrated) return;
+    if (useAuthStore.persist?.hasHydrated?.()) {
+      setIsHydrated(true);
+      return;
+    }
     const unsub = useAuthStore.persist.onFinishHydration(() =>
       setIsHydrated(true),
     );
@@ -63,18 +72,21 @@ export default function StaffLoginPage() {
   }, [isHydrated]);
 
   useEffect(() => {
-    if (isHydrated && isAuthenticated && isStaff) router.replace("/dashboard");
+    if (isHydrated && wasAlreadyAuthenticated.current === null) {
+      wasAlreadyAuthenticated.current = isAuthenticated && isStaff;
+    }
+  }, [isHydrated, isAuthenticated, isStaff]);
+
+  useEffect(() => {
+    if (isHydrated && isAuthenticated && isStaff && wasAlreadyAuthenticated.current === true) {
+      router.replace("/dashboard");
+    }
   }, [isHydrated, isAuthenticated, isStaff, router]);
 
   if (!isHydrated) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#060d10]">
-        <motion.div
-          animate={{ rotate: 360 }}
-          transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-        >
-          <Loader2 className="w-8 h-8 text-energy" />
-        </motion.div>
+        <Loader2 className="w-8 h-8 text-energy animate-spin" />
       </div>
     );
   }
@@ -84,12 +96,36 @@ export default function StaffLoginPage() {
     setError(null);
     setIsLoading(true);
     try {
+      // Log the exact request being made
+      if (process.env.NODE_ENV !== "production") {
+        console.log("[STAFF LOGIN] Sending request to:", "/auth/staff/login");
+        console.log("[STAFF LOGIN] Payload:", { email: data.email, pwLen: data.password.length });
+      }
+
       const res = await apiClient.post("/auth/staff/login", data);
+
+      if (process.env.NODE_ENV !== "production") {
+        console.log("[STAFF LOGIN] Success:", res.data);
+      }
+
       const { staff, access_token, setup_complete } = res.data?.data || {};
       if (!staff || !access_token)
         throw new Error("Invalid response from server");
 
-      setStaff(staff, access_token);
+      // Fetch fresh profile to resolve profile_photo to a current presigned URL.
+      // The login response may contain a stale or missing photo URL; this ensures
+      // the avatar is immediately available and valid.
+      let freshStaff = staff;
+      try {
+        const profile = await staffApi.getProfile();
+        if (profile) {
+          freshStaff = { ...staff, ...profile };
+        }
+      } catch {
+        // Non-fatal: fall back to the login response payload
+      }
+
+      setStaff(freshStaff, access_token);
       if (setup_complete === false) {
         router.push("/staff/complete-profile");
       } else {
@@ -97,23 +133,41 @@ export default function StaffLoginPage() {
       }
     } catch (e: unknown) {
       let msg = "Login failed. Please try again.";
+      let rawResponse: unknown = null;
+
       if (e && typeof e === "object") {
         const err = e as Record<string, unknown>;
+        const resp = err.response as Record<string, unknown> | undefined;
+        rawResponse = resp?.data ?? null;
+
         if (
           err.code === "ECONNABORTED" ||
           (typeof err.message === "string" && err.message.includes("timeout"))
         ) {
-          msg =
-            "Login request timed out. Please check your network connection.";
+          msg = "Login request timed out. Please check your network connection.";
         } else if (err.message === "Network Error") {
-          msg =
-            "Cannot connect to the server. Please check your network connection.";
+          msg = "Cannot connect to the server. Please check your network connection.";
         } else {
-          const resp = err.response as Record<string, unknown> | undefined;
-          const respData = resp?.data as Record<string, unknown> | undefined;
-          if (typeof respData?.message === "string") msg = respData.message;
+          const respData = resp?.data as unknown;
+          if (respData && typeof (respData as Record<string, unknown>).message === "string") {
+            msg = (respData as Record<string, unknown>).message as string;
+          } else if (typeof respData === "string") {
+            msg = respData.slice(0, 200);
+          } else if (typeof err.message === "string") {
+            msg = err.message;
+          }
         }
       }
+
+      // Always log diagnostic info in dev
+      if (process.env.NODE_ENV !== "production") {
+        console.error("[STAFF LOGIN ERROR]", {
+          message: msg,
+          rawResponse,
+          fullError: e,
+        });
+      }
+
       setError(msg);
     } finally {
       setIsLoading(false);

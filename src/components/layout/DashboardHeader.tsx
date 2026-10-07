@@ -10,6 +10,7 @@ import {
   Sun,
   Moon,
   User,
+  UserPlus,
   Calendar,
   Video,
   FileText,
@@ -114,7 +115,7 @@ export default function DashboardHeader({
   const userName = isStaff ? staff?.name : coach?.name;
   const userSurname = isStaff ? undefined : coach?.surname;
   const userEmail = isStaff ? staff?.email : coach?.email;
-  const userPhoto = isStaff ? undefined : coach?.profile_photo;
+  const userPhoto = isStaff ? staff?.profile_photo : coach?.profile_photo;
 
   const safePath = pathname ?? "";
 
@@ -213,6 +214,14 @@ export default function DashboardHeader({
         color:
           "bg-blue-50 text-blue-700 hover:bg-blue-100 dark:bg-blue-900/30 dark:text-blue-400 dark:hover:bg-blue-900/50",
       });
+    } else if (safePath.startsWith("/team")) {
+      actions.push({
+        href: "/team",
+        label: "invite Team",
+        icon: UserPlus,
+        color:
+          "bg-blue-50 text-blue-700 hover:bg-blue-100 dark:bg-blue-900/30 dark:text-blue-400 dark:hover:bg-blue-900/50",
+      });
     }
 
     return actions;
@@ -229,8 +238,6 @@ export default function DashboardHeader({
             className="flex items-center gap-2 text-xs text-[var(--text-tertiary)] mb-1"
             aria-label="Breadcrumb"
           >
-            <span>Dashboard</span>
-            <ChevronRight className="w-3 h-3 flex-shrink-0" />
             <span className="text-blue-600 dark:text-blue-400 font-medium truncate">
               {heading}
             </span>
@@ -281,7 +288,12 @@ export default function DashboardHeader({
                 );
                 if (onClick) {
                   return (
-                    <button key={label} type="button" onClick={onClick} className={className}>
+                    <button
+                      key={label}
+                      type="button"
+                      onClick={onClick}
+                      className={className}
+                    >
                       {content}
                     </button>
                   );
@@ -331,6 +343,8 @@ export default function DashboardHeader({
           </Link>
         </div>
       </div>
+
+      {/* Invite staff banner — only for owners (not staff), hide on team page */}
 
       {/* Mobile search row */}
       <div className="sm:hidden">

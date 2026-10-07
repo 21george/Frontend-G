@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import Link from "next/link";
 import {
   useNotifications,
@@ -27,10 +27,13 @@ import {
   Clock,
   UserCircle,
   ChevronRight,
+  UserCheck,
 } from "lucide-react";
 import { humanDate } from "@/lib/formatDate";
 import { motion } from "framer-motion";
-import FilterBreadcrumb from "@/components/ui/Breadcrumb";
+import { FilterPills } from "@/components/ui/FilterPills";
+import { SearchBar } from "@/components/ui/SearchBar";
+import { Pagination } from "@/components/ui/Pagination";
 
 /* ── Icon & colour maps ─────────────────────────────────────────────── */
 
@@ -44,6 +47,7 @@ const notificationIcons: Record<
   checkin_reminder: Calendar,
   live_session_reminder: Video,
   checkin_scheduled: FileText,
+  coach_assigned: UserCheck,
 };
 
 const notificationColors: Record<string, string> = {
@@ -58,6 +62,8 @@ const notificationColors: Record<string, string> = {
   live_session_reminder:
     "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400",
   checkin_scheduled:
+    "bg-brand-100 text-brand-700 dark:bg-brand-700/30 dark:text-brand-400",
+  coach_assigned:
     "bg-brand-100 text-brand-700 dark:bg-brand-700/30 dark:text-brand-400",
 };
 
@@ -80,8 +86,12 @@ function formatWhen(sentAt: string): string {
 
 /* ── Component ────────────────────────────────────────────────────────── */
 
+const PER_PAGE = 8;
+
 export default function NotificationsPage() {
   const [filter, setFilter] = useState<"all" | "unread">("all");
+  const [search, setSearch] = useState("");
+  const [page, setPage] = useState(1);
 
   /* ── Data ───────────────────────────────────────────────────────────── */
   const {
@@ -126,6 +136,27 @@ export default function NotificationsPage() {
   const handleDelete = (id: string) => {
     deleteNotification.mutate(id, { onSuccess: () => refetchNotifs() });
   };
+
+  /* ── Client-side search & pagination ─────────────────────────────────── */
+  const filteredNotifications = useMemo(() => {
+    let list = notifications;
+    if (search.trim()) {
+      const q = search.trim().toLowerCase();
+      list = list.filter(
+        (n) =>
+          n.title.toLowerCase().includes(q) ||
+          n.body.toLowerCase().includes(q) ||
+          (n.from ?? "").toLowerCase().includes(q),
+      );
+    }
+    return list;
+  }, [notifications, search]);
+
+  const totalPages = Math.max(1, Math.ceil(filteredNotifications.length / PER_PAGE));
+  const paginatedNotifications = useMemo(() => {
+    const start = (page - 1) * PER_PAGE;
+    return filteredNotifications.slice(start, start + PER_PAGE);
+  }, [filteredNotifications, page]);
 
   /* ── Helpers ────────────────────────────────────────────────────────── */
   const getNavigationLink = (notification: Notification) => {
@@ -173,14 +204,16 @@ export default function NotificationsPage() {
         </div>
 
         <div className="flex items-center gap-2 flex-wrap">
-          {/* Filter pills */}
-          <FilterBreadcrumb
-            items={[
+          <FilterPills
+            filters={[
               { key: "all", label: "All" },
               { key: "unread", label: "Unread", count: totalUnread },
             ]}
-            value={filter}
-            onChange={setFilter}
+            activeFilter={filter}
+            onFilterChange={(key) => {
+              setFilter(key as typeof filter);
+              setPage(1);
+            }}
           />
 
           {totalUnread > 0 && (
@@ -194,6 +227,16 @@ export default function NotificationsPage() {
           )}
         </div>
       </div>
+
+      <SearchBar
+        value={search}
+        onChange={(value) => {
+          setSearch(value);
+          setPage(1);
+        }}
+        placeholder="Search notifications..."
+        className="max-w-sm mb-4"
+      />
 
       {/* ── Content ────────────────────────────────────────────────────── */}
       {isLoading ? (
@@ -289,7 +332,7 @@ export default function NotificationsPage() {
           )}
 
           {/* ── Section: Notifications ─────────────────────────────────── */}
-          {notifications.length > 0 && (
+          {filteredNotifications.length > 0 && (
             <section>
               <div className="flex items-center gap-2 mb-2 px-1">
                 <Bell className="w-4 h-4 text-brand-600 dark:text-brand-400" />
@@ -297,12 +340,12 @@ export default function NotificationsPage() {
                   Notifications
                 </h2>
                 <span className="text-xs font-bold text-white bg-brand-600 px-1.5 py-0.5 rounded-full">
-                  {notifications.length}
+                  {filteredNotifications.length}
                 </span>
               </div>
 
               <div className="space-y-2">
-                {notifications.map((notification, i) => {
+                {paginatedNotifications.map((notification, i) => {
                   const Icon = notificationIcons[notification.type] ?? Bell;
                   const colorClass =
                     notificationColors[notification.type] ??
@@ -413,14 +456,13 @@ export default function NotificationsPage() {
         </div>
       )}
 
-      {/* Pagination */}
-      {pagination && pagination.total_pages > 1 && (
-        <div className="flex items-center justify-center gap-2 mt-6">
-          <span className="text-sm text-[var(--text-secondary)] dark:text-[var(--text-secondary)]">
-            Page {pagination.page} of {pagination.total_pages}
-          </span>
-        </div>
-      )}
+      <Pagination
+        page={page}
+        totalPages={totalPages}
+        totalItems={filteredNotifications.length}
+        perPage={PER_PAGE}
+        onPageChange={setPage}
+      />
     </div>
   );
 }

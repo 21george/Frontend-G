@@ -14,7 +14,6 @@ import UploadFileIcon from "@mui/icons-material/UploadFile";
 import FitnessCenterIcon from "@mui/icons-material/FitnessCenter";
 import GroupIcon from "@mui/icons-material/Group";
 import SecurityIcon from "@mui/icons-material/Security";
-import { AnimatedSearch } from "@/components/ui/AnimatedSearch";
 import FilterListIcon from "@mui/icons-material/FilterList";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
@@ -23,7 +22,9 @@ import BarChartIcon from "@mui/icons-material/BarChart";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import NavigateNextIcon from "@mui/icons-material/NavigateNext";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
-import FilterBreadcrumb from "@/components/ui/Breadcrumb";
+import { SearchBar } from "@/components/ui/SearchBar";
+import { FilterPills } from "@/components/ui/FilterPills";
+import { Pagination } from "@/components/ui/Pagination";
 
 const TYPE_CONFIG: Record<
   NonNullable<WorkoutPlanType>,
@@ -304,6 +305,8 @@ function UnassignedPlansCard({
   );
 }
 
+const PER_PAGE = 8;
+
 export default function WorkoutPlansPage() {
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<
@@ -312,6 +315,7 @@ export default function WorkoutPlansPage() {
   const [typeFilter, setTypeFilter] = useState<
     "all" | "individual" | "group" | "team"
   >("all");
+  const [page, setPage] = useState(1);
 
   const query = useWorkoutPlans(
     undefined,
@@ -341,6 +345,12 @@ export default function WorkoutPlansPage() {
     return list;
   }, [plans, filter, typeFilter, search]);
 
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PER_PAGE));
+  const paginated = useMemo(() => {
+    const start = (page - 1) * PER_PAGE;
+    return filtered.slice(start, start + PER_PAGE);
+  }, [filtered, page]);
+
   return (
     <DashboardLayout>
       <div className="space-y-6">
@@ -350,8 +360,8 @@ export default function WorkoutPlansPage() {
         {/* ── FILTERS ── */}
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-2 flex-wrap">
-            <FilterBreadcrumb
-              items={[
+            <FilterPills
+              filters={[
                 { key: "all", label: "All", count: allPlans.length },
                 {
                   key: "active",
@@ -370,32 +380,48 @@ export default function WorkoutPlansPage() {
                     .length,
                 },
               ]}
-              value={filter}
-              onChange={setFilter}
+              activeFilter={filter}
+              onFilterChange={(key) => {
+                setFilter(key as typeof filter);
+                setPage(1);
+              }}
             />
             <div className="w-px h-5 bg-[var(--border)] dark:border-white/[0.08] mx-1 hidden sm:block" />
-            <FilterBreadcrumb
-              items={[
+            <FilterPills
+              filters={[
+                {
+                  key: "individual",
+                  label: "Individual",
+                  count: allPlans.filter((p) => p.plan_type === "individual").length,
+                },
                 {
                   key: "group",
                   label: "Group",
                   count: allPlans.filter((p) => p.plan_type === "group").length,
                 },
+                {
+                  key: "team",
+                  label: "Team",
+                  count: allPlans.filter((p) => p.plan_type === "team").length,
+                },
               ]}
-              value={typeFilter}
-              onChange={setTypeFilter}
+              activeFilter={typeFilter}
+              onFilterChange={(key) => {
+                setTypeFilter(key as typeof typeFilter);
+                setPage(1);
+              }}
             />
           </div>
 
-          <AnimatedSearch className="relative" active={search.length > 0}>
-            <input
-              type="text"
-              placeholder="Search plans..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="w-full sm:w-64 pl-9 pr-3 py-1.5 border border-slate-200 dark:border-white/[0.1] bg-white dark:bg-white/[0.04] text-[12px] font-medium text-slate-600 dark:text-slate-300 focus:outline-none focus:ring-2 focus:ring-cyan-950/20 dark:focus:ring-cyan-400/20"
-            />
-          </AnimatedSearch>
+          <SearchBar
+            value={search}
+            onChange={(value) => {
+              setSearch(value);
+              setPage(1);
+            }}
+            placeholder="Search plans..."
+            className="max-w-xs"
+          />
         </div>
 
         {/* ── PLANS LIST ── */}
@@ -465,7 +491,7 @@ export default function WorkoutPlansPage() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100 dark:divide-white/[0.05]">
-                    {filtered.map((plan, index) => {
+                    {paginated.map((plan, index) => {
                       const typeConf =
                         TYPE_CONFIG[plan.plan_type ?? "individual"];
                       const statusConf = STATUS_CONFIG[plan.status ?? "draft"];
@@ -552,6 +578,13 @@ export default function WorkoutPlansPage() {
                   </tbody>
                 </table>
               </div>
+              <Pagination
+                page={page}
+                totalPages={totalPages}
+                totalItems={filtered.length}
+                perPage={PER_PAGE}
+                onPageChange={setPage}
+              />
             </div>
           )}
         </QueryWrapper>

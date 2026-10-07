@@ -49,13 +49,7 @@ const nextConfig = {
     ],
   },
   async redirects() {
-    return [
-      {
-        source: "/billing/manage",
-        destination: "/billing",
-        permanent: true,
-      },
-    ];
+    return [];
   },
   async headers() {
     const headers = [

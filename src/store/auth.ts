@@ -61,6 +61,7 @@ interface AuthState {
   setCoach: (coach: Coach, token?: string) => void;
   setStaff: (staff: StaffMember, token?: string) => void;
   updateCoach: (coach: Coach) => void;
+  updateStaff: (staff: StaffMember) => void;
   logout: () => void;
   clearAuth: () => void;
   setToken: (token: string) => void;
@@ -99,6 +100,9 @@ export const useAuthStore = create<AuthState>()(
       },
       updateCoach: (coach) => {
         set({ coach, isAuthenticated: true });
+      },
+      updateStaff: (staff) => {
+        set({ staff, isAuthenticated: true });
       },
       setToken: (token) => {
         const payload = decodeJwtPayload(token);

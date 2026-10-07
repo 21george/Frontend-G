@@ -707,6 +707,37 @@ export default function WorkoutPlanDetailPage() {
                           </p>
                         )}
 
+                        {/* Exercise Library Image */}
+                        {(exercise as any).exercise_images?.length > 0 && (
+                          <div className="mt-3 sm:ml-10 flex items-start gap-3">
+                            <img
+                              src={(exercise as any).exercise_images[0]}
+                              alt={(exercise as any).exercise_name || exercise.name}
+                              className="w-20 h-20 rounded object-cover"
+                            />
+                            <div>
+                              <p className="text-xs font-medium text-[var(--text-primary)]">
+                                {(exercise as any).exercise_name || exercise.name}
+                              </p>
+                              {(exercise as any).exercise_muscles?.length > 0 && (
+                                <p className="text-[11px] text-slate-500 mt-0.5">
+                                  {(exercise as any).exercise_muscles.slice(0, 3).join(", ")}
+                                </p>
+                              )}
+                              {(exercise as any).exercise_equipment?.length > 0 && (
+                                <p className="text-[11px] text-slate-400">
+                                  {(exercise as any).exercise_equipment.join(", ")}
+                                </p>
+                              )}
+                              {(exercise as any).exercise_description && (
+                                <p className="text-xs text-[var(--text-secondary)] mt-1 leading-relaxed">
+                                  {(exercise as any).exercise_description}
+                                </p>
+                              )}
+                            </div>
+                          </div>
+                        )}
+
                         {/* Video preview */}
                         {exercise.video_url && (
                           <div className="mt-3 sm:ml-10">

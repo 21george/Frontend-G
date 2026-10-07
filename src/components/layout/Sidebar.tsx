@@ -211,7 +211,7 @@ function SidebarContent({ onClose, collapsed = false }: SidebarContentProps) {
             <Avatar
               name={isStaff ? staff?.name : coach?.name}
               surname={isStaff ? undefined : coach?.surname}
-              photo={isStaff ? undefined : coach?.profile_photo}
+              photo={isStaff ? staff?.profile_photo : coach?.profile_photo}
               size="w-9 h-9"
               variant="colored"
               shape="squircle"

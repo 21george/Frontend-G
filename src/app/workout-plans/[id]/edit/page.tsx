@@ -6,8 +6,10 @@ import { useState, useEffect } from 'react'
 import { ArrowLeft, Plus, Trash2 } from 'lucide-react'
 import Link from 'next/link'
 import { DAYS } from '@/lib/utils'
+import ExercisePicker from '@/components/ExercisePicker'
+import type { ExerciseLibraryItem } from '@/lib/api/services/exercises'
 
-const emptyExercise = { name: '', sets: 3, reps: '10', rest_seconds: 60, notes: '', video_url: '' }
+const emptyExercise = { name: '', sets: 3, reps: '10', rest_seconds: 60, notes: '', video_url: '', exercise_id: '', exercise_name: '', exercise_images: [] as string[], exercise_description: '', exercise_equipment: [] as string[], exercise_muscles: [] as string[] }
 
 export default function EditWorkoutPlanPage() {
   const { id } = useParams<{ id: string }>()
@@ -25,6 +27,8 @@ export default function EditWorkoutPlanPage() {
   const [notes, setNotes] = useState('')
   const [loading, setLoading] = useState(false)
   const [initialized, setInitialized] = useState(false)
+  const [pickerOpen, setPickerOpen] = useState(false)
+  const [pickerTarget, setPickerTarget] = useState<{ di: number; ei: number } | null>(null)
 
   useEffect(() => {
     if (plan && !initialized) {
@@ -41,7 +45,13 @@ export default function EditWorkoutPlanPage() {
           reps: e.reps ?? '10',
           rest_seconds: e.rest_seconds ?? 60,
           notes: e.notes ?? '',
-          video_url: e.video_url ?? ''
+          video_url: e.video_url ?? '',
+          exercise_id: (e as any).exercise_id ?? '',
+          exercise_name: (e as any).exercise_name ?? '',
+          exercise_images: (e as any).exercise_images ?? [],
+          exercise_description: (e as any).exercise_description ?? '',
+          exercise_equipment: (e as any).exercise_equipment ?? [],
+          exercise_muscles: (e as any).exercise_muscles ?? [],
         })) ?? [{ ...emptyExercise }]
       })) ?? [{ day: 'monday', exercises: [{ ...emptyExercise }] }])
       setInitialized(true)
@@ -66,6 +76,25 @@ export default function EditWorkoutPlanPage() {
       ...d,
       exercises: d.exercises.map((e, j) => j === ei ? { ...e, [field]: value } : e)
     } : d))
+
+  const openPicker = (di: number, ei: number) => {
+    setPickerTarget({ di, ei })
+    setPickerOpen(true)
+  }
+
+  const handlePickExercise = (ex: ExerciseLibraryItem) => {
+    if (!pickerTarget) return
+    const { di, ei } = pickerTarget
+    updateExercise(di, ei, 'name', ex.name)
+    updateExercise(di, ei, 'exercise_id', ex.id)
+    updateExercise(di, ei, 'exercise_name', ex.name)
+    updateExercise(di, ei, 'exercise_images', ex.images)
+    updateExercise(di, ei, 'exercise_description', ex.description)
+    updateExercise(di, ei, 'exercise_equipment', ex.equipment)
+    updateExercise(di, ei, 'exercise_muscles', ex.muscles)
+    setPickerOpen(false)
+    setPickerTarget(null)
+  }
 
   const handleSubmit = async (e: React.FormEvent, saveMode: 'save' | 'assign') => {
     e.preventDefault()
@@ -166,8 +195,12 @@ export default function EditWorkoutPlanPage() {
                   {day.exercises.map((ex, ei) => (
                     <div key={ei} className="p-3 grid grid-cols-12 gap-2 items-start">
                       <div className="col-span-4">
-                        <input value={ex.name} onChange={e => updateExercise(di, ei, 'name', e.target.value)}
-                               className="input text-sm" placeholder="Exercise name" />
+                        <div className="flex gap-2">
+                          <input value={ex.name} onChange={e => updateExercise(di, ei, 'name', e.target.value)}
+                                 className="input text-sm flex-1" placeholder="Exercise name" />
+                          <button type="button" onClick={() => openPicker(di, ei)}
+                                  className="btn-secondary text-xs px-2 py-1 whitespace-nowrap" title="Browse Exercise Library">Browse</button>
+                        </div>
                       </div>
                       <div className="col-span-1">
                         <input type="number" value={ex.sets} onChange={e => updateExercise(di, ei, 'sets', +e.target.value)}
@@ -194,6 +227,18 @@ export default function EditWorkoutPlanPage() {
                           <Trash2 className="w-3.5 h-3.5" />
                         </button>
                       </div>
+
+                      {/* Exercise Library Preview */}
+                      {ex.exercise_id && ex.exercise_images?.length > 0 && (
+                        <div className="col-span-12 mt-2 flex items-start gap-3 p-2 bg-blue-50/50 dark:bg-blue-900/10 rounded-lg border border-blue-100 dark:border-blue-800/20">
+                          <img src={ex.exercise_images[0]} alt={ex.exercise_name || ex.name} className="w-16 h-16 rounded object-cover flex-shrink-0" />
+                          <div className="flex-1 min-w-0">
+                            <p className="text-xs font-medium text-blue-700 dark:text-blue-300">{ex.exercise_name || ex.name}</p>
+                            {ex.exercise_muscles?.length > 0 && <p className="text-[11px] text-slate-500 mt-0.5">{ex.exercise_muscles.slice(0, 3).join(", ")}</p>}
+                            {ex.exercise_equipment?.length > 0 && <p className="text-[11px] text-slate-400">{ex.exercise_equipment.join(", ")}</p>}
+                          </div>
+                        </div>
+                      )}
                     </div>
                   ))}
                 </div>
@@ -219,6 +264,13 @@ export default function EditWorkoutPlanPage() {
           </div>
         </form>
       </div>
+
+      {pickerOpen && (
+        <ExercisePicker
+          onSelect={handlePickExercise}
+          onClose={() => { setPickerOpen(false); setPickerTarget(null) }}
+        />
+      )}
     </DashboardLayout>
   )
 }

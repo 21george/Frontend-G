@@ -16,6 +16,7 @@ import {
   Trash2,
   Clock,
   Send,
+  UserCheck,
 } from 'lucide-react'
 import Link from 'next/link'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -42,6 +43,7 @@ const notificationIcons: Record<string, React.ComponentType<{ className?: string
   checkin_reminder: Calendar,
   live_session_reminder: Video,
   checkin_scheduled: FileText,
+  coach_assigned: UserCheck,
 }
 
 const notificationColors: Record<string, string> = {
@@ -51,6 +53,7 @@ const notificationColors: Record<string, string> = {
   checkin_reminder: 'bg-warn-100 text-warn-700 dark:bg-warn-900/30 dark:text-warn-400',
   live_session_reminder: 'bg-danger-100 text-danger-700 dark:bg-danger-900/30 dark:text-danger-400',
   checkin_scheduled: 'bg-brand-100 text-brand-700 dark:bg-brand-900/30 dark:text-brand-400',
+  coach_assigned: 'bg-brand-100 text-brand-700 dark:bg-brand-900/30 dark:text-brand-400',
 }
 
 function formatWhen(sentAt: string | null | undefined): string {

@@ -13,6 +13,7 @@ function actionLabel(action: string): string {
   const labels: Record<string, string> = {
     client_created: "Created client",
     client_updated: "Updated client",
+    client_taken_on: "Took on client",
     checkin_scheduled: "Scheduled check-in",
     workout_plan_created: "Created workout plan",
     workout_plan_assigned: "Assigned workout plan",
@@ -121,7 +122,7 @@ export function TeamOverview({ clients }: { clients: Client[] }) {
               Retry
             </button>
           </div>
-        ) : (staff ?? []).length === 0 ? (
+        ) : (staff?.data ?? []).length === 0 ? (
           <p className="text-sm text-[var(--text-secondary)]">
             No team members yet.{" "}
             <Link
@@ -134,7 +135,7 @@ export function TeamOverview({ clients }: { clients: Client[] }) {
           </p>
         ) : (
           <div className="space-y-3 max-h-72 overflow-y-auto pr-1">
-            {(staff ?? []).slice(0, 10).map((s) => (
+            {(staff?.data ?? []).slice(0, 10).map((s) => (
               <div
                 key={s.id}
                 className="flex items-center gap-3 p-2 rounded-lg hover:bg-white/[0.03] transition-colors"

@@ -165,7 +165,7 @@ export function GlobalSearch({ pathname }: GlobalSearchProps) {
   const canSeeTeam = canViewTeam(isStaff, staffRole);
 
   const { data: allClients, isLoading: clientsLoading } = useAllClients();
-  const { data: staffList, isLoading: staffLoading } = useStaffList({
+  const { data: staffList, isLoading: staffLoading } = useStaffList(1, {
     enabled: canSeeTeam,
   });
 
@@ -215,8 +215,9 @@ export function GlobalSearch({ pathname }: GlobalSearchProps) {
     }
 
     if ((scope === "staff" || scope === "all") && canSeeTeam) {
-      if (staffList?.length) {
-        staffList.forEach((s: StaffMember) => {
+      const staffItems = staffList?.data ?? [];
+      if (staffItems.length) {
+        staffItems.forEach((s: StaffMember) => {
           if (
             s.name?.toLowerCase().includes(q) ||
             s.email?.toLowerCase().includes(q) ||

@@ -17,6 +17,7 @@ import {
 } from '@/lib/hooks';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/Skeleton';
+import { PaymentCardVisual } from './PaymentCardVisual';
 import { AnimatePresence, motion } from 'framer-motion';
 import {
   CreditCard,
@@ -187,34 +188,55 @@ export function PaymentMethodManager() {
     <div className="space-y-3">
       {/* Saved cards */}
       {methods && methods.length > 0 ? (
-        <div className="space-y-2">
-          {methods.map((method) => (
-            <motion.div
-              key={method.id}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="flex items-center justify-between p-3 rounded-lg border border-[var(--border)] hover:border-[var(--border-hover)] transition-colors"
-            >
-              <div className="flex items-center gap-3">
-                <CardBrandIcon brand={method.brand} />
-                <div>
-                  <p className="text-sm font-medium text-[var(--text-primary)]">
-                    {method.brand.charAt(0).toUpperCase() + method.brand.slice(1)} •••• {method.last4}
-                  </p>
-                  <p className="text-xs text-[var(--text-tertiary)]">
-                    Expires {method.exp_month?.toString().padStart(2, '0') ?? '--'}/
-                    {method.exp_year?.toString().slice(-2) ?? '--'}
-                  </p>
+        <div className="space-y-3">
+          {methods.map((method) =>
+            method.is_default ? (
+              <motion.div
+                key={method.id}
+                initial={{ opacity: 0, y: 5 }}
+                animate={{ opacity: 1, y: 0 }}
+              >
+                <PaymentCardVisual
+                  brand={method.brand}
+                  last4={method.last4}
+                  expMonth={method.exp_month}
+                  expYear={method.exp_year}
+                  isDefault
+                />
+                <div className="flex items-center justify-end gap-2 mt-2">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => deleteMethod.mutate(method.id)}
+                    disabled={deleteMethod.isPending}
+                    className="text-[var(--text-tertiary)] hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10"
+                    title="Remove card"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </Button>
                 </div>
-              </div>
+              </motion.div>
+            ) : (
+              <motion.div
+                key={method.id}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="flex items-center justify-between p-3 rounded-lg border border-[var(--border)] hover:border-[var(--border-hover)] transition-colors"
+              >
+                <div className="flex items-center gap-3">
+                  <CardBrandIcon brand={method.brand} />
+                  <div>
+                    <p className="text-sm font-medium text-[var(--text-primary)]">
+                      {method.brand.charAt(0).toUpperCase() + method.brand.slice(1)} •••• {method.last4}
+                    </p>
+                    <p className="text-xs text-[var(--text-tertiary)]">
+                      Expires {method.exp_month?.toString().padStart(2, '0') ?? '--'}/
+                      {method.exp_year?.toString().slice(-2) ?? '--'}
+                    </p>
+                  </div>
+                </div>
 
-              <div className="flex items-center gap-2">
-                {method.is_default ? (
-                  <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200/50 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/20">
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                    Default
-                  </span>
-                ) : (
+                <div className="flex items-center gap-2">
                   <Button
                     variant="ghost"
                     size="sm"
@@ -224,20 +246,20 @@ export function PaymentMethodManager() {
                   >
                     Set as default
                   </Button>
-                )}
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => deleteMethod.mutate(method.id)}
-                  disabled={deleteMethod.isPending}
-                  className="p-1.5 h-auto text-[var(--text-tertiary)] hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10"
-                  title="Remove card"
-                >
-                  <Trash2 className="w-3.5 h-3.5" />
-                </Button>
-              </div>
-            </motion.div>
-          ))}
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => deleteMethod.mutate(method.id)}
+                    disabled={deleteMethod.isPending}
+                    className="p-1.5 h-auto text-[var(--text-tertiary)] hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10"
+                    title="Remove card"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </Button>
+                </div>
+              </motion.div>
+            )
+          )}
         </div>
       ) : (
         !showAddForm && (

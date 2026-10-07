@@ -73,6 +73,8 @@ export {
 } from "./useNotifications";
 export {
   useSubscription,
+  useBillingInformation,
+  useUpdateBillingInformation,
   useCheckout,
   useManageBilling,
   useCancelSubscription,
@@ -83,7 +85,7 @@ export {
   useDeletePaymentMethod,
   useSetDefaultPaymentMethod,
 } from "./useSubscription";
-export { useInvoices } from "./useInvoices";
+export { useInvoices, useDownloadInvoice } from "./useInvoices";
 export {
   useIntegrations,
   useUpdateIntegrations,
@@ -102,6 +104,10 @@ export {
   useCoachingSessionToken,
   useSaveSessionNotes,
 } from "./useCoachingSessions";
+export { useClientPrs, useExercisePrHistory } from "./usePrRecords";
+export { useClientHabits } from "./useHabits";
+export { useClientGoals } from "./useGoals";
+export { useClientProgressPhotos } from "./useProgressPhotos";
 export {
   useWorkoutAnalyses,
   useWorkoutAnalysis,
@@ -125,3 +131,12 @@ export {
   useDeactivateStaff,
   useStaffActivities,
 } from "./useStaff";
+export {
+  useTeamMeetings,
+  useTeamMeeting,
+  useCreateTeamMeeting,
+  useUpdateTeamMeeting,
+  useDeleteTeamMeeting,
+  useUpdateTeamMeetingStatus,
+} from "./useTeamMeetings";
+export { useWeeklySessions } from "./useDashboard";

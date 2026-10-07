@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/store/auth";
 import { useSubscriptionStore } from "@/store/subscription";
 import { useCoachProfile } from "@/hooks/useSettings";
+import { useStaffProfile } from "@/hooks/useStaff";
 import Sidebar from "@/components/layout/Sidebar";
 import DashboardHeader from "@/components/layout/DashboardHeader";
 import { PageSkeleton } from "@/components/ui/skeletons";
@@ -38,6 +39,7 @@ function AuthLayout({
     coach,
     isStaff,
     updateCoach,
+    updateStaff,
   } = useAuthStore();
   const { setupToken } = useSubscriptionStore();
   const router = useRouter();
@@ -86,6 +88,16 @@ function AuthLayout({
     if (freshCoach) updateCoach(freshCoach);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [freshCoach]);
+
+  // Same pattern for staff — profile_photo presigned URL expires after 24h.
+  const { data: freshStaff } = useStaffProfile(
+    isHydrated && isAuthenticated && isStaff,
+  );
+
+  useEffect(() => {
+    if (freshStaff) updateStaff(freshStaff);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [freshStaff]);
 
   useEffect(() => {
     if (!isHydrated) return;

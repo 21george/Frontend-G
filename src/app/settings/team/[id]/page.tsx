@@ -1,6 +1,6 @@
 "use client";
 
-import { useSyncExternalStore, useState } from "react";
+import { useSyncExternalStore, useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
@@ -17,6 +17,9 @@ import {
   Shield,
   Crown,
   User,
+  Pencil,
+  Check,
+  X,
 } from "lucide-react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { Skeleton } from "@/components/ui/Skeleton";
@@ -28,6 +31,7 @@ import {
   useStaffList,
   useDeactivateStaff,
   useUpdateStaffRole,
+  useUpdateStaff,
 } from "@/hooks/useStaff";
 import { useClients, useCheckins, useWorkoutPlans } from "@/lib/hooks";
 import {
@@ -48,6 +52,7 @@ const ROLES: StaffRole[] = [
 
 const TABS = [
   { key: "clients", label: "Clients" },
+  { key: "assignments", label: "Assignments" },
   { key: "schedule", label: "Schedule" },
   { key: "programs", label: "Programs" },
   { key: "activity", label: "Activity" },
@@ -72,6 +77,7 @@ function actionLabel(action: string): string {
   const labels: Record<string, string> = {
     client_created: "Created client",
     client_updated: "Updated client",
+    client_taken_on: "Took on client",
     checkin_scheduled: "Scheduled check-in",
     workout_plan_created: "Created workout plan",
     workout_plan_assigned: "Assigned workout plan",
@@ -94,6 +100,18 @@ function formatTimeAgo(iso: string): string {
   return `${days}d ago`;
 }
 
+function computeAge(dob?: string | null): number | null {
+  if (!dob) return null;
+  const birth = new Date(dob);
+  const now = new Date();
+  let age = now.getFullYear() - birth.getFullYear();
+  const m = now.getMonth() - birth.getMonth();
+  if (m < 0 || (m === 0 && now.getDate() < birth.getDate())) {
+    age--;
+  }
+  return age >= 0 ? age : null;
+}
+
 export default function StaffMemberPage() {
   const params = useParams();
   const router = useRouter();
@@ -104,6 +122,9 @@ export default function StaffMemberPage() {
   const [tab, setTab] = useState("clients");
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [toDeactivate, setToDeactivate] = useState<StaffMember | null>(null);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editName, setEditName] = useState("");
+  const [editRole, setEditRole] = useState<StaffRole>("instructor_coach");
 
   const { data: staff, isLoading: staffLoading } = useStaffMember(staffId);
   const { data: activitiesData, isLoading: activitiesLoading } =
@@ -115,8 +136,28 @@ export default function StaffMemberPage() {
 
   const deactivateStaff = useDeactivateStaff();
   const updateRole = useUpdateStaffRole();
+  const updateStaff = useUpdateStaff();
 
-  const allStaff: StaffMember[] = allStaffData ?? [];
+  useEffect(() => {
+    if (staff) {
+      setEditName(staff.name ?? "");
+      setEditRole(staff.role);
+    }
+  }, [staff]);
+
+  const handleSave = () => {
+    if (!staff) return;
+    updateStaff.mutate(
+      { id: staff.id, name: editName, role: editRole },
+      {
+        onSuccess: () => {
+          setIsEditing(false);
+        },
+      },
+    );
+  };
+
+  const allStaff: StaffMember[] = allStaffData?.data ?? [];
 
   const allClients: Client[] =
     (clientsData as PaginatedResponse<Client> | undefined)?.data ?? [];
@@ -128,6 +169,10 @@ export default function StaffMemberPage() {
 
   const staffClients = allClients.filter(
     (c) => c.primary_staff_id === staffId || c.last_staff_id === staffId,
+  );
+
+  const primaryClients = allClients.filter(
+    (c) => c.primary_staff_id === staffId,
   );
 
   const staffActivities: StaffActivity[] = (
@@ -336,53 +381,154 @@ export default function StaffMemberPage() {
 
               {/* Info section */}
               <div className="space-y-3">
-                <div className="flex items-center gap-1.5 mb-2">
-                  <User size={12} className="text-[var(--text-secondary)]" />
-                  <span className="text-[10px] font-semibold uppercase tracking-widest text-[var(--text-secondary)]">
-                    Details
-                  </span>
-                </div>
-                <div className="space-y-2.5">
-                  <div className="flex items-center justify-between">
-                    <span className="text-[11px] text-[var(--text-tertiary)]">
-                      Role
-                    </span>
-                    <span className="text-[12px] text-[var(--text-secondary)] dark:text-slate-300 flex items-center gap-1">
-                      <RoleIcon className="w-3 h-3" />
-                      {STAFF_ROLE_LABELS[staff.role]}
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-1.5">
+                    <User size={12} className="text-[var(--text-secondary)]" />
+                    <span className="text-[10px] font-semibold uppercase tracking-widest text-[var(--text-secondary)]">
+                      Details
                     </span>
                   </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-[11px] text-[var(--text-tertiary)]">
-                      Email
-                    </span>
-                    <span className="text-[12px] text-[var(--text-secondary)] dark:text-slate-300 truncate max-w-[140px]">
-                      {staff.email}
-                    </span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-[11px] text-[var(--text-tertiary)]">
-                      Invited
-                    </span>
-                    <span className="text-[12px] text-[var(--text-secondary)] dark:text-slate-300">
-                      {staff.invited_at
-                        ? new Date(staff.invited_at).toLocaleDateString("en-US")
-                        : "—"}
-                    </span>
-                  </div>
-                  {staff.activated_at && (
-                    <div className="flex items-center justify-between">
-                      <span className="text-[11px] text-[var(--text-tertiary)]">
-                        Activated
-                      </span>
-                      <span className="text-[12px] text-[var(--text-secondary)] dark:text-slate-300">
-                        {new Date(staff.activated_at).toLocaleDateString(
-                          "en-US",
-                        )}
-                      </span>
-                    </div>
+                  {!isEditing && (
+                    <button
+                      onClick={() => setIsEditing(true)}
+                      className="inline-flex items-center gap-1 text-[10px] font-semibold text-[#132E35] dark:text-[#2A96AD] hover:underline"
+                    >
+                      <Pencil size={10} /> Edit
+                    </button>
                   )}
                 </div>
+                {isEditing ? (
+                  <div className="space-y-3">
+                    <div>
+                      <label className="block text-[11px] text-[var(--text-tertiary)] mb-1">
+                        Name
+                      </label>
+                      <input
+                        type="text"
+                        value={editName}
+                        onChange={(e) => setEditName(e.target.value)}
+                        className="w-full px-2.5 py-1.5 text-[12px] bg-[var(--bg-subtle)] dark:bg-[#FAFAFA]/[0.05] border border-[var(--border)] dark:border-white/[0.08] text-[var(--text-primary)] dark:text-[#FAFAFA] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#132E35]"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[11px] text-[var(--text-tertiary)] mb-1">
+                        Role
+                      </label>
+                      <select
+                        value={editRole}
+                        onChange={(e) => setEditRole(e.target.value as StaffRole)}
+                        className="w-full px-2.5 py-1.5 text-[12px] bg-[var(--bg-subtle)] dark:bg-[#FAFAFA]/[0.05] border border-[var(--border)] dark:border-white/[0.08] text-[var(--text-primary)] dark:text-[#FAFAFA] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#132E35]"
+                      >
+                        {ROLES.map((r) => (
+                          <option key={r} value={r}>
+                            {STAFF_ROLE_LABELS[r]}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="flex items-center gap-2 pt-1">
+                      <button
+                        onClick={handleSave}
+                        disabled={updateStaff.isPending}
+                        className="inline-flex items-center gap-1 px-3 py-1.5 text-[11px] font-semibold bg-[#132E35] dark:bg-[#2A96AD] text-white rounded-md hover:opacity-90 transition-opacity disabled:opacity-50"
+                      >
+                        {updateStaff.isPending ? (
+                          <Loader2 size={12} className="animate-spin" />
+                        ) : (
+                          <Check size={12} />
+                        )}
+                        Save
+                      </button>
+                      <button
+                        onClick={() => {
+                          setIsEditing(false);
+                          if (staff) {
+                            setEditName(staff.name ?? "");
+                            setEditRole(staff.role);
+                          }
+                        }}
+                        disabled={updateStaff.isPending}
+                        className="inline-flex items-center gap-1 px-3 py-1.5 text-[11px] font-semibold border border-[var(--border)] dark:border-white/[0.08] text-[var(--text-secondary)] dark:text-[#FAFAFA]/60 rounded-md hover:bg-[var(--bg-subtle)] dark:hover:bg-[#FAFAFA]/[0.05] transition-colors disabled:opacity-50"
+                      >
+                        <X size={12} /> Cancel
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="space-y-2.5">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[11px] text-[var(--text-tertiary)]">
+                        Role
+                      </span>
+                      <span className="text-[12px] text-[var(--text-secondary)] dark:text-slate-300 flex items-center gap-1">
+                        <RoleIcon className="w-3 h-3" />
+                        {STAFF_ROLE_LABELS[staff.role]}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-[11px] text-[var(--text-tertiary)]">
+                        Email
+                      </span>
+                      <span className="text-[12px] text-[var(--text-secondary)] dark:text-slate-300 truncate max-w-[140px]">
+                        {staff.email}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-[11px] text-[var(--text-tertiary)]">
+                        Invited
+                      </span>
+                      <span className="text-[12px] text-[var(--text-secondary)] dark:text-slate-300">
+                        {staff.invited_at
+                          ? new Date(staff.invited_at).toLocaleDateString("en-US")
+                          : "—"}
+                      </span>
+                    </div>
+                    {staff.activated_at && (
+                      <div className="flex items-center justify-between">
+                        <span className="text-[11px] text-[var(--text-tertiary)]">
+                          Activated
+                        </span>
+                        <span className="text-[12px] text-[var(--text-secondary)] dark:text-slate-300">
+                          {new Date(staff.activated_at).toLocaleDateString(
+                            "en-US",
+                          )}
+                        </span>
+                      </div>
+                    )}
+                    {staff.date_of_birth && (
+                      <div className="flex items-center justify-between">
+                        <span className="text-[11px] text-[var(--text-tertiary)]">Age</span>
+                        <span className="text-[12px] text-[var(--text-secondary)] dark:text-slate-300">
+                          {computeAge(staff.date_of_birth)} years
+                        </span>
+                      </div>
+                    )}
+                    {staff.nationality && (
+                      <div className="flex items-center justify-between">
+                        <span className="text-[11px] text-[var(--text-tertiary)]">Nationality</span>
+                        <span className="text-[12px] text-[var(--text-secondary)] dark:text-slate-300">
+                          {staff.nationality}
+                        </span>
+                      </div>
+                    )}
+                    {staff.years_of_profession && staff.years_of_profession > 0 && (
+                      <div className="flex items-center justify-between">
+                        <span className="text-[11px] text-[var(--text-tertiary)]">Experience</span>
+                        <span className="text-[12px] text-[var(--text-secondary)] dark:text-slate-300">
+                          {staff.years_of_profession} years
+                        </span>
+                      </div>
+                    )}
+                    {staff.bio && (
+                      <div className="pt-1">
+                        <span className="text-[11px] text-[var(--text-tertiary)] block mb-0.5">About</span>
+                        <p className="text-[12px] text-[var(--text-secondary)] dark:text-slate-300 leading-relaxed">
+                          {staff.bio}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
 
               {/* Quick stats in sidebar */}
@@ -506,6 +652,48 @@ export default function StaffMemberPage() {
                                   {c.primary_staff_id === staffId
                                     ? "Primary trainer"
                                     : "Last interaction"}
+                                </p>
+                              </div>
+                            </Link>
+                          ))}
+                        </div>
+                      </ContentPanel>
+                    </motion.div>
+                  )}
+
+                  {tab === "assignments" && (
+                    <motion.div
+                      key="assignments"
+                      initial={{ opacity: 0, y: 8 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -8 }}
+                      transition={{ duration: 0.15 }}
+                    >
+                      <ContentPanel
+                        title="Primary Assignments"
+                        icon={Users}
+                        isLoading={clientsLoading}
+                        empty={primaryClients.length === 0}
+                        emptyText="No clients currently assigned as primary coach."
+                      >
+                        <div className="space-y-2">
+                          {primaryClients.map((c) => (
+                            <Link
+                              key={c.id}
+                              href={`/clients/${c.id}`}
+                              className="flex items-center gap-3 p-2 rounded-lg hover:bg-white/[0.03] transition-colors"
+                            >
+                              <div className="w-8 h-8 flex items-center justify-center rounded-full bg-gradient-to-br from-[#132e35] to-[#0b1e22] text-white text-xs font-bold flex-shrink-0">
+                                {c.name?.[0]?.toUpperCase() ?? "C"}
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <p className="text-sm font-medium text-[var(--text-primary)] truncate">
+                                  {c.name}
+                                </p>
+                                <p className="text-[11px] text-[var(--text-secondary)]">
+                                  {c.last_staff_activity_at
+                                    ? `Last activity ${formatTimeAgo(c.last_staff_activity_at)}`
+                                    : "Assigned"}
                                 </p>
                               </div>
                             </Link>

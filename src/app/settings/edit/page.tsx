@@ -109,13 +109,14 @@ function SelectField({
    ═══════════════════════════════════════════════════════════════════════════ */
 
 export default function EditProfilePage() {
-  const { coach, updateCoach } = useAuthStore();
+  const { coach, updateCoach, isStaff, staff, updateStaff } = useAuthStore();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const toastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const syncedCoachIdRef = useRef<string | undefined>(undefined);
+  const syncedStaffIdRef = useRef<string | undefined>(undefined);
 
   // Profile state
-  const [name, setName] = useState(coach?.name ?? "");
+  const [name, setName] = useState(isStaff ? (staff?.name ?? "") : (coach?.name ?? ""));
   const [surname, setSurname] = useState(coach?.surname ?? "");
   const [title, setTitle] = useState(coach?.job_title ?? "");
   const [role, setRole] = useState(coach?.function ?? "");
@@ -128,6 +129,14 @@ export default function EditProfilePage() {
     coach?.social_media?.instagram ?? "",
   );
   const [website, setWebsite] = useState(coach?.social_media?.website ?? "");
+
+  // Staff profile fields
+  const [dateOfBirth, setDateOfBirth] = useState(staff?.date_of_birth ?? "");
+  const [nationality, setNationality] = useState(staff?.nationality ?? "");
+  const [yearsOfProfession, setYearsOfProfession] = useState(
+    staff?.years_of_profession?.toString() ?? "",
+  );
+  const [bio, setBio] = useState(staff?.bio ?? "");
 
   // UI state
   const [saving, setSaving] = useState(false);
@@ -172,6 +181,14 @@ export default function EditProfilePage() {
     "social_media",
   ] as const;
 
+  const staffEditableKeys = [
+    "name",
+    "date_of_birth",
+    "nationality",
+    "years_of_profession",
+    "bio",
+  ] as const;
+
   // Build the payload that PUT /coach/profile will receive. Pure
   // function of the form state — no I/O, easy to diff.
   const buildPayload = useCallback(
@@ -185,6 +202,17 @@ export default function EditProfilePage() {
       social_media: { linkedin, instagram, website },
     }),
     [name, surname, phone, language, title, role, linkedin, instagram, website],
+  );
+
+  const buildStaffPayload = useCallback(
+    () => ({
+      name,
+      date_of_birth: dateOfBirth || null,
+      nationality: nationality || "",
+      years_of_profession: yearsOfProfession ? parseInt(yearsOfProfession, 10) : 0,
+      bio: bio || "",
+    }),
+    [name, dateOfBirth, nationality, yearsOfProfession, bio],
   );
 
   // Diff the current form state against the persisted coach record.
@@ -205,6 +233,16 @@ export default function EditProfilePage() {
     );
   }, [coach, buildPayload]);
 
+  const staffDirty = useMemo(() => {
+    if (!staff) return false;
+    const payload = buildStaffPayload();
+    return (
+      diffChanged(payload, staff as unknown as Record<string, unknown>, {
+        fields: [...staffEditableKeys],
+      }).length > 0
+    );
+  }, [staff, buildStaffPayload]);
+
   // Centralised helper: reads all profile fields from a coach-shaped object
   // and pushes them into form state. Called on hydration, after save, and on
   // cancel so the form is always consistent with the persisted record.
@@ -221,6 +259,15 @@ export default function EditProfilePage() {
     setWebsite(c.social_media?.website ?? "");
   }, []);
 
+  const syncFormFromStaff = useCallback((s: typeof staff) => {
+    if (!s) return;
+    setName(s.name ?? "");
+    setDateOfBirth(s.date_of_birth ?? "");
+    setNationality(s.nationality ?? "");
+    setYearsOfProfession(s.years_of_profession?.toString() ?? "");
+    setBio(s.bio ?? "");
+  }, []);
+
   // Re-sync form when coach data first arrives (late hydration from auth
   // store). Guard on ID so photo-upload ref changes don't clobber edits.
   useEffect(() => {
@@ -230,9 +277,43 @@ export default function EditProfilePage() {
     }
   }, [coach, syncFormFromCoach]);
 
+  // Re-sync all staff profile fields when staff data first arrives
+  // (late hydration / login). Guard on ID so background profile_photo
+  // refetches from useStaffProfile don't clobber unsaved edits.
+  useEffect(() => {
+    if (isStaff && staff?.id && staff.id !== syncedStaffIdRef.current) {
+      syncedStaffIdRef.current = staff.id;
+      syncFormFromStaff(staff);
+    }
+  }, [isStaff, staff, syncFormFromStaff]);
+
   const handleSave = async () => {
-    if (!dirty) {
+    if (!isStaff && !dirty) {
       showToast("No changes to save", "error");
+      return;
+    }
+    if (isStaff && !staffDirty) {
+      showToast("No changes to save", "error");
+      return;
+    }
+
+    if (isStaff) {
+      setSaving(true);
+      try {
+        const payload = buildStaffPayload();
+        const { data: res } = await api.put("/staff/profile", payload);
+        if (res.success && res.data) {
+          updateStaff(res.data);
+          syncFormFromStaff(res.data);
+        }
+        showToast("Profile updated");
+      } catch (err: unknown) {
+        const axiosError = err as { response?: { data?: { message?: string } } };
+        const msg = axiosError?.response?.data?.message || "Failed to save settings";
+        showToast(msg, "error");
+      } finally {
+        setSaving(false);
+      }
       return;
     }
 
@@ -270,7 +351,11 @@ export default function EditProfilePage() {
   };
 
   const handleCancel = () => {
-    syncFormFromCoach(coach);
+    if (isStaff) {
+      syncFormFromStaff(staff);
+    } else {
+      syncFormFromCoach(coach);
+    }
   };
 
   const MAX_FILE_SIZE = 5 * 1024 * 1024;
@@ -287,12 +372,13 @@ export default function EditProfilePage() {
       showToast("File too large (max 5 MB)", "error");
       return;
     }
+    const endpoint = isStaff ? `/staff/profile/photo?ext=${ext}` : `/coach/profile/photo?ext=${ext}`;
     setPhotoUploading(true);
     try {
       const formData = new FormData();
       formData.append("photo", file);
       const { data: res } = await api.post(
-        `/coach/profile/photo?ext=${ext}`,
+        endpoint,
         formData,
         {
           headers: { "Content-Type": "multipart/form-data" },
@@ -320,7 +406,9 @@ export default function EditProfilePage() {
           );
         }
       }
-      if (coach && profile_photo) {
+      if (isStaff && staff && profile_photo) {
+        updateStaff({ ...staff, profile_photo } as any);
+      } else if (coach && profile_photo) {
         updateCoach({ ...coach, profile_photo });
       }
       showToast("Photo uploaded successfully");
@@ -337,8 +425,12 @@ export default function EditProfilePage() {
   const handlePhotoDelete = async () => {
     setPhotoUploading(true);
     try {
-      await api.delete("/coach/profile/photo");
-      if (coach) updateCoach({ ...coach, profile_photo: undefined });
+      await api.delete(isStaff ? "/staff/profile/photo" : "/coach/profile/photo");
+      if (isStaff && staff) {
+        updateStaff({ ...staff, profile_photo: undefined } as any);
+      } else if (coach) {
+        updateCoach({ ...coach, profile_photo: undefined });
+      }
       showToast("Photo removed");
     } catch (err: any) {
       const msg = err?.response?.data?.message || "Failed to remove photo";
@@ -396,29 +488,57 @@ export default function EditProfilePage() {
           <div className="p-6">
             <div className="flex flex-col sm:flex-row items-center gap-6">
               <div className="relative h-24 w-24 flex-shrink-0">
-                {coach?.profile_photo ? (
-                  <>
-                    {!imageErrored ? (
-                      <Image
-                        src={coach.profile_photo}
-                        alt={coach.name ?? "Profile"}
-                        fill
-                        className="rounded-full object-cover ring-2 ring-[var(--border)]"
-                        sizes="96px"
-                        unoptimized
-                        onError={() => setImageErrored(true)}
-                      />
-                    ) : (
-                      <div className="absolute inset-0 flex items-center justify-center rounded-full bg-[var(--btn-bg)] text-white text-xl font-bold">
-                        {coach.name?.[0]?.toUpperCase() ?? "C"}
+                {isStaff
+                  ? staff?.profile_photo
+                    ? (
+                      <>
+                        {!imageErrored ? (
+                          <Image
+                            src={staff.profile_photo}
+                            alt={staff.name ?? "Profile"}
+                            fill
+                            className="rounded-full object-cover ring-2 ring-[var(--border)]"
+                            sizes="96px"
+                            unoptimized
+                            onError={() => setImageErrored(true)}
+                          />
+                        ) : (
+                          <div className="absolute inset-0 flex items-center justify-center rounded-full bg-[var(--btn-bg)] text-white text-xl font-bold">
+                            {staff.name?.[0]?.toUpperCase() ?? "S"}
+                          </div>
+                        )}
+                      </>
+                    )
+                    : (
+                      <div className="h-full w-full flex items-center justify-center rounded-full bg-[var(--bg-subtle)] text-[var(--text-tertiary)]">
+                        <User className="w-10 h-10" />
+                      </div>
+                    )
+                  : coach?.profile_photo
+                    ? (
+                      <>
+                        {!imageErrored ? (
+                          <Image
+                            src={coach.profile_photo}
+                            alt={coach.name ?? "Profile"}
+                            fill
+                            className="rounded-full object-cover ring-2 ring-[var(--border)]"
+                            sizes="96px"
+                            unoptimized
+                            onError={() => setImageErrored(true)}
+                          />
+                        ) : (
+                          <div className="absolute inset-0 flex items-center justify-center rounded-full bg-[var(--btn-bg)] text-white text-xl font-bold">
+                            {coach.name?.[0]?.toUpperCase() ?? "C"}
+                          </div>
+                        )}
+                      </>
+                    )
+                    : (
+                      <div className="h-full w-full flex items-center justify-center rounded-full bg-[var(--bg-subtle)] text-[var(--text-tertiary)]">
+                        <User className="w-10 h-10" />
                       </div>
                     )}
-                  </>
-                ) : (
-                  <div className="h-full w-full flex items-center justify-center rounded-full bg-[var(--bg-subtle)] text-[var(--text-tertiary)]">
-                    <User className="w-10 h-10" />
-                  </div>
-                )}
                 {photoUploading && (
                   <div className="absolute inset-0 z-20 flex items-center justify-center rounded-full bg-black/50">
                     <Loader2 className="w-6 h-6 text-white animate-spin" />
@@ -446,9 +566,11 @@ export default function EditProfilePage() {
                     disabled={photoUploading}
                     className="text-sm font-medium text-[var(--accent)] hover:text-emerald-600 transition-colors disabled:opacity-50"
                   >
-                    {coach?.profile_photo ? "Change Photo" : "Upload Photo"}
+                    {isStaff
+                      ? staff?.profile_photo ? "Change Photo" : "Upload Photo"
+                      : coach?.profile_photo ? "Change Photo" : "Upload Photo"}
                   </button>
-                  {coach?.profile_photo && (
+                  {(isStaff ? staff?.profile_photo : coach?.profile_photo) && (
                     <button
                       onClick={handlePhotoDelete}
                       disabled={photoUploading}
@@ -478,60 +600,110 @@ export default function EditProfilePage() {
             </h2>
           </div>
           <div className="p-6 space-y-5">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-              <InputField
-                label="First Name"
-                value={name}
-                onChange={setName}
-                placeholder="John"
-                icon={<User className="w-4 h-4" />}
-              />
-              <InputField
-                label="Last Name"
-                value={surname}
-                onChange={setSurname}
-                placeholder="Doe"
-                icon={<User className="w-4 h-4" />}
-              />
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-              <InputField
-                label="Prefix Title"
-                value={title}
-                onChange={setTitle}
-                placeholder="Dr."
-                icon={<User className="w-4 h-4" />}
-              />
-              <InputField
-                label="Role"
-                value={role}
-                onChange={setRole}
-                placeholder="Coach"
-                icon={<User className="w-4 h-4" />}
-              />
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-              <SelectField
-                label="Language"
-                value={language}
-                onChange={(v) => setLanguage(v as "en" | "de")}
-                options={[
-                  { value: "en", label: "English" },
-                  { value: "de", label: "Deutsch" },
-                ]}
-              />
-              <InputField
-                label="Phone Number"
-                value={phone}
-                onChange={setPhone}
-                placeholder="+1 234 567 890"
-                type="tel"
-                icon={<Phone className="w-4 h-4" />}
-              />
-            </div>
+            {isStaff ? (
+              <>
+                <InputField
+                  label="Name"
+                  value={name}
+                  onChange={setName}
+                  placeholder="Your name"
+                  icon={<User className="w-4 h-4" />}
+                />
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                  <InputField
+                    label="Date of Birth"
+                    value={dateOfBirth}
+                    onChange={setDateOfBirth}
+                    placeholder="YYYY-MM-DD"
+                    type="date"
+                  />
+                  <InputField
+                    label="Nationality"
+                    value={nationality}
+                    onChange={setNationality}
+                    placeholder="e.g. German"
+                  />
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                  <InputField
+                    label="Years of Profession"
+                    value={yearsOfProfession}
+                    onChange={setYearsOfProfession}
+                    placeholder="5"
+                    type="number"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-xs font-medium text-[var(--text-secondary)] uppercase tracking-wide">
+                    About Me
+                  </label>
+                  <textarea
+                    value={bio}
+                    onChange={(e) => setBio(e.target.value)}
+                    placeholder="Tell us about yourself..."
+                    rows={4}
+                    className="w-full px-4 py-2.5 text-sm bg-[var(--bg-card)] border border-[var(--border)] rounded-lg text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 hover:border-[var(--border-hover)] transition-colors resize-none"
+                  />
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                  <InputField
+                    label="First Name"
+                    value={name}
+                    onChange={setName}
+                    placeholder="John"
+                    icon={<User className="w-4 h-4" />}
+                  />
+                  <InputField
+                    label="Last Name"
+                    value={surname}
+                    onChange={setSurname}
+                    placeholder="Doe"
+                    icon={<User className="w-4 h-4" />}
+                  />
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                  <InputField
+                    label="Prefix Title"
+                    value={title}
+                    onChange={setTitle}
+                    placeholder="Dr."
+                    icon={<User className="w-4 h-4" />}
+                  />
+                  <InputField
+                    label="Role"
+                    value={role}
+                    onChange={setRole}
+                    placeholder="Coach"
+                    icon={<User className="w-4 h-4" />}
+                  />
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                  <SelectField
+                    label="Language"
+                    value={language}
+                    onChange={(v) => setLanguage(v as "en" | "de")}
+                    options={[
+                      { value: "en", label: "English" },
+                      { value: "de", label: "Deutsch" },
+                    ]}
+                  />
+                  <InputField
+                    label="Phone Number"
+                    value={phone}
+                    onChange={setPhone}
+                    placeholder="+1 234 567 890"
+                    type="tel"
+                    icon={<Phone className="w-4 h-4" />}
+                  />
+                </div>
+              </>
+            )}
             <InputField
               label="Email Address"
-              value={coach?.email ?? ""}
+              value={isStaff ? (staff?.email ?? "") : (coach?.email ?? "")}
               onChange={() => {}}
               disabled
               icon={<Mail className="w-4 h-4" />}
@@ -539,44 +711,57 @@ export default function EditProfilePage() {
           </div>
         </div>
 
-        {/* Social Links Card */}
-        <div className="bg-[var(--bg-card)] rounded-xl border border-[var(--border)] overflow-hidden shadow-sm">
-          <div className="px-6 py-4 border-b border-[var(--border)]">
-            <h2 className="text-base font-semibold text-[var(--text-primary)]">
-              Social Links
-            </h2>
+        {!isStaff && (
+          <div className="bg-[var(--bg-card)] rounded-xl border border-[var(--border)] overflow-hidden shadow-sm">
+            <div className="px-6 py-4 border-b border-[var(--border)]">
+              <h2 className="text-base font-semibold text-[var(--text-primary)]">
+                Social Links
+              </h2>
+            </div>
+            <div className="p-6 space-y-5">
+              <InputField
+                label="LinkedIn"
+                value={linkedin}
+                onChange={setLinkedin}
+                placeholder="linkedin.com/in/yourname"
+                icon={<Globe className="w-4 h-4" />}
+              />
+              <InputField
+                label="Instagram"
+                value={instagram}
+                onChange={setInstagram}
+                placeholder="instagram.com/yourname"
+                icon={<Globe className="w-4 h-4" />}
+              />
+              <InputField
+                label="Website"
+                value={website}
+                onChange={setWebsite}
+                placeholder="yourwebsite.com"
+                icon={<LinkIcon className="w-4 h-4" />}
+              />
+            </div>
           </div>
-          <div className="p-6 space-y-5">
-            <InputField
-              label="LinkedIn"
-              value={linkedin}
-              onChange={setLinkedin}
-              placeholder="linkedin.com/in/yourname"
-              icon={<Globe className="w-4 h-4" />}
-            />
-            <InputField
-              label="Instagram"
-              value={instagram}
-              onChange={setInstagram}
-              placeholder="instagram.com/yourname"
-              icon={<Globe className="w-4 h-4" />}
-            />
-            <InputField
-              label="Website"
-              value={website}
-              onChange={setWebsite}
-              placeholder="yourwebsite.com"
-              icon={<LinkIcon className="w-4 h-4" />}
-            />
-          </div>
-        </div>
+        )}
       </div>
 
       {/* Sticky Save Bar */}
       <div className="fixed bottom-0 left-0 lg:left-64 right-0 z-30 bg-[var(--bg-card)]/90 backdrop-blur-md border-t border-[var(--border)] px-6 py-4">
         <div className="max-w-3xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3">
           <div className="text-sm">
-            {dirty ? (
+            {isStaff ? (
+              staffDirty ? (
+                <span className="text-amber-600 font-medium flex items-center gap-1.5">
+                  <span className="w-2 h-2 rounded-full bg-amber-500" />
+                  Unsaved changes
+                </span>
+              ) : (
+                <span className="text-[var(--text-secondary)] flex items-center gap-1.5">
+                  <Check className="w-4 h-4 text-[var(--accent)]" />
+                  All changes saved
+                </span>
+              )
+            ) : dirty ? (
               <span className="text-amber-600 font-medium flex items-center gap-1.5">
                 <span className="w-2 h-2 rounded-full bg-amber-500" />
                 Unsaved changes
@@ -591,14 +776,14 @@ export default function EditProfilePage() {
           <div className="flex items-center gap-3">
             <button
               onClick={handleCancel}
-              disabled={!dirty || saving}
+              disabled={(isStaff ? !staffDirty : !dirty) || saving}
               className="px-4 py-2 text-sm font-medium text-[var(--text-secondary)] border border-[var(--border)] rounded-lg hover:bg-[var(--bg-subtle)] transition-colors disabled:opacity-50"
             >
               Cancel
             </button>
             <button
               onClick={handleSave}
-              disabled={!dirty || saving}
+              disabled={(isStaff ? !staffDirty : !dirty) || saving}
               className="px-4 py-2 bg-[var(--btn-bg)] text-white text-sm font-medium hover:bg-[var(--btn-hover)] transition-colors disabled:opacity-50 flex items-center gap-2 rounded-lg"
             >
               {saving && <Loader2 className="w-4 h-4 animate-spin" />}

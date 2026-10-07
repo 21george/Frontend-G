@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -41,6 +41,7 @@ const itemVariants = {
 export default function LoginPage() {
   const router = useRouter();
   const setCoach = useAuthStore((s) => s.setCoach);
+  const setStaff = useAuthStore((s) => s.setStaff);
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   const setSetupToken = useSubscriptionStore((s) => s.setSetupToken);
 
@@ -50,9 +51,13 @@ export default function LoginPage() {
   const [pendingAlert, setPendingAlert] = useState<
     "update_payment" | "resubscribe" | "renew_subscription" | null
   >(null);
-  const [isHydrated, setIsHydrated] = useState(() =>
-    typeof window !== "undefined" && useAuthStore.persist?.hasHydrated?.(),
-  );
+  // Always start false; set true after effect runs so server/client initial HTML match.
+  const [isHydrated, setIsHydrated] = useState(false);
+
+  // Track whether the user was already authenticated when this page mounted.
+  // Prevents the post-login useEffect from overriding redirects performed
+  // by the login handler (e.g. /subscription/select-plan).
+  const wasAlreadyAuthenticated = useRef<boolean | null>(null);
 
   const form = useForm<LoginValues>({
     resolver: zodResolver(loginSchema),
@@ -61,6 +66,12 @@ export default function LoginPage() {
 
   useEffect(() => {
     if (isHydrated) return;
+    // If persist has already hydrated (fast client mount), flip immediately
+    if (useAuthStore.persist?.hasHydrated?.()) {
+      setIsHydrated(true);
+      return;
+    }
+    // Otherwise subscribe to the hydration event
     const unsub = useAuthStore.persist.onFinishHydration(() =>
       setIsHydrated(true),
     );
@@ -68,18 +79,24 @@ export default function LoginPage() {
   }, [isHydrated]);
 
   useEffect(() => {
-    if (isHydrated && isAuthenticated) router.replace("/dashboard");
+    if (isHydrated && wasAlreadyAuthenticated.current === null) {
+      wasAlreadyAuthenticated.current = isAuthenticated;
+    }
+  }, [isHydrated, isAuthenticated]);
+
+  useEffect(() => {
+    if (isHydrated && isAuthenticated && wasAlreadyAuthenticated.current === true) {
+      router.replace("/dashboard");
+    }
   }, [isHydrated, isAuthenticated, router]);
 
   if (!isHydrated) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#060d10]">
-        <motion.div
-          animate={{ rotate: 360 }}
-          transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-        >
-          <Loader2 className="w-8 h-8 text-[var(--energy)]" />
-        </motion.div>
+      <div
+        className="min-h-screen flex items-center justify-center bg-[#060d10]"
+        suppressHydrationWarning
+      >
+        <Loader2 className="w-8 h-8 text-[var(--energy)] animate-spin" />
       </div>
     );
   }
@@ -123,6 +140,34 @@ export default function LoginPage() {
       router.push("/dashboard");
     } catch (e: unknown) {
       let msg = "Login failed. Please try again.";
+
+      // Check if this was a 401 from coach login — try staff login as fallback
+      const is401 =
+        e &&
+        typeof e === "object" &&
+        (e as Record<string, unknown>).response &&
+        ((e as Record<string, unknown>).response as Record<string, unknown>)
+          ?.status === 401;
+
+      if (is401) {
+        try {
+          const staffRes = await apiClient.post("/auth/staff/login", data);
+          const { staff, access_token, setup_complete } =
+            staffRes.data?.data || {};
+          if (staff && access_token) {
+            setStaff(staff, access_token);
+            if (setup_complete === false) {
+              router.push("/staff/complete-profile");
+            } else {
+              router.push("/dashboard");
+            }
+            return;
+          }
+        } catch (staffErr: unknown) {
+          // Staff login also failed — fall through to show error
+        }
+      }
+
       if (e && typeof e === "object") {
         const err = e as Record<string, unknown>;
         if (

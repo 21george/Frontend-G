@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useAuthStore, canViewTeam } from "@/store/auth";
+import { STAFF_ROLE_LABELS } from "@/types";
 import { useThemeStore } from "@/store/theme";
 import {
   useSubscription,
@@ -35,6 +36,7 @@ import {
   Clock,
   Trash2,
   Users,
+  CalendarClock,
 } from "lucide-react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { SettingsSkeleton } from "@/components/ui/skeletons";
@@ -260,7 +262,7 @@ function formatSubscriptionAmount(
 /* ── Main Page ─────────────────────────────────────────────────── */
 
 export default function SettingsPage() {
-  const { coach, isStaff, staffRole, hasHydrated } = useAuthStore();
+  const { coach, staff, isStaff, staffRole, hasHydrated } = useAuthStore();
   const { theme, toggle: toggleTheme } = useThemeStore();
   const { data: subscription, isLoading: subLoading } = useSubscription();
   const manageBilling = useManageBilling();
@@ -286,17 +288,67 @@ export default function SettingsPage() {
   const loginAlerts = notifData?.login_alerts ?? true;
   const doNotDisturb = notifData?.dnd_enabled ?? false;
 
-  const tier = subscription?.tier ?? "free";
+  const tier = subscription?.tier ?? "none";
   const tierLabel =
-    tier === "pro" ? "Pro" : tier === "business" ? "Business" : "Free";
+    tier === "pro"
+      ? "Pro"
+      : tier === "business"
+        ? "Business"
+        : tier === "free"
+          ? "Free"
+          : "No Plan";
   const TierIcon =
-    tier === "business" ? Building2 : tier === "pro" ? Crown : Zap;
-  const isTrialing = subscription?.status === "trialing";
-  const isPastDue = subscription?.status === "past_due";
+    tier === "business"
+      ? Building2
+      : tier === "pro"
+        ? Crown
+        : tier === "free"
+          ? Zap
+          : AlertTriangle;
+  const status = subscription?.status ?? "none";
+  const isTrialing = status === "trialing";
+  const isPastDue = status === "past_due";
+  const isCancelling = subscription?.cancel_at_period_end;
+  const isActive = status === "active";
   const subscriptionAmount = formatSubscriptionAmount(
     subscription?.amount,
     subscription?.currency,
   );
+
+  function getStatusLabel() {
+    if (isCancelling) return "Cancelling";
+    if (isPastDue) return "Past Due";
+    if (isTrialing) return "Trialing";
+    if (isActive) return "Active";
+    if (status === "cancelled") return "Cancelled";
+    if (status === "pending") return "Pending";
+    return "Free";
+  }
+
+  function getStatusColor() {
+    if (isCancelling) return "text-amber-600";
+    if (isPastDue) return "text-red-600";
+    if (isTrialing) return "text-amber-600";
+    if (isActive) return "text-[var(--accent)]";
+    if (status === "cancelled") return "text-slate-500";
+    return "text-[var(--text-secondary)]";
+  }
+
+  function getPriceLabel() {
+    if (subscriptionAmount && subscription?.period) {
+      return `${subscriptionAmount} / ${subscription.period.replace("_", " ")}`;
+    }
+    if (isTrialing) {
+      return "Free trial";
+    }
+    if (tier === "free") {
+      return "Free";
+    }
+    if (tier === "none") {
+      return "No active plan";
+    }
+    return "Pricing available in billing";
+  }
 
   return (
     <DashboardLayout>
@@ -326,7 +378,26 @@ export default function SettingsPage() {
               <div className="p-6">
                 <div className="flex items-start gap-5 mb-6">
                   <div className="relative h-20 w-20 rounded-full flex-shrink-0">
-                    {coach?.profile_photo ? (
+                    {isStaff && staff?.profile_photo ? (
+                      <ProfilePhoto
+                        key={staff.profile_photo}
+                        src={staff.profile_photo}
+                        alt={staff.name ?? "Profile"}
+                        fallback={
+                          <div className="absolute inset-0 flex items-center justify-center rounded-full bg-gradient-to-br from-[#132e35] to-[#0b1e22] text-white text-lg font-bold">
+                            {staff.name?.[0]?.toUpperCase() ??
+                              staff?.email?.[0]?.toUpperCase() ??
+                              "S"}
+                          </div>
+                        }
+                      />
+                    ) : isStaff ? (
+                      <div className="absolute inset-0 flex items-center justify-center rounded-full bg-gradient-to-br from-[#132e35] to-[#0b1e22] text-white text-lg font-bold">
+                        {staff?.name?.[0]?.toUpperCase() ??
+                          staff?.email?.[0]?.toUpperCase() ??
+                          "S"}
+                      </div>
+                    ) : coach?.profile_photo ? (
                       <ProfilePhoto
                         key={coach.profile_photo}
                         src={coach.profile_photo}
@@ -345,48 +416,61 @@ export default function SettingsPage() {
                   </div>
                   <div className="flex-1 min-w-0">
                     <h3 className="text-lg font-semibold text-[var(--text-primary)]">
-                      {coach?.name} {coach?.surname}
+                      {isStaff
+                        ? staff?.name || staff?.email
+                        : `${coach?.name} ${coach?.surname}`}
                     </h3>
                     <p className="text-sm text-[var(--text-secondary)] mt-0.5">
-                      {coach?.email}
+                      {isStaff ? staff?.email : coach?.email}
                     </p>
                     <div className="flex flex-wrap gap-2 mt-3">
                       <span className="inline-flex items-center px-2.5 py-0.5 text-xs font-medium bg-[var(--accent-light)] text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 rounded-full">
-                        Coach
+                        {isStaff
+                          ? (staffRole ? STAFF_ROLE_LABELS[staffRole] : null) ?? "Staff"
+                          : "Coach"}
                       </span>
-                      <span className="inline-flex items-center px-2.5 py-0.5 text-xs font-medium bg-[var(--bg-subtle)] text-[var(--text-secondary)] rounded-full">
-                        {coach?.language === "de" ? "Deutsch" : "English"}
-                      </span>
+                      {!isStaff && (
+                        <span className="inline-flex items-center px-2.5 py-0.5 text-xs font-medium bg-[var(--bg-subtle)] text-[var(--text-secondary)] rounded-full">
+                          {coach?.language === "de" ? "Deutsch" : "English"}
+                        </span>
+                      )}
                     </div>
                   </div>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-1">
                   <InfoRow
-                    label="First Name"
-                    value={coach?.name ?? ""}
+                    label="Name"
+                    value={isStaff ? (staff?.name ?? "") : (coach?.name ?? "")}
                     icon={<User className="w-4 h-4" />}
                   />
-                  <InfoRow
-                    label="Last Name"
-                    value={coach?.surname ?? ""}
-                    icon={<User className="w-4 h-4" />}
-                  />
-                  <InfoRow
-                    label="Phone"
-                    value={coach?.phone ?? ""}
-                    icon={<Phone className="w-4 h-4" />}
-                  />
+                  {!isStaff && (
+                    <InfoRow
+                      label="Last Name"
+                      value={coach?.surname ?? ""}
+                      icon={<User className="w-4 h-4" />}
+                    />
+                  )}
                   <InfoRow
                     label="Email"
-                    value={coach?.email ?? ""}
+                    value={isStaff ? (staff?.email ?? "") : (coach?.email ?? "")}
                     icon={<Mail className="w-4 h-4" />}
+                  />
+                  <InfoRow
+                    label="Role"
+                    value={
+                      isStaff
+                        ? (staffRole ? STAFF_ROLE_LABELS[staffRole] : null) ?? ""
+                        : "Coach"
+                    }
+                    icon={<Shield className="w-4 h-4" />}
                   />
                 </div>
 
-                {(coach?.social_media?.linkedin ||
-                  coach?.social_media?.instagram ||
-                  coach?.social_media?.website) && (
+                {(!isStaff &&
+                  (coach?.social_media?.linkedin ||
+                    coach?.social_media?.instagram ||
+                    coach?.social_media?.website)) && (
                   <div className="mt-5 pt-5 border-t border-[var(--border)]">
                     <p className="text-xs font-medium text-[var(--text-secondary)] uppercase tracking-wide mb-3">
                       Social Links
@@ -481,35 +565,39 @@ export default function SettingsPage() {
               </div>
             </Card>
 
-            {/* Danger Zone */}
-            <Card className="border-red-200 dark:border-red-900/30">
-              <CardHeader
-                icon={
-                  <AlertTriangle className="w-5 h-5 text-red-600 dark:text-red-400" />
-                }
-                title="Danger Zone"
-              />
-              <div className="p-6">
-                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                  <div>
-                    <p className="text-sm font-medium text-[var(--text-primary)]">
-                      Delete Account
-                    </p>
-                    <p className="text-xs text-[var(--text-secondary)] mt-0.5 max-w-md">
-                      Permanently remove your account and all associated data.
-                      This action cannot be undone.
-                    </p>
+            {!isStaff && (
+              <>
+                {/* Danger Zone */}
+                <Card className="border-red-200 dark:border-red-900/30">
+                  <CardHeader
+                    icon={
+                      <AlertTriangle className="w-5 h-5 text-red-600 dark:text-red-400" />
+                    }
+                    title="Danger Zone"
+                  />
+                  <div className="p-6">
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                      <div>
+                        <p className="text-sm font-medium text-[var(--text-primary)]">
+                          Delete Account
+                        </p>
+                        <p className="text-xs text-[var(--text-secondary)] mt-0.5 max-w-md">
+                          Permanently remove your account and all associated data.
+                          This action cannot be undone.
+                        </p>
+                      </div>
+                      <button
+                        onClick={() => setShowDeleteModal(true)}
+                        className="inline-flex items-center gap-1.5 px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-medium rounded-lg transition-colors"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                        Delete Account
+                      </button>
+                    </div>
                   </div>
-                  <button
-                    onClick={() => setShowDeleteModal(true)}
-                    className="inline-flex items-center gap-1.5 px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-medium rounded-lg transition-colors"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                    Delete Account
-                  </button>
-                </div>
-              </div>
-            </Card>
+                </Card>
+              </>
+            )}
           </div>
 
           {/* ── Right Column ── */}
@@ -605,26 +693,26 @@ export default function SettingsPage() {
               </div>
             </Card>
 
-            {/* Billing & Subscription */}
-            <Card>
-              <CardHeader
-                icon={<CreditCard className="w-5 h-5 text-white" />}
-                title="Billing & Subscription"
-                action={
-                  <button
-                    onClick={() => manageBilling.mutate()}
-                    disabled={manageBilling.isPending}
-                    className="inline-flex items-center gap-1.5 text-sm font-medium text-[var(--accent)] hover:text-emerald-600 transition-colors disabled:opacity-50"
-                  >
-                    {manageBilling.isPending ? (
-                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                    ) : (
-                      <Pencil className="w-3.5 h-3.5" />
-                    )}
-                    {manageBilling.isPending ? "Opening…" : "Manage"}
-                  </button>
-                }
-              />
+            {!isStaff && (
+              <Card>
+                <CardHeader
+                  icon={<CreditCard className="w-5 h-5 text-white" />}
+                  title="Billing & Subscription"
+                  action={
+                    <button
+                      onClick={() => manageBilling.mutate()}
+                      disabled={manageBilling.isPending}
+                      className="inline-flex items-center gap-1.5 text-sm font-medium text-[var(--accent)] hover:text-emerald-600 transition-colors disabled:opacity-50"
+                    >
+                      {manageBilling.isPending ? (
+                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                      ) : (
+                        <Pencil className="w-3.5 h-3.5" />
+                      )}
+                      {manageBilling.isPending ? "Opening…" : "Manage"}
+                    </button>
+                  }
+                />
               <div className="p-6">
                 <div className="flex items-center gap-4 mb-5">
                   <div
@@ -643,11 +731,7 @@ export default function SettingsPage() {
                       {tierLabel} Plan
                     </h3>
                     <p className="text-sm text-[var(--text-secondary)]">
-                      {subscriptionAmount
-                        ? `${subscriptionAmount} / ${subscription?.period.replace("_", " ")}`
-                        : tier === "free"
-                          ? "Free"
-                          : "Pricing available in billing"}
+                      {getPriceLabel()}
                     </p>
                   </div>
                 </div>
@@ -662,11 +746,29 @@ export default function SettingsPage() {
                   </div>
                 )}
 
+                {isCancelling && (
+                  <div className="mb-4 p-3 bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-900/30 rounded-lg flex items-start gap-2">
+                    <CalendarClock className="w-4 h-4 text-amber-600 dark:text-amber-400 flex-shrink-0 mt-0.5" />
+                    <p className="text-sm text-amber-700 dark:text-amber-400">
+                      Subscription ends{" "}
+                      <ClientDate date={subscription?.current_period_end ?? null} />.
+                    </p>
+                  </div>
+                )}
+
                 {isTrialing && (
                   <div className="mb-4 p-3 bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-900/30 rounded-lg">
                     <p className="text-sm text-amber-700 dark:text-amber-400">
                       Trial active until{" "}
-                      <ClientDate date={subscription?.trial_ends_at} />.
+                      <ClientDate date={subscription?.trial_ends_at ?? null} />.
+                    </p>
+                  </div>
+                )}
+
+                {tier === "none" && !isTrialing && (
+                  <div className="mb-4 p-3 bg-slate-50 dark:bg-slate-900/20 border border-slate-200 dark:border-slate-800/30 rounded-lg">
+                    <p className="text-sm text-[var(--text-secondary)]">
+                      No active subscription. Choose a plan to unlock all features.
                     </p>
                   </div>
                 )}
@@ -674,22 +776,8 @@ export default function SettingsPage() {
                 <div className="space-y-2 mb-5">
                   <div className="flex justify-between text-sm">
                     <span className="text-[var(--text-secondary)]">Status</span>
-                    <span
-                      className={`font-medium ${
-                        subscription?.status === "active"
-                          ? "text-[var(--accent)]"
-                          : isPastDue
-                            ? "text-red-600"
-                            : "text-[var(--text-secondary)]"
-                      }`}
-                    >
-                      {subscription?.status === "active"
-                        ? "Active"
-                        : subscription?.status === "trialing"
-                          ? "Trialing"
-                          : isPastDue
-                            ? "Past Due"
-                            : "Free"}
+                    <span className={`font-medium ${getStatusColor()}`}>
+                      {getStatusLabel()}
                     </span>
                   </div>
                   <div className="flex justify-between text-sm">
@@ -704,15 +792,35 @@ export default function SettingsPage() {
                       {subscription?.client_limit === null && " (Unlimited)"}
                     </span>
                   </div>
-                  {subscription?.next_payment_date && (
+                  {subscription?.trial_ends_at && isTrialing && (
                     <div className="flex justify-between text-sm">
                       <span className="text-[var(--text-secondary)]">
-                        {subscription?.status === "trialing"
-                          ? "Trial Ends"
-                          : "Renews"}
+                        Trial Ends
                       </span>
                       <ClientDate
-                        date={subscription?.next_payment_date}
+                        date={subscription?.trial_ends_at ?? null}
+                        className="font-medium text-[var(--text-primary)]"
+                      />
+                    </div>
+                  )}
+                  {subscription?.next_payment_date && !isTrialing && (
+                    <div className="flex justify-between text-sm">
+                      <span className="text-[var(--text-secondary)]">
+                        {isCancelling ? "Ends" : "Renews"}
+                      </span>
+                      <ClientDate
+                        date={subscription?.next_payment_date ?? null}
+                        className="font-medium text-[var(--text-primary)]"
+                      />
+                    </div>
+                  )}
+                  {subscription?.current_period_end && !subscription?.next_payment_date && (
+                    <div className="flex justify-between text-sm">
+                      <span className="text-[var(--text-secondary)]">
+                        {isCancelling ? "Ends" : "Period End"}
+                      </span>
+                      <ClientDate
+                        date={subscription?.current_period_end ?? null}
                         className="font-medium text-[var(--text-primary)]"
                       />
                     </div>
@@ -760,7 +868,8 @@ export default function SettingsPage() {
                   </Link>
                 </div>
               </div>
-            </Card>
+              </Card>
+            )}
           </div>
         </div>
 

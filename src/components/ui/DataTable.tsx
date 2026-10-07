@@ -4,6 +4,7 @@ import { useState, useMemo } from 'react'
 import { ChevronUp, ChevronDown, ChevronsUpDown } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { AnimatedSearch } from './AnimatedSearch'
+import { Pagination } from './Pagination'
 
 export interface Column<T> {
   key: string
@@ -40,6 +41,8 @@ interface DataTableProps<T> {
   emptyMessage?: string
   className?: string
   headerActions?: React.ReactNode
+  paginated?: boolean
+  perPage?: number
 }
 
 export function DataTable<T>({
@@ -53,10 +56,13 @@ export function DataTable<T>({
   emptyMessage = 'No items found',
   className,
   headerActions,
+  paginated = false,
+  perPage = 8,
 }: DataTableProps<T>) {
   const [search, setSearch] = useState('')
   const [sortKey, setSortKey] = useState<string | null>(null)
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc')
+  const [page, setPage] = useState(1)
 
   const filtered = useMemo(() => {
     let items = data
@@ -71,6 +77,13 @@ export function DataTable<T>({
     }
     return items
   }, [data, search, searchFn, sortKey, sortDir, columns])
+
+  const totalPages = Math.max(1, Math.ceil(filtered.length / perPage))
+  const paginatedData = useMemo(() => {
+    if (!paginated) return filtered
+    const start = (page - 1) * perPage
+    return filtered.slice(start, start + perPage)
+  }, [filtered, page, paginated, perPage])
 
   const toggleSort = (key: string) => {
     if (sortKey === key) {
@@ -124,14 +137,14 @@ export function DataTable<T>({
             </tr>
           </thead>
           <tbody>
-            {filtered.length === 0 ? (
+            {paginatedData.length === 0 ? (
               <tr>
                 <td colSpan={columns.length} className="px-4 py-12 text-center text-sm text-[var(--text-tertiary)] dark:text-slate-500">
                   {emptyMessage}
                 </td>
               </tr>
             ) : (
-              filtered.map((item) => (
+              paginatedData.map((item) => (
                 <tr
                   key={keyExtractor(item)}
                   onClick={() => onRowClick?.(item)}
@@ -151,6 +164,16 @@ export function DataTable<T>({
           </tbody>
         </table>
       </div>
+
+      {paginated && (
+        <Pagination
+          page={page}
+          totalPages={totalPages}
+          totalItems={filtered.length}
+          perPage={perPage}
+          onPageChange={setPage}
+        />
+      )}
     </div>
   )
 }

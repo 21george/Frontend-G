@@ -1,6 +1,7 @@
 import api from "@/lib/api/client";
 import type {
   ApiResponse,
+  PaginatedResponse,
   StaffMember,
   StaffActivity,
   InviteStaffPayload,
@@ -14,8 +15,10 @@ import type {
  * the backend's StaffMiddleware resolves org_id + role automatically.
  */
 export const staffApi = {
-  list: () =>
-    api.get<ApiResponse<StaffMember[]>>("/org/staff").then((r) => r.data.data),
+  list: (page = 1, perPage = 20) =>
+    api
+      .get<PaginatedResponse<StaffMember>>("/org/staff", { params: { page, per_page: perPage } })
+      .then((r) => r.data),
 
   get: (id: string) =>
     api.get<ApiResponse<StaffMember>>(`/org/staff/${id}`).then((r) => r.data.data),
@@ -44,6 +47,11 @@ export const staffApi = {
       })
       .then((r) => r.data),
 
+  takeOn: (clientId: string) =>
+    api
+      .post<ApiResponse<null>>(`/org/clients/${clientId}/take-on`)
+      .then((r) => r.data),
+
   acceptInvite: (payload: { token: string; name: string; password: string }) =>
     api
       .post<
@@ -61,8 +69,24 @@ export const staffApi = {
       .get<ApiResponse<{ data: StaffActivity[]; pagination: { total: number; page: number; per_page: number } }>>("/org/staff/activities", { params: { page } })
       .then((r) => r.data.data),
 
-  updateProfile: (payload: { name: string }) =>
+  getProfile: () =>
+    api
+      .get<ApiResponse<StaffMember>>("/staff/profile")
+      .then((r) => r.data.data),
+
+  updateProfile: (payload: {
+    name: string;
+    date_of_birth?: string;
+    nationality?: string;
+    years_of_profession?: number;
+    bio?: string;
+  }) =>
     api
       .put<ApiResponse<StaffMember>>("/staff/profile", payload)
+      .then((r) => r.data),
+
+  update: (id: string, payload: { name: string; role?: string }) =>
+    api
+      .put<ApiResponse<StaffMember>>(`/org/staff/${id}`, payload)
       .then((r) => r.data),
 };

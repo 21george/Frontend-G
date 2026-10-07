@@ -95,6 +95,12 @@ export interface Exercise {
   notes?: string;
   demo_video_url?: string;
   video_url?: string;
+  exercise_id?: string;
+  exercise_name?: string;
+  exercise_images?: string[];
+  exercise_description?: string;
+  exercise_equipment?: string[];
+  exercise_muscles?: string[];
 }
 
 export interface WorkoutDay {
@@ -226,10 +232,79 @@ export interface CheckinMeeting {
   meeting_link?: string;
   notes?: string;
   status: "scheduled" | "completed" | "cancelled";
+  source?: "coach" | "client";
   client_response: "pending" | "accepted" | "declined" | "reschedule_requested";
   client_response_note?: string | null;
   client_responded_at?: string | null;
   proposed_scheduled_at?: string | null;
+}
+
+export interface TeamMeetingParticipant {
+  id: string;
+  name: string;
+}
+
+export interface TeamMeeting {
+  id: string;
+  org_id: string;
+  created_by: string;
+  created_by_name: string;
+  title: string;
+  description?: string | null;
+  type: "call" | "video" | "chat" | "in_person";
+  scheduled_at: string;
+  duration_min?: number | null;
+  meeting_link?: string | null;
+  notes?: string | null;
+  status: "scheduled" | "completed" | "cancelled";
+  participants: TeamMeetingParticipant[];
+  is_group: boolean;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface DashboardCoachingSession {
+  id: string;
+  type: "coaching_session";
+  title: string;
+  scheduled_at: string;
+  duration_min?: number;
+  status: string;
+  client_id: string;
+  client_name: string;
+}
+
+export interface DashboardClientMeeting {
+  id: string;
+  type: "client_meeting";
+  meeting_type: string;
+  scheduled_at: string;
+  status: string;
+  source: "coach" | "client";
+  client_id: string;
+  client_name: string;
+  client_response: string;
+}
+
+export interface DashboardTeamMeeting {
+  id: string;
+  type: "team_meeting";
+  title: string;
+  meeting_type: string;
+  scheduled_at: string;
+  duration_min?: number;
+  status: string;
+  is_group: boolean;
+  participants: TeamMeetingParticipant[];
+  created_by_name: string;
+}
+
+export interface WeeklyDashboardSessions {
+  week_start: string;
+  week_end: string;
+  team_meetings: DashboardTeamMeeting[];
+  coaching_sessions: DashboardCoachingSession[];
+  client_meetings: DashboardClientMeeting[];
 }
 
 export interface Message {
@@ -670,6 +745,11 @@ export interface StaffMember {
   status: StaffStatus;
   invited_at: string | null;
   activated_at: string | null;
+  profile_photo?: string | null;
+  date_of_birth?: string | null;
+  nationality?: string;
+  years_of_profession?: number;
+  bio?: string;
 }
 
 export interface InviteStaffPayload {

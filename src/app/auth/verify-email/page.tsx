@@ -14,6 +14,7 @@ import { Loader2, Mail, RotateCcw } from "lucide-react";
 import Link from "next/link";
 import apiClient from "@/lib/api";
 import { useAuthStore } from "@/store/auth";
+import { useSubscriptionStore } from "@/store/subscription";
 import { Button } from "@/components/ui/button";
 import type { AxiosError } from "axios";
 
@@ -34,6 +35,7 @@ export default function VerifyEmailPage() {
   const searchParams = useSearchParams();
   const coachId = searchParams.get("id");
   const setCoach = useAuthStore((s) => s.setCoach);
+  const setSetupToken = useSubscriptionStore((s) => s.setSetupToken);
 
   const [digits, setDigits] = useState<string[]>(Array(CODE_LENGTH).fill(""));
   const [error, setError] = useState<string | null>(null);
@@ -110,11 +112,29 @@ export default function VerifyEmailPage() {
         coach_id: coachId,
         code,
       });
-      const { coach } = res.data.data;
+      const { coach, access_token, redirect, setup_token } = res.data.data;
       setSuccess(true);
-      setCoach(coach);
+      setCoach(coach, access_token);
+
+      // Store setup token for pending subscriptions so the select-plan page
+      // has it even if the redirect URL query params are lost.
+      if (setup_token && coach?.id) {
+        setSetupToken(setup_token, coach.id);
+      }
+
       // Brief success moment before redirect
-      setTimeout(() => router.push("/dashboard"), 800);
+      const redirectUrl = redirect || "/dashboard";
+      if (setup_token && coach?.id && redirectUrl === "/subscription/select-plan") {
+        setTimeout(
+          () =>
+            router.push(
+              `/subscription/select-plan?token=${encodeURIComponent(setup_token)}&coach_id=${coach.id}`,
+            ),
+          800,
+        );
+      } else {
+        setTimeout(() => router.push(redirectUrl), 800);
+      }
     } catch (error: unknown) {
       const axiosError = error as AxiosError<{ message?: string }>;
       const msg =

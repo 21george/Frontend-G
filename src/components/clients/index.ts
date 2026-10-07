@@ -18,6 +18,10 @@ export type { ScheduleFilter } from "./tabs/ClientScheduleTab";
 export { PlanAnalysisTab } from "./tabs/PlanAnalysisTab";
 export { BodyAnalysisTab } from "./tabs/BodyAnalysisTab";
 export { ClientAdherenceTab } from "./tabs/ClientAdherenceTab";
+export { ClientPrsTab } from "./tabs/ClientPrsTab";
+export { ClientProgressPhotosTab } from "./tabs/ClientProgressPhotosTab";
+export { ClientHabitsTab } from "./tabs/ClientHabitsTab";
+export { ClientGoalsTab } from "./tabs/ClientGoalsTab";
 
 // Modals
 export { ScheduleModal } from "./modals/ScheduleModal";

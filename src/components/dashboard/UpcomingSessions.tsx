@@ -12,7 +12,7 @@ import {
 import Link from "next/link";
 import { parseDateValue } from "@/lib/utils";
 import type { Client, CheckinMeeting } from "@/types";
-import { isBefore } from "date-fns";
+import { isBefore, startOfWeek, endOfWeek } from "date-fns";
 import { humanDate } from "@/lib/formatDate";
 import { motion } from "framer-motion";
 import { type LucideIcon } from "lucide-react";
@@ -41,19 +41,21 @@ export function UpcomingSessions({
     return () => clearInterval(interval);
   }, []);
 
-  const upcoming = useMemo(() => {
+  const weekStart = startOfWeek(now, { weekStartsOn: 1 });
+  const weekEnd = endOfWeek(now, { weekStartsOn: 1 });
+
+  const thisWeekSessions = useMemo(() => {
     return checkins
       .filter((c) => {
         const d = parseDateValue(c.scheduled_at);
-        return d && !isBefore(d, now);
+        return d && d >= weekStart && d <= weekEnd;
       })
       .sort((a, b) => {
         const da = parseDateValue(a.scheduled_at)?.getTime() ?? 0;
         const db = parseDateValue(b.scheduled_at)?.getTime() ?? 0;
         return da - db;
-      })
-      .slice(0, 5);
-  }, [checkins, now]);
+      });
+  }, [checkins, weekStart, weekEnd]);
 
   return (
     <motion.div
@@ -64,7 +66,7 @@ export function UpcomingSessions({
     >
       <div className="flex items-center justify-between px-5 py-4 border-b border-[var(--border)] dark:border-white/[0.07]">
         <p className="text-sm font-semibold text-[var(--text-primary)] dark:text-[#FAFAFA]">
-          What&apos;s coming up
+          This Week&apos;s Sessions
         </p>
         <button
           aria-label="More options"
@@ -75,15 +77,15 @@ export function UpcomingSessions({
       </div>
 
       <div className="flex-1 divide-y divide-[var(--border)] dark:divide-white/[0.06]">
-        {upcoming.length === 0 ? (
+        {thisWeekSessions.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-12 text-[var(--text-tertiary)] dark:text-[#FAFAFA]/30">
             <CalendarDays size={24} className="mb-2" />
             <p className="text-xs">
-              Nothing scheduled — book a session to fill your week.
+              No sessions this week.
             </p>
           </div>
         ) : (
-          upcoming.map((session, i) => {
+          thisWeekSessions.map((session, i) => {
             const date = parseDateValue(session.scheduled_at);
             const client = clientMap.get(session.client_id);
             const Icon = TYPE_ICON[session.type] ?? MessageCircle;

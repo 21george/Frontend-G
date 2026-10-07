@@ -14,66 +14,28 @@ import {
   Users,
   MessageSquare,
   MoreVertical,
-  ChevronLeft,
-  ChevronRight,
   UsersRound,
   AlertCircle,
   Upload,
+  UserPlus,
 } from "lucide-react";
-import { AnimatedSearch } from "@/components/ui/AnimatedSearch";
-
 import { QueryWrapper } from "@/components/ui/QueryWrapper";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { Button } from "@/components/ui/button";
 import { SegmentedProgressBar } from "@/components/ui/SegmentedProgressBar";
 import { motion } from "framer-motion";
 import { MessageDrawer } from "@/components/messages/MessageDrawer";
-import FilterBreadcrumb from "@/components/ui/Breadcrumb";
+import { SearchBar } from "@/components/ui/SearchBar";
+import { FilterPills } from "@/components/ui/FilterPills";
+import { Pagination } from "@/components/ui/Pagination";
+import { ClientStatusBadge } from "@/components/clients/ClientStatusBadge";
+import { useAuthStore } from "@/store/auth";
+import { useTakeOnClient, useStaffList } from "@/hooks/useStaff";
+import type { StaffMember } from "@/types";
 
 const MS_PER_DAY = 1000 * 60 * 60 * 24;
 const NEW_CLIENT_THRESHOLD_DAYS = 14;
 const DEFAULT_DAYS_SINCE_CREATED = 30;
-
-// Status badge configuration - using your app's color scheme
-const statusConfig: Record<
-  string,
-  { label: string; lightClass: string; darkClass: string }
-> = {
-  blocked: {
-    label: "Blocked",
-    lightClass:
-      "bg-orange-50 text-orange-700 border border-orange-200/60 rounded-2xl",
-    darkClass:
-      "dark:bg-orange-900/30 dark:text-orange-400 dark:border-orange-800 rounded-2xl",
-  },
-  "on-track": {
-    label: "On Track",
-    lightClass:
-      "bg-emerald-50 text-emerald-700 border border-emerald-200/60 rounded-2xl",
-    darkClass:
-      "dark:bg-emerald-900/30 dark:text-emerald-400 dark:border-emerald-800 rounded-2xl",
-  },
-  "new-client": {
-    label: "New Client",
-    lightClass:
-      "bg-blue-50 text-blue-700 border border-blue-200/60 rounded-2xl",
-    darkClass:
-      "dark:bg-blue-900/30 dark:text-blue-400 dark:border-blue-800 rounded-2xl",
-  },
-  attention: {
-    label: "Attention Required",
-    lightClass: "bg-red-50 text-red-700 border border-red-200/60 rounded-2xl",
-    darkClass:
-      "dark:bg-red-900/30 dark:text-red-400 dark:border-red-800 rounded-2xl",
-  },
-  completed: {
-    label: "Completed",
-    lightClass:
-      "bg-slate-100 text-slate-600 border border-slate-200 rounded-2xl",
-    darkClass:
-      "dark:bg-slate-800/30 dark:text-slate-400 dark:border-slate-700 rounded-2xl",
-  },
-};
 
 function getStatusForClient(client: any): string {
   if (client.is_blocked) return "blocked";
@@ -93,11 +55,6 @@ function getStatusForClient(client: any): string {
   return "on-track";
 }
 
-function getClientStatus(client: any) {
-  const statusKey = getStatusForClient(client);
-  return statusConfig[statusKey] || statusConfig["on-track"];
-}
-
 type FilterKey =
   | "all"
   | "active"
@@ -112,13 +69,23 @@ export default function ClientsPage() {
   const [page, setPage] = useState(1);
   const [drawerClient, setDrawerClient] = useState<any>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
-  const PER_PAGE = 10;
+  const PER_PAGE = 8;
+
+  const { isStaff, staffRole, staff } = useAuthStore();
+  const canTakeOn = isStaff && staffRole === "instructor_coach";
+  const takeOnMutation = useTakeOnClient();
 
   // Fetch ALL clients and plans so stats/filters are accurate across pages
   const allClientsQuery = useAllClients();
   const allClients = allClientsQuery.data ?? [];
   const allPlansQuery = useAllWorkoutPlans();
   const allPlans = allPlansQuery.data ?? [];
+  const { data: staffData } = useStaffList();
+  const allStaff: StaffMember[] = staffData?.data ?? [];
+  const staffMap = useMemo(
+    () => new Map<string, StaffMember>(allStaff.map((s) => [s.id, s])),
+    [allStaff],
+  );
 
   // Client-side search across the full client list
   const searchedClients = useMemo(() => {
@@ -354,24 +321,15 @@ export default function ClientsPage() {
   return (
     <DashboardLayout>
       <div className="min-h-screen">
-        {/* Search Bar */}
-        <AnimatedSearch
-          className="relative mb-4"
-          iconClassName="left-4 w-4 h-4"
-          active={search.length > 0}
-        >
-          <input
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search clients"
-            className="w-full sm:w-[12rem] py-3 pl-11 pr-4 text-sm text-[var(--text-primary)] bg-white dark:bg-neutral-900 border border-[var(--border)] rounded-lg placeholder-slate-400 dark:placeholder:text-neutral-500 focus:outline-none focus:border-brand-700/30 focus:ring-2 focus:ring-brand-700/20 transition-colors"
-          />
-        </AnimatedSearch>
+        <SearchBar
+          value={search}
+          onChange={setSearch}
+          placeholder="Search clients"
+          className="max-w-xs mb-4"
+        />
 
-        {/* Filter Pills — count display */}
-
-        <FilterBreadcrumb
-          items={[
+        <FilterPills
+          filters={[
             { key: "all", label: "All", count: stats.total },
             { key: "active", label: "Active", count: stats.active },
             { key: "new", label: "New", count: stats.newClients },
@@ -379,8 +337,8 @@ export default function ClientsPage() {
             { key: "group", label: "Group", count: stats.groupProgram },
             { key: "needs-plan", label: "Needs Plan", count: stats.needsPlan },
           ]}
-          value={filter}
-          onChange={setFilter}
+          activeFilter={filter}
+          onFilterChange={(key) => setFilter(key as FilterKey)}
           className="mb-4"
         />
 
@@ -415,9 +373,7 @@ export default function ClientsPage() {
                 </Button>
               </Link>
               <Link href="/import-excel">
-                <Button variant="secondary">
-                  <Upload className="w-4 h-4" /> Import Clients
-                </Button>
+                <Button variant="secondary"></Button>
               </Link>
             </div>
           }
@@ -475,7 +431,7 @@ export default function ClientsPage() {
                 animate="visible"
               >
                 {paginatedClients.map((client: any) => {
-                  const status = getClientStatus(client);
+                  const statusKey = getStatusForClient(client);
                   const planProgress = clientProgressMap.get(client.id);
                   const liveProgress = liveProgressMap.get(client.id);
                   const hasActivePlan =
@@ -487,28 +443,33 @@ export default function ClientsPage() {
                     planProgress?.hasAssignedPlan ??
                     false;
                   const progressPct = hasActivePlan
-                    ? (liveProgress?.progressPct ?? planProgress?.progressPct ?? 0)
+                    ? (liveProgress?.progressPct ??
+                      planProgress?.progressPct ??
+                      0)
                     : (planProgress?.progressPct ?? 0);
                   const completedDays = hasActivePlan
-                    ? (liveProgress?.completedDays ?? planProgress?.completedDays ?? 0)
+                    ? (liveProgress?.completedDays ??
+                      planProgress?.completedDays ??
+                      0)
                     : (planProgress?.completedDays ?? 0);
                   const totalDays = hasActivePlan
                     ? (liveProgress?.totalDays ?? planProgress?.totalDays ?? 0)
                     : (planProgress?.totalDays ?? 0);
                   const planTitle = hasActivePlan
-                    ? (liveProgress?.planTitle ?? planProgress?.activePlanTitle ?? "Plan")
+                    ? (liveProgress?.planTitle ??
+                      planProgress?.activePlanTitle ??
+                      "Plan")
                     : (planProgress?.activePlanTitle ?? "Plan");
                   const planStatus = planProgress?.status ?? "draft";
                   const isInGroupProgram = groupClientIds.has(client.id);
                   const needsNewPlan = !hasAssignedPlan;
 
                   const statusGradient =
-                    status.label === "Blocked" ||
-                    status.label === "Attention Required"
+                    statusKey === "blocked" || statusKey === "attention"
                       ? "from-red-500/10 to-transparent"
-                      : status.label === "New Client"
+                      : statusKey === "new-client"
                         ? "from-blue-500/10 to-transparent"
-                        : status.label === "Completed"
+                        : statusKey === "completed"
                           ? "from-slate-500/10 to-transparent"
                           : "from-emerald-500/10 to-transparent";
 
@@ -663,48 +624,81 @@ export default function ClientsPage() {
 
                           {/* Assigned To */}
                           <div className="col-span-2 hidden md:block">
-                            {client.last_staff_name ? (
-                              <div>
-                                <div className="text-sm text-[var(--text-primary)] font-medium truncate">
-                                  {client.last_staff_name}
+                            {(() => {
+                              const primaryStaff = client.primary_staff_id
+                                ? staffMap.get(client.primary_staff_id)
+                                : null;
+                              if (primaryStaff) {
+                                return (
+                                  <div>
+                                    <div className="text-sm text-[var(--text-primary)] font-medium truncate">
+                                      {primaryStaff.name}
+                                    </div>
+                                    <div className="text-xs text-[var(--text-secondary)]">
+                                      Primary Coach
+                                    </div>
+                                  </div>
+                                );
+                              }
+                              if (client.last_staff_name) {
+                                return (
+                                  <div>
+                                    <div className="text-sm text-[var(--text-primary)] font-medium truncate">
+                                      {client.last_staff_name}
+                                    </div>
+                                    <div className="text-xs text-[var(--text-secondary)]">
+                                      {client.last_staff_activity
+                                        ? client.last_staff_activity.replace(
+                                            /_/g,
+                                            " ",
+                                          )
+                                        : client.last_staff_role
+                                          ? client.last_staff_role.replace(
+                                              /_/g,
+                                              " ",
+                                            )
+                                          : "Instructor"}
+                                    </div>
+                                  </div>
+                                );
+                              }
+                              if (client.primary_staff_id) {
+                                return (
+                                  <div className="text-sm text-[var(--text-secondary)]">
+                                    Assigned
+                                  </div>
+                                );
+                              }
+                              return (
+                                <div className="text-sm text-[var(--text-secondary)]">
+                                  —
                                 </div>
-                                <div className="text-xs text-[var(--text-secondary)]">
-                                  {client.last_staff_activity
-                                    ? client.last_staff_activity.replace(
-                                        /_/g,
-                                        " ",
-                                      )
-                                    : client.last_staff_role
-                                      ? client.last_staff_role.replace(
-                                          /_/g,
-                                          " ",
-                                        )
-                                      : "Instructor"}
-                                </div>
-                              </div>
-                            ) : client.primary_staff_id ? (
-                              <div className="text-sm text-[var(--text-secondary)]">
-                                Assigned
-                              </div>
-                            ) : (
-                              <div className="text-sm text-[var(--text-secondary)]">
-                                —
-                              </div>
-                            )}
+                              );
+                            })()}
                           </div>
 
                           {/* Status */}
                           <div className="col-span-3 sm:col-span-2">
-                            <span
-                              className={`inline-flex items-center px-2.5 py-1 text-[10px] font-bold uppercase tracking-tight ${status.lightClass} ${status.darkClass}`}
-                            >
-                              {status.label}
-                            </span>
+                            <ClientStatusBadge status={statusKey} />
                           </div>
 
                           {/* Actions */}
                           <div className="col-span-3 sm:col-span-2 text-right">
                             <div className="flex items-center justify-end gap-1">
+                              {canTakeOn &&
+                                client.primary_staff_id !== staff?.id && (
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      takeOnMutation.mutate(client.id);
+                                    }}
+                                    disabled={takeOnMutation.isPending}
+                                    className="p-2 rounded-lg text-[var(--text-tertiary)] hover:text-[var(--accent)] hover:bg-[var(--bg-subtle)] transition-colors disabled:opacity-50"
+                                    title="Take on client"
+                                  >
+                                    <UserPlus className="w-4 h-4" />
+                                  </button>
+                                )}
                               <button
                                 onClick={(e) => {
                                   e.stopPropagation();
@@ -733,33 +727,13 @@ export default function ClientsPage() {
                 })}
               </motion.div>
 
-              {/* Pagination */}
-              <div className="mt-4 px-4 py-3 flex items-center justify-between">
-                <span className="text-xs text-[var(--text-secondary)]">
-                  Showing {startIndex + 1}-
-                  {Math.min(startIndex + PER_PAGE, filteredClients.length)} of{" "}
-                  {filteredClients.length} clients
-                </span>
-                <div className="flex items-center gap-2">
-                  <span className="text-xs text-[var(--text-secondary)] mr-2">
-                    Page {page} of {totalPages}
-                  </span>
-                  <button
-                    onClick={() => setPage((p) => Math.max(1, p - 1))}
-                    className="p-1.5 border rounded-xl border-[var(--border)] text-[var(--text-tertiary)] hover:bg-[var(--bg-subtle)] transition-colors disabled:opacity-50"
-                    disabled={page <= 1}
-                  >
-                    <ChevronLeft className="w-4 h-4" />
-                  </button>
-                  <button
-                    onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                    className="p-1.5 border rounded-xl border-[var(--border)] text-[var(--text-tertiary)] hover:bg-[var(--bg-subtle)] transition-colors disabled:opacity-50"
-                    disabled={page >= totalPages}
-                  >
-                    <ChevronRight className="w-4 h-4" />
-                  </button>
-                </div>
-              </div>
+              <Pagination
+                page={page}
+                totalPages={totalPages}
+                totalItems={filteredClients.length}
+                perPage={PER_PAGE}
+                onPageChange={setPage}
+              />
             </div>
           )}
         </QueryWrapper>

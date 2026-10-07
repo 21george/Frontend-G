@@ -3,7 +3,8 @@
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { useClients, useCheckins, useWorkoutPlans } from "@/lib/hooks";
 import { useMemo } from "react";
-import { Users, Calendar, TrendingUp, Briefcase } from "lucide-react";
+import { Users, Calendar, TrendingUp, Briefcase, UserCheck, ArrowRight } from "lucide-react";
+import Link from "next/link";
 import { parseDateValue } from "@/lib/utils";
 import type {
   Client,
@@ -17,9 +18,11 @@ import { AISuggestionBanner } from "@/components/dashboard/AISuggestionBanner";
 import { SessionVolumeHeatmap } from "@/components/dashboard/SessionVolumeHeatmap";
 import { UpcomingSessions } from "@/components/dashboard/UpcomingSessions";
 import { UpcomingCoachingSessions } from "@/components/dashboard/UpcomingCoachingSessions";
+import { WeeklyScheduleCard } from "@/components/dashboard/WeeklyScheduleCard";
 import { ClientWorkload } from "@/components/dashboard/ClientWorkload";
 import { KpiCard } from "@/components/dashboard/KpiCard";
 import { TeamOverview } from "@/components/dashboard/TeamOverview";
+import { PendingReviews } from "@/components/dashboard/PendingReviews";
 import { DashboardSkeleton } from "@/components/ui/skeletons";
 import { useAuthStore } from "@/store/auth";
 import { PaymentMethodPrompt } from "@/components/billing/PaymentMethodPrompt";
@@ -36,17 +39,72 @@ function useTodayString() {
   );
 }
 
+function StaffClientCard({
+  primaryCount,
+  interactionCount,
+  delay,
+}: {
+  primaryCount: number;
+  interactionCount: number;
+  delay: number;
+}) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 16 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay }}
+      className="col-span-2 bg-[var(--bg-card)] border border-[var(--border)] dark:border-white/[0.07] p-5 shadow-[var(--shadow-sm)]"
+    >
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-2">
+          <UserCheck size={16} className="text-[#132E35] dark:text-[#2A96AD]" />
+          <span className="text-sm font-semibold text-[var(--text-primary)] dark:text-[#FAFAFA]">
+            Your Clients
+          </span>
+        </div>
+        <Link
+          href="/clients"
+          className="inline-flex items-center gap-1 text-[11px] font-semibold text-[#132E35] dark:text-[#2A96AD] hover:underline"
+        >
+          View all <ArrowRight size={12} />
+        </Link>
+      </div>
+      <div className="grid grid-cols-2 gap-3">
+        <div className="text-center p-3 bg-[var(--bg-subtle)] dark:bg-[#FAFAFA]/[0.03]">
+          <div className="text-2xl font-bold text-[var(--text-primary)] dark:text-[#FAFAFA]">
+            {primaryCount}
+          </div>
+          <div className="text-[10px] font-medium uppercase tracking-wider text-[var(--text-secondary)] dark:text-[#FAFAFA]/50 mt-1">
+            Primary
+          </div>
+        </div>
+        <div className="text-center p-3 bg-[var(--bg-subtle)] dark:bg-[#FAFAFA]/[0.03]">
+          <div className="text-2xl font-bold text-[var(--text-primary)] dark:text-[#FAFAFA]">
+            {interactionCount}
+          </div>
+          <div className="text-[10px] font-medium uppercase tracking-wider text-[var(--text-secondary)] dark:text-[#FAFAFA]/50 mt-1">
+            Interactions
+          </div>
+        </div>
+      </div>
+    </motion.div>
+  );
+}
+
 export default function DashboardPage() {
   const { data: clientsData, isLoading: clientsLoading } = useClients();
   const { data: checkinsData, isLoading: checkinsLoading } = useCheckins();
   const { data: workoutData, isLoading: plansLoading } = useWorkoutPlans();
-  const { isStaff, staffRole } = useAuthStore();
+  const { isStaff, staffRole, staff } = useAuthStore();
   const kpiLoading = clientsLoading || checkinsLoading || plansLoading;
   const todayStr = useTodayString();
   // Instructors, managers, and admins (plus the owner coach) can see the team
   // overview on the dashboard. Front-desk staff do not need this view.
   const canViewTeamOverview =
     !isStaff || staffRole === "admin" || staffRole === "manager";
+
+  // Owner/admin get the unified weekly schedule view; other roles see the legacy view
+  const canViewUnifiedSchedule = !isStaff || staffRole === "admin";
 
   const clients: Client[] = useMemo(
     () => (clientsData as PaginatedResponse<Client> | undefined)?.data ?? [],
@@ -103,6 +161,16 @@ export default function DashboardPage() {
     [workoutPlans],
   );
 
+  const staffId = staff?.id ?? "";
+  const primaryCount = useMemo(
+    () => clients.filter((c) => c.primary_staff_id === staffId).length,
+    [clients, staffId],
+  );
+  const interactionCount = useMemo(
+    () => clients.filter((c) => c.last_staff_id === staffId).length,
+    [clients, staffId],
+  );
+
   if (kpiLoading) {
     return (
       <DashboardLayout>
@@ -135,10 +203,19 @@ export default function DashboardPage() {
           <SessionVolumeHeatmap checkins={checkins} />
         </div>
 
-        {/* Row 1b: Upcoming 1-on-1 Coaching Sessions */}
+        {/* Row 1b: Upcoming Sessions / Unified Weekly Schedule */}
         <div className="mb-4 grid grid-cols-1 md:grid-cols-2 gap-4">
           <UpcomingCoachingSessions />
-          <UpcomingSessions checkins={checkins} clientMap={clientMap} />
+          {canViewUnifiedSchedule ? (
+            <WeeklyScheduleCard />
+          ) : (
+            <UpcomingSessions checkins={checkins} clientMap={clientMap} />
+          )}
+        </div>
+
+        {/* Pending Reviews */}
+        <div className="mb-4">
+          <PendingReviews />
         </div>
 
         {/* Team Overview — owner / admin only */}
@@ -149,44 +226,76 @@ export default function DashboardPage() {
           <ClientWorkload clients={clients} checkins={checkins} />
 
           <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.24 }} className="xl:col-span-2 grid grid-cols-2 gap-4 content-start">
-            <KpiCard
-              label="Total Clients"
-              value={(clientsData as PaginatedResponse<Client> | undefined)?.pagination?.total ?? clients.length}
-              icon={Users}
-              trend={{ value: `${activeClients} active`, up: true }}
-              delay={0.24}
-            />
+            {isStaff ? (
+              <>
+                <StaffClientCard
+                  primaryCount={primaryCount}
+                  interactionCount={interactionCount}
+                  delay={0.24}
+                />
+                <KpiCard
+                  label="Today's Sessions"
+                  value={todaySessions}
+                  icon={Calendar}
+                  trend={{
+                    value: String(todaySessions),
+                    up: todaySessions > 0,
+                  }}
+                  delay={0.3}
+                />
+                <KpiCard
+                  label="This Week"
+                  value={thisWeekSessions}
+                  icon={TrendingUp}
+                  trend={{
+                    value: `${todaySessions} today`,
+                    up: thisWeekSessions > 0,
+                  }}
+                  delay={0.36}
+                />
+              </>
+            ) : (
+              <>
+                <KpiCard
+                  label="Total Clients"
+                  value={(clientsData as PaginatedResponse<Client> | undefined)?.pagination?.total ?? clients.length}
+                  icon={Users}
+                  trend={{ value: `${activeClients} active`, up: true }}
+                  delay={0.24}
+                />
 
-            <KpiCard
-              label="Active Plans"
-              value={activePlans}
-              icon={Briefcase}
-              trend={{
-                value: `${workoutPlans.length > 0 ? Math.round((activePlans / workoutPlans.length) * 100) : 0}% of total`,
-                up: activePlans > 0,
-              }}
-              delay={0.3}
-            />
-            <KpiCard
-              label="Today's Sessions"
-              value={todaySessions}
-              icon={Calendar}
-              trend={{
-                value: String(todaySessions),
-                up: todaySessions > 0,
-              }}
-              delay={0.36}
-            />
-            <KpiCard
-              label="This Week"
-              value={thisWeekSessions}
-              icon={TrendingUp}
-              trend={{
-                value: `${todaySessions} today`,
-                up: thisWeekSessions > 0,
-              }}
-              delay={0.42}
-            />
+                <KpiCard
+                  label="Active Plans"
+                  value={activePlans}
+                  icon={Briefcase}
+                  trend={{
+                    value: `${workoutPlans.length > 0 ? Math.round((activePlans / workoutPlans.length) * 100) : 0}% of total`,
+                    up: activePlans > 0,
+                  }}
+                  delay={0.3}
+                />
+                <KpiCard
+                  label="Today's Sessions"
+                  value={todaySessions}
+                  icon={Calendar}
+                  trend={{
+                    value: String(todaySessions),
+                    up: todaySessions > 0,
+                  }}
+                  delay={0.36}
+                />
+                <KpiCard
+                  label="This Week"
+                  value={thisWeekSessions}
+                  icon={TrendingUp}
+                  trend={{
+                    value: `${todaySessions} today`,
+                    up: thisWeekSessions > 0,
+                  }}
+                  delay={0.42}
+                />
+              </>
+            )}
           </motion.div>
         </div>
       </div>

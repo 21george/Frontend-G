@@ -9,6 +9,7 @@ interface PaymentCardVisualProps {
   expYear: number | null;
   isDefault?: boolean;
   onSetDefault?: () => void;
+  onEdit?: () => void;
   className?: string;
 }
 
@@ -48,6 +49,7 @@ export function PaymentCardVisual({
   expYear,
   isDefault = false,
   onSetDefault,
+  onEdit,
   className = "",
 }: PaymentCardVisualProps) {
   const normalized = brand.toLowerCase();
@@ -90,10 +92,12 @@ export function PaymentCardVisual({
               </p>
               <p className="text-sm font-mono">{exp}</p>
             </div>
-            <button type="button" className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 transition-colors text-xs font-medium">
-              <Pencil className="w-3 h-3" />
-              Edit
-            </button>
+            {onEdit && (
+              <button type="button" onClick={onEdit} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 transition-colors text-xs font-medium">
+                <Pencil className="w-3 h-3" />
+                Edit
+              </button>
+            )}
           </div>
         </div>
       </div>
@@ -136,10 +140,12 @@ export function PaymentCardVisual({
               Set as default
             </button>
           )}
-          <button type="button" className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg hover:bg-white dark:hover:bg-white/5 transition-colors text-xs font-medium text-[var(--text-secondary)]">
-            <Pencil className="w-3 h-3" />
-            Edit
-          </button>
+          {onEdit && (
+            <button type="button" onClick={onEdit} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg hover:bg-white dark:hover:bg-white/5 transition-colors text-xs font-medium text-[var(--text-secondary)]">
+              <Pencil className="w-3 h-3" />
+              Edit
+            </button>
+          )}
         </div>
       </div>
     </div>

@@ -15,7 +15,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
 import Link from "next/link";
 import { CreateCheckinModal } from "@/components/CreateCheckinModal";
-import FilterBreadcrumb from "@/components/ui/Breadcrumb";
+import { FilterPills } from "@/components/ui/FilterPills";
 import {
   Search,
   CalendarDays,
@@ -587,14 +587,14 @@ export default function CheckinsPage() {
           {/* Filter Tabs */}
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-5">
             <div className="flex flex-wrap items-center gap-2">
-              <FilterBreadcrumb
-                items={FILTER_TABS.map((t) => ({
+              <FilterPills
+                filters={FILTER_TABS.map((t) => ({
                   key: t.key,
                   label: t.label,
                   count: counts[t.key],
                 }))}
-                value={filter}
-                onChange={setFilter}
+                activeFilter={filter}
+                onFilterChange={(key) => setFilter(key as StatusFilter)}
               />
             </div>
 
